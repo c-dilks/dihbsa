@@ -17,12 +17,16 @@ LD        := g++
 LDFLAGS   := $(ROOTLDFLAGS)
 
 
-all: analysis
+all: 
+	@cd src; make
+	@echo "now compiling main executables..."
+	make analysis
 
 analysis: analysis.o
 	$(CXX) -o analysis.exe $< $(ROOTCFLAGS) $(ROOTLDFLAGS) $(HIPOLIBS) $(LZ4LIBS) $(ROOTLIBS)
 
 clean:
+	@cd src; make clean
 	@echo 'Removing all build files'
 	@rm -rf *.exe
 
