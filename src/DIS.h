@@ -30,16 +30,17 @@ class DIS : public TObject
     void SetBeamEn(Float_t newBeamEn);
     void SetElectron(Float_t px, Float_t py, Float_t pz);
     Bool_t Analyse();
+    void ResetVars();
 
     Float_t BeamEn;
     Float_t W,Q2,Nu,X;
     
   private:
-    TLorentzVector * vecBeam;
-    TLorentzVector * vecTarget;
-    TLorentzVector * vecElectron;
-    TLorentzVector * vecW;
-    TLorentzVector * vecQ;
+    TLorentzVector vecBeam;
+    TLorentzVector vecTarget;
+    TLorentzVector vecElectron;
+    TLorentzVector vecW;
+    TLorentzVector vecQ;
 
 
   ClassDef(DIS,1);

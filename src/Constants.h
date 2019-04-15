@@ -7,12 +7,12 @@ enum particle_enum {
   kE,
   kP,
   kN,
-  kPIP,
-  kPIM,
-  kPI0,
-  kKP,
-  kKM,
-  kPHOTON,
+  kPip,
+  kPim,
+  kPi0,
+  kKp,
+  kKm,
+  kPhoton,
   nParticles
 };
 
@@ -22,12 +22,12 @@ static TString PartName(int p) {
     case kE: return "electron";
     case kP: return "proton";
     case kN: return "neutron";
-    case kPIP: return "piPlus";
-    case kPIM: return "piMinus";
-    case kPI0: return "pi0";
-    case kKP: return "KPlus";
-    case kKM: return "KMinus";
-    case kPHOTON: return "photon";
+    case kPip: return "piPlus";
+    case kPim: return "piMinus";
+    case kPi0: return "pi0";
+    case kKp: return "KPlus";
+    case kKm: return "KMinus";
+    case kPhoton: return "photon";
     default: 
       fprintf(stderr,"ERROR: bad PartName request\n");
       return "unknown";
@@ -40,12 +40,12 @@ static TString PartTitle(int p) {
     case kE: return "e^{-}";
     case kP: return "p";
     case kN: return "n";
-    case kPIP: return "#pi^{+}";
-    case kPIM: return "#pi^{-}";
-    case kPI0: return "#pi^{0}";
-    case kKP: return "K^{+}";
-    case kKM: return "K^{-}";
-    case kPHOTON: return "#gamma";
+    case kPip: return "#pi^{+}";
+    case kPim: return "#pi^{-}";
+    case kPi0: return "#pi^{0}";
+    case kKp: return "K^{+}";
+    case kKm: return "K^{-}";
+    case kPhoton: return "#gamma";
     default: 
       fprintf(stderr,"ERROR: bad PartTitle request\n");
       return "unknown";
@@ -58,12 +58,12 @@ static int PartPID(int p) {
     case kE: return 11;
     case kP: return 2212;
     case kN: return 2112;
-    case kPIP: return 211;
-    case kPIM: return -211;
-    case kPI0: return 111;
-    case kKP: return 321;
-    case kKM: return -321;
-    case kPHOTON: return 22;
+    case kPip: return 211;
+    case kPim: return -211;
+    case kPi0: return 111;
+    case kKp: return 321;
+    case kKm: return -321;
+    case kPhoton: return 22;
     default: 
       fprintf(stderr,"ERROR: bad PartPID request\n");
       return -10000;
@@ -76,12 +76,12 @@ static int PartMass(int p) {
     case kE: return 0.000511;
     case kP: return 0.938272;
     case kN: return 0.939565;
-    case kPIP: return 0.139571;
-    case kPIM: return 0.139571;
-    case kPI0: return 0.134977;
-    case kKP: return 0.493677;
-    case kKM: return 0.493677;
-    case kPHOTON: return 0.0;
+    case kPip: return 0.139571;
+    case kPim: return 0.139571;
+    case kPi0: return 0.134977;
+    case kKp: return 0.493677;
+    case kKm: return 0.493677;
+    case kPhoton: return 0.0;
     default: 
       fprintf(stderr,"ERROR: bad PartMass request\n");
       return -10000;
