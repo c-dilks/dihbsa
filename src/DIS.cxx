@@ -7,6 +7,8 @@ using namespace std;
 
 DIS::DIS() {
   printf("DIS instantiated\n");
+  debug = false;
+
   BeamEn = 10.6; // ?? use run db to get beam en
 
   vecBeam = TLorentzVector(
@@ -46,19 +48,14 @@ void DIS::SetElectron(Float_t px, Float_t py, Float_t pz) {
 
 // compute DIS kinematics; returns false if the event
 // does not pass any DIS cuts (e.g., W<2)
-// -- these cuts have comment "DIScut"
+// -- these cuts have comment "disCut"
 Bool_t DIS::Analyse() {
   ResetVars();
   vecW = vecBeam + vecTarget - vecElectron; // ?? check this!
   W = vecW.M();
 
-  vecBeam.Print();
-  vecTarget.Print();
-  vecElectron.Print();
-  printf("--> W = %f\n",W);
-  
 
-  // DIScut: make sure event is above elastic & resonance region
+  // disCut: make sure event is above elastic & resonance region
   if( W < 2.0 ) return false;
 
   vecQ = vecBeam - vecElectron;
@@ -66,6 +63,20 @@ Bool_t DIS::Analyse() {
 
   Nu = vecBeam.E() - vecElectron.E();
   X = Q2 / ( 2 * PartMass(kP) * Nu );
+
+
+  if(debug) {
+    printf("beam\n");
+    vecBeam.Print();
+    printf("target\n");
+    vecTarget.Print();
+    printf("electron\n");
+    vecElectron.Print();
+    printf("W\n");
+    vecW.Print();
+    printf("--> W = %f\n",W);
+  };
+  
 
   return true;
 };

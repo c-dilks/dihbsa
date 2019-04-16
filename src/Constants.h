@@ -71,7 +71,7 @@ static int PartPID(int p) {
 };
 
 
-static int PartMass(int p) {
+static float PartMass(int p) {
   switch(p) {
     case kE: return 0.000511;
     case kP: return 0.938272;

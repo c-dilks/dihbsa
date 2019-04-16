@@ -27,8 +27,8 @@ GLIBS = $(ROOTGLIBS) $(SYSLIBS) $(HIPOLIBS)
 
 #-----------------------------------------------
 
-CXXFILES = DIS.cxx
-HEADERS = Constants.h DIS.h
+CXXFILES = DIS.cxx Trajectory.cxx
+HEADERS = Constants.h DIS.h Trajectory.h
 
 #-----------------------------------------------
 

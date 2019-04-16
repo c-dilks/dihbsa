@@ -34,6 +34,8 @@ class DIS : public TObject
 
     Float_t BeamEn;
     Float_t W,Q2,Nu,X;
+
+    Bool_t debug;
     
   private:
     TLorentzVector vecBeam;

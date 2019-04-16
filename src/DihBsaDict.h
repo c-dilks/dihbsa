@@ -33,6 +33,7 @@ extern void G__set_cpp_environmentDihBsaDict();
 #include "TMemberInspector.h"
 #include "Constants.h"
 #include "DIS.h"
+#include "Trajectory.h"
 #include <algorithm>
 namespace std { }
 using namespace std;

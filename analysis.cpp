@@ -84,6 +84,7 @@ int main(int argc, char** argv) {
 
 
    Bool_t foundAllObservables;
+   Bool_t disCut;
 
 
    
@@ -142,7 +143,7 @@ int main(int argc, char** argv) {
        P[k[oE]][dY],
        P[k[oE]][dZ]
      );
-     disEv->Analyse();
+     disCut = disEv->Analyse();
 
 
 
