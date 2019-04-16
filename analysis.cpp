@@ -18,6 +18,7 @@
 // DihBsa
 #include "Constants.h"
 #include "DIS.h"
+#include "Trajectory.h"
 
 
 
@@ -43,6 +44,10 @@ int main(int argc, char** argv) {
    // load libs
    gSystem->Load("src/DihBsa.so");
    DIS * disEv = new DIS();
+   Trajectory * hadron[2];
+   enum plus_minus { hP, hM };
+   hadron[hP] = new Trajectory(kPip);
+   hadron[hM] = new Trajectory(kPim);
 
    hipo::benchmark bench;
 
@@ -51,10 +56,21 @@ int main(int argc, char** argv) {
    TFile * outfile = new TFile(outfileN,"RECREATE");
    TTree * tree = new TTree();
 
+   // DIS kinematics branches
    tree->Branch("W",&(disEv->W),"W/F");
    tree->Branch("Q2",&(disEv->Q2),"Q2/F");
    tree->Branch("Nu",&(disEv->Nu),"Nu/F");
    tree->Branch("X",&(disEv->X),"X/F");
+
+   // hadron branches
+   Float_t hadE[2]; // [enum plus_minus (0=+, 1=-)]
+   Float_t hadPt[2];
+   Float_t hadEta[2];
+   Float_t hadPhi[2];
+   tree->Branch("E",hadE,"E[2]/F");
+   tree->Branch("Pt",hadPt,"Pt[2]/F");
+   tree->Branch("Eta",hadEta,"Eta[2]/F");
+   tree->Branch("Phi",hadPhi,"Phi[2]/F");
 
 
    // define reader and particle list
@@ -146,44 +162,24 @@ int main(int argc, char** argv) {
      disCut = disEv->Analyse();
 
 
-
-
-
-
-     // loop through observables, calculating kinematics
-     /*
-     for(int o=0; o<Nobs; o++) { 
-       // -- set E to Emax, and set 4-momenta
-       E[o] = Emax[o];
-       // -- set observable momenta
-       particleList.getVector4(Idx[o],vecObs[o],Mass[o]); // set 4-momentum
-
-       P[o][dX] = particleList.getPx(Idx[o]);
-       P[o][dY] = particleList.getPy(Idx[o]);
-       P[o][dZ] = particleList.getPz(Idx[o]);
-
-       //P[o][dX] = vecObs[o].vect().x(); // faster way to get momenta ??
-       //P[o][dY] = vecObs[o].vect().y();
-       //P[o][dZ] = vecObs[o].vect().z();
-       
-       Pt[o] = TMath::Hypot( P[o][dX], P[o][dY] ); // transverse momentum
-       // -- compute angles
-       Phi[o] = TMath::ATan2( P[o][dY], P[o][dX] );
-       Theta[o] = TMath::ACos(Pt[o]);
-       Eta[o] = -1 * TMath::Log( TMath::Tan( Theta[o]/2.0 ) ); 
-       if(debug) printf("[%s]\tindex=%d  energy=%.3f\n",Name[o].Data(),Idx[o],E[o]);
+     // set pi+ and pi- momenta
+     hadron[hP]->SetMomentum(
+       P[k[oPip]][dX],
+       P[k[oPip]][dY],
+       P[k[oPip]][dZ]
+     );
+     hadron[hM]->SetMomentum(
+       P[k[oPim]][dX],
+       P[k[oPim]][dY],
+       P[k[oPim]][dZ]
+     );
+     for(int h=0; h<2; h++) {
+       hadE[h] = hadron[h]->Vec->E();
+       hadPt[h] = hadron[h]->Vec->Pt();
+       hadEta[h] = hadron[h]->Vec->Eta();
+       hadPhi[h] = hadron[h]->Vec->Phi();
      };
-
-
-     // calculate DIS kinematics
-     vecW = vecBeam + vecTarget - vecObs[oE];
-     vecQ = vecBeam - vecObs[oE];
-     Q2 = -1*vecQ.m2();
-     W = vecW.m();
-     //Nu = vecTarget.e() * vecQ.e() / MASS_P;
-     Nu = vecBeam.e() - vecObs[oE].e();
-     X = Q2 / ( 2 * MASS_P * Nu );
-     */
+       
 
 
      tree->Fill();

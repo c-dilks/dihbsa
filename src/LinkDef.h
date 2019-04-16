@@ -5,5 +5,6 @@
 #pragma link off all functions;
 
 #pragma link C++ class DIS+;
+#pragma link C++ class Trajectory+;
 
 #endif

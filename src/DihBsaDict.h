@@ -45,6 +45,7 @@ extern G__linked_taginfo G__DihBsaDictLN_TClass;
 extern G__linked_taginfo G__DihBsaDictLN_TBuffer;
 extern G__linked_taginfo G__DihBsaDictLN_TMemberInspector;
 extern G__linked_taginfo G__DihBsaDictLN_TObject;
+extern G__linked_taginfo G__DihBsaDictLN_TString;
 extern G__linked_taginfo G__DihBsaDictLN_vectorlEunsignedsPintcOallocatorlEunsignedsPintgRsPgR;
 extern G__linked_taginfo G__DihBsaDictLN_vectorlEROOTcLcLTSchemaHelpercOallocatorlEROOTcLcLTSchemaHelpergRsPgR;
 extern G__linked_taginfo G__DihBsaDictLN_reverse_iteratorlEvectorlEROOTcLcLTSchemaHelpercOallocatorlEROOTcLcLTSchemaHelpergRsPgRcLcLiteratorgR;
@@ -77,5 +78,6 @@ extern G__linked_taginfo G__DihBsaDictLN_TMatrixTSparseRowlEfloatgR;
 extern G__linked_taginfo G__DihBsaDictLN_TMatrixTSparseDiaglEfloatgR;
 extern G__linked_taginfo G__DihBsaDictLN_TLorentzVector;
 extern G__linked_taginfo G__DihBsaDictLN_DIS;
+extern G__linked_taginfo G__DihBsaDictLN_Trajectory;
 
 /* STUB derived class for protected member access */
