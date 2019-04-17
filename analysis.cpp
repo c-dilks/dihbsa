@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
 
 
    // if true, print more to stdout
-   bool debug = 1;
+   bool debug = 0;
 
    // set output file name
    TString outfileN;
@@ -81,108 +81,110 @@ int main(int argc, char** argv) {
 
 
    // define observable variables
-   // -- local index is for the list of observables used here;
-   //    this makes looping easier
-   // -- global index is the index from src/Constants.h
-   // -- example: PartPID(k[o]) gets PID of observable o
-   enum obs_enum {oE, oPip, oPim, Nobs}; // local index of observable
-   int k[Nobs]; // global particle index of observable
-   k[oE] = kE;
-   k[oPip] = kPip;
-   k[oPim] = kPim;
-
-   clas12::vector4 vecObs[Nobs]; // observable 4-momentum
-   Float_t E[Nobs]; // energy 
-   Float_t Emax[Nobs]; // maximum energy 
-   Int_t Idx[Nobs]; // index of observable in particleList
-   Float_t P[Nobs][3]; // momentum [x,y,z]
+   Float_t E[nParticles]; // energy 
+   Float_t Emax[nParticles]; // maximum energy 
+   Int_t Idx[nParticles]; // index of observable in particleList
+   Float_t P[nParticles][3]; // momentum [x,y,z]
    enum xyz {dX,dY,dZ};
+   clas12::vector4 vecObs; // observable 4-momentum
+   Int_t oCur,pidCur;
 
 
    Bool_t foundAllObservables;
    Bool_t disCut;
 
+   Int_t evCount = 0;
 
-   
+   printf("begin event loop...");
    while(reader.next()==true) {
      bench.resume();
 
-     int size = particleList.getSize();
 
      // search for highest-energy observables
      // -- reset indices and max energy
-     for(int o=0; o<Nobs; o++) {
+     for(int o=0; o<nParticles; o++) {
        Emax[o] = 0;
        Idx[o] = -1;
      };
-     // -- loop through full particle list, getting max energies
-     //    of each observable
-     for(int i=0; i<size; i++) {
-       for(int o=0; o<Nobs; o++) {
-         if( particleList.getPid(i) == PartPID(k[o]) ) {
-           particleList.getVector4( i, vecObs[o], PartMass(k[o]) );
-           E[o] = vecObs[o].e();
-           if(E[o] > Emax[o]) {
-             Emax[o] = E[o];
-             Idx[o] = i;
-           };
+     // -- if it's an electron or pion, check if it has
+     //    higher energy than any previous one found
+     for(int i=0; i<particleList.getSize(); i++) {
+
+       pidCur = particleList.getPid(i);
+       if      (pidCur == PartPID(kE)   )  oCur=kE;
+       else if (pidCur == PartPID(kPip) )  oCur=kPip;
+       else if (pidCur == PartPID(kPim) )  oCur=kPim;
+       else oCur=-10000;
+
+       if(oCur>-10000) {
+         particleList.getVector4(i,vecObs,PartMass(oCur));
+         E[oCur] = vecObs.e();
+         if(E[oCur] > Emax[oCur]) {
+           Emax[oCur] = E[oCur];
+           Idx[oCur] = i;
          };
        };
      };
-     // -- skip this event if not all observables have been found
-     foundAllObservables = true;
-     for(int o=0; o<Nobs; o++) {
-       if(Idx[o]<0) foundAllObservables=false;
-     };
+     // -- check if we have an electron and pi+/pi- dihadron in this
+     //    event; skip if we don't
+     foundAllObservables = Idx[kE]>=0 && Idx[kPip]>=0 && Idx[kPim]>=0;
      if(!foundAllObservables) continue;
-     if(debug) printf("-------\n");
+     if(debug) printf(">>> BEGIN DIHADRON EVENT\n");
      // -- set energy and momentum for all observables
-     for(int o=0; o<Nobs; o++) { 
-       E[o] = Emax[o];
+     for(int o=0; o<nParticles; o++) { 
+       if(Idx[o]>=0) {
+         E[o] = Emax[o];
 
-       particleList.getVector4( Idx[o], vecObs[o], PartMass(k[o]) ); 
+         particleList.getVector4(Idx[o],vecObs,PartMass(o)); 
 
-       P[o][dX] = particleList.getPx(Idx[o]);
-       P[o][dY] = particleList.getPy(Idx[o]);
-       P[o][dZ] = particleList.getPz(Idx[o]);
-
-       //P[o][dX] = vecObs[o].vect().x(); // faster way ??
-       //P[o][dY] = vecObs[o].vect().y();
-       //P[o][dZ] = vecObs[o].vect().z();
+         P[o][dX] = particleList.getPx(Idx[o]);
+         P[o][dY] = particleList.getPy(Idx[o]);
+         P[o][dZ] = particleList.getPz(Idx[o]);
+       };
      };
-
 
 
      // compute DIS kinematics
      disEv->SetElectron(
-       P[k[oE]][dX],
-       P[k[oE]][dY],
-       P[k[oE]][dZ]
+       P[kE][dX],
+       P[kE][dY],
+       P[kE][dZ]
      );
      disCut = disEv->Analyse();
+
+     if(!disCut) continue;
 
 
      // set pi+ and pi- momenta
      hadron[hP]->SetMomentum(
-       P[k[oPip]][dX],
-       P[k[oPip]][dY],
-       P[k[oPip]][dZ]
+       P[kPip][dX],
+       P[kPip][dY],
+       P[kPip][dZ]
      );
      hadron[hM]->SetMomentum(
-       P[k[oPim]][dX],
-       P[k[oPim]][dY],
-       P[k[oPim]][dZ]
+       P[kPim][dX],
+       P[kPim][dY],
+       P[kPim][dZ]
      );
      for(int h=0; h<2; h++) {
        hadE[h] = hadron[h]->Vec->E();
        hadPt[h] = hadron[h]->Vec->Pt();
        hadEta[h] = hadron[h]->Vec->Eta();
        hadPhi[h] = hadron[h]->Vec->Phi();
+       if(debug) {
+         printf("[+] %s 4-momentum:\n",(hadron[h]->Title()).Data());
+         hadron[h]->Vec->Print();
+       };
      };
        
 
 
      tree->Fill();
+     evCount++;
+     /*
+     if(evCount%100==0) 
+       printf("[---] %d dihadron events found\n",evCount);
+       */
 
      bench.pause();
    };
@@ -191,5 +193,6 @@ int main(int argc, char** argv) {
      bench.getTime()*1e-9,
      bench.getCounter());
    tree->Write("tree");
+   printf("\nDIHADRON EVENT COUNT: %d\n\n",evCount);
 };
 //### END OF GENERATED CODE

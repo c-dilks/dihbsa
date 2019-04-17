@@ -26,13 +26,9 @@ all:
 	@cd src; make
 	@echo "now compiling main executables..."
 	make analysis
-	make analysisOld
 
 analysis: analysis.o
 	$(CXX) -o analysis.exe $< $(ALLFLAGS)
-
-analysisOld: analysisOld.o
-	$(CXX) -o analysisOld.exe $< $(ALLFLAGS)
 
 clean:
 	@cd src; make clean

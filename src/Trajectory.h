@@ -25,7 +25,6 @@
 class Trajectory : public TObject
 {
   public:
-    Trajectory();
     Trajectory(Int_t particle_index);
     ~Trajectory();
 

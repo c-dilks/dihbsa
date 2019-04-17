@@ -16,7 +16,7 @@ DIS::DIS() {
     0.0,
     BeamEn,
     BeamEn
-  ); // ?? is initializing as a 4-momentum like this okay?
+  );
 
   vecTarget = TLorentzVector(
     0.0,
@@ -39,9 +39,7 @@ void DIS::SetBeamEn(Float_t newBeamEn) {
 
 
 void DIS::SetElectron(Float_t px, Float_t py, Float_t pz) {
-  vecElectron.SetVectM(
-    TVector3(px,py,pz),PartMass(kE)
-  ); // ?? check this definition is okay!
+  vecElectron.SetXYZM(px,py,pz,PartMass(kE));
   return;
 };
 
@@ -51,7 +49,7 @@ void DIS::SetElectron(Float_t px, Float_t py, Float_t pz) {
 // -- these cuts have comment "disCut"
 Bool_t DIS::Analyse() {
   ResetVars();
-  vecW = vecBeam + vecTarget - vecElectron; // ?? check this!
+  vecW = vecBeam + vecTarget - vecElectron;
   W = vecW.M();
 
 
@@ -59,7 +57,7 @@ Bool_t DIS::Analyse() {
   if( W < 2.0 ) return false;
 
   vecQ = vecBeam - vecElectron;
-  Q2 = -1 * vecQ.Mag2(); // ?? check this!
+  Q2 = -1 * vecQ.M2();
 
   Nu = vecBeam.E() - vecElectron.E();
   X = Q2 / ( 2 * PartMass(kP) * Nu );
