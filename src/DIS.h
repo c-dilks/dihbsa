@@ -29,20 +29,31 @@ class DIS : public TObject
 
     void SetBeamEn(Float_t newBeamEn);
     void SetElectron(Float_t px, Float_t py, Float_t pz);
-    Bool_t Analyse();
+    void Analyse();
+    void Print();
+    void BreitPrint();
     void ResetVars();
 
     Float_t BeamEn;
     Float_t W,Q2,Nu,X;
+    TVector3 BreitBoost;
 
-    Bool_t debug;
+    Bool_t debug,speedup;
     
-  private:
     TLorentzVector vecBeam;
     TLorentzVector vecTarget;
     TLorentzVector vecElectron;
     TLorentzVector vecW;
     TLorentzVector vecQ;
+    TLorentzVector vecBreit;
+
+    TLorentzVector breitBeam;
+    TLorentzVector breitTarget;
+    TLorentzVector breitElectron;
+    TLorentzVector breitW;
+    TLorentzVector breitQ;
+
+  private:
 
 
   ClassDef(DIS,1);

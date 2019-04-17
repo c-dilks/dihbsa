@@ -34,6 +34,7 @@ extern void G__set_cpp_environmentDihBsaDict();
 #include "Constants.h"
 #include "DIS.h"
 #include "Trajectory.h"
+#include "Dihadron.h"
 #include <algorithm>
 namespace std { }
 using namespace std;
@@ -76,8 +77,11 @@ extern G__linked_taginfo G__DihBsaDictLN_TMatrixTFlatlEfloatgR;
 extern G__linked_taginfo G__DihBsaDictLN_TMatrixTSublEfloatgR;
 extern G__linked_taginfo G__DihBsaDictLN_TMatrixTSparseRowlEfloatgR;
 extern G__linked_taginfo G__DihBsaDictLN_TMatrixTSparseDiaglEfloatgR;
+extern G__linked_taginfo G__DihBsaDictLN_TVector3;
 extern G__linked_taginfo G__DihBsaDictLN_TLorentzVector;
 extern G__linked_taginfo G__DihBsaDictLN_DIS;
 extern G__linked_taginfo G__DihBsaDictLN_Trajectory;
+extern G__linked_taginfo G__DihBsaDictLN_Dihadron;
+extern G__linked_taginfo G__DihBsaDictLN_DihadroncLcLplusminus;
 
 /* STUB derived class for protected member access */

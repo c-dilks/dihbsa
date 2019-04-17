@@ -19,6 +19,7 @@
 #include "Constants.h"
 #include "DIS.h"
 #include "Trajectory.h"
+#include "Dihadron.h"
 
 
 
@@ -45,6 +46,8 @@ int main(int argc, char** argv) {
    gSystem->Load("src/DihBsa.so");
    DIS * disEv = new DIS();
    Trajectory * hadron[2];
+   Dihadron * dih = new Dihadron();
+
    enum plus_minus { hP, hM };
    hadron[hP] = new Trajectory(kPip);
    hadron[hM] = new Trajectory(kPim);
@@ -71,6 +74,10 @@ int main(int argc, char** argv) {
    tree->Branch("Pt",hadPt,"Pt[2]/F");
    tree->Branch("Eta",hadEta,"Eta[2]/F");
    tree->Branch("Phi",hadPhi,"Phi[2]/F");
+
+   // dihadron branches
+   Float_t Mh;
+   tree->Branch("Mh",&Mh,"Mh/F");
 
 
    // define reader and particle list
@@ -150,7 +157,10 @@ int main(int argc, char** argv) {
        P[kE][dY],
        P[kE][dZ]
      );
-     disCut = disEv->Analyse();
+     disEv->Analyse();
+
+     //disCut = disEv->W > 2.0  &&  disEv->Q2 > 1.0;
+     disCut = disEv->W > 2.0;
 
      if(!disCut) continue;
 
@@ -176,6 +186,12 @@ int main(int argc, char** argv) {
          hadron[h]->Vec->Print();
        };
      };
+
+
+     // set dihadron momenta
+     dih->SetHadrons(hadron[hP],hadron[hM]);
+     Mh = dih->Mh();
+
        
 
 

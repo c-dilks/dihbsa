@@ -6,5 +6,6 @@
 
 #pragma link C++ class DIS+;
 #pragma link C++ class Trajectory+;
+#pragma link C++ class Dihadron+;
 
 #endif
