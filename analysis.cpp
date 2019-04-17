@@ -189,7 +189,7 @@ int main(int argc, char** argv) {
 
 
      // set dihadron momenta
-     dih->SetHadrons(hadron[hP],hadron[hM]);
+     dih->SetEvent(hadron[hP],hadron[hM],disEv);
      Mh = dih->Mh();
 
        

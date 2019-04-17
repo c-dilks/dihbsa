@@ -88,7 +88,7 @@ void DIS::Print() {
   vecW.Print();
 }
 
-void DIS::BreitPrint() {
+void DIS::ComputeBreitKinematics() {
   breitBeam = vecBeam;
   breitTarget = vecTarget;
   breitElectron = vecElectron;
@@ -100,7 +100,10 @@ void DIS::BreitPrint() {
   breitElectron.Boost(BreitBoost);
   breitW.Boost(BreitBoost);
   breitQ.Boost(BreitBoost);
+};
 
+void DIS::BreitPrint() {
+  ComputeBreitKinematics();
   printf("[DIS] Breit Frame:\n");
   //printf("beam\t");
   //breitBeam.Print();

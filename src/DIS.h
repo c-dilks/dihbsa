@@ -32,6 +32,7 @@ class DIS : public TObject
     void Analyse();
     void Print();
     void BreitPrint();
+    void ComputeBreitKinematics();
     void ResetVars();
 
     Float_t BeamEn;
