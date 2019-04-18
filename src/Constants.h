@@ -2,6 +2,9 @@
 #define CONSTANTS_H_GUARD
 
 #include "TString.h"
+#include "TMath.h"
+
+static Double_t PI = TMath::Pi();
 
 enum particle_enum {
   kE,

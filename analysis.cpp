@@ -98,6 +98,25 @@ int main(int argc, char** argv) {
    clas12::particle particleList("REC::Particle",reader);
 
 
+   // define additional banks
+   hipo::bank recBank("REC::Event",reader);
+   Int_t o_evnum = recBank.getn("NEVENT"); // see NOTE below!
+   Int_t o_helicity = recBank.getn("Helic");
+   // NOTE: Clas12Tool Hipo/bank::getEntryOrder is protected,
+   // and as far as I know, this is how to access specific bank 
+   // nodes; my minimal workaround was to add the following *public* 
+   // method to Hipo/bank.h:
+   // 
+   // int getn(const char *e) { return getEntryOrder(e); };
+   //
+
+   Int_t evnum;
+   Int_t helicity;
+
+   tree->Branch("evnum",&evnum,"evnum/I");
+   tree->Branch("helicity",&helicity,"helicity/I");
+
+
 
    // define observable variables
    Float_t E[nParticles]; // energy 
@@ -117,6 +136,11 @@ int main(int argc, char** argv) {
    printf("begin event loop...");
    while(reader.next()==true) {
      bench.resume();
+
+
+     // read event-level banks
+     evnum = recBank.getInt(o_evnum,0);
+     helicity = recBank.getInt(o_helicity,0);
 
 
      // search for highest-energy observables

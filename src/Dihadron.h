@@ -51,6 +51,7 @@ class Dihadron : public TObject
 
     Float_t phiR;
     Float_t phiH;
+    Float_t phiHR; // = phiH-phiR (for G1perp modulation)
     Float_t z[2];
     Float_t zpair;
     Float_t Mh;

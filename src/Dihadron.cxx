@@ -94,6 +94,10 @@ void Dihadron::ComputeAngles() {
   phiH = sgnH * TMath::ACos( numerH / denomH );
   phiR = sgnR * TMath::ACos( numerR / denomR );
 
+  phiHR = phiH - phiR;
+  while(phiHR>PI) phiHR-=2*PI;
+  while(phiHR<-PI) phiHR+=2*PI;
+
 };
 
 
