@@ -35,8 +35,13 @@ mkdir -p $logdir
 mkdir -p $outdir
 
 
+# filter for hipo files
+hipofilter="32.evio.8"
+
 # get list of hipo files
-ls ${hipodir}/*.hipo > hipoz
+ls ${hipodir}/*.hipo | grep $hipofilter > hipoz
+filecnt=$(cat hipoz | wc -l)
+echo "[+] number of hipo files to process: $filecnt"
 
 
 # execute analysis code in parallel
