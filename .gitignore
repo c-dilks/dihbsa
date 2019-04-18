@@ -3,3 +3,4 @@
 *.so
 .*.sw*
 *.root
+logfiles/*

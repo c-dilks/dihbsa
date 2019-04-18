@@ -7,6 +7,7 @@
 #include "TString.h"
 #include "TMath.h"
 #include "TSystem.h"
+#include "TRegexp.h"
 
 // Clas12Tool
 #include "reader.h"
@@ -39,7 +40,10 @@ int main(int argc, char** argv) {
 
    // set output file name
    TString outfileN;
-   outfileN = "out.root";
+   outfileN = infileN;
+   outfileN(TRegexp("^.*/")) = "outroot/";
+   outfileN(TRegexp("hipo$")) = "root";
+   printf("outfileN = %s\n",outfileN.Data());
 
 
    // load libs
@@ -64,20 +68,28 @@ int main(int argc, char** argv) {
    tree->Branch("Q2",&(disEv->Q2),"Q2/F");
    tree->Branch("Nu",&(disEv->Nu),"Nu/F");
    tree->Branch("X",&(disEv->X),"X/F");
+   tree->Branch("y",&(disEv->y),"y/F");
 
    // hadron branches
    Float_t hadE[2]; // [enum plus_minus (0=+, 1=-)]
+   Float_t hadP[2];
    Float_t hadPt[2];
    Float_t hadEta[2];
    Float_t hadPhi[2];
-   tree->Branch("E",hadE,"E[2]/F");
-   tree->Branch("Pt",hadPt,"Pt[2]/F");
-   tree->Branch("Eta",hadEta,"Eta[2]/F");
-   tree->Branch("Phi",hadPhi,"Phi[2]/F");
+   tree->Branch("hadE",hadE,"hadE[2]/F");
+   tree->Branch("hadP",hadP,"hadP[2]/F");
+   tree->Branch("hadPt",hadPt,"hadPt[2]/F");
+   tree->Branch("hadEta",hadEta,"hadEta[2]/F");
+   tree->Branch("hadPhi",hadPhi,"hadPhi[2]/F");
 
    // dihadron branches
-   Float_t Mh;
-   tree->Branch("Mh",&Mh,"Mh/F");
+   tree->Branch("Mh",&(dih->Mh),"Mh/F");
+   tree->Branch("Z",dih->z,"Z[2]/F");
+   tree->Branch("Zpair",&(dih->zpair),"Zpair/F");
+   tree->Branch("PhiH",&(dih->phiH),"PhiH/F");
+   tree->Branch("PhiR",&(dih->phiR),"PhiR/F");
+   tree->Branch("Mmiss",&(dih->Mmiss),"Mmiss/F");
+   tree->Branch("xF",&(dih->xF),"xF/F");
 
 
    // define reader and particle list
@@ -159,8 +171,12 @@ int main(int argc, char** argv) {
      );
      disEv->Analyse();
 
-     //disCut = disEv->W > 2.0  &&  disEv->Q2 > 1.0;
-     disCut = disEv->W > 2.0;
+
+     // dis kinematics cuts
+     disCut = true;
+     //disCut = disCut && disEv->W > 2.0;
+     //disCut = disCut && disEv->Q2 > 1.0;
+     //disCut = disCut && disEv->y < 0.8;
 
      if(!disCut) continue;
 
@@ -177,30 +193,28 @@ int main(int argc, char** argv) {
        P[kPim][dZ]
      );
      for(int h=0; h<2; h++) {
-       hadE[h] = hadron[h]->Vec->E();
-       hadPt[h] = hadron[h]->Vec->Pt();
-       hadEta[h] = hadron[h]->Vec->Eta();
-       hadPhi[h] = hadron[h]->Vec->Phi();
+       hadE[h] = (hadron[h]->Vec).E();
+       hadP[h] = (hadron[h]->Vec).P();
+       hadPt[h] = (hadron[h]->Vec).Pt();
+       hadEta[h] = (hadron[h]->Vec).Eta();
+       hadPhi[h] = (hadron[h]->Vec).Phi();
        if(debug) {
          printf("[+] %s 4-momentum:\n",(hadron[h]->Title()).Data());
-         hadron[h]->Vec->Print();
+         (hadron[h]->Vec).Print();
        };
      };
 
 
      // set dihadron momenta
      dih->SetEvent(hadron[hP],hadron[hM],disEv);
-     Mh = dih->Mh();
 
        
 
 
      tree->Fill();
      evCount++;
-     /*
      if(evCount%100==0) 
        printf("[---] %d dihadron events found\n",evCount);
-       */
 
      bench.pause();
    };

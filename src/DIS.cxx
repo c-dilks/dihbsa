@@ -8,7 +8,7 @@ using namespace std;
 DIS::DIS() {
   printf("DIS instantiated\n");
   debug = false;
-  speedup = true;
+  speedup = false;
 
   BeamEn = 10.6; // ?? use run db to get beam en
 
@@ -60,6 +60,7 @@ void DIS::Analyse() {
 
   Nu = vecBeam.E() - vecElectron.E();
   X = Q2 / ( 2 * PartMass(kP) * Nu );
+  y = Nu / BeamEn;
 
   vecBreit = vecQ + 2*X*vecTarget;
   BreitBoost = -1 * vecBreit.BoostVector();

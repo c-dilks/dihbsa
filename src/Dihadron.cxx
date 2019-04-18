@@ -19,21 +19,33 @@ Dihadron::Dihadron() {
 void Dihadron::SetEvent(
   Trajectory * trajPlus, 
   Trajectory * trajMinus,
-  DIS * disEv
+  DIS * disEvent
 ) {
   hadron[hP] = trajPlus;
   hadron[hM] = trajMinus;
-  disKin = disEv;
+  disEv = disEvent;
 
-  // compute momenta
-  for(h=0; h<2; h++) vecHad[h] = *(hadron[h]->Vec);
+  // compute momenta Ph and R
+  for(h=0; h<2; h++) vecHad[h] = hadron[h]->Vec;
   vecPh = vecHad[hP] + vecHad[hM];
   vecR = 0.5 * ( vecHad[hP] - vecHad[hM] );
 
   // compute z
-  for(h=0; h<2; h++) z[h] = hadron[h].Vec.E() / disKin->Nu;
-  zpair = vecPh.E() / disKin->Nu;
+  for(h=0; h<2; h++) z[h] = vecHad[h].E() / disEv->Nu;
+  zpair = vecPh.E() / disEv->Nu;
 
+  // compute invariant mass
+  Mh = vecPh.M();
+
+  // compute missing mass
+  vecMmiss = disEv->vecW - vecPh;
+  Mmiss = vecMmiss.M();
+
+  // compute xF
+  bvecPh = vecPh;
+  bvecPh.Boost(disEv->BreitBoost);
+  xF = bvecPh.E() / disEv->W;
+  
 
   // compute angles
   ComputeAngles();
@@ -65,13 +77,13 @@ void Dihadron::ComputeAngles() {
   crossQPh = pQ.Cross(pPh); // Q x P_h
   crossQRperp = pQ.Cross(pRperp); // Q x Rperp
 
-  // -- sign coefficients from equations 3 & 4
+  // -- sign coefficients (=+/-1) from equations 3 & 4
   sgnH = crossQL.Dot(pPh);
   sgnH /= fabs(sgnH); // sign of (Qxl).Ph
   sgnR = crossQL.Dot(pRperp);
   sgnR /= fabs(sgnR); // sign of (Qxl).Rperp
 
-  // -- numerator and denominator of arcsin argument from eq 3 & 4
+  // -- numerator and denominator of arccos argument from eq 3 & 4
   numerH = crossQL.Dot(crossQPh); // (Qxl).(QxPh)
   denomH = crossQL.Mag() * crossQPh.Mag();
 
@@ -83,12 +95,6 @@ void Dihadron::ComputeAngles() {
   phiR = sgnR * TMath::ACos( numerR / denomR );
 
 };
-
-
-Float_t Dihadron::Mh() {
-  return vecPh.M();
-};
-
 
 
 

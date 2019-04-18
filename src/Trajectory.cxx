@@ -8,8 +8,8 @@ using namespace std;
 Trajectory::Trajectory(Int_t particle_index) {
   debug = false;
   Idx = particle_index;
-  Vec = new TLorentzVector();
-  Vec->SetXYZM(
+  Vec = TLorentzVector(0,0,0,0);
+  Vec.SetXYZM(
     0.0,
     0.0,
     0.0,
@@ -20,7 +20,7 @@ Trajectory::Trajectory(Int_t particle_index) {
 
 
 void Trajectory::SetMomentum(Float_t px, Float_t py, Float_t pz) {
-  Vec->SetXYZM(
+  Vec.SetXYZM(
     px,
     py,
     pz,

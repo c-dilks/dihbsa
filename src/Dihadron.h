@@ -36,19 +36,26 @@ class Dihadron : public TObject
 
     void SetEvent(
       Trajectory * trajPlus, Trajectory * trajMinus, DIS * disEv);
-    Float_t Mh();
+    void ComputeAngles();
 
     enum plusminus {hP,hM};
     Trajectory * hadron[2];
-    DIS * disKin;
+    DIS * disEv;
     TLorentzVector vecHad[2];
     TLorentzVector vecPh;
     TLorentzVector vecR;
+    TLorentzVector vecMmiss;
+
+    TLorentzVector bvecPh;
+
 
     Float_t phiR;
     Float_t phiH;
     Float_t z[2];
     Float_t zpair;
+    Float_t Mh;
+    Float_t Mmiss;
+    Float_t xF;
     
   private:
     int h;

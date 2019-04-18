@@ -36,7 +36,7 @@ class Trajectory : public TObject
 
 
     Int_t Idx;
-    TLorentzVector * Vec;
+    TLorentzVector Vec;
 
 
     Bool_t debug;
