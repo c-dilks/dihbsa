@@ -6,6 +6,8 @@
 
 static Double_t PI = TMath::Pi();
 
+enum plusminus {hP,hM};
+
 enum particle_enum {
   kE,
   kP,

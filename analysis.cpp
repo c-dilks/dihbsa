@@ -52,7 +52,6 @@ int main(int argc, char** argv) {
    Trajectory * hadron[2];
    Dihadron * dih = new Dihadron();
 
-   enum plus_minus { hP, hM };
    hadron[hP] = new Trajectory(kPip);
    hadron[hM] = new Trajectory(kPim);
 
@@ -264,4 +263,3 @@ int main(int argc, char** argv) {
    tree->Write("tree");
    printf("\nDIHADRON EVENT COUNT: %d\n\n",evCount);
 };
-//### END OF GENERATED CODE

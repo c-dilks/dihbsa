@@ -26,9 +26,13 @@ all:
 	@cd src; make
 	@echo "now compiling main executables..."
 	make analysis
+	make diagnostics
 
 analysis: analysis.o
 	$(CXX) -o analysis.exe $< $(ALLFLAGS)
+	 
+diagnostics: diagnostics.o
+	$(CXX) -o diagnostics.exe $< $(ALLFLAGS)
 
 clean:
 	@cd src; make clean
