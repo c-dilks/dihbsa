@@ -99,22 +99,34 @@ int main(int argc, char** argv) {
 
 
    // define additional banks
-   hipo::bank recBank("REC::Event",reader);
-   Int_t o_evnum = recBank.getn("NEVENT"); // see NOTE below!
-   Int_t o_helicity = recBank.getn("Helic");
+   hipo::bank evBank("REC::Event",reader);
+   hipo::bank configBank("RUN::config",reader);
+
+   // Get node numbers of this bank
+   //
    // NOTE: Clas12Tool Hipo/bank::getEntryOrder is protected,
    // and as far as I know, this is how to access specific bank 
    // nodes; my minimal workaround was to add the following *public* 
    // method to Hipo/bank.h:
    // 
    // int getn(const char *e) { return getEntryOrder(e); };
-   //
+   // 
+   Int_t o_evnum = evBank.getn("NEVENT"); // event #
+   Int_t o_runnum = evBank.getn("NRUN"); // run #
+   Int_t o_helicity = evBank.getn("Helic"); // e- helicity
+   Int_t o_torus = configBank.getn("torus"); // torus in/outbending
+   Int_t o_triggerBits = configBank.getn("trigger"); // trigger bits
 
-   Int_t evnum;
+   Int_t evnum,runnum;
    Int_t helicity;
+   Float_t torus;
+   Long64_t triggerBits;
 
+   tree->Branch("runnum",&runnum,"runnum/I");
    tree->Branch("evnum",&evnum,"evnum/I");
    tree->Branch("helicity",&helicity,"helicity/I");
+   tree->Branch("torus",&torus,"torus/F");
+   tree->Branch("triggerBits",&triggerBits,"triggerBits/L");
 
 
 
@@ -139,8 +151,11 @@ int main(int argc, char** argv) {
 
 
      // read event-level banks
-     evnum = recBank.getInt(o_evnum,0);
-     helicity = recBank.getInt(o_helicity,0);
+     evnum = evBank.getInt(o_evnum,0);
+     runnum = evBank.getInt(o_runnum,0);
+     helicity = evBank.getInt(o_helicity,0);
+     torus = configBank.getFloat(o_torus,0);
+     triggerBits = configBank.getLong(o_triggerBits,0);
 
 
      // search for highest-energy observables
