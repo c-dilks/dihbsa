@@ -11,6 +11,7 @@
 #include "TRegexp.h"
 #include "TH1.h"
 #include "TH2.h"
+#include "TCanvas.h"
 
 // DihBsa
 #include "Constants.h"
@@ -102,21 +103,81 @@ int main(int argc, char** argv) {
      NBINS,0,4,NBINS,0,4);
    TH2F * hadEtaCorr = new TH2F("hadEtaCorr",
      "#eta^{+} vs. #eta^{-};#eta^{-};#eta^{+}",
-     NBINS,-1,4,NBINS,-1,4);
+     NBINS,0,5,NBINS,0,5);
    TH2F * hadPhiCorr = new TH2F("hadPhiCorr",
      "#phi^{+} vs. #phi^{-};#phi^{-};#phi^{+}",
      NBINS,-PI-1,PI+1,NBINS,-PI-1,PI+1);
+   TH2F * hadZCorr = new TH2F("hadZCorr",
+     "z^{+} vs. z^{-};z^{-};z^{+}",
+     NBINS,0,1,NBINS,0,1);
+   
+   TH1F * hadEDist[2];
+   TH1F * hadPDist[2];
+   TH1F * hadPtDist[2];
+   TH1F * hadEtaDist[2];
+   TH1F * hadPhiDist[2];
+   TH1F * hadZDist[2];
+   TString sgnSym[2];
+   sgnSym[hP] = "+";
+   sgnSym[hM] = "-";
+   TString sgnTxt[2];
+   sgnTxt[hP] = "p";
+   sgnTxt[hM] = "m";
+   TString plotTitle,plotName;
+   for(int h=0; h<2; h++) {
+     plotTitle = "E distribution (blue:#pi^{+} red:#pi^{-})";
+     plotName = sgnTxt[h]+"hadEDist";
+     hadEDist[h] = new TH1F(plotName,plotTitle,
+       NBINS,0,10);
+     plotTitle = "p distribution (blue:#pi^{+} red:#pi^{-})";
+     plotName = sgnTxt[h]+"hadPDist";
+     hadPDist[h] = new TH1F(plotName,plotTitle,
+       NBINS,0,10);
+     plotTitle = "p_{T} distribution (blue:#pi^{+} red:#pi^{-})";
+     plotName = sgnTxt[h]+"hadPtDist";
+     hadPtDist[h] = new TH1F(plotName,plotTitle,
+       NBINS,0,4);
+     plotTitle = "#eta distribution (blue:#pi^{+} red:#pi^{-})";
+     plotName = sgnTxt[h]+"hadEtaDist";
+     hadEtaDist[h] = new TH1F(plotName,plotTitle,
+       NBINS,0,5);
+     plotTitle = "#phi distribution (blue:#pi^{+} red:#pi^{-})";
+     plotName = sgnTxt[h]+"hadPhiDist";
+     hadPhiDist[h] = new TH1F(plotName,plotTitle,
+       NBINS,-PI-1,PI+1);
+     plotTitle = "Z distribution (blue:#pi^{+} red:#pi^{-})";
+     plotName = sgnTxt[h]+"hadZDist";
+     hadZDist[h] = new TH1F(plotName,plotTitle,
+       NBINS,0,1);
+   };
+   Color_t plotColor[2];
+   plotColor[hP] = kBlue;
+   plotColor[hM] = kRed;
+   for(int h=0; h<2; h++) {
+     hadEDist[h]->SetLineColor(plotColor[h]);
+     hadPDist[h]->SetLineColor(plotColor[h]);
+     hadPtDist[h]->SetLineColor(plotColor[h]);
+     hadEtaDist[h]->SetLineColor(plotColor[h]);
+     hadPhiDist[h]->SetLineColor(plotColor[h]);
+     hadZDist[h]->SetLineColor(plotColor[h]);
+
+     hadEDist[h]->SetLineWidth(2);
+     hadPDist[h]->SetLineWidth(2);
+     hadPtDist[h]->SetLineWidth(2);
+     hadEtaDist[h]->SetLineWidth(2);
+     hadPhiDist[h]->SetLineWidth(2);
+     hadZDist[h]->SetLineWidth(2);
+   };
+
+
 
    TH1F * deltaPhiDist = new TH1F("deltaPhiDist",
      "#Delta#phi=#phi^{+}-#phi^{-} distribution;#Delta#phi",
-     NBINS,-PI,PI);
+     NBINS,-PI-1,PI+1);
 
    TH1F * MhDist = new TH1F("MhDist",
      "M_{h} distribution",
-     NBINS,0,8);
-   TH2F * ZCorr = new TH2F("ZCorr",
-     "z^{+} vs. z^{-};z^{-};z^{+}",
-     NBINS,0,1,NBINS,0,1);
+     NBINS,0,4);
    TH1F * ZpairDist = new TH1F("ZpairDist",
      "Z_{pair} distribution;Z_{pair}",
      NBINS,0,1);
@@ -151,6 +212,8 @@ int main(int argc, char** argv) {
    printf("begin loop through %d events...\n",ENT);
    for(int i=0; i<ENT; i++) {
      chain->GetEntry(i);
+
+     if(i%10000==0) printf("%.2f%%\n",100*(float)i/((float)ENT));
 
 
      cutQ2 = Q2 > 1.0;
@@ -187,6 +250,16 @@ int main(int argc, char** argv) {
        hadPtCorr->Fill(hadPt[hM],hadPt[hP]);
        hadEtaCorr->Fill(hadEta[hM],hadEta[hP]);
        hadPhiCorr->Fill(hadPhi[hM],hadPhi[hP]);
+       hadZCorr->Fill(Z[hM],Z[hP]);
+
+       for(int h=0; h<2; h++) {
+         hadEDist[h]->Fill(hadE[h]);
+         hadPDist[h]->Fill(hadP[h]);
+         hadPtDist[h]->Fill(hadPt[h]);
+         hadEtaDist[h]->Fill(hadEta[h]);
+         hadPhiDist[h]->Fill(hadPhi[h]);
+         hadZDist[h]->Fill(Z[h]);
+       };
 
        deltaPhi = hadPhi[hP] - hadPhi[hM];
        while(deltaPhi>PI) deltaPhi-=2*PI;
@@ -194,7 +267,6 @@ int main(int argc, char** argv) {
        deltaPhiDist->Fill(deltaPhi);
 
        MhDist->Fill(Mh);
-       ZCorr->Fill(Z[hM],Z[hP]);
        ZpairDist->Fill(Zpair);
        xFDist->Fill(xF);
        MmissDist->Fill(Mmiss);
@@ -212,21 +284,86 @@ int main(int argc, char** argv) {
 
    };
 
+
+
+   Int_t f;
+   TCanvas * hadECanv = new TCanvas("hadECanv","hadECanv",
+     1000,800);
+   hadECanv->Divide(2,1);
+   hadECanv->cd(1);
+   f = hadEDist[hP]->GetMaximum() > hadEDist[hM]->GetMaximum() ?
+     hP:hM;
+   hadEDist[f]->Draw();
+   hadEDist[(f+1)%2]->Draw("SAME");
+   hadECanv->cd(2);
+   hadECorr->Draw("colz");
+   TCanvas * hadPCanv = new TCanvas("hadPCanv","hadPCanv",
+     1000,800);
+   hadPCanv->Divide(2,1);
+   hadPCanv->cd(1);
+   f = hadPDist[hP]->GetMaximum() > hadPDist[hM]->GetMaximum() ?
+     hP:hM;
+   hadPDist[f]->Draw();
+   hadPDist[(f+1)%2]->Draw("SAME");
+   hadPCanv->cd(2);
+   hadPCorr->Draw("colz");
+   TCanvas * hadPtCanv = new TCanvas("hadPtCanv","hadPtCanv",
+     1000,800);
+   hadPtCanv->Divide(2,1);
+   hadPtCanv->cd(1);
+   f = hadPtDist[hP]->GetMaximum() > hadPtDist[hM]->GetMaximum() ?
+     hP:hM;
+   hadPtDist[f]->Draw();
+   hadPtDist[(f+1)%2]->Draw("SAME");
+   hadPtCanv->cd(2);
+   hadPtCorr->Draw("colz");
+   TCanvas * hadEtaCanv = new TCanvas("hadEtaCanv","hadEtaCanv",
+     1000,800);
+   hadEtaCanv->Divide(2,1);
+   hadEtaCanv->cd(1);
+   f = hadEtaDist[hP]->GetMaximum() > hadEtaDist[hM]->GetMaximum() ?
+     hP:hM;
+   hadEtaDist[f]->Draw();
+   hadEtaDist[(f+1)%2]->Draw("SAME");
+   hadEtaCanv->cd(2);
+   hadEtaCorr->Draw("colz");
+   TCanvas * hadPhiCanv = new TCanvas("hadPhiCanv","hadPhiCanv",
+     1000,800);
+   hadPhiCanv->Divide(2,1);
+   hadPhiCanv->cd(1);
+   f = hadPhiDist[hP]->GetMaximum() > hadPhiDist[hM]->GetMaximum() ?
+     hP:hM;
+   hadPhiDist[f]->Draw();
+   hadPhiDist[(f+1)%2]->Draw("SAME");
+   hadPhiCanv->cd(2);
+   hadPhiCorr->Draw("colz");
+   TCanvas * hadZCanv = new TCanvas("hadZCanv","hadZCanv",
+     1000,800);
+   hadZCanv->Divide(2,1);
+   hadZCanv->cd(1);
+   f = hadZDist[hP]->GetMaximum() > hadZDist[hM]->GetMaximum() ?
+     hP:hM;
+   hadZDist[f]->Draw();
+   hadZDist[(f+1)%2]->Draw("SAME");
+   hadZCanv->cd(2);
+   hadZCorr->Draw("colz");
+
+
    WDist->Write();
    Q2vsW->Write();
    Q2vsX->Write();
    YDist->Write();
 
-   hadECorr->Write();
-   hadPCorr->Write();
-   hadPtCorr->Write();
-   hadEtaCorr->Write();
-   hadPhiCorr->Write();
+   hadECanv->Write();
+   hadPCanv->Write();
+   hadPtCanv->Write();
+   hadEtaCanv->Write();
+   hadPhiCanv->Write();
+   hadZCanv->Write();
 
    deltaPhiDist->Write();
 
    MhDist->Write();
-   ZCorr->Write();
    ZpairDist->Write();
    xFDist->Write();
    MmissDist->Write();
