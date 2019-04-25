@@ -37,37 +37,62 @@ class Dihadron : public TObject
     void SetEvent(
       Trajectory * trajPlus, Trajectory * trajMinus, DIS * disEv);
     void ComputeAngles();
+    Float_t PlaneAngle(TVector3 vA, TVector3 vB,
+                       TVector3 vC, TVector3 vD);
+    TVector3 Reject(TVector3 vA, TVector3 vB);
+    TVector3 Project(TVector3 vA, TVector3 vB);
 
-    enum plusminus {hP,hM};
     Trajectory * hadron[2];
     DIS * disEv;
-    TLorentzVector vecHad[2];
-    TLorentzVector vecPh;
-    TLorentzVector vecR;
-    TLorentzVector vecMmiss;
 
-    TLorentzVector bvecPh;
+    TLorentzVector vecHad[2]; // hadron momentum
+    TLorentzVector vecPh; // dihadron total momentum
+    TLorentzVector vecR; // dihadron relative momentum
+    TLorentzVector vecMmiss; // used to compute missing mass
+
+    TLorentzVector bvecPh; // breit frame's dihadron total momentum
 
 
-    Float_t phiR;
-    Float_t phiH;
-    Float_t phiHR; // = phiH-phiR (for G1perp modulation)
-    Float_t z[2];
-    Float_t zpair;
-    Float_t Mh;
-    Float_t Mmiss;
-    Float_t xF;
+    Float_t PhMag; // dihadron total momentum
+    Float_t PhtMag; // transverse component of dihadron total momentum
+    Float_t RMag; // dihadron relative momentum
+    Float_t RtMag; // transverse componet of relative momentum
+    Float_t phiR; // angle[ reaction_plane, R^q etc. (see below) ]
+    Float_t phiH; // angle[ reaction_plane, Ph^q ]
+    Float_t z[2]; // fraction of energy of fragmenting parton
+                  // carried by the hadron
+    Float_t zpair; // fraction of energy of fragmenting parton
+                   // carried by the hadron pair
+    Float_t Mh; // dihadron invariant mass
+    Float_t Mmiss; // missing mass
+    Float_t xF; // feynman-x
+
+
+    // phiR angle is defined a couple different ways; these
+    // variables are for those and a couple alternative tests
+    Float_t phiR_T_byKt;
+    Float_t phiR_T_byRej;
+    Float_t phiR_Perp;
+    Float_t phiR_byPh;
+    Float_t phiR_byPhad[2];
+    Float_t phiP1P2;
+
     
   private:
     int h;
 
-    TVector3 pQ,pL,pPh,pR,pRperp;
+    TVector3 pQ,pL,pPh,pR;
     TVector3 pHad[2];
-    TVector3 pHadPerp[2];
-    TVector3 crossQL,crossQPh,crossQRperp;
+    TVector3 pHad_Perp[2];
+    TVector3 pPh_Perp;
 
-    Float_t sgnH,sgnR;
-    Float_t numerH,denomH,numerR,denomR;
+    TVector3 pR_T_byKt;
+    TVector3 pR_T_byRej;
+    TVector3 pR_Perp;
+
+    Float_t proj;
+    TVector3 crossAB,crossCD;
+    Float_t sgn,numer,denom;
 
 
 

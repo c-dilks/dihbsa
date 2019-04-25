@@ -25,7 +25,7 @@ void Dihadron::SetEvent(
   hadron[hM] = trajMinus;
   disEv = disEvent;
 
-  // compute momenta Ph and R
+  // compute 4-momenta Ph and R
   for(h=0; h<2; h++) vecHad[h] = hadron[h]->Vec;
   vecPh = vecHad[hP] + vecHad[hM];
   vecR = 0.5 * ( vecHad[hP] - vecHad[hM] );
@@ -53,54 +53,109 @@ void Dihadron::SetEvent(
 
 
 void Dihadron::ComputeAngles() {
-  // using arxiv:1702.07317, with sign convention
+  // sign convention:
   //   P_1 = pi+ momentum
   //   P_2 = pi- momentum
   //  
+  // regarding transverse components, there are two 
+  // frames to consider (see arXiv:1707.04999):
+  // -- perp-frame: "transverse" plane is normal to fragmenting
+  //                quark, i.e., to q
+  // -- T-frame: "transverse" plane is normal to Ph
 
-  // -- 3-momenta
+
+  // get 3-momenta from 4-momenta
   pQ = (disEv->vecQ).Vect();
   pL = (disEv->vecElectron).Vect();
   pPh = vecPh.Vect();
   pR = vecR.Vect();
-  for(h=0; h<2; h++) {
-    pHad[h] = vecHad[h].Vect();
-    pHadPerp[h] = TVector3(pHad[h].X(),pHad[h].Y(),0);
-  };
+  for(h=0; h<2; h++) pHad[h] = vecHad[h].Vect();
 
-  // -- Rperp from equation 5
-  pRperp = 1 / ( z[hP] + z[hM] ) * 
-           ( z[hM] * pHadPerp[hP]  -  z[hP] * pHadPerp[hM] );
 
-  // -- cross products
-  crossQL = pQ.Cross(pL); // Q x l
-  crossQPh = pQ.Cross(pPh); // Q x P_h
-  crossQRperp = pQ.Cross(pRperp); // Q x Rperp
+  // perp-frame hadron 3-momenta
+  for(h=0; h<2; h++) pHad_Perp[h] = Reject(pHad[h],pQ);
+  pPh_Perp = Reject(pPh,pQ);
 
-  // -- sign coefficients (=+/-1) from equations 3 & 4
-  sgnH = crossQL.Dot(pPh);
-  sgnH /= fabs(sgnH); // sign of (Qxl).Ph
-  sgnR = crossQL.Dot(pRperp);
-  sgnR /= fabs(sgnR); // sign of (Qxl).Rperp
 
-  // -- numerator and denominator of arccos argument from eq 3 & 4
-  numerH = crossQL.Dot(crossQPh); // (Qxl).(QxPh)
-  denomH = crossQL.Mag() * crossQPh.Mag();
+  // compute transverse components of R in different frames
+  // (and with different equations)
+  // -- in T-frame, via kT relation (following 1707.04999)
+  pR_T_byKt = 1 / ( z[hP] + z[hM] ) *  
+              ( z[hM] * pHad_Perp[hP]  -  z[hP] * pHad_Perp[hM] );
+  // -- in T-frame, via rejection
+  pR_T_byRej = Reject(pR,pPh);
+  // -- in perp-frame, via rejection
+  pR_Perp= Reject(pR,pQ);
 
-  numerR = crossQL.Dot(crossQRperp); // (Qxl).(QxRperp)
-  denomR = crossQL.Mag() * crossQRperp.Mag();
 
-  // -- finally compute the angles
-  phiH = sgnH * TMath::ACos( numerH / denomH );
-  phiR = sgnR * TMath::ACos( numerR / denomR );
+  // momentum magnitudes
+  PhMag = pPh.Mag(); // dihadron total momentum Ph
+  PhtMag = pPh_Perp.Mag(); // trans. comp. of Ph (used for G1perp)
+  RMag = vecR.Mag(); // dihadron relative momentum R
+  RtMag = pR_T_byKt.Mag(); // trans. comp. of R
 
-  phiHR = phiH - phiR;
-  while(phiHR>PI) phiHR-=2*PI;
-  while(phiHR<-PI) phiHR+=2*PI;
 
+  // compute phiH angle
+  phiH = PlaneAngle(pQ,pL,pQ,pPh);
+
+
+  // compute phiR angle (all the ways)
+
+  // -- HERMES 0803.2367 angle, but used Matevosyan et al 1707.04999
+  //    to obtain R_T vector
+  phiR_T_byKt = PlaneAngle(pQ,pL,pQ,pR_T_byKt);
+
+  // -- HERMES 0803.2367 angle
+  phiR_T_byRej = PlaneAngle(pQ,pL,pQ,pR_T_byRej);
+
+  // -- COMPASS 1702.07317
+  phiR_Perp = PlaneAngle(pQ,pL,pQ,pR_Perp);
+
+  // -- alternative tests
+  phiR_byPh = PlaneAngle(pQ,pL,pQ,pPh);
+  phiP1P2 = PlaneAngle(pQ,pL,pHad[hP],pHad[hM]);
+  for(int h=0; h<2; h++) 
+    phiR_byPhad[h] = PlaneAngle(pQ,pL,pQ,pHad[h]);
+
+  // finally set the "preferred" phiR angle
+  phiR = phiR_T_byKt;
 };
 
 
+// compute angle between planes given by
+// vA x vB and vC x vD
+// the angle is with respect to vA x vB
+Float_t Dihadron::PlaneAngle(
+  TVector3 vA, TVector3 vB,
+  TVector3 vC, TVector3 vD
+) {
+  crossAB = vA.Cross(vB); // AxB
+  crossCD = vC.Cross(vD); // CxD
+
+  sgn = crossAB.Dot(vD); // sign of
+  sgn /= fabs(sgn);      // (AxB).D
+
+  numer = crossAB.Dot(crossCD); // (AxB).(CxD)
+  denom = crossAB.Mag() * crossCD.Mag(); // |AxB|*|CxD|
+
+  return sgn * TMath::ACos(numer/denom);
+};
+
+
+// vector rejection: 
+// returns vA projected onto plane transverse to vB
+TVector3 Dihadron::Reject(TVector3 vA, TVector3 vB) {
+  return vA - Project(vA,vB);
+};
+
+// vector projection:
+// returns vA projected onto vB
+TVector3 Dihadron::Project(TVector3 vA, TVector3 vB) {
+  proj = vA.Dot(vB) / ( vB.Dot(vB) );
+  return proj * vB;
+};
+
+  
 
 Dihadron::~Dihadron() {
 };

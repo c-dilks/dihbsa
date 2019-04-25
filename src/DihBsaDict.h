@@ -82,6 +82,5 @@ extern G__linked_taginfo G__DihBsaDictLN_TLorentzVector;
 extern G__linked_taginfo G__DihBsaDictLN_DIS;
 extern G__linked_taginfo G__DihBsaDictLN_Trajectory;
 extern G__linked_taginfo G__DihBsaDictLN_Dihadron;
-extern G__linked_taginfo G__DihBsaDictLN_DihadroncLcLplusminus;
 
 /* STUB derived class for protected member access */

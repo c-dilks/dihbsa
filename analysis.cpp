@@ -87,8 +87,18 @@ int main(int argc, char** argv) {
    tree->Branch("Zpair",&(dih->zpair),"Zpair/F");
    tree->Branch("PhiH",&(dih->phiH),"PhiH/F");
    tree->Branch("PhiR",&(dih->phiR),"PhiR/F");
+   tree->Branch("Ph",&(dih->PhMag),"Ph/F");
+   tree->Branch("Pht",&(dih->PhtMag),"Pht/F");
    tree->Branch("Mmiss",&(dih->Mmiss),"Mmiss/F");
    tree->Branch("xF",&(dih->xF),"xF/F");
+
+   // dihadron angle test branches
+   tree->Branch("phiR_T_byKt",&(dih->phiR_T_byKt),"phiR_T_byKt/F");
+   tree->Branch("phiR_T_byRej",&(dih->phiR_T_byRej),"phiR_T_byRej/F");
+   tree->Branch("phiR_Perp",&(dih->phiR_Perp),"phiR_Perp/F");
+   tree->Branch("phiR_byPh",&(dih->phiR_byPh),"phiR_byPh/F");
+   tree->Branch("phiR_byPhad",dih->phiR_byPhad,"phiR_byPhad[2]/F");
+   tree->Branch("phiP1P2",&(dih->phiP1P2),"phiP1P2/F");
 
 
    // define reader and particle list
