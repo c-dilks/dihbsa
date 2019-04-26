@@ -95,30 +95,30 @@ void Dihadron::ComputeAngles() {
   RtMag = pR_T_byKt.Mag(); // trans. comp. of R
 
 
-  // compute phiH angle
-  phiH = PlaneAngle(pQ,pL,pQ,pPh);
+  // compute PhiH angle
+  PhiH = PlaneAngle(pQ,pL,pQ,pPh);
 
 
-  // compute phiR angle (all the ways)
+  // compute PhiR angle (all the ways)
 
   // -- HERMES 0803.2367 angle, but used Matevosyan et al 1707.04999
   //    to obtain R_T vector
-  phiR_T_byKt = PlaneAngle(pQ,pL,pQ,pR_T_byKt);
+  PhiR_T_byKt = PlaneAngle(pQ,pL,pQ,pR_T_byKt);
 
   // -- HERMES 0803.2367 angle
-  phiR_T_byRej = PlaneAngle(pQ,pL,pQ,pR_T_byRej);
+  PhiR_T_byRej = PlaneAngle(pQ,pL,pQ,pR_T_byRej);
 
   // -- COMPASS 1702.07317
-  phiR_Perp = PlaneAngle(pQ,pL,pQ,pR_Perp);
+  PhiR_Perp = PlaneAngle(pQ,pL,pQ,pR_Perp);
 
   // -- alternative tests
-  phiR_byPh = PlaneAngle(pQ,pL,pQ,pPh);
-  phiP1P2 = PlaneAngle(pQ,pL,pHad[hP],pHad[hM]);
+  PhiR_byPh = PlaneAngle(pQ,pL,pQ,pPh);
+  PhiP1P2 = PlaneAngle(pQ,pL,pHad[hM],pHad[hP]);
   for(int h=0; h<2; h++) 
-    phiR_byPhad[h] = PlaneAngle(pQ,pL,pQ,pHad[h]);
+    PhiR_byPhad[h] = PlaneAngle(pQ,pL,pQ,pHad[h]);
 
-  // finally set the "preferred" phiR angle
-  phiR = phiR_T_byKt;
+  // finally set the "preferred" PhiR angle
+  PhiR = PhiR_T_byKt;
 };
 
 
@@ -132,11 +132,22 @@ Float_t Dihadron::PlaneAngle(
   crossAB = vA.Cross(vB); // AxB
   crossCD = vC.Cross(vD); // CxD
 
-  sgn = crossAB.Dot(vD); // sign of
-  sgn /= fabs(sgn);      // (AxB).D
+  sgn = crossAB.Dot(vD); // (AxB).D
+
+  if(fabs(sgn)<0.0001) {
+    //fprintf(stderr,"WARNING: Dihadron::PlaneAngle (AxB).D == 0\n");
+    return -10000;
+  };
+
+  sgn /= fabs(sgn); // sign of (AxB).D
 
   numer = crossAB.Dot(crossCD); // (AxB).(CxD)
   denom = crossAB.Mag() * crossCD.Mag(); // |AxB|*|CxD|
+
+  if(fabs(denom)<0.0001) {
+    //fprintf(stderr,"WARNING: Dihadron::PlaneAngle |AxB|*|CxD| == 0\n");
+    return -10000;
+  };
 
   return sgn * TMath::ACos(numer/denom);
 };
@@ -145,14 +156,28 @@ Float_t Dihadron::PlaneAngle(
 // vector rejection: 
 // returns vA projected onto plane transverse to vB
 TVector3 Dihadron::Reject(TVector3 vA, TVector3 vB) {
+
+  if(fabs(vB.Dot(vB))<0.0001) {
+    //fprintf(stderr,"WARNING: Dihadron::Reject to null vector\n");
+    return TVector3(0,0,0);
+  };
+
   return vA - Project(vA,vB);
+
 };
 
 // vector projection:
 // returns vA projected onto vB
 TVector3 Dihadron::Project(TVector3 vA, TVector3 vB) {
+
+  if(fabs(vB.Dot(vB))<0.0001) {
+    //fprintf(stderr,"WARNING: Dihadron::Project to null vector\n");
+    return TVector3(0,0,0);
+  };
+
   proj = vA.Dot(vB) / ( vB.Dot(vB) );
   return proj * vB;
+
 };
 
   

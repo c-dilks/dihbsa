@@ -36,7 +36,8 @@ mkdir -p $outdir
 
 
 # filter for hipo files
-hipofilter="32.evio.8"
+#hipofilter="32.evio.8"
+hipofilter="evio"
 
 # get list of hipo files
 ls ${hipodir}/*.hipo | grep $hipofilter > hipoz

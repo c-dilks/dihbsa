@@ -36,7 +36,7 @@ class DIS : public TObject
     void ResetVars();
 
     Float_t BeamEn;
-    Float_t W,Q2,Nu,X,y;
+    Float_t W,Q2,Nu,x,y;
     TVector3 BreitBoost;
 
     Bool_t debug,speedup;

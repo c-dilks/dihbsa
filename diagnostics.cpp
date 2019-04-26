@@ -18,62 +18,16 @@
 #include "DIS.h"
 #include "Trajectory.h"
 #include "Dihadron.h"
+#include "EventTree.h"
 
+Float_t ModAngle(Float_t ang);
+void HadronCompareCanv(TCanvas * canv, TH1F * dist[2], TH2F * corr);
 
 int main(int argc, char** argv) {
 
-  TChain * chain = new TChain("tree");
-  chain->Add("outroot/out*.root");
-  
-  Int_t ENT = chain->GetEntries();
-  //ENT = 10000;
-  
+   gSystem->Load("src/DihBsa.so");
+   EventTree * ev = new EventTree("outroot/*.root");
 
-   Float_t W,Q2,Nu,X,y;
-
-   Float_t hadE[2]; // [enum plus_minus (0=+, 1=-)]
-   Float_t hadP[2];
-   Float_t hadPt[2];
-   Float_t hadEta[2];
-   Float_t hadPhi[2];
-
-   Float_t Mh,Zpair,PhiH,PhiR,Mmiss,xF;
-   Float_t Z[2];
-
-   Int_t evnum,runnum;
-   Int_t helicity;
-   Float_t torus;
-   Long64_t triggerBits;
-
-   chain->SetBranchAddress("W",&W);
-   chain->SetBranchAddress("Q2",&Q2);
-   chain->SetBranchAddress("Nu",&Nu);
-   chain->SetBranchAddress("X",&X);
-   chain->SetBranchAddress("y",&y);
-
-   chain->SetBranchAddress("hadE",hadE);
-   chain->SetBranchAddress("hadP",hadP);
-   chain->SetBranchAddress("hadPt",hadPt);
-   chain->SetBranchAddress("hadEta",hadEta);
-   chain->SetBranchAddress("hadPhi",hadPhi);
-
-   chain->SetBranchAddress("Mh",&Mh);
-   chain->SetBranchAddress("Z",Z);
-   chain->SetBranchAddress("Zpair",&Zpair);
-   chain->SetBranchAddress("PhiH",&PhiH);
-   chain->SetBranchAddress("PhiR",&PhiR);
-   chain->SetBranchAddress("Mmiss",&Mmiss);
-   chain->SetBranchAddress("xF",&xF);
-
-   chain->SetBranchAddress("runnum",&runnum);
-   chain->SetBranchAddress("evnum",&evnum);
-   chain->SetBranchAddress("helicity",&helicity);
-   chain->SetBranchAddress("torus",&torus);
-   chain->SetBranchAddress("triggerBits",&triggerBits);
-
-
-   Bool_t cutQ2,cutW,cutY;
-   Bool_t cutDihadron;
 
    Float_t deltaPhi;
    Float_t PhiHR;
@@ -117,56 +71,32 @@ int main(int argc, char** argv) {
    TH1F * hadEtaDist[2];
    TH1F * hadPhiDist[2];
    TH1F * hadZDist[2];
-   TString sgnSym[2];
-   sgnSym[hP] = "+";
-   sgnSym[hM] = "-";
-   TString sgnTxt[2];
-   sgnTxt[hP] = "p";
-   sgnTxt[hM] = "m";
    TString plotTitle,plotName;
    for(int h=0; h<2; h++) {
      plotTitle = "E distribution (blue:#pi^{+} red:#pi^{-})";
-     plotName = sgnTxt[h]+"hadEDist";
+     plotName = PMstr(h)+"hadEDist";
      hadEDist[h] = new TH1F(plotName,plotTitle,
        NBINS,0,10);
      plotTitle = "p distribution (blue:#pi^{+} red:#pi^{-})";
-     plotName = sgnTxt[h]+"hadPDist";
+     plotName = PMstr(h)+"hadPDist";
      hadPDist[h] = new TH1F(plotName,plotTitle,
        NBINS,0,10);
      plotTitle = "p_{T} distribution (blue:#pi^{+} red:#pi^{-})";
-     plotName = sgnTxt[h]+"hadPtDist";
+     plotName = PMstr(h)+"hadPtDist";
      hadPtDist[h] = new TH1F(plotName,plotTitle,
        NBINS,0,4);
      plotTitle = "#eta distribution (blue:#pi^{+} red:#pi^{-})";
-     plotName = sgnTxt[h]+"hadEtaDist";
+     plotName = PMstr(h)+"hadEtaDist";
      hadEtaDist[h] = new TH1F(plotName,plotTitle,
        NBINS,0,5);
      plotTitle = "#phi distribution (blue:#pi^{+} red:#pi^{-})";
-     plotName = sgnTxt[h]+"hadPhiDist";
+     plotName = PMstr(h)+"hadPhiDist";
      hadPhiDist[h] = new TH1F(plotName,plotTitle,
        NBINS,-PI-1,PI+1);
      plotTitle = "Z distribution (blue:#pi^{+} red:#pi^{-})";
-     plotName = sgnTxt[h]+"hadZDist";
+     plotName = PMstr(h)+"hadZDist";
      hadZDist[h] = new TH1F(plotName,plotTitle,
        NBINS,0,1);
-   };
-   Color_t plotColor[2];
-   plotColor[hP] = kBlue;
-   plotColor[hM] = kRed;
-   for(int h=0; h<2; h++) {
-     hadEDist[h]->SetLineColor(plotColor[h]);
-     hadPDist[h]->SetLineColor(plotColor[h]);
-     hadPtDist[h]->SetLineColor(plotColor[h]);
-     hadEtaDist[h]->SetLineColor(plotColor[h]);
-     hadPhiDist[h]->SetLineColor(plotColor[h]);
-     hadZDist[h]->SetLineColor(plotColor[h]);
-
-     hadEDist[h]->SetLineWidth(2);
-     hadPDist[h]->SetLineWidth(2);
-     hadPtDist[h]->SetLineWidth(2);
-     hadEtaDist[h]->SetLineWidth(2);
-     hadPhiDist[h]->SetLineWidth(2);
-     hadZDist[h]->SetLineWidth(2);
    };
 
 
@@ -206,78 +136,60 @@ int main(int argc, char** argv) {
 
 
 
+   printf("begin loop through %d events...\n",ev->ENT);
+   for(int i=0; i<ev->ENT; i++) {
+     ev->GetEvent(i);
+
+     if(i%10000==0) printf("%.2f%%\n",100*(float)i/((float)ev->ENT));
 
 
-
-   printf("begin loop through %d events...\n",ENT);
-   for(int i=0; i<ENT; i++) {
-     chain->GetEntry(i);
-
-     if(i%10000==0) printf("%.2f%%\n",100*(float)i/((float)ENT));
+     if(!(ev->cutDihadron)) continue;
 
 
-     cutQ2 = Q2 > 1.0;
-     cutW = W > 2.0;
-     cutY = y < 0.8;
-
-
-     cutDihadron = true;
-     cutDihadron = cutDihadron && Z[hP] > 0.1 && Z[hM] > 0.1;
-     cutDihadron = cutDihadron && Zpair < 0.95;
-     cutDihadron = cutDihadron && Mmiss > 1.05;
-     cutDihadron = cutDihadron && xF > 0;
-     cutDihadron = cutDihadron && hadP[hP] > 1.0 && hadP[hM] > 1.0;
-
-     if(!cutDihadron) continue;
-
-
-     if(cutQ2 && cutY) {
-       WDist->Fill(W);
-       Q2vsW->Fill(W,Q2);
+     if(ev->cutQ2 && ev->cutY) {
+       WDist->Fill(ev->W);
+       Q2vsW->Fill(ev->W,ev->Q2);
      };
 
-     if(cutQ2 && cutW) {
-       YDist->Fill(y);
+     if(ev->cutQ2 && ev->cutW) {
+       YDist->Fill(ev->y);
      };
 
 
-     if(cutQ2 && cutW && cutY) {
-       Q2vsX->Fill(X,Q2);
+     if(ev->cutQ2 && ev->cutW && ev->cutY) {
+
+       Q2vsX->Fill(ev->x,ev->Q2);
 
 
-       hadECorr->Fill(hadE[hM],hadE[hP]);
-       hadPCorr->Fill(hadP[hM],hadP[hP]);
-       hadPtCorr->Fill(hadPt[hM],hadPt[hP]);
-       hadEtaCorr->Fill(hadEta[hM],hadEta[hP]);
-       hadPhiCorr->Fill(hadPhi[hM],hadPhi[hP]);
-       hadZCorr->Fill(Z[hM],Z[hP]);
+       hadECorr->Fill(ev->hadE[hM],ev->hadE[hP]);
+       hadPCorr->Fill(ev->hadP[hM],ev->hadP[hP]);
+       hadPtCorr->Fill(ev->hadPt[hM],ev->hadPt[hP]);
+       hadEtaCorr->Fill(ev->hadEta[hM],ev->hadEta[hP]);
+       hadPhiCorr->Fill(ev->hadPhi[hM],ev->hadPhi[hP]);
+       hadZCorr->Fill(ev->Z[hM],ev->Z[hP]);
 
        for(int h=0; h<2; h++) {
-         hadEDist[h]->Fill(hadE[h]);
-         hadPDist[h]->Fill(hadP[h]);
-         hadPtDist[h]->Fill(hadPt[h]);
-         hadEtaDist[h]->Fill(hadEta[h]);
-         hadPhiDist[h]->Fill(hadPhi[h]);
-         hadZDist[h]->Fill(Z[h]);
+         hadEDist[h]->Fill(ev->hadE[h]);
+         hadPDist[h]->Fill(ev->hadP[h]);
+         hadPtDist[h]->Fill(ev->hadPt[h]);
+         hadEtaDist[h]->Fill(ev->hadEta[h]);
+         hadPhiDist[h]->Fill(ev->hadPhi[h]);
+         hadZDist[h]->Fill(ev->Z[h]);
        };
 
-       deltaPhi = hadPhi[hP] - hadPhi[hM];
-       while(deltaPhi>PI) deltaPhi-=2*PI;
-       while(deltaPhi<-PI) deltaPhi+=2*PI;
+       deltaPhi = ModAngle(ev->hadPhi[hP] - ev->hadPhi[hM]);
        deltaPhiDist->Fill(deltaPhi);
 
-       MhDist->Fill(Mh);
-       ZpairDist->Fill(Zpair);
-       xFDist->Fill(xF);
-       MmissDist->Fill(Mmiss);
+       MhDist->Fill(ev->Mh);
+       ZpairDist->Fill(ev->Zpair);
+       xFDist->Fill(ev->xF);
+       MmissDist->Fill(ev->Mmiss);
 
-       PhiHDist->Fill(PhiH);
-       PhiRDist->Fill(PhiR);
-       PhiHvsPhiR->Fill(PhiR,PhiH);
+       PhiHDist->Fill(ev->PhiH);
+       PhiRDist->Fill(ev->PhiR);
+       PhiHvsPhiR->Fill(ev->PhiR,ev->PhiH);
 
-       PhiHR = PhiH-PhiR;
-       while(PhiHR>PI) PhiHR-=2*PI;
-       while(PhiHR<-PI) PhiHR+=2*PI;
+       PhiHR = ModAngle(ev->PhiH - ev->PhiR);
        PhiHRDist->Fill(PhiHR);
      };
 
@@ -285,74 +197,24 @@ int main(int argc, char** argv) {
    };
 
 
-
-   Int_t f;
-   TCanvas * hadECanv = new TCanvas("hadECanv","hadECanv",
-     1000,800);
-   hadECanv->Divide(2,1);
-   hadECanv->cd(1);
-   f = hadEDist[hP]->GetMaximum() > hadEDist[hM]->GetMaximum() ?
-     hP:hM;
-   hadEDist[f]->Draw();
-   hadEDist[(f+1)%2]->Draw("SAME");
-   hadECanv->cd(2);
-   hadECorr->Draw("colz");
-   TCanvas * hadPCanv = new TCanvas("hadPCanv","hadPCanv",
-     1000,800);
-   hadPCanv->Divide(2,1);
-   hadPCanv->cd(1);
-   f = hadPDist[hP]->GetMaximum() > hadPDist[hM]->GetMaximum() ?
-     hP:hM;
-   hadPDist[f]->Draw();
-   hadPDist[(f+1)%2]->Draw("SAME");
-   hadPCanv->cd(2);
-   hadPCorr->Draw("colz");
-   TCanvas * hadPtCanv = new TCanvas("hadPtCanv","hadPtCanv",
-     1000,800);
-   hadPtCanv->Divide(2,1);
-   hadPtCanv->cd(1);
-   f = hadPtDist[hP]->GetMaximum() > hadPtDist[hM]->GetMaximum() ?
-     hP:hM;
-   hadPtDist[f]->Draw();
-   hadPtDist[(f+1)%2]->Draw("SAME");
-   hadPtCanv->cd(2);
-   hadPtCorr->Draw("colz");
-   TCanvas * hadEtaCanv = new TCanvas("hadEtaCanv","hadEtaCanv",
-     1000,800);
-   hadEtaCanv->Divide(2,1);
-   hadEtaCanv->cd(1);
-   f = hadEtaDist[hP]->GetMaximum() > hadEtaDist[hM]->GetMaximum() ?
-     hP:hM;
-   hadEtaDist[f]->Draw();
-   hadEtaDist[(f+1)%2]->Draw("SAME");
-   hadEtaCanv->cd(2);
-   hadEtaCorr->Draw("colz");
-   TCanvas * hadPhiCanv = new TCanvas("hadPhiCanv","hadPhiCanv",
-     1000,800);
-   hadPhiCanv->Divide(2,1);
-   hadPhiCanv->cd(1);
-   f = hadPhiDist[hP]->GetMaximum() > hadPhiDist[hM]->GetMaximum() ?
-     hP:hM;
-   hadPhiDist[f]->Draw();
-   hadPhiDist[(f+1)%2]->Draw("SAME");
-   hadPhiCanv->cd(2);
-   hadPhiCorr->Draw("colz");
-   TCanvas * hadZCanv = new TCanvas("hadZCanv","hadZCanv",
-     1000,800);
-   hadZCanv->Divide(2,1);
-   hadZCanv->cd(1);
-   f = hadZDist[hP]->GetMaximum() > hadZDist[hM]->GetMaximum() ?
-     hP:hM;
-   hadZDist[f]->Draw();
-   hadZDist[(f+1)%2]->Draw("SAME");
-   hadZCanv->cd(2);
-   hadZCorr->Draw("colz");
-
-
    WDist->Write();
    Q2vsW->Write();
    Q2vsX->Write();
    YDist->Write();
+
+   TCanvas * hadECanv = new TCanvas("hadECanv","hadECanv",1000,800);
+   TCanvas * hadPCanv = new TCanvas("hadPCanv","hadPCanv",1000,800);
+   TCanvas * hadPtCanv = new TCanvas("hadPtCanv","hadPtCanv",1000,800);
+   TCanvas * hadEtaCanv = new TCanvas("hadEtaCanv","hadEtaCanv",1000,800);
+   TCanvas * hadPhiCanv = new TCanvas("hadPhiCanv","hadPhiCanv",1000,800);
+   TCanvas * hadZCanv = new TCanvas("hadZCanv","hadZCanv",1000,800);
+
+   HadronCompareCanv(hadECanv, hadEDist, hadECorr);
+   HadronCompareCanv(hadPCanv, hadPDist, hadPCorr);
+   HadronCompareCanv(hadPtCanv, hadPtDist, hadPtCorr);
+   HadronCompareCanv(hadEtaCanv, hadEtaDist, hadEtaCorr);
+   HadronCompareCanv(hadPhiCanv, hadPhiDist, hadPhiCorr);
+   HadronCompareCanv(hadZCanv, hadZDist, hadZCorr);
 
    hadECanv->Write();
    hadPCanv->Write();
@@ -360,6 +222,7 @@ int main(int argc, char** argv) {
    hadEtaCanv->Write();
    hadPhiCanv->Write();
    hadZCanv->Write();
+
 
    deltaPhiDist->Write();
 
@@ -374,6 +237,32 @@ int main(int argc, char** argv) {
 
    PhiHRDist->Write();
 
+   outfile->Close();
+
 };
-  
+
+
+Float_t ModAngle(Float_t ang) {
+  while(ang>PI) ang-=2*PI;
+  while(ang<-PI) ang+=2*PI;
+  return ang;
+};
+
+
+void HadronCompareCanv(TCanvas * canv, TH1F * dist[2], TH2F * corr) {
+
+  dist[hP]->SetLineColor(kBlue);
+  dist[hM]->SetLineColor(kRed);
+  for(int h=0; h<2; h++) dist[h]->SetLineWidth(2);
+
+  canv->Divide(2,1);
+
+  canv->cd(1);
+  Int_t f = dist[hP]->GetMaximum() > dist[hM]->GetMaximum() ? hP:hM;
+  dist[f]->Draw();
+  dist[(f+1)%2]->Draw("SAME");
+
+  canv->cd(2);
+  corr->Draw("colz");
+};
 

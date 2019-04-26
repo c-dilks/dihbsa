@@ -57,8 +57,8 @@ class Dihadron : public TObject
     Float_t PhtMag; // transverse component of dihadron total momentum
     Float_t RMag; // dihadron relative momentum
     Float_t RtMag; // transverse componet of relative momentum
-    Float_t phiR; // angle[ reaction_plane, R^q etc. (see below) ]
-    Float_t phiH; // angle[ reaction_plane, Ph^q ]
+    Float_t PhiR; // angle[ reaction_plane, R^q etc. (see below) ]
+    Float_t PhiH; // angle[ reaction_plane, Ph^q ]
     Float_t z[2]; // fraction of energy of fragmenting parton
                   // carried by the hadron
     Float_t zpair; // fraction of energy of fragmenting parton
@@ -68,14 +68,14 @@ class Dihadron : public TObject
     Float_t xF; // feynman-x
 
 
-    // phiR angle is defined a couple different ways; these
+    // PhiR angle is defined a couple different ways; these
     // variables are for those and a couple alternative tests
-    Float_t phiR_T_byKt;
-    Float_t phiR_T_byRej;
-    Float_t phiR_Perp;
-    Float_t phiR_byPh;
-    Float_t phiR_byPhad[2];
-    Float_t phiP1P2;
+    Float_t PhiR_T_byKt;
+    Float_t PhiR_T_byRej;
+    Float_t PhiR_Perp;
+    Float_t PhiR_byPh;
+    Float_t PhiR_byPhad[2];
+    Float_t PhiP1P2;
 
     
   private:

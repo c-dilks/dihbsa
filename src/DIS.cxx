@@ -59,10 +59,10 @@ void DIS::Analyse() {
   Q2 = -1 * vecQ.M2();
 
   Nu = vecBeam.E() - vecElectron.E();
-  X = Q2 / ( 2 * PartMass(kP) * Nu );
+  x = Q2 / ( 2 * PartMass(kP) * Nu );
   y = Nu / BeamEn;
 
-  vecBreit = vecQ + 2*X*vecTarget;
+  vecBreit = vecQ + 2*x*vecTarget;
   BreitBoost = -1 * vecBreit.BoostVector();
 
 
@@ -117,14 +117,14 @@ void DIS::BreitPrint() {
   printf("breit Q\t\t");
   breitQ.Print();
   printf("breit 2xp\t");
-  (2*X*breitTarget).Print();
+  (2*x*breitTarget).Print();
 
   // check breit frame properties:
   printf("\n");
   // -- 2xp momentum components equal & opposite of Q momentum
   //    (where p is the target momentum in the breit frame)
   printf("Q+2xp:\t");
-  (breitQ + 2*X*breitTarget).Print();
+  (breitQ + 2*x*breitTarget).Print();
   printf("angle(Q,p) = %f\n",breitQ.Vect().Angle(breitTarget.Vect()));
   // -- q is entirely space-like, so E component should be zero
   printf("q0 = %f\n",breitQ.E());
@@ -137,7 +137,7 @@ void DIS::ResetVars() {
   W = -10000;
   Q2 = -10000;
   Nu = -10000;
-  X = -10000;
+  x = -10000;
   return;
 };
 

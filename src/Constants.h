@@ -6,8 +6,6 @@
 
 static Double_t PI = TMath::Pi();
 
-enum plusminus {hP,hM};
-
 enum particle_enum {
   kE,
   kP,
@@ -93,5 +91,27 @@ static float PartMass(int p) {
   };
 };
 
+
+enum plusminus {hP,hM};
+
+static TString PMstr(int h) {
+  switch(h) {
+    case hP: return "p";
+    case hM: return "m";
+    default: 
+      fprintf(stderr,"ERROR: bad PMstr request\n");
+      return "unknown";
+  };
+};
+
+static TString PMsym(int h) {
+  switch(h) {
+    case hP: return "+";
+    case hM: return "-";
+    default: 
+      fprintf(stderr,"ERROR: bad PMsym request\n");
+      return "unknown";
+  };
+};
 
 #endif

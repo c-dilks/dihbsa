@@ -23,16 +23,26 @@ ALLFLAGS = $(ROOTCFLAGS) $(ROOTLDFLAGS) $(DIHBSALIBS) $(HIPOLIBS) $(LZ4LIBS) $(R
 
 
 all: 
+	@echo "compiling src..."
 	@cd src; make
+	@echo ""
 	@echo "now compiling main executables..."
+	@echo ""
 	make analysis
+	@echo ""
 	make diagnostics
+	@echo ""
+	make phiRtest
+	@echo ""
 
 analysis: analysis.o
 	$(CXX) -o analysis.exe $< $(ALLFLAGS)
 	 
 diagnostics: diagnostics.o
 	$(CXX) -o diagnostics.exe $< $(ALLFLAGS)
+
+phiRtest: phiRtest.o
+	$(CXX) -o phiRtest.exe $< $(ALLFLAGS)
 
 clean:
 	@cd src; make clean

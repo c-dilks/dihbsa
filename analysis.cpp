@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
    tree->Branch("W",&(disEv->W),"W/F");
    tree->Branch("Q2",&(disEv->Q2),"Q2/F");
    tree->Branch("Nu",&(disEv->Nu),"Nu/F");
-   tree->Branch("X",&(disEv->X),"X/F");
+   tree->Branch("x",&(disEv->x),"x/F");
    tree->Branch("y",&(disEv->y),"y/F");
 
    // hadron branches
@@ -85,20 +85,20 @@ int main(int argc, char** argv) {
    tree->Branch("Mh",&(dih->Mh),"Mh/F");
    tree->Branch("Z",dih->z,"Z[2]/F");
    tree->Branch("Zpair",&(dih->zpair),"Zpair/F");
-   tree->Branch("PhiH",&(dih->phiH),"PhiH/F");
-   tree->Branch("PhiR",&(dih->phiR),"PhiR/F");
+   tree->Branch("PhiH",&(dih->PhiH),"PhiH/F");
+   tree->Branch("PhiR",&(dih->PhiR),"PhiR/F");
    tree->Branch("Ph",&(dih->PhMag),"Ph/F");
    tree->Branch("Pht",&(dih->PhtMag),"Pht/F");
    tree->Branch("Mmiss",&(dih->Mmiss),"Mmiss/F");
    tree->Branch("xF",&(dih->xF),"xF/F");
 
    // dihadron angle test branches
-   tree->Branch("phiR_T_byKt",&(dih->phiR_T_byKt),"phiR_T_byKt/F");
-   tree->Branch("phiR_T_byRej",&(dih->phiR_T_byRej),"phiR_T_byRej/F");
-   tree->Branch("phiR_Perp",&(dih->phiR_Perp),"phiR_Perp/F");
-   tree->Branch("phiR_byPh",&(dih->phiR_byPh),"phiR_byPh/F");
-   tree->Branch("phiR_byPhad",dih->phiR_byPhad,"phiR_byPhad[2]/F");
-   tree->Branch("phiP1P2",&(dih->phiP1P2),"phiP1P2/F");
+   tree->Branch("PhiR_T_byKt",&(dih->PhiR_T_byKt),"PhiR_T_byKt/F");
+   tree->Branch("PhiR_T_byRej",&(dih->PhiR_T_byRej),"PhiR_T_byRej/F");
+   tree->Branch("PhiR_Perp",&(dih->PhiR_Perp),"PhiR_Perp/F");
+   tree->Branch("PhiR_byPh",&(dih->PhiR_byPh),"PhiR_byPh/F");
+   tree->Branch("PhiR_byPhad",dih->PhiR_byPhad,"PhiR_byPhad[2]/F");
+   tree->Branch("PhiP1P2",&(dih->PhiP1P2),"PhiP1P2/F");
 
 
    // define reader and particle list
@@ -272,4 +272,6 @@ int main(int argc, char** argv) {
      bench.getCounter());
    tree->Write("tree");
    printf("\nDIHADRON EVENT COUNT: %d\n\n",evCount);
+
+   outfile->Close();
 };
