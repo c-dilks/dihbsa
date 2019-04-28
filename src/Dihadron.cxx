@@ -108,7 +108,7 @@ void Dihadron::ComputeAngles() {
   // -- HERMES 0803.2367 angle
   PhiR_T_byRej = PlaneAngle(pQ,pL,pQ,pR_T_byRej);
 
-  // -- COMPASS 1702.07317
+  // -- COMPASS 1702.07317, but used vector rejection to get R_perp
   PhiR_Perp = PlaneAngle(pQ,pL,pQ,pR_Perp);
 
   // -- alternative tests

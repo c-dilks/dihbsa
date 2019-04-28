@@ -42,6 +42,7 @@ namespace std {} using namespace std;
 #include "Trajectory.h"
 #include "Dihadron.h"
 #include "EventTree.h"
+#include "Asymmetry.h"
 
 // Header files passed via #pragma extra_include
 
@@ -163,6 +164,38 @@ namespace ROOT {
    }
    // Static variable to force the class initialization
    static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const ::EventTree*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
+} // end of namespace ROOT
+
+namespace ROOT {
+   static void *new_Asymmetry(void *p = 0);
+   static void *newArray_Asymmetry(Long_t size, void *p);
+   static void delete_Asymmetry(void *p);
+   static void deleteArray_Asymmetry(void *p);
+   static void destruct_Asymmetry(void *p);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const ::Asymmetry*)
+   {
+      ::Asymmetry *ptr = 0;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< ::Asymmetry >(0);
+      static ::ROOT::TGenericClassInfo 
+         instance("Asymmetry", ::Asymmetry::Class_Version(), "Asymmetry.h", 31,
+                  typeid(::Asymmetry), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &::Asymmetry::Dictionary, isa_proxy, 4,
+                  sizeof(::Asymmetry) );
+      instance.SetNew(&new_Asymmetry);
+      instance.SetNewArray(&newArray_Asymmetry);
+      instance.SetDelete(&delete_Asymmetry);
+      instance.SetDeleteArray(&deleteArray_Asymmetry);
+      instance.SetDestructor(&destruct_Asymmetry);
+      return &instance;
+   }
+   TGenericClassInfo *GenerateInitInstance(const ::Asymmetry*)
+   {
+      return GenerateInitInstanceLocal((::Asymmetry*)0);
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const ::Asymmetry*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
 } // end of namespace ROOT
 
 //______________________________________________________________________________
@@ -306,6 +339,41 @@ TClass *EventTree::Class()
 }
 
 //______________________________________________________________________________
+atomic_TClass_ptr Asymmetry::fgIsA(0);  // static to hold class pointer
+
+//______________________________________________________________________________
+const char *Asymmetry::Class_Name()
+{
+   return "Asymmetry";
+}
+
+//______________________________________________________________________________
+const char *Asymmetry::ImplFileName()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::Asymmetry*)0x0)->GetImplFileName();
+}
+
+//______________________________________________________________________________
+int Asymmetry::ImplFileLine()
+{
+   return ::ROOT::GenerateInitInstanceLocal((const ::Asymmetry*)0x0)->GetImplFileLine();
+}
+
+//______________________________________________________________________________
+TClass *Asymmetry::Dictionary()
+{
+   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Asymmetry*)0x0)->GetClass();
+   return fgIsA;
+}
+
+//______________________________________________________________________________
+TClass *Asymmetry::Class()
+{
+   if (!fgIsA.load()) { R__LOCKGUARD(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Asymmetry*)0x0)->GetClass(); }
+   return fgIsA;
+}
+
+//______________________________________________________________________________
 void DIS::Streamer(TBuffer &R__b)
 {
    // Stream an object of class DIS.
@@ -423,6 +491,39 @@ namespace ROOT {
    }
 } // end of namespace ROOT for class ::EventTree
 
+//______________________________________________________________________________
+void Asymmetry::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class Asymmetry.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(Asymmetry::Class(),this);
+   } else {
+      R__b.WriteClassBuffer(Asymmetry::Class(),this);
+   }
+}
+
+namespace ROOT {
+   // Wrappers around operator new
+   static void *new_Asymmetry(void *p) {
+      return  p ? new(p) ::Asymmetry : new ::Asymmetry;
+   }
+   static void *newArray_Asymmetry(Long_t nElements, void *p) {
+      return p ? new(p) ::Asymmetry[nElements] : new ::Asymmetry[nElements];
+   }
+   // Wrapper around operator delete
+   static void delete_Asymmetry(void *p) {
+      delete ((::Asymmetry*)p);
+   }
+   static void deleteArray_Asymmetry(void *p) {
+      delete [] ((::Asymmetry*)p);
+   }
+   static void destruct_Asymmetry(void *p) {
+      typedef ::Asymmetry current_t;
+      ((current_t*)p)->~current_t();
+   }
+} // end of namespace ROOT for class ::Asymmetry
+
 namespace {
   void TriggerDictionaryInitialization_DihBsaDict_Impl() {
     static const char* headers[] = {
@@ -431,6 +532,7 @@ namespace {
 "Trajectory.h",
 "Dihadron.h",
 "EventTree.h",
+"Asymmetry.h",
 0
     };
     static const char* includePaths[] = {
@@ -448,6 +550,7 @@ class __attribute__((annotate("$clingAutoload$DIS.h")))  DIS;
 class __attribute__((annotate("$clingAutoload$Trajectory.h")))  Trajectory;
 class __attribute__((annotate("$clingAutoload$Dihadron.h")))  Dihadron;
 class __attribute__((annotate("$clingAutoload$EventTree.h")))  EventTree;
+class __attribute__((annotate("$clingAutoload$Asymmetry.h")))  Asymmetry;
 )DICTFWDDCLS";
     static const char* payloadCode = R"DICTPAYLOAD(
 #line 1 "DihBsaDict dictionary payload"
@@ -459,10 +562,12 @@ class __attribute__((annotate("$clingAutoload$EventTree.h")))  EventTree;
 #include "Trajectory.h"
 #include "Dihadron.h"
 #include "EventTree.h"
+#include "Asymmetry.h"
 
 #undef  _BACKWARD_BACKWARD_WARNING_H
 )DICTPAYLOAD";
     static const char* classesHeaders[]={
+"Asymmetry", payloadCode, "@",
 "DIS", payloadCode, "@",
 "Dihadron", payloadCode, "@",
 "EventTree", payloadCode, "@",

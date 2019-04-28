@@ -8,5 +8,6 @@
 #pragma link C++ class Trajectory+;
 #pragma link C++ class Dihadron+;
 #pragma link C++ class EventTree+;
+#pragma link C++ class Asymmetry+;
 
 #endif

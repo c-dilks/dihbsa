@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
 
      ev->GetEvent(i);
 
-     if(/*ev->cutDihadron &&*/ ev->cutQ2 && ev->cutW && ev->cutY) {
+     if(ev->cutDihadron && ev->cutQ2 && ev->cutW && ev->cutY) {
 
        ang_T_byKt = TMath::Sin(ev->PhiR_T_byKt);
        ang_T_byRej = TMath::Sin(ev->PhiR_T_byRej);
