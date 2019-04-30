@@ -6,3 +6,4 @@
 *.pcm
 *.png
 logfiles/*
+src/DihBsaDict.*
