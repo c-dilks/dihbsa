@@ -99,9 +99,10 @@ class Dihadron : public TObject
     TVector3 crossAB,crossCD;
     Float_t sgn,numer,denom;
 
-    TLorentzVector vecPh_com; // P+q COM frame dihadron total momentum
-    TVector3 pPh_com; // 3-vector Ph in COM frame
-    TVector3 pPh_com_long;
+    TLorentzVector vecPh_com; // P+q COM frame
+    TLorentzVector disVecQ_com; // P+q COM frame
+    TVector3 pPh_com; // COM frame
+    TVector3 pQ_com; // COM frame
 
 
 

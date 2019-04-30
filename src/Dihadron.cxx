@@ -50,6 +50,16 @@ void Dihadron::SetEvent(
   vecPh = vecHad[hP] + vecHad[hM];
   vecR = 0.5 * ( vecHad[hP] - vecHad[hM] );
 
+
+  // get 3-momenta from 4-momenta
+  pQ = disVecQ.Vect();
+  pL = disVecElectron.Vect();
+  pPh = vecPh.Vect();
+  pR = vecR.Vect();
+  for(h=0; h<2; h++) pHad[h] = vecHad[h].Vect();
+
+
+
   // compute z
   for(h=0; h<2; h++) z[h] = disVecTarget.Dot(vecHad[h]) / disVecTarget.Dot(disVecQ);
   zpair = disVecTarget.Dot(vecPh) / disVecTarget.Dot(disVecQ);
@@ -61,33 +71,20 @@ void Dihadron::SetEvent(
   vecMmiss = disVecW - vecPh;
   Mmiss = vecMmiss.M();
 
-
-
-  // get 3-momenta from 4-momenta
-  pQ = disVecQ.Vect();
-  pL = disVecElectron.Vect();
-  pPh = vecPh.Vect();
-  pR = vecR.Vect();
-  for(h=0; h<2; h++) pHad[h] = vecHad[h].Vect();
-
-
-
   // compute xF
-  /*
-  bvecPh = vecPh;
-  if(!useBreit) bvecPh.Boost(disEv->BreitBoost); // if useBreit==true, bvecPh is already
-                                                 // in the Breit frame
-  xF = bvecPh.E() / disEv->W;
-  */
-  if(useBreit) xF=0; // (for now...)
-  else {
-    vecPh_com = vecPh;
-    vecPh_com.Boost(disEv->ComBoost);
-    pPh_com = vecPh_com.Vect();
-    pPh_com_long = pPh_com.Project(pQ)
-    xF = pPh_com_long.Mag() / disEv->W;
+  vecPh_com = vecPh;
+  disVecQ_com = disVecQ;
+  // -- (if in Breit frame, boost to lab frame)
+  if(useBreit) { 
+    vecPh_com.Boost(-1*(disEv->BreitBoost));
+    disVecQ_com.Boost(-1*(disEv->BreitBoost));
   };
-
+  // -- boost to CoM frame
+  vecPh_com.Boost(disEv->ComBoost);
+  disVecQ_com.Boost(disEv->ComBoost);
+  pPh_com = vecPh_com.Vect();
+  pQ_com = disVecQ_com.Vect();
+  xF = pPh_com.Dot(pQ_com) / (disEv->W * pQ_com.Mag());
 
 
   // compute angles

@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
    gSystem->Load("src/DihBsa.so");
    DIS * disEv = new DIS();
    Trajectory * hadron[2];
-   Dihadron * dih = new Dihadron();
+   Dihadron * dih = new Dihadron(); dih->useBreit = false;
    Dihadron * dihBr = new Dihadron(); dihBr->useBreit = true;
 
    hadron[hP] = new Trajectory(kPip);
@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
 
 
    // debugging flags
-   disEv->debug = 1;
+   disEv->debug = 0;
    dih->debug = 0;
    dihBr->debug = 0;
 
@@ -175,7 +175,6 @@ int main(int argc, char** argv) {
 
 
    Bool_t foundAllObservables;
-   Bool_t disCut;
 
    Int_t evCount = 0;
 
@@ -244,14 +243,6 @@ int main(int argc, char** argv) {
      );
      disEv->Analyse();
 
-
-     // dis kinematics cuts
-     disCut = true;
-     //disCut = disCut && disEv->W > 2.0;
-     //disCut = disCut && disEv->Q2 > 1.0;
-     //disCut = disCut && disEv->y < 0.8;
-
-     if(!disCut) continue;
 
 
      // set pi+ and pi- momenta
