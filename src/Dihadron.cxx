@@ -51,8 +51,8 @@ void Dihadron::SetEvent(
   vecR = 0.5 * ( vecHad[hP] - vecHad[hM] );
 
   // compute z
-  for(h=0; h<2; h++) z[h] = vecHad[h].E() / disVecQ.E();
-  zpair = vecPh.E() / disVecQ.E();
+  for(h=0; h<2; h++) z[h] = disVecTarget.Dot(vecHad[h]) / disVecTarget.Dot(disVecQ);
+  zpair = disVecTarget.Dot(vecPh) / disVecTarget.Dot(disVecQ);
 
   // compute invariant mass
   Mh = vecPh.M();
@@ -61,11 +61,33 @@ void Dihadron::SetEvent(
   vecMmiss = disVecW - vecPh;
   Mmiss = vecMmiss.M();
 
+
+
+  // get 3-momenta from 4-momenta
+  pQ = disVecQ.Vect();
+  pL = disVecElectron.Vect();
+  pPh = vecPh.Vect();
+  pR = vecR.Vect();
+  for(h=0; h<2; h++) pHad[h] = vecHad[h].Vect();
+
+
+
   // compute xF
+  /*
   bvecPh = vecPh;
   if(!useBreit) bvecPh.Boost(disEv->BreitBoost); // if useBreit==true, bvecPh is already
                                                  // in the Breit frame
   xF = bvecPh.E() / disEv->W;
+  */
+  if(useBreit) xF=0; // (for now...)
+  else {
+    vecPh_com = vecPh;
+    vecPh_com.Boost(disEv->ComBoost);
+    pPh_com = vecPh_com.Vect();
+    pPh_com_long = pPh_com.Project(pQ)
+    xF = pPh_com_long.Mag() / disEv->W;
+  };
+
 
 
   // compute angles
@@ -83,14 +105,6 @@ void Dihadron::ComputeAngles() {
   // -- perp-frame: "transverse" plane is normal to fragmenting
   //                quark, i.e., to q
   // -- T-frame: "transverse" plane is normal to Ph
-
-
-  // get 3-momenta from 4-momenta
-  pQ = disVecQ.Vect();
-  pL = disVecElectron.Vect();
-  pPh = vecPh.Vect();
-  pR = vecR.Vect();
-  for(h=0; h<2; h++) pHad[h] = vecHad[h].Vect();
 
 
   // perp-frame hadron 3-momenta

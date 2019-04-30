@@ -31,31 +31,52 @@ class DIS : public TObject
     void SetElectron(Float_t px, Float_t py, Float_t pz);
     void Analyse();
     void Print();
-    void BreitPrint();
+
     void ComputeBreitKinematics();
+    void ComputeComKinematics();
+
+    void BreitPrint();
+    void ComPrint();
+
     void ResetVars();
+
 
     Float_t BeamEn;
     Float_t W,Q2,Nu,x,y;
     TVector3 BreitBoost;
+    TVector3 ComBoost;
 
     Bool_t debug,speedup;
     
+    // lab frame 4-vectors
     TLorentzVector vecBeam;
     TLorentzVector vecTarget;
     TLorentzVector vecElectron;
     TLorentzVector vecW;
     TLorentzVector vecQ;
-    TLorentzVector vecBreit;
 
+
+    // breit frame 4-vectors 
+    // (computed only if ComputeBreitKinematics() is called; 
+    //  in practice, it's faster to externally boost only the ones you need)
     TLorentzVector breitBeam;
     TLorentzVector breitTarget;
     TLorentzVector breitElectron;
     TLorentzVector breitW;
     TLorentzVector breitQ;
 
-  private:
+    // target-virualPhoton center-of-mass frame 4-vectors 
+    // (computed only if ComputeComKinematics() is called; 
+    //  in practice, it's faster to externally boost only the ones you need)
+    TLorentzVector comBeam;
+    TLorentzVector comTarget;
+    TLorentzVector comElectron;
+    TLorentzVector comW;
+    TLorentzVector comQ;
 
+  private:
+    TLorentzVector boostvecBreit;
+    TLorentzVector boostvecCom;
 
   ClassDef(DIS,1);
 };

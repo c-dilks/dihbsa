@@ -51,8 +51,6 @@ class Dihadron : public TObject
     TLorentzVector vecR; // dihadron relative momentum
     TLorentzVector vecMmiss; // used to compute missing mass
 
-    TLorentzVector bvecPh; // breit frame's dihadron total momentum
-
     TLorentzVector disVecBeam;
     TLorentzVector disVecTarget;
     TLorentzVector disVecElectron;
@@ -100,6 +98,11 @@ class Dihadron : public TObject
     Float_t proj;
     TVector3 crossAB,crossCD;
     Float_t sgn,numer,denom;
+
+    TLorentzVector vecPh_com; // P+q COM frame dihadron total momentum
+    TVector3 pPh_com; // 3-vector Ph in COM frame
+    TVector3 pPh_com_long;
+
 
 
 

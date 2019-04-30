@@ -59,6 +59,12 @@ int main(int argc, char** argv) {
    hipo::benchmark bench;
 
 
+   // debugging flags
+   disEv->debug = 1;
+   dih->debug = 0;
+   dihBr->debug = 0;
+
+
    // define tree
    TFile * outfile = new TFile(outfileN,"RECREATE");
    TTree * tree = new TTree();
@@ -119,7 +125,6 @@ int main(int argc, char** argv) {
    tree->Branch("b_PhiR_byPh",&(dihBr->PhiR_byPh),"b_PhiR_byPh/F");
    tree->Branch("b_PhiR_byPhad",dihBr->PhiR_byPhad,"b_PhiR_byPhad[2]/F");
    tree->Branch("b_PhiP1P2",&(dihBr->PhiP1P2),"b_PhiP1P2/F");
-
 
    // define reader and particle list
    hipo::reader reader;
