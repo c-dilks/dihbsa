@@ -7,6 +7,7 @@ using namespace std;
 
 Dihadron::Dihadron() {
   debug = true;
+  useBreit = false;
 
   for(h=0; h<2; h++) vecHad[h] = TLorentzVector(0,0,0,0);
   vecPh = TLorentzVector(0,0,0,0);
@@ -25,27 +26,47 @@ void Dihadron::SetEvent(
   hadron[hM] = trajMinus;
   disEv = disEvent;
 
+
+  // get disEv vectors
+  disVecBeam = disEv->vecBeam;
+  disVecTarget = disEv->vecTarget;
+  disVecElectron = disEv->vecElectron;
+  disVecW = disEv->vecW;
+  disVecQ = disEv->vecQ;
+  if(useBreit) {
+    disVecBeam.Boost(disEv->BreitBoost);
+    disVecTarget.Boost(disEv->BreitBoost);
+    disVecElectron.Boost(disEv->BreitBoost);
+    disVecW.Boost(disEv->BreitBoost);
+    disVecQ.Boost(disEv->BreitBoost);
+  };
+
+
   // compute 4-momenta Ph and R
-  for(h=0; h<2; h++) vecHad[h] = hadron[h]->Vec;
+  for(h=0; h<2; h++) {
+    vecHad[h] = hadron[h]->Vec;
+    if(useBreit) vecHad[h].Boost(disEv->BreitBoost);
+  };
   vecPh = vecHad[hP] + vecHad[hM];
   vecR = 0.5 * ( vecHad[hP] - vecHad[hM] );
 
   // compute z
-  for(h=0; h<2; h++) z[h] = vecHad[h].E() / disEv->Nu;
-  zpair = vecPh.E() / disEv->Nu;
+  for(h=0; h<2; h++) z[h] = vecHad[h].E() / disVecQ.E();
+  zpair = vecPh.E() / disVecQ.E();
 
   // compute invariant mass
   Mh = vecPh.M();
 
   // compute missing mass
-  vecMmiss = disEv->vecW - vecPh;
+  vecMmiss = disVecW - vecPh;
   Mmiss = vecMmiss.M();
 
   // compute xF
   bvecPh = vecPh;
-  bvecPh.Boost(disEv->BreitBoost);
+  if(!useBreit) bvecPh.Boost(disEv->BreitBoost); // if useBreit==true, bvecPh is already
+                                                 // in the Breit frame
   xF = bvecPh.E() / disEv->W;
-  
+
 
   // compute angles
   ComputeAngles();
@@ -65,8 +86,8 @@ void Dihadron::ComputeAngles() {
 
 
   // get 3-momenta from 4-momenta
-  pQ = (disEv->vecQ).Vect();
-  pL = (disEv->vecElectron).Vect();
+  pQ = disVecQ.Vect();
+  pL = disVecElectron.Vect();
   pPh = vecPh.Vect();
   pR = vecR.Vect();
   for(h=0; h<2; h++) pHad[h] = vecHad[h].Vect();

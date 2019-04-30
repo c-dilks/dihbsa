@@ -51,6 +51,7 @@ int main(int argc, char** argv) {
    DIS * disEv = new DIS();
    Trajectory * hadron[2];
    Dihadron * dih = new Dihadron();
+   Dihadron * dihBr = new Dihadron(); dihBr->useBreit = true;
 
    hadron[hP] = new Trajectory(kPip);
    hadron[hM] = new Trajectory(kPim);
@@ -99,6 +100,25 @@ int main(int argc, char** argv) {
    tree->Branch("PhiR_byPh",&(dih->PhiR_byPh),"PhiR_byPh/F");
    tree->Branch("PhiR_byPhad",dih->PhiR_byPhad,"PhiR_byPhad[2]/F");
    tree->Branch("PhiP1P2",&(dih->PhiP1P2),"PhiP1P2/F");
+
+   // breit frame dihadron branches
+   //tree->Branch("b_Mh",&(dihBr->Mh),"b_Mh/F");
+   tree->Branch("b_Z",dihBr->z,"b_Z[2]/F");
+   tree->Branch("b_Zpair",&(dihBr->zpair),"b_Zpair/F");
+   tree->Branch("b_PhiH",&(dihBr->PhiH),"b_PhiH/F");
+   tree->Branch("b_PhiR",&(dihBr->PhiR),"b_PhiR/F");
+   tree->Branch("b_Ph",&(dihBr->PhMag),"b_Ph/F");
+   tree->Branch("b_Pht",&(dihBr->PhtMag),"b_Pht/F");
+   tree->Branch("b_Mmiss",&(dihBr->Mmiss),"b_Mmiss/F");
+   tree->Branch("b_xF",&(dihBr->xF),"b_xF/F");
+
+   // breit frame dihadron angle test branches
+   tree->Branch("b_PhiR_T_byKt",&(dihBr->PhiR_T_byKt),"b_PhiR_T_byKt/F");
+   tree->Branch("b_PhiR_T_byRej",&(dihBr->PhiR_T_byRej),"b_PhiR_T_byRej/F");
+   tree->Branch("b_PhiR_Perp",&(dihBr->PhiR_Perp),"b_PhiR_Perp/F");
+   tree->Branch("b_PhiR_byPh",&(dihBr->PhiR_byPh),"b_PhiR_byPh/F");
+   tree->Branch("b_PhiR_byPhad",dihBr->PhiR_byPhad,"b_PhiR_byPhad[2]/F");
+   tree->Branch("b_PhiP1P2",&(dihBr->PhiP1P2),"b_PhiP1P2/F");
 
 
    // define reader and particle list
@@ -255,6 +275,8 @@ int main(int argc, char** argv) {
 
      // set dihadron momenta
      dih->SetEvent(hadron[hP],hadron[hM],disEv);
+     dihBr->SetEvent(hadron[hP],hadron[hM],disEv);
+
 
        
 

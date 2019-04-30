@@ -26,7 +26,7 @@ void HadronCompareCanv(TCanvas * canv, TH1F * dist[2], TH2F * corr);
 int main(int argc, char** argv) {
 
    gSystem->Load("src/DihBsa.so");
-   EventTree * ev = new EventTree("outroot/*.root");
+   EventTree * ev = new EventTree("outroot/out*.root");
 
 
    Float_t deltaPhi;

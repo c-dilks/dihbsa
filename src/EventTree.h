@@ -70,6 +70,13 @@ class EventTree : public TObject
     Float_t PhiR_byPh;
     Float_t PhiR_byPhad[2];
     Float_t PhiP1P2;
+
+    Float_t b_PhiR_T_byKt;
+    Float_t b_PhiR_T_byRej;
+    Float_t b_PhiR_Perp;
+    Float_t b_PhiR_byPh;
+    Float_t b_PhiR_byPhad[2];
+    Float_t b_PhiP1P2;
     ///////////////////////////
 
 

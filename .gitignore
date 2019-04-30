@@ -4,4 +4,5 @@
 .*.sw*
 *.root
 *.pcm
+*.png
 logfiles/*

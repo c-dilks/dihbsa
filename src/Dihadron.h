@@ -33,6 +33,7 @@ class Dihadron : public TObject
     ~Dihadron();
 
     Bool_t debug;
+    Bool_t useBreit;
 
     void SetEvent(
       Trajectory * trajPlus, Trajectory * trajMinus, DIS * disEv);
@@ -51,6 +52,12 @@ class Dihadron : public TObject
     TLorentzVector vecMmiss; // used to compute missing mass
 
     TLorentzVector bvecPh; // breit frame's dihadron total momentum
+
+    TLorentzVector disVecBeam;
+    TLorentzVector disVecTarget;
+    TLorentzVector disVecElectron;
+    TLorentzVector disVecW;
+    TLorentzVector disVecQ;
 
 
     Float_t PhMag; // dihadron total momentum

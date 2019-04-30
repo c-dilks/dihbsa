@@ -4,7 +4,7 @@ exe="analysis.exe"
 
 # default arguments
 hipodir=../hipo  # directory of hipo files to analyse
-njobsMax=4  # maximum number of parallel jobs to run
+njobsMax=6  # maximum number of parallel jobs to run
             # (set this to zero to use all accessible threads)
 
 if [ $# -ge 1 ]; then hipodir=$1; fi
@@ -50,9 +50,9 @@ cnt=1
 echo ""
 echo "[+] begin job submission"
 while read hipofile; do
-  log=$(echo $hipofile | sed 's/^.*\///g' | sed 's/hipo$/log/g')
+  log=$(echo $hipofile | sed 's/^.*\///g' | sed 's/hipo$//g')
   if [ $cnt -le $njobs ]; then 
-    ./$exe $hipofile >& $logdir/Phi$log &
+    ./$exe $hipofile > $logdir/${log}out 2> $logdir/${log}err &
     echo " processing $hipofile"
     let cnt++
   else
