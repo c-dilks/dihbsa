@@ -56,6 +56,7 @@ class EventTree : public TObject
     // dihadron kinematics
     Float_t Mh,Zpair,PhiH,PhiR,Mmiss,xF;
     Float_t Z[2];
+    Float_t Ph,Pht;
 
     // event-level branches
     Int_t evnum,runnum;

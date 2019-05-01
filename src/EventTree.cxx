@@ -38,6 +38,8 @@ EventTree::EventTree(TString filelist) {
   chain->SetBranchAddress("PhiR",&PhiR);
   chain->SetBranchAddress("Mmiss",&Mmiss);
   chain->SetBranchAddress("xF",&xF);
+  chain->SetBranchAddress("Ph",&Ph);
+  chain->SetBranchAddress("Pht",&Pht);
 
   chain->SetBranchAddress("runnum",&runnum);
   chain->SetBranchAddress("evnum",&evnum);
@@ -74,11 +76,11 @@ void EventTree::GetEvent(Int_t i) {
 
   // Dihadron kinematics cuts
   cutDihadron = true;
-  //cutDihadron = cutDihadron && Z[hP] > 0.1 && Z[hM] > 0.1;
-  //cutDihadron = cutDihadron && Zpair < 0.95;
+  cutDihadron = cutDihadron && Z[hP] > 0.1 && Z[hM] > 0.1;
+  cutDihadron = cutDihadron && Zpair < 0.95;
   cutDihadron = cutDihadron && Mmiss > 1.05;
-  //cutDihadron = cutDihadron && xF > 0;
-  //cutDihadron = cutDihadron && hadP[hP] > 1.0 && hadP[hM] > 1.0;
+  cutDihadron = cutDihadron && xF > 0;
+  cutDihadron = cutDihadron && hadP[hP] > 1.0 && hadP[hM] > 1.0;
 };
 
 

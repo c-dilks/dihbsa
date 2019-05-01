@@ -25,17 +25,19 @@ void HadronCompareCanv(TCanvas * canv, TH1F * dist[2], TH2F * corr);
 
 int main(int argc, char** argv) {
 
+   // ARGUMENTS
+   TString inDir = "outroot";
+   if(argc>1) inDir = TString(argv[1]);
+
    gSystem->Load("src/DihBsa.so");
-   EventTree * ev = new EventTree("outroot/out*.root");
-
-
-   Float_t deltaPhi;
-   Float_t PhiHR;
+   EventTree * ev = new EventTree(TString(inDir+"/out*.root"));
 
 
    TFile * outfile = new TFile("plots.root","RECREATE");
 
    const Int_t NBINS = 100;
+   Float_t deltaPhi;
+   Float_t PhiHR;
 
    TH1F * WDist = new TH1F("WDist","W distribution (w/o W cut);W",
      NBINS,0,6);
@@ -139,8 +141,6 @@ int main(int argc, char** argv) {
    printf("begin loop through %d events...\n",ev->ENT);
    for(int i=0; i<ev->ENT; i++) {
      ev->GetEvent(i);
-
-     if(i%10000==0) printf("%.2f%%\n",100*(float)i/((float)ev->ENT));
 
 
      if(!(ev->cutDihadron)) continue;

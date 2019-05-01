@@ -27,10 +27,14 @@ int main(int argc, char** argv) {
 
    // ARGUMENTS
    TString inDir = "outroot";
+   Bool_t useBreit = false;
    if(argc>1) inDir = TString(argv[1]);
+   if(argc>2) useBreit = (Bool_t)strtof(argv[2],NULL);
 
    gSystem->Load("src/DihBsa.so");
    EventTree * ev = new EventTree(TString(inDir+"/out*.root"));
+   TString frame = useBreit ? " --- Breit frame":" --- Lab frame ";
+   printf("\nPhiR definition comparison plots will be in %s\n",frame.Data());
 
 
    TFile * outfile = new TFile("phiRplots.root","RECREATE");
@@ -78,6 +82,40 @@ int main(int argc, char** argv) {
      NBINS,-distMax,distMax,
      NBINS,-distMax,distMax);
 
+
+
+
+   TString newTitle;
+
+   newTitle = dist_T_byKt->GetTitle() + frame;
+   dist_T_byKt->SetTitle(newTitle);
+
+   newTitle = dist_T_byRej->GetTitle() + frame;
+   dist_T_byRej->SetTitle(newTitle);
+
+   newTitle = dist_Perp->GetTitle() + frame;
+   dist_Perp->SetTitle(newTitle);
+
+   newTitle = diff__T_byKt__T_byRej->GetTitle() + frame;
+   diff__T_byKt__T_byRej->SetTitle(newTitle);
+
+   newTitle = diff__T_byKt__Perp->GetTitle() + frame;
+   diff__T_byKt__Perp->SetTitle(newTitle);
+
+   newTitle = diff__T_byRej__Perp->GetTitle() + frame;
+   diff__T_byRej__Perp->SetTitle(newTitle);
+
+   newTitle = corr__T_byKt__T_byRej->GetTitle() + frame;
+   corr__T_byKt__T_byRej->SetTitle(newTitle);
+
+   newTitle = corr__T_byKt__Perp->GetTitle() + frame;
+   corr__T_byKt__Perp->SetTitle(newTitle);
+
+   newTitle = corr__T_byRej__Perp->GetTitle() + frame;
+   corr__T_byRej__Perp->SetTitle(newTitle);
+
+
+
    TH2F * breitVsLab_T_byKt = new TH2F("breitVsLab_T_byKt",
      "sin[ #phi_{R}(T,k_{T}) ] via Breit Frame vs. via Lab Frame",
      NBINS,-distMax,distMax,
@@ -92,14 +130,46 @@ int main(int argc, char** argv) {
      NBINS,-distMax,distMax);
 
 
+   TString plotTitle;
+   TString sigmaStr = "sin[ #phi_{R}(T,k_{T}) - #phi_{R}(#perp  ,rej) ]";
+   plotTitle = sigmaStr+" vs. Q^{~2}";
+   TH2F * sigmaVsQ2 = new TH2F("sigmaVsQ2",plotTitle,
+     NBINS,0,10,
+     NBINS,-distMax,distMax);
+   plotTitle = sigmaStr+" vs. P_{ h}";
+   TH2F * sigmaVsPh = new TH2F("sigmaVsPh",plotTitle,
+     NBINS,0,8,
+     NBINS,-distMax,distMax);
+   plotTitle = sigmaStr+" vs. P_{ h#perp}";
+   TH2F * sigmaVsPht = new TH2F("sigmaVsPht",plotTitle,
+     NBINS,0,2,
+     NBINS,-distMax,distMax);
+   plotTitle = sigmaStr+" vs. z";
+   TH2F * sigmaVsZ = new TH2F("sigmaVsZ",plotTitle,
+     NBINS,0,1,
+     NBINS,-distMax,distMax);
+   plotTitle = sigmaStr+" vs. x_{F}";
+   TH2F * sigmaVsXF = new TH2F("sigmaVsXF",plotTitle,
+     NBINS*2,-1,1,
+     NBINS,-distMax,distMax);
+
+
+
+
    Float_t ang_T_byKt;
    Float_t ang_T_byRej;
    Float_t ang_Perp;
-   Float_t angDiff;
+
+   Float_t l_ang_T_byKt;
+   Float_t l_ang_T_byRej;
+   Float_t l_ang_Perp;
 
    Float_t b_ang_T_byKt;
    Float_t b_ang_T_byRej;
    Float_t b_ang_Perp;
+
+   Float_t angDiff;
+   Float_t sigma;
 
    printf("begin loop through %d events...\n",ev->ENT);
    for(int i=0; i<ev->ENT; i++) {
@@ -109,14 +179,24 @@ int main(int argc, char** argv) {
      if(ev->cutDihadron && ev->cutQ2 && ev->cutW && ev->cutY) {
 
        // lab frame
-       ang_T_byKt = TMath::Sin(ev->PhiR_T_byKt);
-       ang_T_byRej = TMath::Sin(ev->PhiR_T_byRej);
-       ang_Perp = TMath::Sin(ev->PhiR_Perp);
+       l_ang_T_byKt = TMath::Sin(ev->PhiR_T_byKt);
+       l_ang_T_byRej = TMath::Sin(ev->PhiR_T_byRej);
+       l_ang_Perp = TMath::Sin(ev->PhiR_Perp);
 
        // breit frame
        b_ang_T_byKt = TMath::Sin(ev->b_PhiR_T_byKt);
        b_ang_T_byRej = TMath::Sin(ev->b_PhiR_T_byRej);
        b_ang_Perp = TMath::Sin(ev->b_PhiR_Perp);
+
+       if(useBreit) {
+         ang_T_byKt = b_ang_T_byKt;
+         ang_T_byRej = b_ang_T_byRej;
+         ang_Perp = b_ang_Perp;
+       } else {
+         ang_T_byKt = l_ang_T_byKt;
+         ang_T_byRej = l_ang_T_byRej;
+         ang_Perp = l_ang_Perp;
+       };
 
 
        dist_T_byKt->Fill(ang_T_byKt);
@@ -133,15 +213,22 @@ int main(int argc, char** argv) {
        diff__T_byKt__T_byRej->Fill(angDiff);
 
        angDiff = TMath::Sin(ModAngle(ang_T_byKt - ang_Perp));
+       sigma = angDiff;
        diff__T_byKt__Perp->Fill(angDiff);
 
        angDiff = TMath::Sin(ModAngle(ang_T_byRej - ang_Perp));
        diff__T_byRej__Perp->Fill(angDiff);
 
 
-       breitVsLab_T_byKt->Fill(ang_T_byKt,b_ang_T_byKt);
-       breitVsLab_T_byRej->Fill(ang_T_byRej,b_ang_T_byRej);
-       breitVsLab_Perp->Fill(ang_Perp,b_ang_Perp);
+       breitVsLab_T_byKt->Fill(l_ang_T_byKt,b_ang_T_byKt);
+       breitVsLab_T_byRej->Fill(l_ang_T_byRej,b_ang_T_byRej);
+       breitVsLab_Perp->Fill(l_ang_Perp,b_ang_Perp);
+
+       sigmaVsQ2->Fill(ev->Q2,sigma);
+       sigmaVsPh->Fill(ev->Ph,sigma);
+       sigmaVsPht->Fill(ev->Pht,sigma);
+       sigmaVsZ->Fill(ev->Zpair,sigma);
+       sigmaVsXF->Fill(ev->xF,sigma);
      };
 
 
@@ -162,6 +249,12 @@ int main(int argc, char** argv) {
    breitVsLab_T_byKt->Write();
    breitVsLab_T_byRej->Write();
    breitVsLab_Perp->Write();
+
+   sigmaVsQ2->Write();
+   sigmaVsPh->Write();
+   sigmaVsPht->Write();
+   sigmaVsZ->Write();
+   sigmaVsXF->Write();
 
 
    outfile->Close();
