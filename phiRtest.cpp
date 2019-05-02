@@ -152,6 +152,9 @@ int main(int argc, char** argv) {
    TH2F * sigmaVsXF = new TH2F("sigmaVsXF",plotTitle,
      NBINS*2,-1,1,
      NBINS,-distMax,distMax);
+   TH1F * sigmaDist = new TH1F("sigmaDist",sigmaStr,
+     NBINS,-distMax,distMax);
+
 
 
 
@@ -229,6 +232,7 @@ int main(int argc, char** argv) {
        sigmaVsPht->Fill(ev->Pht,sigma);
        sigmaVsZ->Fill(ev->Zpair,sigma);
        sigmaVsXF->Fill(ev->xF,sigma);
+       if(ev->Q2 > 2 && ev->Q2 < 3) sigmaDist->Fill(sigma);
      };
 
 
@@ -255,6 +259,7 @@ int main(int argc, char** argv) {
    sigmaVsPht->Write();
    sigmaVsZ->Write();
    sigmaVsXF->Write();
+   sigmaDist->Write();
 
 
    outfile->Close();

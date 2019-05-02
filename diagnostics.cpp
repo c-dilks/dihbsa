@@ -41,6 +41,8 @@ int main(int argc, char** argv) {
 
    TH1F * WDist = new TH1F("WDist","W distribution (w/o W cut);W",
      NBINS,0,6);
+   TH1F * XDist = new TH1F("XDist","x distribution",
+     NBINS,0,1);
    TH2F * Q2vsW = new TH2F("Q2vsW","Q^{2} vs. W (w/o W cut);W;Q^{2}",
      NBINS,0,6,NBINS,0,10);
    TH2F * Q2vsX = new TH2F("Q2vsX","Q^{2} vs. x;x;Q^{2}",
@@ -143,61 +145,64 @@ int main(int argc, char** argv) {
      ev->GetEvent(i);
 
 
-     if(!(ev->cutDihadron)) continue;
+     if(ev->cutDihadron) {
 
 
-     if(ev->cutQ2 && ev->cutY) {
-       WDist->Fill(ev->W);
-       Q2vsW->Fill(ev->W,ev->Q2);
-     };
-
-     if(ev->cutQ2 && ev->cutW) {
-       YDist->Fill(ev->y);
-     };
-
-
-     if(ev->cutQ2 && ev->cutW && ev->cutY) {
-
-       Q2vsX->Fill(ev->x,ev->Q2);
-
-
-       hadECorr->Fill(ev->hadE[hM],ev->hadE[hP]);
-       hadPCorr->Fill(ev->hadP[hM],ev->hadP[hP]);
-       hadPtCorr->Fill(ev->hadPt[hM],ev->hadPt[hP]);
-       hadEtaCorr->Fill(ev->hadEta[hM],ev->hadEta[hP]);
-       hadPhiCorr->Fill(ev->hadPhi[hM],ev->hadPhi[hP]);
-       hadZCorr->Fill(ev->Z[hM],ev->Z[hP]);
-
-       for(int h=0; h<2; h++) {
-         hadEDist[h]->Fill(ev->hadE[h]);
-         hadPDist[h]->Fill(ev->hadP[h]);
-         hadPtDist[h]->Fill(ev->hadPt[h]);
-         hadEtaDist[h]->Fill(ev->hadEta[h]);
-         hadPhiDist[h]->Fill(ev->hadPhi[h]);
-         hadZDist[h]->Fill(ev->Z[h]);
+       if(ev->cutQ2 && ev->cutY) {
+         WDist->Fill(ev->W);
+         Q2vsW->Fill(ev->W,ev->Q2);
        };
 
-       deltaPhi = ModAngle(ev->hadPhi[hP] - ev->hadPhi[hM]);
-       deltaPhiDist->Fill(deltaPhi);
+       if(ev->cutQ2 && ev->cutW) {
+         YDist->Fill(ev->y);
+       };
 
-       MhDist->Fill(ev->Mh);
-       ZpairDist->Fill(ev->Zpair);
-       xFDist->Fill(ev->xF);
-       MmissDist->Fill(ev->Mmiss);
 
-       PhiHDist->Fill(ev->PhiH);
-       PhiRDist->Fill(ev->PhiR);
-       PhiHvsPhiR->Fill(ev->PhiR,ev->PhiH);
+       if(ev->cutQ2 && ev->cutW && ev->cutY) {
 
-       PhiHR = ModAngle(ev->PhiH - ev->PhiR);
-       PhiHRDist->Fill(PhiHR);
+         Q2vsX->Fill(ev->x,ev->Q2);
+         XDist->Fill(ev->x);
+
+
+         hadECorr->Fill(ev->hadE[hM],ev->hadE[hP]);
+         hadPCorr->Fill(ev->hadP[hM],ev->hadP[hP]);
+         hadPtCorr->Fill(ev->hadPt[hM],ev->hadPt[hP]);
+         hadEtaCorr->Fill(ev->hadEta[hM],ev->hadEta[hP]);
+         hadPhiCorr->Fill(ev->hadPhi[hM],ev->hadPhi[hP]);
+         hadZCorr->Fill(ev->Z[hM],ev->Z[hP]);
+
+         for(int h=0; h<2; h++) {
+           hadEDist[h]->Fill(ev->hadE[h]);
+           hadPDist[h]->Fill(ev->hadP[h]);
+           hadPtDist[h]->Fill(ev->hadPt[h]);
+           hadEtaDist[h]->Fill(ev->hadEta[h]);
+           hadPhiDist[h]->Fill(ev->hadPhi[h]);
+           hadZDist[h]->Fill(ev->Z[h]);
+         };
+
+         deltaPhi = ModAngle(ev->hadPhi[hP] - ev->hadPhi[hM]);
+         deltaPhiDist->Fill(deltaPhi);
+
+         MhDist->Fill(ev->Mh);
+         ZpairDist->Fill(ev->Zpair);
+         xFDist->Fill(ev->xF);
+         MmissDist->Fill(ev->Mmiss);
+
+         PhiHDist->Fill(ev->PhiH);
+         PhiRDist->Fill(ev->PhiR);
+         PhiHvsPhiR->Fill(ev->PhiR,ev->PhiH);
+
+         PhiHR = ModAngle(ev->PhiH - ev->PhiR);
+         PhiHRDist->Fill(PhiHR);
+       };
+
+
      };
-
-
    };
 
 
    WDist->Write();
+   XDist->Write();
    Q2vsW->Write();
    Q2vsX->Write();
    YDist->Write();
@@ -264,5 +269,6 @@ void HadronCompareCanv(TCanvas * canv, TH1F * dist[2], TH2F * corr) {
 
   canv->cd(2);
   corr->Draw("colz");
+  canv->GetPad(2)->SetGrid(1,1);
 };
 
