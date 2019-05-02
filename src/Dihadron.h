@@ -59,9 +59,10 @@ class Dihadron : public TObject
 
 
     Float_t PhMag; // dihadron total momentum
-    Float_t PhtMag; // transverse component of dihadron total momentum
+    Float_t PhPerpMag; // transverse component of dihadron total momentum (perp frame)
     Float_t RMag; // dihadron relative momentum
-    Float_t RtMag; // transverse componet of relative momentum
+    Float_t RTMag; // transverse componet of relative momentum (T-frame)
+    Float_t RPerpMag; // transverse componet of relative momentum (perp-frame)
     Float_t PhiR; // angle[ reaction_plane, R^q etc. (see below) ]
     Float_t PhiH; // angle[ reaction_plane, Ph^q ]
     Float_t z[2]; // fraction of energy of fragmenting parton
@@ -71,18 +72,27 @@ class Dihadron : public TObject
     Float_t Mh; // dihadron invariant mass
     Float_t Mmiss; // missing mass
     Float_t xF; // feynman-x
+    Float_t alpha; // dihadron opening angle
 
 
-    // PhiR angle is defined a couple different ways; these
-    // variables are for those and a couple alternative tests
-    Float_t PhiR_T_byKt;
-    Float_t PhiR_T_byRej;
-    Float_t PhiR_Perp;
-    Float_t PhiR_byPh;
-    Float_t PhiR_byPhad[2];
-    Float_t PhiP1P2;
+    // PhiR angle is defined a couple different ways since
+    // transverse components of R vary in definition; there are two
+    // frames to consider (see arXiv:1707.04999):
+    // -- perp-frame: "transverse" plane is normal to fragmenting
+    //                quark, i.e., to q
+    // -- T-frame: "transverse" plane is normal to Ph
+    //
 
+    Float_t PhiRq; // use R_perp computed via rejection w.r.t. q
+    // -- COMPASS 1702.07317, but used vector rejection to get R_perp
+
+    Float_t PhiRp; // use R_T computed via covariant kT formula
+    // -- HERMES 0803.2367 angle, but used Matevosyan et al 1707.04999
+
+    Float_t PhiRp_r; // use R_T computed via rejection w.r.t. Ph (not frame independent)
+    // -- HERMES 0803.2367 angle
     
+
   private:
     int h;
 

@@ -90,41 +90,36 @@ int main(int argc, char** argv) {
 
    // dihadron branches
    tree->Branch("Mh",&(dih->Mh),"Mh/F");
+   tree->Branch("Mmiss",&(dih->Mmiss),"Mmiss/F");
    tree->Branch("Z",dih->z,"Z[2]/F");
    tree->Branch("Zpair",&(dih->zpair),"Zpair/F");
+   tree->Branch("xF",&(dih->xF),"xF/F");
+   tree->Branch("alpha",&(dih->alpha),"alpha/F");
+   tree->Branch("Ph",&(dih->PhMag),"Ph/F");
+   tree->Branch("PhPerp",&(dih->PhPerpMag),"PhPerp/F");
+   tree->Branch("R",&(dih->RMag),"R/F");
+   tree->Branch("RPerp",&(dih->RPerpMag),"RPerp/F");
+   tree->Branch("RT",&(dih->RTMag),"RT/F");
    tree->Branch("PhiH",&(dih->PhiH),"PhiH/F");
    tree->Branch("PhiR",&(dih->PhiR),"PhiR/F");
-   tree->Branch("Ph",&(dih->PhMag),"Ph/F");
-   tree->Branch("Pht",&(dih->PhtMag),"Pht/F");
-   tree->Branch("Mmiss",&(dih->Mmiss),"Mmiss/F");
-   tree->Branch("xF",&(dih->xF),"xF/F");
-
-   // dihadron angle test branches
-   tree->Branch("PhiR_T_byKt",&(dih->PhiR_T_byKt),"PhiR_T_byKt/F");
-   tree->Branch("PhiR_T_byRej",&(dih->PhiR_T_byRej),"PhiR_T_byRej/F");
-   tree->Branch("PhiR_Perp",&(dih->PhiR_Perp),"PhiR_Perp/F");
-   tree->Branch("PhiR_byPh",&(dih->PhiR_byPh),"PhiR_byPh/F");
-   tree->Branch("PhiR_byPhad",dih->PhiR_byPhad,"PhiR_byPhad[2]/F");
-   tree->Branch("PhiP1P2",&(dih->PhiP1P2),"PhiP1P2/F");
+   // -- phiR angle test branches
+   tree->Branch("PhiRq",&(dih->PhiRq),"PhiRq/F"); // via R_perp
+   tree->Branch("PhiRp",&(dih->PhiRp),"PhiRp/F"); // via R_T
+   tree->Branch("PhiRp_r",&(dih->PhiRp_r),"PhiRp_r/F"); // via R_T (frame-dependent)
 
    // breit frame dihadron branches
-   //tree->Branch("b_Mh",&(dihBr->Mh),"b_Mh/F");
-   tree->Branch("b_Z",dihBr->z,"b_Z[2]/F");
-   tree->Branch("b_Zpair",&(dihBr->zpair),"b_Zpair/F");
+   tree->Branch("b_alpha",&(dihBr->alpha),"b_alpha/F");
+   tree->Branch("b_Ph",&(dihBr->PhMag),"b_Ph/F");
+   tree->Branch("b_PhPerp",&(dihBr->PhPerpMag),"b_PhPerp/F");
+   tree->Branch("b_R",&(dihBr->RMag),"b_R/F");
+   tree->Branch("b_RPerp",&(dihBr->RPerpMag),"b_RPerp/F");
+   tree->Branch("b_RT",&(dihBr->RTMag),"b_RT/F");
    tree->Branch("b_PhiH",&(dihBr->PhiH),"b_PhiH/F");
    tree->Branch("b_PhiR",&(dihBr->PhiR),"b_PhiR/F");
-   tree->Branch("b_Ph",&(dihBr->PhMag),"b_Ph/F");
-   tree->Branch("b_Pht",&(dihBr->PhtMag),"b_Pht/F");
-   tree->Branch("b_Mmiss",&(dihBr->Mmiss),"b_Mmiss/F");
-   tree->Branch("b_xF",&(dihBr->xF),"b_xF/F");
-
-   // breit frame dihadron angle test branches
-   tree->Branch("b_PhiR_T_byKt",&(dihBr->PhiR_T_byKt),"b_PhiR_T_byKt/F");
-   tree->Branch("b_PhiR_T_byRej",&(dihBr->PhiR_T_byRej),"b_PhiR_T_byRej/F");
-   tree->Branch("b_PhiR_Perp",&(dihBr->PhiR_Perp),"b_PhiR_Perp/F");
-   tree->Branch("b_PhiR_byPh",&(dihBr->PhiR_byPh),"b_PhiR_byPh/F");
-   tree->Branch("b_PhiR_byPhad",dihBr->PhiR_byPhad,"b_PhiR_byPhad[2]/F");
-   tree->Branch("b_PhiP1P2",&(dihBr->PhiP1P2),"b_PhiP1P2/F");
+   // -- phiR angle test branches
+   tree->Branch("b_PhiRq",&(dihBr->PhiRq),"b_PhiRq/F"); // via R_perp
+   tree->Branch("b_PhiRp",&(dihBr->PhiRp),"b_PhiRp/F"); // via R_T
+   tree->Branch("b_PhiRp_r",&(dihBr->PhiRp_r),"b_PhiRp_r/F"); // via R_T (frame-dependent)
 
    // define reader and particle list
    hipo::reader reader;

@@ -71,6 +71,11 @@ void Dihadron::SetEvent(
   vecMmiss = disVecW - vecPh;
   Mmiss = vecMmiss.M();
 
+  // compute opening angle
+  alpha = TMath::ACos(
+    pHad[hM].Dot(pHad[hP]) / ( pHad[hM].Mag() * pHad[hP].Mag() ) 
+  );
+
   // compute xF
   vecPh_com = vecPh;
   disVecQ_com = disVecQ;
@@ -104,6 +109,14 @@ void Dihadron::ComputeAngles() {
   // -- T-frame: "transverse" plane is normal to Ph
 
 
+  // first compute PhiH angle
+  PhiH = PlaneAngle(pQ,pL,pQ,pPh);
+
+
+  // then compute PhiR angle (all the ways)
+  //
+  
+
   // perp-frame hadron 3-momenta
   for(h=0; h<2; h++) pHad_Perp[h] = Reject(pHad[h],pQ);
   pPh_Perp = Reject(pPh,pQ);
@@ -122,35 +135,25 @@ void Dihadron::ComputeAngles() {
 
   // momentum magnitudes
   PhMag = pPh.Mag(); // dihadron total momentum Ph
-  PhtMag = pPh_Perp.Mag(); // trans. comp. of Ph (used for G1perp)
-  RMag = vecR.Mag(); // dihadron relative momentum R
-  RtMag = pR_T_byKt.Mag(); // trans. comp. of R
+  PhPerpMag = pPh_Perp.Mag(); // trans. comp. of Ph (perp frame, obviously)
+  RMag = pR.Mag(); // dihadron relative momentum R
+  RTMag = pR_T_byKt.Mag(); // trans. comp. of R (perp frame)
+  RPerpMag = pR_Perp.Mag(); // trans. comp. of R (perp frame)
 
 
-  // compute PhiH angle
-  PhiH = PlaneAngle(pQ,pL,pQ,pPh);
 
-
-  // compute PhiR angle (all the ways)
+  // -- COMPASS 1702.07317, but used vector rejection to get R_perp
+  PhiRq = PlaneAngle(pQ,pL,pQ,pR_Perp);
 
   // -- HERMES 0803.2367 angle, but used Matevosyan et al 1707.04999
   //    to obtain R_T vector
-  PhiR_T_byKt = PlaneAngle(pQ,pL,pQ,pR_T_byKt);
+  PhiRp = PlaneAngle(pQ,pL,pQ,pR_T_byKt);
 
   // -- HERMES 0803.2367 angle
-  PhiR_T_byRej = PlaneAngle(pQ,pL,pQ,pR_T_byRej);
-
-  // -- COMPASS 1702.07317, but used vector rejection to get R_perp
-  PhiR_Perp = PlaneAngle(pQ,pL,pQ,pR_Perp);
-
-  // -- alternative tests
-  PhiR_byPh = PlaneAngle(pQ,pL,pQ,pPh);
-  PhiP1P2 = PlaneAngle(pQ,pL,pHad[hM],pHad[hP]);
-  for(int h=0; h<2; h++) 
-    PhiR_byPhad[h] = PlaneAngle(pQ,pL,pQ,pHad[h]);
+  PhiRp_r = PlaneAngle(pQ,pL,pQ,pR_T_byRej);
 
   // finally set the "preferred" PhiR angle
-  PhiR = PhiR_T_byKt;
+  PhiR = PhiRp;
 };
 
 

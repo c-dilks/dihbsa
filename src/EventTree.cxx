@@ -18,7 +18,6 @@ EventTree::EventTree(TString filelist) {
   ENT = chain->GetEntries();
   printf("number of entries: %d\n",ENT);
 
-
   chain->SetBranchAddress("W",&W);
   chain->SetBranchAddress("Q2",&Q2);
   chain->SetBranchAddress("Nu",&Nu);
@@ -32,34 +31,42 @@ EventTree::EventTree(TString filelist) {
   chain->SetBranchAddress("hadPhi",hadPhi);
 
   chain->SetBranchAddress("Mh",&Mh);
+  chain->SetBranchAddress("Mmiss",&Mmiss);
   chain->SetBranchAddress("Z",Z);
   chain->SetBranchAddress("Zpair",&Zpair);
+  chain->SetBranchAddress("xF",&xF);
+  //chain->SetBranchAddress("alpha",&alpha);
+  chain->SetBranchAddress("Ph",&Ph);
+  //chain->SetBranchAddress("PhPerp",&PhPerp);
+  chain->SetBranchAddress("Pht",&PhPerp); // FIX !!
+  //chain->SetBranchAddress("R",&R);
+  //chain->SetBranchAddress("RPerp",&RPerp);
+  //chain->SetBranchAddress("RT",&RT);
+
   chain->SetBranchAddress("PhiH",&PhiH);
   chain->SetBranchAddress("PhiR",&PhiR);
-  chain->SetBranchAddress("Mmiss",&Mmiss);
-  chain->SetBranchAddress("xF",&xF);
-  chain->SetBranchAddress("Ph",&Ph);
-  chain->SetBranchAddress("Pht",&Pht);
 
+  //chain->SetBranchAddress("PhiRq",&PhiRq);
+  //chain->SetBranchAddress("PhiRp",&PhiRp);
+  //chain->SetBranchAddress("PhiRp_r",&PhiRp_r);
+  chain->SetBranchAddress("PhiR_Perp",&PhiRq);
+  chain->SetBranchAddress("PhiR_T_byKt",&PhiRp);
+  chain->SetBranchAddress("PhiR_T_byRej",&PhiRp_r);
+
+  //chain->SetBranchAddress("b_PhiRq",&b_PhiRq);
+  //chain->SetBranchAddress("b_PhiRp",&b_PhiRp);
+  //chain->SetBranchAddress("b_PhiRp_r",&b_PhiRp_r);
+  chain->SetBranchAddress("b_PhiR_Perp",&b_PhiRq);
+  chain->SetBranchAddress("b_PhiR_T_byKt",&b_PhiRp);
+  chain->SetBranchAddress("b_PhiR_T_byRej",&b_PhiRp_r);
+
+  
   chain->SetBranchAddress("runnum",&runnum);
   chain->SetBranchAddress("evnum",&evnum);
   chain->SetBranchAddress("helicity",&helicity);
   chain->SetBranchAddress("torus",&torus);
   chain->SetBranchAddress("triggerBits",&triggerBits);
 
-  chain->SetBranchAddress("PhiR_T_byKt",&PhiR_T_byKt);
-  chain->SetBranchAddress("PhiR_T_byRej",&PhiR_T_byRej);
-  chain->SetBranchAddress("PhiR_Perp",&PhiR_Perp);
-  chain->SetBranchAddress("PhiR_byPh",&PhiR_byPh);
-  chain->SetBranchAddress("PhiR_byPhad",PhiR_byPhad);
-  chain->SetBranchAddress("PhiP1P2",&PhiP1P2);
-
-  chain->SetBranchAddress("b_PhiR_T_byKt",&b_PhiR_T_byKt);
-  chain->SetBranchAddress("b_PhiR_T_byRej",&b_PhiR_T_byRej);
-  chain->SetBranchAddress("b_PhiR_Perp",&b_PhiR_Perp);
-  chain->SetBranchAddress("b_PhiR_byPh",&b_PhiR_byPh);
-  chain->SetBranchAddress("b_PhiR_byPhad",b_PhiR_byPhad);
-  chain->SetBranchAddress("b_PhiP1P2",&b_PhiP1P2);
 
 };
 
@@ -117,6 +124,7 @@ void EventTree::Print() {
   printf("  Mh=%.2f",Mh);
   printf("  Mmiss=%.2f",Mmiss);
   printf("  xF=%.2f",xF);
+  printf("  alpha=%.2f",alpha);
   printf("\n");
   printf("  Zpair=%.2f  Z[%s]=%.2f  Z[%s]=%.2f",
       Zpair,
@@ -127,14 +135,9 @@ void EventTree::Print() {
   printf("  PhiR=%.2f",PhiR);
   printf("\n");
   printf("[---] PhiR Tests\n");
-  printf("  PhiR_T_byKt=%.2f",PhiR_T_byKt);
-  printf("  PhiR_T_byRej=%.2f",PhiR_T_byRej);
-  printf("  PhiR_Perp=%.2f",PhiR_Perp);
-  printf("  PhiR_byPh=%.2f",PhiR_byPh);
-  printf("\n");
-  printf("  PhiR_byPhad[%s]=%.2f",PMsym(hP).Data(),PhiR_byPhad[hP]);
-  printf("  PhiR_byPhad[%s]=%.2f",PMsym(hM).Data(),PhiR_byPhad[hM]);
-  printf("  PhiP1P2=%.2f",PhiP1P2);
+  printf("  PhiRq=%.2f",PhiRq);
+  printf("  PhiRp=%.2f",PhiRp);
+  printf("  PhiRp_r=%.2f",PhiRp_r);
   printf("\n");
 };
 

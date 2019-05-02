@@ -54,9 +54,10 @@ class EventTree : public TObject
     Float_t hadPhi[2];
 
     // dihadron kinematics
-    Float_t Mh,Zpair,PhiH,PhiR,Mmiss,xF;
+    Float_t Mh,Zpair,PhiH,PhiR,Mmiss,xF,alpha;
     Float_t Z[2];
-    Float_t Ph,Pht;
+    Float_t Ph,PhPerp;
+    Float_t R,RPerp,RT;
 
     // event-level branches
     Int_t evnum,runnum;
@@ -65,19 +66,13 @@ class EventTree : public TObject
     Long64_t triggerBits;
 
     // PhiR tests
-    Float_t PhiR_T_byKt;
-    Float_t PhiR_T_byRej;
-    Float_t PhiR_Perp;
-    Float_t PhiR_byPh;
-    Float_t PhiR_byPhad[2];
-    Float_t PhiP1P2;
+    Float_t PhiRq;
+    Float_t PhiRp;
+    Float_t PhiRp_r;
 
-    Float_t b_PhiR_T_byKt;
-    Float_t b_PhiR_T_byRej;
-    Float_t b_PhiR_Perp;
-    Float_t b_PhiR_byPh;
-    Float_t b_PhiR_byPhad[2];
-    Float_t b_PhiP1P2;
+    Float_t b_PhiRq;
+    Float_t b_PhiRp;
+    Float_t b_PhiRp_r;
     ///////////////////////////
 
 

@@ -43,41 +43,41 @@ int main(int argc, char** argv) {
    const Int_t NBINS = 100;
    Float_t distMax = 1.1;
 
-   TH1F * dist_T_byKt = new TH1F("dist_T_byKt",
+   TH1F * distPhiRp = new TH1F("distPhiRp",
      "sin[ #phi_{R}(T,k_{T}) ] distribution -- using R_{T} via k_{T} formula;sin[ #phi_{R} ]",
      NBINS,-distMax,distMax);
-   TH1F * dist_T_byRej = new TH1F("dist_T_byRej",
+   TH1F * distPhiRp_r = new TH1F("distPhiRp_r",
      "sin[ #phi_{R}(T,rej) ] distribution -- using R_{T} via vector rejection;sin[ #phi_{R} ]",
      NBINS,-distMax,distMax);
-   TH1F * dist_Perp = new TH1F("dist_Perp",
+   TH1F * distPhiRq = new TH1F("distPhiRq",
      "sin[ #phi_{R}(#perp  ,rej) ] distribution -- using R_{ #perp  } via vector rejection;sin[ #phi_{R} ]",
      NBINS,-distMax,distMax);
-   dist_T_byKt->SetLineColor(kRed);
-   dist_T_byRej->SetLineColor(kGreen+1);
-   dist_Perp->SetLineColor(kBlue);
+   distPhiRp->SetLineColor(kRed);
+   distPhiRp_r->SetLineColor(kGreen+1);
+   distPhiRq->SetLineColor(kBlue);
 
-   TH1F * diff__T_byKt__T_byRej = new TH1F("diff__T_byKt__T_byRej",
+   TH1F * diff_PhiRp_PhiRp_r = new TH1F("diff_PhiRp_PhiRp_r",
      "sin[ #phi_{R}(T,k_{T}) - #phi_{R}(T,rej) ]",
      NBINS,-distMax,distMax);
-   TH1F * diff__T_byKt__Perp = new TH1F("diff__T_byKt__Perp",
+   TH1F * diff_PhiRp_PhiRq = new TH1F("diff_PhiRp_PhiRq",
      "sin[ #phi_{R}(T,k_{T}) - #phi_{R}(#perp  ,rej) ]",
      NBINS,-distMax,distMax);
-   TH1F * diff__T_byRej__Perp = new TH1F("diff__T_byRej__Perp",
+   TH1F * diff_PhiRp_r_PhiRq = new TH1F("diff_PhiRp_r_PhiRq",
      "sin[ #phi_{R}(T,rej) - #phi_{R}(#perp  ,rej) ]",
      NBINS,-distMax,distMax);
-   diff__T_byKt__T_byRej->SetLineColor(kRed);
-   diff__T_byKt__Perp->SetLineColor(kGreen+1);
-   diff__T_byRej__Perp->SetLineColor(kBlue);
+   diff_PhiRp_PhiRp_r->SetLineColor(kRed);
+   diff_PhiRp_PhiRq->SetLineColor(kGreen+1);
+   diff_PhiRp_r_PhiRq->SetLineColor(kBlue);
 
-   TH2F * corr__T_byKt__T_byRej = new TH2F("corr__T_byKt__T_byRej",
+   TH2F * corr_PhiRp_PhiRp_r = new TH2F("corr_PhiRp_PhiRp_r",
      "sin[ #phi_{R}(T,k_{T}) ] vs. sin[ #phi_{R}(T,rej) ]",
      NBINS,-distMax,distMax,
      NBINS,-distMax,distMax);
-   TH2F * corr__T_byKt__Perp = new TH2F("corr__T_byKt__Perp",
+   TH2F * corr_PhiRp_PhiRq = new TH2F("corr_PhiRp_PhiRq",
      "sin[ #phi_{R}(T,k_{T}) ] vs. sin[ #phi_{R}(#perp  ,rej) ]",
      NBINS,-distMax,distMax,
      NBINS,-distMax,distMax);
-   TH2F * corr__T_byRej__Perp = new TH2F("corr__T_byRej__Perp",
+   TH2F * corr_PhiRp_r_PhiRq = new TH2F("corr_PhiRp_r_PhiRq",
      "sin[ #phi_{R}(T,rej) ] vs. sin[ #phi_{R}(#perp  ,rej) ]",
      NBINS,-distMax,distMax,
      NBINS,-distMax,distMax);
@@ -87,44 +87,44 @@ int main(int argc, char** argv) {
 
    TString newTitle;
 
-   newTitle = dist_T_byKt->GetTitle() + frame;
-   dist_T_byKt->SetTitle(newTitle);
+   newTitle = distPhiRp->GetTitle() + frame;
+   distPhiRp->SetTitle(newTitle);
 
-   newTitle = dist_T_byRej->GetTitle() + frame;
-   dist_T_byRej->SetTitle(newTitle);
+   newTitle = distPhiRp_r->GetTitle() + frame;
+   distPhiRp_r->SetTitle(newTitle);
 
-   newTitle = dist_Perp->GetTitle() + frame;
-   dist_Perp->SetTitle(newTitle);
+   newTitle = distPhiRq->GetTitle() + frame;
+   distPhiRq->SetTitle(newTitle);
 
-   newTitle = diff__T_byKt__T_byRej->GetTitle() + frame;
-   diff__T_byKt__T_byRej->SetTitle(newTitle);
+   newTitle = diff_PhiRp_PhiRp_r->GetTitle() + frame;
+   diff_PhiRp_PhiRp_r->SetTitle(newTitle);
 
-   newTitle = diff__T_byKt__Perp->GetTitle() + frame;
-   diff__T_byKt__Perp->SetTitle(newTitle);
+   newTitle = diff_PhiRp_PhiRq->GetTitle() + frame;
+   diff_PhiRp_PhiRq->SetTitle(newTitle);
 
-   newTitle = diff__T_byRej__Perp->GetTitle() + frame;
-   diff__T_byRej__Perp->SetTitle(newTitle);
+   newTitle = diff_PhiRp_r_PhiRq->GetTitle() + frame;
+   diff_PhiRp_r_PhiRq->SetTitle(newTitle);
 
-   newTitle = corr__T_byKt__T_byRej->GetTitle() + frame;
-   corr__T_byKt__T_byRej->SetTitle(newTitle);
+   newTitle = corr_PhiRp_PhiRp_r->GetTitle() + frame;
+   corr_PhiRp_PhiRp_r->SetTitle(newTitle);
 
-   newTitle = corr__T_byKt__Perp->GetTitle() + frame;
-   corr__T_byKt__Perp->SetTitle(newTitle);
+   newTitle = corr_PhiRp_PhiRq->GetTitle() + frame;
+   corr_PhiRp_PhiRq->SetTitle(newTitle);
 
-   newTitle = corr__T_byRej__Perp->GetTitle() + frame;
-   corr__T_byRej__Perp->SetTitle(newTitle);
+   newTitle = corr_PhiRp_r_PhiRq->GetTitle() + frame;
+   corr_PhiRp_r_PhiRq->SetTitle(newTitle);
 
 
 
-   TH2F * breitVsLab_T_byKt = new TH2F("breitVsLab_T_byKt",
+   TH2F * breitVsLabPhiRp = new TH2F("breitVsLabPhiRp",
      "sin[ #phi_{R}(T,k_{T}) ] via Breit Frame vs. via Lab Frame",
      NBINS,-distMax,distMax,
      NBINS,-distMax,distMax);
-   TH2F * breitVsLab_T_byRej = new TH2F("breitVsLab_T_byRej",
+   TH2F * breitVsLabPhiRp_r = new TH2F("breitVsLabPhiRp_r",
      "sin[ #phi_{R}(T,Rej) ] via Breit Frame vs. via Lab Frame",
      NBINS,-distMax,distMax,
      NBINS,-distMax,distMax);
-   TH2F * breitVsLab_Perp = new TH2F("breitVsLab_Perp",
+   TH2F * breitVsLabPhiRq = new TH2F("breitVsLabPhiRq",
      "sin[ #phi_{R}(#perp  ,rej) ] via Breit Frame vs. via Lab Frame",
      NBINS,-distMax,distMax,
      NBINS,-distMax,distMax);
@@ -141,7 +141,7 @@ int main(int argc, char** argv) {
      NBINS,0,8,
      NBINS,-distMax,distMax);
    plotTitle = sigmaStr+" vs. P_{ h#perp}";
-   TH2F * sigmaVsPht = new TH2F("sigmaVsPht",plotTitle,
+   TH2F * sigmaVsPhPerp = new TH2F("sigmaVsPhPerp",plotTitle,
      NBINS,0,2,
      NBINS,-distMax,distMax);
    plotTitle = sigmaStr+" vs. z";
@@ -159,17 +159,17 @@ int main(int argc, char** argv) {
 
 
 
-   Float_t ang_T_byKt;
-   Float_t ang_T_byRej;
-   Float_t ang_Perp;
+   Float_t angPhiRp;
+   Float_t angPhiRp_r;
+   Float_t angPhiRq;
 
-   Float_t l_ang_T_byKt;
-   Float_t l_ang_T_byRej;
-   Float_t l_ang_Perp;
+   Float_t l_angPhiRp;
+   Float_t l_angPhiRp_r;
+   Float_t l_angPhiRq;
 
-   Float_t b_ang_T_byKt;
-   Float_t b_ang_T_byRej;
-   Float_t b_ang_Perp;
+   Float_t b_angPhiRp;
+   Float_t b_angPhiRp_r;
+   Float_t b_angPhiRq;
 
    Float_t angDiff;
    Float_t sigma;
@@ -182,54 +182,54 @@ int main(int argc, char** argv) {
      if(ev->cutDihadron && ev->cutQ2 && ev->cutW && ev->cutY) {
 
        // lab frame
-       l_ang_T_byKt = TMath::Sin(ev->PhiR_T_byKt);
-       l_ang_T_byRej = TMath::Sin(ev->PhiR_T_byRej);
-       l_ang_Perp = TMath::Sin(ev->PhiR_Perp);
+       l_angPhiRp = ev->PhiRp;
+       l_angPhiRp_r = ev->PhiRp_r;
+       l_angPhiRq = ev->PhiRq;
 
        // breit frame
-       b_ang_T_byKt = TMath::Sin(ev->b_PhiR_T_byKt);
-       b_ang_T_byRej = TMath::Sin(ev->b_PhiR_T_byRej);
-       b_ang_Perp = TMath::Sin(ev->b_PhiR_Perp);
+       b_angPhiRp = ev->b_PhiRp;
+       b_angPhiRp_r = ev->b_PhiRp_r;
+       b_angPhiRq = ev->b_PhiRq;
 
        if(useBreit) {
-         ang_T_byKt = b_ang_T_byKt;
-         ang_T_byRej = b_ang_T_byRej;
-         ang_Perp = b_ang_Perp;
+         angPhiRp = b_angPhiRp;
+         angPhiRp_r = b_angPhiRp_r;
+         angPhiRq = b_angPhiRq;
        } else {
-         ang_T_byKt = l_ang_T_byKt;
-         ang_T_byRej = l_ang_T_byRej;
-         ang_Perp = l_ang_Perp;
+         angPhiRp = l_angPhiRp;
+         angPhiRp_r = l_angPhiRp_r;
+         angPhiRq = l_angPhiRq;
        };
 
 
-       dist_T_byKt->Fill(ang_T_byKt);
-       dist_T_byRej->Fill(ang_T_byRej);
-       dist_Perp->Fill(ang_Perp);
+       distPhiRp->Fill(TMath::Sin(angPhiRp));
+       distPhiRp_r->Fill(TMath::Sin(angPhiRp_r));
+       distPhiRq->Fill(TMath::Sin(angPhiRq));
 
 
-       corr__T_byKt__T_byRej->Fill(ang_T_byRej,ang_T_byKt);
-       corr__T_byKt__Perp->Fill(ang_Perp,ang_T_byKt);
-       corr__T_byRej__Perp->Fill(ang_Perp,ang_T_byRej);
+       corr_PhiRp_PhiRp_r->Fill(TMath::Sin(angPhiRp_r),TMath::Sin(angPhiRp));
+       corr_PhiRp_PhiRq->Fill(TMath::Sin(angPhiRq),TMath::Sin(angPhiRp));
+       corr_PhiRp_r_PhiRq->Fill(TMath::Sin(angPhiRq),TMath::Sin(angPhiRp_r));
 
 
-       angDiff = TMath::Sin(ModAngle(ang_T_byKt - ang_T_byRej));
-       diff__T_byKt__T_byRej->Fill(angDiff);
+       angDiff = TMath::Sin(ModAngle(angPhiRp - angPhiRp_r));
+       diff_PhiRp_PhiRp_r->Fill(angDiff);
 
-       angDiff = TMath::Sin(ModAngle(ang_T_byKt - ang_Perp));
+       angDiff = TMath::Sin(ModAngle(angPhiRp - angPhiRq));
        sigma = angDiff;
-       diff__T_byKt__Perp->Fill(angDiff);
+       diff_PhiRp_PhiRq->Fill(angDiff);
 
-       angDiff = TMath::Sin(ModAngle(ang_T_byRej - ang_Perp));
-       diff__T_byRej__Perp->Fill(angDiff);
+       angDiff = TMath::Sin(ModAngle(angPhiRp_r - angPhiRq));
+       diff_PhiRp_r_PhiRq->Fill(angDiff);
 
 
-       breitVsLab_T_byKt->Fill(l_ang_T_byKt,b_ang_T_byKt);
-       breitVsLab_T_byRej->Fill(l_ang_T_byRej,b_ang_T_byRej);
-       breitVsLab_Perp->Fill(l_ang_Perp,b_ang_Perp);
+       breitVsLabPhiRp->Fill(TMath::Sin(l_angPhiRp),TMath::Sin(b_angPhiRp));
+       breitVsLabPhiRp_r->Fill(TMath::Sin(l_angPhiRp_r),TMath::Sin(b_angPhiRp_r));
+       breitVsLabPhiRq->Fill(TMath::Sin(l_angPhiRq),TMath::Sin(b_angPhiRq));
 
        sigmaVsQ2->Fill(ev->Q2,sigma);
        sigmaVsPh->Fill(ev->Ph,sigma);
-       sigmaVsPht->Fill(ev->Pht,sigma);
+       sigmaVsPhPerp->Fill(ev->PhPerp,sigma);
        sigmaVsZ->Fill(ev->Zpair,sigma);
        sigmaVsXF->Fill(ev->xF,sigma);
        if(ev->Q2 > 2 && ev->Q2 < 3) sigmaDist->Fill(sigma);
@@ -238,25 +238,25 @@ int main(int argc, char** argv) {
 
    };
 
-   dist_T_byKt->Write();
-   dist_T_byRej->Write();
-   dist_Perp->Write();
+   distPhiRp->Write();
+   distPhiRp_r->Write();
+   distPhiRq->Write();
 
-   corr__T_byKt__T_byRej->Write();
-   corr__T_byKt__Perp->Write();
-   corr__T_byRej__Perp->Write();
+   corr_PhiRp_PhiRp_r->Write();
+   corr_PhiRp_PhiRq->Write();
+   corr_PhiRp_r_PhiRq->Write();
 
-   diff__T_byKt__T_byRej->Write();
-   diff__T_byKt__Perp->Write();
-   diff__T_byRej__Perp->Write();
+   diff_PhiRp_PhiRp_r->Write();
+   diff_PhiRp_PhiRq->Write();
+   diff_PhiRp_r_PhiRq->Write();
 
-   breitVsLab_T_byKt->Write();
-   breitVsLab_T_byRej->Write();
-   breitVsLab_Perp->Write();
+   breitVsLabPhiRp->Write();
+   breitVsLabPhiRp_r->Write();
+   breitVsLabPhiRq->Write();
 
    sigmaVsQ2->Write();
    sigmaVsPh->Write();
-   sigmaVsPht->Write();
+   sigmaVsPhPerp->Write();
    sigmaVsZ->Write();
    sigmaVsXF->Write();
    sigmaDist->Write();
