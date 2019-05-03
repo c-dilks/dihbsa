@@ -16,7 +16,7 @@ EventTree::EventTree(TString filelist) {
   chain->Add(filelist);
 
   ENT = chain->GetEntries();
-  printf("number of entries: %d\n",ENT);
+  printf("number of entries: %lld\n",ENT);
 
   chain->SetBranchAddress("W",&W);
   chain->SetBranchAddress("Q2",&Q2);
@@ -35,30 +35,23 @@ EventTree::EventTree(TString filelist) {
   chain->SetBranchAddress("Z",Z);
   chain->SetBranchAddress("Zpair",&Zpair);
   chain->SetBranchAddress("xF",&xF);
-  //chain->SetBranchAddress("alpha",&alpha);
+  chain->SetBranchAddress("alpha",&alpha);
   chain->SetBranchAddress("Ph",&Ph);
-  //chain->SetBranchAddress("PhPerp",&PhPerp);
-  chain->SetBranchAddress("Pht",&PhPerp); // FIX !!
-  //chain->SetBranchAddress("R",&R);
-  //chain->SetBranchAddress("RPerp",&RPerp);
-  //chain->SetBranchAddress("RT",&RT);
+  chain->SetBranchAddress("PhPerp",&PhPerp);
+  chain->SetBranchAddress("R",&R);
+  chain->SetBranchAddress("RPerp",&RPerp);
+  chain->SetBranchAddress("RT",&RT);
 
   chain->SetBranchAddress("PhiH",&PhiH);
   chain->SetBranchAddress("PhiR",&PhiR);
 
-  //chain->SetBranchAddress("PhiRq",&PhiRq);
-  //chain->SetBranchAddress("PhiRp",&PhiRp);
-  //chain->SetBranchAddress("PhiRp_r",&PhiRp_r);
-  chain->SetBranchAddress("PhiR_Perp",&PhiRq);
-  chain->SetBranchAddress("PhiR_T_byKt",&PhiRp);
-  chain->SetBranchAddress("PhiR_T_byRej",&PhiRp_r);
+  chain->SetBranchAddress("PhiRq",&PhiRq);
+  chain->SetBranchAddress("PhiRp",&PhiRp);
+  chain->SetBranchAddress("PhiRp_r",&PhiRp_r);
 
-  //chain->SetBranchAddress("b_PhiRq",&b_PhiRq);
-  //chain->SetBranchAddress("b_PhiRp",&b_PhiRp);
-  //chain->SetBranchAddress("b_PhiRp_r",&b_PhiRp_r);
-  chain->SetBranchAddress("b_PhiR_Perp",&b_PhiRq);
-  chain->SetBranchAddress("b_PhiR_T_byKt",&b_PhiRp);
-  chain->SetBranchAddress("b_PhiR_T_byRej",&b_PhiRp_r);
+  chain->SetBranchAddress("b_PhiRq",&b_PhiRq);
+  chain->SetBranchAddress("b_PhiRp",&b_PhiRp);
+  chain->SetBranchAddress("b_PhiRp_r",&b_PhiRp_r);
 
   
   chain->SetBranchAddress("runnum",&runnum);
@@ -82,12 +75,12 @@ void EventTree::GetEvent(Int_t i) {
   cutY = y < 0.8;
 
   // Dihadron kinematics cuts
-  cutDihadron = true;
-  cutDihadron = cutDihadron && Z[hP] > 0.1 && Z[hM] > 0.1;
-  cutDihadron = cutDihadron && Zpair < 0.95;
-  cutDihadron = cutDihadron && Mmiss > 1.05;
-  cutDihadron = cutDihadron && xF > 0;
-  cutDihadron = cutDihadron && hadP[hP] > 1.0 && hadP[hM] > 1.0;
+  cutDihadron = 
+    Z[hP] > 0.1 && Z[hM] > 0.1 &&
+    Zpair < 0.95 &&
+    Mmiss > 1.05 &&
+    xF > 0 &&
+    hadP[hP] > 1.0 && hadP[hM] > 1.0;
 };
 
 

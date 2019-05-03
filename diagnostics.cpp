@@ -140,10 +140,10 @@ int main(int argc, char** argv) {
 
 
 
-   printf("begin loop through %d events...\n",ev->ENT);
+   printf("begin loop through %lld events...\n",ev->ENT);
    for(int i=0; i<ev->ENT; i++) {
-     ev->GetEvent(i);
 
+     ev->GetEvent(i);
 
      if(ev->cutDihadron) {
 

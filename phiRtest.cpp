@@ -144,6 +144,26 @@ int main(int argc, char** argv) {
    TH2F * sigmaVsPhPerp = new TH2F("sigmaVsPhPerp",plotTitle,
      NBINS,0,2,
      NBINS,-distMax,distMax);
+   plotTitle = sigmaStr+" vs. R";
+   TH2F * sigmaVsR = new TH2F("sigmaVsR",plotTitle,
+     NBINS,0,4,
+     NBINS,-distMax,distMax);
+   plotTitle = sigmaStr+" vs. R_{q}";
+   TH2F * sigmaVsRT = new TH2F("sigmaVsRT",plotTitle,
+     NBINS,0,1.5,
+     NBINS,-distMax,distMax);
+   plotTitle = sigmaStr+" vs. R_{p}";
+   TH2F * sigmaVsRPerp = new TH2F("sigmaVsRPerp",plotTitle,
+     NBINS,0,1.5,
+     NBINS,-distMax,distMax);
+   plotTitle = sigmaStr+" vs. D=#Delta#eta#oplus#Delta#phi";
+   TH2F * sigmaVsD = new TH2F("sigmaVsD",plotTitle,
+     NBINS,0,8,
+     NBINS,-distMax,distMax);
+   plotTitle = sigmaStr+" vs. #alpha";
+   TH2F * sigmaVsAlpha = new TH2F("sigmaVsAlpha",plotTitle,
+     NBINS,0,2,
+     NBINS,-distMax,distMax);
    plotTitle = sigmaStr+" vs. z";
    TH2F * sigmaVsZ = new TH2F("sigmaVsZ",plotTitle,
      NBINS,0,1,
@@ -156,6 +176,10 @@ int main(int argc, char** argv) {
      NBINS,-distMax,distMax);
 
 
+   plotTitle = "#alpha vs. D=#Delta#eta#oplus#Delta#phi";
+   TH2F * alphaVsD = new TH2F("alphaVsD",plotTitle,
+     NBINS,0,8,
+     NBINS,0,2);
 
 
 
@@ -173,8 +197,9 @@ int main(int argc, char** argv) {
 
    Float_t angDiff;
    Float_t sigma;
+   Float_t D,deltaEta,deltaPhi;
 
-   printf("begin loop through %d events...\n",ev->ENT);
+   printf("begin loop through %lld events...\n",ev->ENT);
    for(int i=0; i<ev->ENT; i++) {
 
      ev->GetEvent(i);
@@ -230,9 +255,22 @@ int main(int argc, char** argv) {
        sigmaVsQ2->Fill(ev->Q2,sigma);
        sigmaVsPh->Fill(ev->Ph,sigma);
        sigmaVsPhPerp->Fill(ev->PhPerp,sigma);
+       sigmaVsR->Fill(ev->R,sigma);
+       sigmaVsRT->Fill(ev->RT,sigma);
+       sigmaVsRPerp->Fill(ev->RPerp,sigma);
+       sigmaVsAlpha->Fill(ev->alpha,sigma);
        sigmaVsZ->Fill(ev->Zpair,sigma);
        sigmaVsXF->Fill(ev->xF,sigma);
        if(ev->Q2 > 2 && ev->Q2 < 3) sigmaDist->Fill(sigma);
+
+       deltaEta = ev->hadEta[hP] - ev->hadEta[hM];
+       deltaPhi = ModAngle(ev->hadPhi[hP] - ev->hadPhi[hM]);
+
+       D = TMath::Sqrt(
+         TMath::Power(deltaEta, 2) +
+         TMath::Power(deltaPhi, 2) );
+       sigmaVsD->Fill(D,sigma);
+       alphaVsD->Fill(D,ev->alpha);
      };
 
 
@@ -257,9 +295,16 @@ int main(int argc, char** argv) {
    sigmaVsQ2->Write();
    sigmaVsPh->Write();
    sigmaVsPhPerp->Write();
+   sigmaVsR->Write();
+   sigmaVsRT->Write();
+   sigmaVsRPerp->Write();
+   sigmaVsD->Write();
+   sigmaVsAlpha->Write();
    sigmaVsZ->Write();
    sigmaVsXF->Write();
    sigmaDist->Write();
+
+   alphaVsD->Write();
 
 
    outfile->Close();
