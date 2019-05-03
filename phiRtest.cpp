@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
    TFile * outfile = new TFile("phiRplots.root","RECREATE");
 
 
-   const Int_t NBINS = 100;
+   const Int_t NBINS = 50;
    Float_t distMax = 1.1;
 
    TH1F * distPhiRp = new TH1F("distPhiRp",
@@ -131,55 +131,78 @@ int main(int argc, char** argv) {
 
 
    TString plotTitle;
-   TString sigmaStr = "sin[ #phi_{R}(T,k_{T}) - #phi_{R}(#perp  ,rej) ]";
+   Float_t sigmaMax = 1.5*distMax;
+   //TString sigmaStr = "sin[ #phi_{R}(T,k_{T}) - #phi_{R}(#perp  ,rej) ]";
+   TString sigmaStr = "#sigma";
    plotTitle = sigmaStr+" vs. Q^{~2}";
    TH2F * sigmaVsQ2 = new TH2F("sigmaVsQ2",plotTitle,
      NBINS,0,10,
-     NBINS,-distMax,distMax);
+     NBINS,-sigmaMax,sigmaMax);
+   plotTitle = sigmaStr+" vs. x";
+   TH2F * sigmaVsX = new TH2F("sigmaVsX",plotTitle,
+     NBINS,0,1,
+     NBINS,-sigmaMax,sigmaMax);
+   plotTitle = sigmaStr+" vs. M_{h}";
+   TH2F * sigmaVsMh = new TH2F("sigmaVsMh",plotTitle,
+     NBINS,0,3,
+     NBINS,-sigmaMax,sigmaMax);
    plotTitle = sigmaStr+" vs. P_{ h}";
    TH2F * sigmaVsPh = new TH2F("sigmaVsPh",plotTitle,
      NBINS,0,8,
-     NBINS,-distMax,distMax);
+     NBINS,-sigmaMax,sigmaMax);
    plotTitle = sigmaStr+" vs. P_{ h#perp}";
    TH2F * sigmaVsPhPerp = new TH2F("sigmaVsPhPerp",plotTitle,
      NBINS,0,2,
-     NBINS,-distMax,distMax);
+     NBINS,-sigmaMax,sigmaMax);
    plotTitle = sigmaStr+" vs. R";
    TH2F * sigmaVsR = new TH2F("sigmaVsR",plotTitle,
      NBINS,0,4,
-     NBINS,-distMax,distMax);
+     NBINS,-sigmaMax,sigmaMax);
    plotTitle = sigmaStr+" vs. R_{q}";
    TH2F * sigmaVsRT = new TH2F("sigmaVsRT",plotTitle,
      NBINS,0,1.5,
-     NBINS,-distMax,distMax);
+     NBINS,-sigmaMax,sigmaMax);
    plotTitle = sigmaStr+" vs. R_{p}";
    TH2F * sigmaVsRPerp = new TH2F("sigmaVsRPerp",plotTitle,
      NBINS,0,1.5,
-     NBINS,-distMax,distMax);
+     NBINS,-sigmaMax,sigmaMax);
    plotTitle = sigmaStr+" vs. D=#Delta#eta#oplus#Delta#phi";
    TH2F * sigmaVsD = new TH2F("sigmaVsD",plotTitle,
-     NBINS,0,8,
-     NBINS,-distMax,distMax);
+     NBINS,0,5,
+     NBINS,-sigmaMax,sigmaMax);
    plotTitle = sigmaStr+" vs. #alpha";
    TH2F * sigmaVsAlpha = new TH2F("sigmaVsAlpha",plotTitle,
-     NBINS,0,2,
-     NBINS,-distMax,distMax);
-   plotTitle = sigmaStr+" vs. z";
+     NBINS,0,1.4,
+     NBINS,-sigmaMax,sigmaMax);
+   plotTitle = sigmaStr+" vs. z_{pair}";
    TH2F * sigmaVsZ = new TH2F("sigmaVsZ",plotTitle,
      NBINS,0,1,
-     NBINS,-distMax,distMax);
+     NBINS,-sigmaMax,sigmaMax);
    plotTitle = sigmaStr+" vs. x_{F}";
    TH2F * sigmaVsXF = new TH2F("sigmaVsXF",plotTitle,
      NBINS*2,-1,1,
-     NBINS,-distMax,distMax);
+     NBINS,-sigmaMax,sigmaMax);
+   plotTitle = sigmaStr+" vs. #phi_{h}";
+   TH2F * sigmaVsPhiH = new TH2F("sigmaVsPhiH",plotTitle,
+     NBINS,-PI-0.1,PI+0.1,
+     NBINS,-sigmaMax,sigmaMax);
+   plotTitle = sigmaStr+" vs. #phi_{Rq}";
+   TH2F * sigmaVsPhiRq = new TH2F("sigmaVsPhiRq",plotTitle,
+     NBINS,-PI-0.1,PI+0.1,
+     NBINS,-sigmaMax,sigmaMax);
+   plotTitle = sigmaStr+" vs. #phi_{Rp}";
+   TH2F * sigmaVsPhiRp = new TH2F("sigmaVsPhiRp",plotTitle,
+     NBINS,-PI-0.1,PI+0.1,
+     NBINS,-sigmaMax,sigmaMax);
+
    TH1F * sigmaDist = new TH1F("sigmaDist",sigmaStr,
-     NBINS,-distMax,distMax);
+     NBINS,-sigmaMax,sigmaMax);
 
 
    plotTitle = "#alpha vs. D=#Delta#eta#oplus#Delta#phi";
    TH2F * alphaVsD = new TH2F("alphaVsD",plotTitle,
-     NBINS,0,8,
-     NBINS,0,2);
+     NBINS,0,5,
+     NBINS,0,1.4);
 
 
 
@@ -253,6 +276,8 @@ int main(int argc, char** argv) {
        breitVsLabPhiRq->Fill(TMath::Sin(l_angPhiRq),TMath::Sin(b_angPhiRq));
 
        sigmaVsQ2->Fill(ev->Q2,sigma);
+       sigmaVsX->Fill(ev->x,sigma);
+       sigmaVsMh->Fill(ev->Mh,sigma);
        sigmaVsPh->Fill(ev->Ph,sigma);
        sigmaVsPhPerp->Fill(ev->PhPerp,sigma);
        sigmaVsR->Fill(ev->R,sigma);
@@ -261,14 +286,18 @@ int main(int argc, char** argv) {
        sigmaVsAlpha->Fill(ev->alpha,sigma);
        sigmaVsZ->Fill(ev->Zpair,sigma);
        sigmaVsXF->Fill(ev->xF,sigma);
+       sigmaVsPhiH->Fill(ev->PhiH,sigma);
+       sigmaVsPhiRq->Fill(angPhiRq,sigma);
+       sigmaVsPhiRp->Fill(angPhiRp,sigma);
+
        if(ev->Q2 > 2 && ev->Q2 < 3) sigmaDist->Fill(sigma);
 
        deltaEta = ev->hadEta[hP] - ev->hadEta[hM];
        deltaPhi = ModAngle(ev->hadPhi[hP] - ev->hadPhi[hM]);
-
        D = TMath::Sqrt(
          TMath::Power(deltaEta, 2) +
          TMath::Power(deltaPhi, 2) );
+
        sigmaVsD->Fill(D,sigma);
        alphaVsD->Fill(D,ev->alpha);
      };
@@ -293,17 +322,26 @@ int main(int argc, char** argv) {
    breitVsLabPhiRq->Write();
 
    sigmaVsQ2->Write();
+
+   sigmaVsX->Write();
+   sigmaVsMh->Write();
+   sigmaVsZ->Write();
+   sigmaVsXF->Write();
+
    sigmaVsPh->Write();
    sigmaVsPhPerp->Write();
    sigmaVsR->Write();
    sigmaVsRT->Write();
    sigmaVsRPerp->Write();
-   sigmaVsD->Write();
-   sigmaVsAlpha->Write();
-   sigmaVsZ->Write();
-   sigmaVsXF->Write();
-   sigmaDist->Write();
 
+   sigmaVsAlpha->Write();
+   sigmaVsD->Write();
+
+   sigmaVsPhiH->Write();
+   sigmaVsPhiRq->Write();
+   sigmaVsPhiRp->Write();
+
+   sigmaDist->Write();
    alphaVsD->Write();
 
 
