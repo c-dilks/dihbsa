@@ -1,0 +1,37 @@
+<Request>
+<Project name="clas12" />
+<Track name="debug" />
+<Name name="dihbsaAnalysis" />
+
+<Variable name="hipoDir" value="file:/home/dilks/j/hipo" />
+<Variable name="workDir" value="file:/home/dilks/j/dihbsa" />
+
+<List name="hipoFiles">
+out_clas_003432.evio.278
+out_clas_003432.evio.327
+out_clas_003432.evio.328
+out_clas_003432.evio.470
+out_clas_003432.evio.694
+out_clas_003432.evio.883
+</List>
+
+<ForEach list="hipoFiles">
+<Job>
+  <TimeLimit unit="minutes" time="20" />
+  <DiskSpace space="2" unit="GB" />
+  <Memory space="2" unit="GB" />
+
+  <Input src="${hipoDir}/${hipoFiles}.hipo" dest="infile.hipo" />
+
+  <Command><![CDATA[
+    analysis.exe infile.hipo
+  ]]></Command>
+
+  <Output dest="${workDir}/outroot/${hipoFiles}.root" src="outroot.root" />
+  <Stdout dest="${workDir}/logfiles/${hipoFiles}.out" />
+  <Stderr dest="${workDir}/logfiles/${hipoFiles}.err" />
+
+</Job>
+</ForEach>
+
+</Request>

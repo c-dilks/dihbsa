@@ -1,0 +1,36 @@
+<Request>
+  <Project name="clas12"/>
+  <Track name="debug"/>
+  <Name name="dihbsaAnalysis"/>
+
+<!-- sample XML Files in /u/group/hps/production/ -->
+
+  <List name="hipoFiles">
+out_clas_003432.evio.1544
+out_clas_003432.evio.1545
+out_clas_003432.evio.1548
+  </List>
+
+  <Variable name="hipoDir" value="file:/w/hallb-scifs17exp/clas12/rg-a/data/cooked_5p7p8_fullMap_alignprod" />
+  <Variable name="workDir" value="/w/hallb-scifs17exp/clas12/dilks/dihbsa" />
+
+  <ForEach list="hipoFiles">
+    <Job>
+      <TimeLimit unit="minutes" time="20"/>
+      <!--
+      <DiskSpace space="2" unit="GB" />
+      <Memory space="2" unit="GB" />
+      -->
+      <Input src="${hipoDir}/${hipoFiles}.hipo" dest="infile.hipo"/>
+
+      <Command><![CDATA[
+        analysis.exe infile.hipo
+      ]]></Command>
+
+      <Output dest="${workDir}/outroot/${hipoFiles}.root" src="outroot.root"/>
+      <Stdout dest="${workDir}/logfiles/${hipoFiles}.out"/>
+      <Stderr dest="${workDir}/logfiles/${hipoFiles}.err"/>
+    </Job>
+  </ForEach>
+
+</Request>
