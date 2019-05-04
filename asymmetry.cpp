@@ -64,6 +64,8 @@ int main(int argc, char** argv) {
      };
    };
 
+   asym->CalculateAsymmetries();
+
    asym->Write(outfile);
 
 

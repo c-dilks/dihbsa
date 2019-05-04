@@ -21,6 +21,7 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
+#include "TGraphErrors.h"
 
 // dihbsa
 #include "Constants.h"
@@ -37,6 +38,8 @@ class Asymmetry : public TObject
     void AddBinBound(Int_t ivIdx, Float_t newBound);
     void PrintBinBounds();
     Int_t GetBin(Int_t v_, Float_t iv_);
+    void CalculateAsymmetries();
+    void EvalAsymmetry(TGraphErrors * asymGr, TH1D * mdistL, TH1D * mdistR);
 
     void Write(TFile * f);
 
@@ -86,8 +89,9 @@ class Asymmetry : public TObject
     // [spin] [IV] [bin]
     // -- [IV] is that specific IV; the other 2 IVs are integrated 
     // -- [bin] is the bin in that IV
-    TH1D * mDist1[nSpin][nIV][nBinsMax]; // filled with, e.g., Sin(phiR) for each spin
-    TH1D * wDist1[nIV][nBinsMax]; // filled with appropriate IV (finely binned)
+    TH1D * wDist1[nIV][nBinsMax]; // fill appropriate IV (finely binned)
+    TH1D * mDist1[nSpin][nIV][nBinsMax]; // fill, e.g., Sin(phiR) for each spin
+    TGraphErrors * asym1[nIV][nBinsMax]; // asymmetry
 
 
     // 2-dim binning:
@@ -98,16 +102,18 @@ class Asymmetry : public TObject
     // -- [IV2] is the second IV
     // -- [bin1] is the first IV's bin
     // -- [bin2] is the second IV's bin
-    TH2D * mDist2[nSpin][nIV][nIV][nBinsMax][nBinsMax];
-    TH1D * wDist2[nIV][nIV][nBinsMax][nBinsMax];
+    TH2D * wDist2[nIV][nIV][nBinsMax][nBinsMax];
+    TH1D * mDist2[nSpin][nIV][nIV][nBinsMax][nBinsMax];
+    TGraphErrors * asym2[nIV][nIV][nBinsMax][nBinsMax];
 
     // 3-dim binning:
     // distributions for each triple of bins; since no IVs are integated
     // over, we only need one distribution; the three bins are in alphabetical
     // order
     // [vM bin] [vX bin] [vZ bin]
-    TH3D * mDist3[nSpin][nBinsMax][nBinsMax][nBinsMax];
-    TH1D * wDist3[nBinsMax][nBinsMax][nBinsMax];
+    TH3D * wDist3[nBinsMax][nBinsMax][nBinsMax];
+    TH1D * mDist3[nSpin][nBinsMax][nBinsMax][nBinsMax];
+    TGraphErrors * asym3[nBinsMax][nBinsMax][nBinsMax];
 
 
     // bin boundaries
@@ -133,6 +139,11 @@ class Asymmetry : public TObject
     Float_t modulation;
     Int_t binn[nIV];
     Int_t spinn;
+
+    Double_t yL,yR;
+    Double_t asymNumer,asymDenom;
+    Double_t asymVal,modVal;
+    Double_t asymErr,modErr;
 
 
 
