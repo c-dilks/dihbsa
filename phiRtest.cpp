@@ -15,12 +15,13 @@
 
 // DihBsa
 #include "Constants.h"
+#include "Tools.h"
 #include "DIS.h"
 #include "Trajectory.h"
 #include "Dihadron.h"
 #include "EventTree.h"
+#include "Asymmetry.h"
 
-Float_t ModAngle(Float_t ang);
 void HadronCompareCanv(TCanvas * canv, TH1F * dist[2], TH2F * corr);
 
 int main(int argc, char** argv) {
@@ -260,15 +261,15 @@ int main(int argc, char** argv) {
        corr_PhiRp_r_PhiRq->Fill(TMath::Sin(angPhiRq),TMath::Sin(angPhiRp_r));
 
 
-       angDiff = TMath::Sin(ModAngle(angPhiRp - angPhiRp_r));
-       diff_PhiRp_PhiRp_r->Fill(angDiff);
+       angDiff = Tools::AdjAngle(angPhiRp - angPhiRp_r);
+       diff_PhiRp_PhiRp_r->Fill(TMath::Sin(angDiff));
 
-       angDiff = TMath::Sin(ModAngle(angPhiRp - angPhiRq));
-       sigma = angDiff;
-       diff_PhiRp_PhiRq->Fill(angDiff);
+       angDiff = Tools::AdjAngle(angPhiRp - angPhiRq);
+       sigma = TMath::Sin(angDiff);
+       diff_PhiRp_PhiRq->Fill(TMath::Sin(angDiff));
 
-       angDiff = TMath::Sin(ModAngle(angPhiRp_r - angPhiRq));
-       diff_PhiRp_r_PhiRq->Fill(angDiff);
+       angDiff = Tools::AdjAngle(angPhiRp_r - angPhiRq);
+       diff_PhiRp_r_PhiRq->Fill(TMath::Sin(angDiff));
 
 
        breitVsLabPhiRp->Fill(TMath::Sin(l_angPhiRp),TMath::Sin(b_angPhiRp));
@@ -293,7 +294,7 @@ int main(int argc, char** argv) {
        if(ev->Q2 > 2 && ev->Q2 < 3) sigmaDist->Fill(sigma);
 
        deltaEta = ev->hadEta[hP] - ev->hadEta[hM];
-       deltaPhi = ModAngle(ev->hadPhi[hP] - ev->hadPhi[hM]);
+       deltaPhi = Tools::AdjAngle(ev->hadPhi[hP] - ev->hadPhi[hM]);
        D = TMath::Sqrt(
          TMath::Power(deltaEta, 2) +
          TMath::Power(deltaPhi, 2) );
@@ -350,8 +351,3 @@ int main(int argc, char** argv) {
 };
 
 
-Float_t ModAngle(Float_t ang) {
-  while(ang>PI) ang-=2*PI;
-  while(ang<-PI) ang+=2*PI;
-  return ang;
-};

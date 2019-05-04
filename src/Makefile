@@ -28,7 +28,7 @@ GLIBS = $(ROOTGLIBS) $(SYSLIBS) $(HIPOLIBS)
 #-----------------------------------------------
 
 CXXFILES = DIS.cxx Trajectory.cxx Dihadron.cxx EventTree.cxx Asymmetry.cxx
-HEADERS = Constants.h DIS.h Trajectory.h Dihadron.h EventTree.h Asymmetry.h
+HEADERS = Constants.h Tools.h DIS.h Trajectory.h Dihadron.h EventTree.h Asymmetry.h
 
 #-----------------------------------------------
 

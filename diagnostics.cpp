@@ -15,12 +15,12 @@
 
 // DihBsa
 #include "Constants.h"
+#include "Tools.h"
 #include "DIS.h"
 #include "Trajectory.h"
 #include "Dihadron.h"
 #include "EventTree.h"
 
-Float_t ModAngle(Float_t ang);
 void HadronCompareCanv(TCanvas * canv, TH1F * dist[2], TH2F * corr);
 
 int main(int argc, char** argv) {
@@ -180,7 +180,7 @@ int main(int argc, char** argv) {
            hadZDist[h]->Fill(ev->Z[h]);
          };
 
-         deltaPhi = ModAngle(ev->hadPhi[hP] - ev->hadPhi[hM]);
+         deltaPhi = Tools::AdjAngle(ev->hadPhi[hP] - ev->hadPhi[hM]);
          deltaPhiDist->Fill(deltaPhi);
 
          MhDist->Fill(ev->Mh);
@@ -192,7 +192,7 @@ int main(int argc, char** argv) {
          PhiRDist->Fill(ev->PhiR);
          PhiHvsPhiR->Fill(ev->PhiR,ev->PhiH);
 
-         PhiHR = ModAngle(ev->PhiH - ev->PhiR);
+         PhiHR = Tools::AdjAngle(ev->PhiH - ev->PhiR);
          PhiHRDist->Fill(PhiHR);
        };
 
@@ -246,12 +246,6 @@ int main(int argc, char** argv) {
 
 };
 
-
-Float_t ModAngle(Float_t ang) {
-  while(ang>PI) ang-=2*PI;
-  while(ang<-PI) ang+=2*PI;
-  return ang;
-};
 
 
 void HadronCompareCanv(TCanvas * canv, TH1F * dist[2], TH2F * corr) {

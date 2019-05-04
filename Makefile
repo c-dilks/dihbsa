@@ -34,6 +34,8 @@ all:
 	@echo ""
 	make phiRtest
 	@echo ""
+	make asymmetry
+	@echo ""
 
 analysis: analysis.o
 	$(CXX) -o analysis.exe $< $(ALLFLAGS)
@@ -43,6 +45,9 @@ diagnostics: diagnostics.o
 
 phiRtest: phiRtest.o
 	$(CXX) -o phiRtest.exe $< $(ALLFLAGS)
+	
+asymmetry: asymmetry.o
+	$(CXX) -o asymmetry.exe $< $(ALLFLAGS)
 
 clean:
 	@cd src; make clean

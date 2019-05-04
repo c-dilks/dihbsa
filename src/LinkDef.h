@@ -4,6 +4,7 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+#pragma link C++ class Tools+;
 #pragma link C++ class DIS+;
 #pragma link C++ class Trajectory+;
 #pragma link C++ class Dihadron+;
