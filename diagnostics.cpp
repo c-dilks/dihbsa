@@ -29,7 +29,6 @@ int main(int argc, char** argv) {
    TString inDir = "outroot";
    if(argc>1) inDir = TString(argv[1]);
 
-   gSystem->Load("src/DihBsa.so");
    EventTree * ev = new EventTree(TString(inDir+"/out*.root"));
 
 

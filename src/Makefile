@@ -37,8 +37,8 @@ All: DihBsa.so
 DihBsa.so: LinkDef.h $(HEADERS) $(CXXFILES)
 	@echo "generating dictionary $@..."
 	@rootcint -f DihBsaDict.cxx -c $(HEADERS) LinkDef.h
-	$(CXX) $(CXXFILES) DihBsaDict.cxx -shared -o DihBsa.so $(CXXFLAGS) $(GLIBS)
+	$(CXX) $(CXXFILES) DihBsaDict.cxx -shared -o ../DihBsa.so $(CXXFLAGS) $(GLIBS)
 
 clean:
 	@echo "removing DihBsa.so..."
-	@rm DihBsa.so
+	@rm ../DihBsa.so

@@ -28,11 +28,13 @@ int main(int argc, char** argv) {
 
    // ARGUMENTS
    TString infileN;
-   if(argc>1) infileN = TString(argv[1]);
-   else {
+   Bool_t batchMode = false;
+   if(argc<=1) {
      printf("USAGE: %s [hipo file]\n",argv[0]);
      exit(0);
    };
+   if(argc>1) infileN = TString(argv[1]);
+   if(argc>2) batchMode = true;
 
 
    // if true, print more to stdout
@@ -40,14 +42,17 @@ int main(int argc, char** argv) {
 
    // set output file name
    TString outfileN;
-   outfileN = infileN;
-   outfileN(TRegexp("^.*/")) = "outroot/";
-   outfileN(TRegexp("hipo$")) = "root";
+   if(batchMode) outfileN = "outroot.root";
+   else {
+     outfileN = infileN;
+     outfileN(TRegexp("^.*/")) = "outroot/";
+     outfileN(TRegexp("hipo$")) = "root";
+   };
    printf("outfileN = %s\n",outfileN.Data());
 
 
    // load libs
-   gSystem->Load("src/DihBsa.so");
+   //gSystem->Load("src/DihBsa.so");
    DIS * disEv = new DIS();
    Trajectory * hadron[2];
    Dihadron * dih = new Dihadron(); dih->useBreit = false;

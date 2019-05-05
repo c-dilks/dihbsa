@@ -41,7 +41,7 @@ app "  <Input src=\"\${hipoDir}/\${hipoFiles}.hipo\" dest=\"infile.hipo\" />"
 app ""
 
 app "  <Command><![CDATA["
-app "    analysis.exe infile.hipo"
+app "    analysis.exe infile.hipo 1"
 app "  ]]></Command>"
 app ""
 

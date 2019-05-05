@@ -1,35 +1,45 @@
 <Request>
   <Project name="clas12"/>
   <Track name="debug"/>
-  <Name name="dihbsaAnalysis"/>
+  <Name name="dihbsa"/>
 
 <!-- sample XML Files in /u/group/hps/production/ -->
 
-  <List name="hipoFiles">
-out_clas_003432.evio.1544
-out_clas_003432.evio.1545
-out_clas_003432.evio.1548
+  <List name="hipoFile">
+4037_4
+4038_4
+4039_4
   </List>
 
-  <Variable name="hipoDir" value="file:/w/hallb-scifs17exp/clas12/rg-a/data/cooked_5p7p8_fullMap_alignprod" />
+  <Variable name="hipoDir" value="/mss/clas12/rg-a/production/trains/dnp2018/v0/skim4_inclusive" />
   <Variable name="workDir" value="/w/hallb-scifs17exp/clas12/dilks/dihbsa" />
 
-  <ForEach list="hipoFiles">
+  <ForEach list="hipoFile">
     <Job>
       <TimeLimit unit="minutes" time="20"/>
+      <DiskSpace space="4" unit="GB" />
       <!--
-      <DiskSpace space="2" unit="GB" />
       <Memory space="2" unit="GB" />
       -->
-      <Input src="${hipoDir}/${hipoFiles}.hipo" dest="infile.hipo"/>
+
+      <!--
+      <Command><![CDATA[
+        mkdir src
+        ls -l
+      ]]></Command>
+      -->
+
+      <Input src="mss:${hipoDir}/${hipoFile}.hipo" dest="infile.hipo"/>
+      <Input src="file:${workDir}/analysis.exe" dest="analysis.exe"/>
+      <Input src="file:${workDir}/DihBsa.so" dest="DihBsa.so"/>
 
       <Command><![CDATA[
-        analysis.exe infile.hipo
+        analysis.exe infile.hipo 1
       ]]></Command>
 
-      <Output dest="${workDir}/outroot/${hipoFiles}.root" src="outroot.root"/>
-      <Stdout dest="${workDir}/logfiles/${hipoFiles}.out"/>
-      <Stderr dest="${workDir}/logfiles/${hipoFiles}.err"/>
+      <Output dest="${workDir}/outroot/${hipoFile}.root" src="outroot.root"/>
+      <Stdout dest="${workDir}/logfiles/${hipoFile}.out"/>
+      <Stderr dest="${workDir}/logfiles/${hipoFile}.err"/>
     </Job>
   </ForEach>
 

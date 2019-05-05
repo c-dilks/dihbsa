@@ -31,7 +31,6 @@ int main(int argc, char** argv) {
    if(argc>1) inDir = TString(argv[1]);
    if(argc>2) useBreit = (Bool_t)strtof(argv[2],NULL);
 
-   gSystem->Load("src/DihBsa.so");
    EventTree * ev = new EventTree(TString(inDir+"/out*.root"));
    TString frame = useBreit ? " --- Breit frame":" --- Lab frame ";
    printf("\n%s\n",frame.Data());
