@@ -16,6 +16,7 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
+#include "TF1.h"
 #include "TGraphErrors.h"
 #include "TCanvas.h"
 
@@ -30,10 +31,13 @@ class KinDep : public TObject
   public:
     KinDep(Asymmetry * asym_);
     ~KinDep();
+    void FillAsymGraphs();
     void FillCanvases();
+    void FormatAsymGr(TGraphErrors * g, Int_t ivNum);
 
     Asymmetry * A;
     Int_t canvSize;
+    TString fitName;
 
     
     // 1D canvases
@@ -63,6 +67,13 @@ class KinDep : public TObject
     Int_t NB[Asymmetry::nIV];
     TString canvName;
     TString grName,grTitle;
+
+    TF1 * fitFunc;
+    Float_t asymValue,asymError;
+    Float_t kinValue,kinError;
+
+    TGraphErrors * asymGrCurr;
+    TH3D * wDistCurr;
 
   ClassDef(KinDep,1);
 };
