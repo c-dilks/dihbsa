@@ -437,7 +437,7 @@ void Asymmetry::EvalAsymmetry(
   };
 
   // fit asymmetry
-  asymGr->Fit("pol1","","",-modMax,modMax);
+  asymGr->Fit("pol1","Q","",-modMax,modMax);
 };
 
 
@@ -458,9 +458,18 @@ Float_t Asymmetry::EvalModulation(Float_t PhiH_, Float_t PhiR_) {
 };
 
 Int_t Asymmetry::SpinState(Int_t spin_) {
+  /*
   switch(spin_) {
     case -1: return sM;
     case 1: return sP;
+    default:
+      fprintf(stderr,"ERROR: bad SpinState request: %d\n",spin_);
+      return -10000;
+  };
+  */
+  switch(spin_) {
+    case 0: return sP; // dnp2019 // TODO
+    case 1: return sM;
     default:
       fprintf(stderr,"ERROR: bad SpinState request: %d\n",spin_);
       return -10000;

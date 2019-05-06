@@ -9,7 +9,7 @@ HIPOCFLAGS  := -I$(CLAS12TOOL)/Hipo -I$(CLAS12TOOL)/Banks -Isrc
 HIPOLIBS    := -L$(CLAS12TOOL)/lib -lhipo -lclas12banks -Lsrc
 
 DIHBSACFLAGS  := -Isrc 
-DIHBSALIBS    := -Lsrc DihBsa.so
+DIHBSALIBS    := -Lsrc ./DihBsa.so
 
 LZ4LIBS     := -L$(CLAS12TOOL)/Lz4/lib -llz4
 LZ4INCLUDES := -I$(CLAS12TOOL)/Lz4/lib

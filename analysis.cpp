@@ -52,7 +52,6 @@ int main(int argc, char** argv) {
 
 
    // load libs
-   //gSystem->Load("src/DihBsa.so");
    DIS * disEv = new DIS();
    Trajectory * hadron[2];
    Dihadron * dih = new Dihadron(); dih->useBreit = false;

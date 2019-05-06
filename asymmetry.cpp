@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
    if(argc>1) inDir = TString(argv[1]);
    if(argc>2) useBreit = (Bool_t)strtof(argv[2],NULL);
 
-   EventTree * ev = new EventTree(TString(inDir+"/out*.root"));
+   EventTree * ev = new EventTree(TString(inDir+"/*.root"));
    TString frame = useBreit ? " --- Breit frame":" --- Lab frame ";
    printf("\n%s\n",frame.Data());
 

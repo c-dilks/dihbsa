@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
    TString inDir = "outroot";
    if(argc>1) inDir = TString(argv[1]);
 
-   EventTree * ev = new EventTree(TString(inDir+"/out*.root"));
+   EventTree * ev = new EventTree(TString(inDir+"/*.root"));
 
 
    TFile * outfile = new TFile("plots.root","RECREATE");

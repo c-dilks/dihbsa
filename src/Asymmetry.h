@@ -92,6 +92,7 @@ class Asymmetry : public TObject
     TH1D * wDist1[nIV][nBinsMax]; // fill appropriate IV (finely binned)
     TH1D * mDist1[nSpin][nIV][nBinsMax]; // fill, e.g., Sin(phiR) for each spin
     TGraphErrors * asym1[nIV][nBinsMax]; // asymmetry
+    TH1D * bDist1[nIV]; // full IV distribution, for showing bin bounds
 
 
     // 2-dim binning:
@@ -105,6 +106,7 @@ class Asymmetry : public TObject
     TH2D * wDist2[nIV][nIV][nBinsMax][nBinsMax];
     TH1D * mDist2[nSpin][nIV][nIV][nBinsMax][nBinsMax];
     TGraphErrors * asym2[nIV][nIV][nBinsMax][nBinsMax];
+    TH2D * bDist2[nIV][nIV];
 
     // 3-dim binning:
     // distributions for each triple of bins; since no IVs are integated
@@ -114,6 +116,7 @@ class Asymmetry : public TObject
     TH3D * wDist3[nBinsMax][nBinsMax][nBinsMax];
     TH1D * mDist3[nSpin][nBinsMax][nBinsMax][nBinsMax];
     TGraphErrors * asym3[nBinsMax][nBinsMax][nBinsMax];
+    TH3D * bDist3[nIV][nIV][nIV];
 
 
     // bin boundaries
@@ -124,10 +127,10 @@ class Asymmetry : public TObject
     Float_t nModMax;
 
 
-    
-  private:
     TString IVname[nIV];
     TString IVtitle[nIV];
+    
+  private:
     TString SpinName[nSpin];
     TString SpinTitle[nSpin];
     TString plotTitle,plotName;
