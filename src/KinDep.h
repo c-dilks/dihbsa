@@ -34,6 +34,7 @@ class KinDep : public TObject
     void FillAsymGraphs();
     void FillCanvases();
     void FormatAsymGr(TGraphErrors * g, Int_t ivNum);
+    void Write(TFile * f);
 
     Asymmetry * A;
     Int_t canvSize;

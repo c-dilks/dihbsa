@@ -39,7 +39,6 @@ KinDep::KinDep(Asymmetry * asym_) {
     asymGr1[v] = new TGraphErrors();
     asymGr1[v]->SetName(grName);
     asymGr1[v]->SetTitle(grTitle);
-    FormatAsymGr(asymGr1[v],v);
   };
 
   
@@ -70,7 +69,6 @@ KinDep::KinDep(Asymmetry * asym_) {
         asymGr2[v0][v1][b] = new TGraphErrors();
         asymGr2[v0][v1][b]->SetName(grName);
         asymGr2[v0][v1][b]->SetTitle(grTitle);
-        FormatAsymGr(asymGr2[v0][v1][b],v0);
       };
 
     };
@@ -108,7 +106,6 @@ KinDep::KinDep(Asymmetry * asym_) {
             asymGr3[v0][v1][v2][b1][b2] = new TGraphErrors();
             asymGr3[v0][v1][v2][b1][b2]->SetName(grName);
             asymGr3[v0][v1][v2][b1][b2]->SetTitle(grTitle);
-            FormatAsymGr(asymGr3[v0][v1][v2][b1][b2],v0);
           };
         };
       };
@@ -135,6 +132,8 @@ void KinDep::FormatAsymGr(TGraphErrors * g, Int_t ivNum) {
   g->SetMarkerStyle(kFullCircle);
   g->SetMarkerColor(kBlack);
   g->SetMarkerSize(1.3);
+
+  g->GetYaxis()->SetRangeUser(-0.05,0.1);
 };
 
   
@@ -183,6 +182,7 @@ void KinDep::FillAsymGraphs() {
 
 
   // fill 3D graphs
+  /*
   for(int v0=0; v0<N; v0++) {
     for(int v1=0; v1<N; v1++) {
       for(int v2=0; v2<N; v2++) {
@@ -190,6 +190,8 @@ void KinDep::FillAsymGraphs() {
           for(int b2=0; b2<NB[v2]; b2++) {
 
             for(int p=0; p<NB[v0]; p++) {
+
+              printf("aqui %d %d %d %d %d %d\n",v0,v1,v2,b1,b2,p);
 
               // TODO -- check this assigment
               switch(v0) {
@@ -208,7 +210,10 @@ void KinDep::FillAsymGraphs() {
               };
 
 
+
+              printf("aqui switch %p\n",(void*)asymGrCurr);
               fitFunc = asymGrCurr->GetFunction(fitName);
+              printf("aqui switch %p\n",(void*)fitFunc);
 
               asymValue = fitFunc->GetParameter(1);
               asymError = fitFunc->GetParError(1);
@@ -216,14 +221,18 @@ void KinDep::FillAsymGraphs() {
               kinValue = wDistCurr->GetMean(v0+1);
               kinError = wDistCurr->GetRMS(v0+1);
 
+              printf("aqui vals\n");
+
               asymGr3[v0][v1][v2][b1][b2]->SetPoint(p,kinValue,asymValue);
               asymGr3[v0][v1][v2][b1][b2]->SetPointError(p,kinError,asymError);
+              printf("aqui fills\n");
             };
           };
         };
       };
     };
   };
+  */
 
 };
 
@@ -235,10 +244,80 @@ void KinDep::FillCanvases() {
   // fill 1D canvases
   for(int v=0; v<N; v++) {
     canv1->cd(v+1);
-
+    asymGr1[v]->Draw("APE");
+    FormatAsymGr(asymGr1[v],v);
+    asymGr1[v]->Draw("APE");
   };
+
+
+  // fill 2D canvases
+  for(int v0=0; v0<N; v0++) {
+    for(int v1=0; v1<N; v1++) {
+      for(int b1=0; b1<NB[v1]; b1++) {
+        canv2[v0][v1]->cd(b1+1);
+        asymGr2[v0][v1][b1]->Draw("APE");
+        FormatAsymGr(asymGr2[v0][v1][b1],v0);
+        asymGr2[v0][v1][b1]->Draw("APE");
+      };
+    };
+  };
+
+  // fill 3D canvases
+  /*
+  for(int v0=0; v0<N; v0++) {
+    for(int v1=0; v1<N; v1++) {
+      for(int v2=0; v2<N; v2++) {
+        for(int b1=0; b1<NB[v1]; b1++) {
+          for(int b2=0; b2<NB[v2]; b2++) {
+
+            // fill 2d grid of canvases, such that
+            // -- bottom-left corner is for ( b1=0, b2=0 )
+            // -- top-left corner is for ( b1=0, b2=NB[v2]-1 )
+            canv3[v0][v1][v2]->cd(
+              ( NB[v2] - 1 - b2 ) * NB[v1] + b1 + 1
+            );
+            asymGr3[v0][v1][v2][b1][b2]->Draw("APE");
+            FormatAsymGr(asymGr3[v0][v1][v2][b1][b2],v0);
+            asymGr3[v0][v1][v2][b1][b2]->Draw("APE");
+          };
+        };
+      };
+    };
+  };
+  */
+
+
 };
 
+
+// to be called AFTER Asymmetry::Write()
+void KinDep::Write(TFile * f) {
+  f->cd();
+
+  // 1D write
+  f->cd("/1D");
+  canv1->Write();
+
+  // 2D write
+  f->cd("/"); f->mkdir("2D/canv"); f->cd("/2D/canv");
+  for(int v0=0; v0<N; v0++) {
+    for(int v1=0; v1<N; v1++) {
+      if(v0!=v1) canv2[v0][v1]->Write();
+    };
+  };
+
+  // 3D write
+  /*
+  f->cd("/"); f->mkdir("3D/canv"); f->cd("/3D/canv");
+  for(int v0=0; v0<N; v0++) {
+    for(int v1=0; v1<N; v1++) {
+      for(int v2=0; v2<N; v2++) {
+        canv3[v0][v1][v2]->Write();
+      };
+    };
+  };
+  */
+};
 
 
 

@@ -37,16 +37,18 @@ Asymmetry::Asymmetry(Int_t phiModulation, Bool_t singleBinMode=false) {
   for(int v=0; v<nIV; v++) nBins[v]=-1;
   // -- mass
   AddBinBound(vM,0);
-  AddBinBound(vM,0.5);
-  AddBinBound(vM,1);
+  AddBinBound(vM,0.45);
+  AddBinBound(vM,0.9);
   AddBinBound(vM,maxIV[vM]);
   // -- x
   AddBinBound(vX,0);
   AddBinBound(vX,0.2);
+  AddBinBound(vX,0.35);
   AddBinBound(vX,maxIV[vX]);
   // -- z
   AddBinBound(vZ,0);
-  AddBinBound(vZ,0.5);
+  AddBinBound(vZ,0.42);
+  AddBinBound(vZ,0.6);
   AddBinBound(vZ,maxIV[vZ]);
 
   if(singleBinMode) {

@@ -20,6 +20,7 @@
 #include "Dihadron.h"
 #include "EventTree.h"
 #include "Asymmetry.h"
+#include "KinDep.h"
 
 void HadronCompareCanv(TCanvas * canv, TH1F * dist[2], TH2F * corr);
 
@@ -65,8 +66,10 @@ int main(int argc, char** argv) {
 
    asym->CalculateAsymmetries();
 
-   asym->Write(outfile);
+   KinDep * kd = new KinDep(asym);
 
+   asym->Write(outfile);
+   kd->Write(outfile);
 
    outfile->Close();
 
