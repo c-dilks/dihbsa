@@ -15,6 +15,7 @@
 #include "TTree.h"
 #include "TChain.h"
 #include "TFile.h"
+#include "TCanvas.h"
 #include "TLorentzVector.h"
 #include "TString.h"
 #include "TMath.h"
@@ -22,6 +23,7 @@
 #include "TH2.h"
 #include "TH3.h"
 #include "TGraphErrors.h"
+#include "TLine.h"
 
 // dihbsa
 #include "Constants.h"
@@ -41,6 +43,7 @@ class Asymmetry : public TObject
     void CalculateAsymmetries();
     void EvalAsymmetry(TGraphErrors * asymGr, TH1D * mdistL, TH1D * mdistR);
 
+    void DrawBoundLines();
     void Write(TFile * f);
 
     void FillPlots();
@@ -74,7 +77,8 @@ class Asymmetry : public TObject
     // enumerators 
     enum ivEnum { vM, vX, vZ, nIV }; // Independent Variables (IV)
     enum spinEnum { sP, sM, nSpin }; // spin state
-    static const Int_t nBinsMax = 20;
+    static const Int_t nBinsMax = 7;
+    Float_t minIV[nIV];
     Float_t maxIV[nIV];
 
     static const Int_t w1Bins = 100; // number of bins for wDist1 plots
@@ -93,6 +97,7 @@ class Asymmetry : public TObject
     TH1D * mDist1[nSpin][nIV][nBinsMax]; // fill, e.g., Sin(phiR) for each spin
     TGraphErrors * asym1[nIV][nBinsMax]; // asymmetry
     TH1D * bDist1[nIV]; // full IV distribution, for showing bin bounds
+    TCanvas * bDistCanv1[nIV]; // canvas for bDist
 
 
     // 2-dim binning:
@@ -107,6 +112,7 @@ class Asymmetry : public TObject
     TH1D * mDist2[nSpin][nIV][nIV][nBinsMax][nBinsMax];
     TGraphErrors * asym2[nIV][nIV][nBinsMax][nBinsMax];
     TH2D * bDist2[nIV][nIV];
+    TCanvas * bDistCanv2[nIV][nIV];
 
     // 3-dim binning:
     // distributions for each triple of bins; since no IVs are integated
@@ -116,7 +122,6 @@ class Asymmetry : public TObject
     TH3D * wDist3[nBinsMax][nBinsMax][nBinsMax];
     TH1D * mDist3[nSpin][nBinsMax][nBinsMax][nBinsMax];
     TGraphErrors * asym3[nBinsMax][nBinsMax][nBinsMax];
-    TH3D * bDist3[nIV][nIV][nIV];
 
 
     // bin boundaries
@@ -126,6 +131,9 @@ class Asymmetry : public TObject
                                   // of the highest bin, use bin#+1
     Float_t nModMax;
 
+    TLine * boundLine1[nIV][nBinsMax];
+    TLine * vertLine[nIV][nIV][nBinsMax];
+    TLine * horizLine[nIV][nIV][nBinsMax];
 
     TString IVname[nIV];
     TString IVtitle[nIV];
@@ -135,6 +143,7 @@ class Asymmetry : public TObject
     TString SpinName[nSpin];
     TString SpinTitle[nSpin];
     TString plotTitle,plotName;
+    TString canvName;
 
 
     Float_t angle;
@@ -148,6 +157,8 @@ class Asymmetry : public TObject
     Double_t asymNumer,asymDenom;
     Double_t asymVal,modVal;
     Double_t asymErr,modErr;
+
+    Double_t bMax;
 
 
 

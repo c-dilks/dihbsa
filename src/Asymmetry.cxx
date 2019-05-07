@@ -31,22 +31,22 @@ Asymmetry::Asymmetry(Int_t phiModulation, Bool_t singleBinMode=false) {
 
 
   // set up (default) binning
-  maxIV[vM] = 3;
-  maxIV[vX] = 1;
-  maxIV[vZ] = 1;
+  minIV[vM] = 0;   maxIV[vM] = 3;
+  minIV[vX] = 0;   maxIV[vX] = 1;
+  minIV[vZ] = 0;   maxIV[vZ] = 1;
   for(int v=0; v<nIV; v++) nBins[v]=-1;
   // -- mass
-  AddBinBound(vM,0);
+  AddBinBound(vM,minIV[vM]);
   AddBinBound(vM,0.45);
   AddBinBound(vM,0.9);
   AddBinBound(vM,maxIV[vM]);
   // -- x
-  AddBinBound(vX,0);
+  AddBinBound(vX,minIV[vX]);
   AddBinBound(vX,0.2);
   AddBinBound(vX,0.35);
   AddBinBound(vX,maxIV[vX]);
   // -- z
-  AddBinBound(vZ,0);
+  AddBinBound(vZ,minIV[vZ]);
   AddBinBound(vZ,0.42);
   AddBinBound(vZ,0.6);
   AddBinBound(vZ,maxIV[vZ]);
@@ -85,6 +85,18 @@ Asymmetry::Asymmetry(Int_t phiModulation, Bool_t singleBinMode=false) {
 
   // instantiate 1-d distributions
   for(int v=0; v<nIV; v++) {
+
+    plotName = Form("bDist_%s",
+     IVname[v].Data()
+    );
+    plotTitle = 
+      Form("full %s distribution",
+      IVtitle[v].Data()
+    );
+    bDist1[v] = new TH1D(plotName,plotTitle,
+      w1Bins,bound[v][0],bound[v][nBins[v]]
+    );
+
     for(int b=0; b<nBins[v]; b++) {
 
       plotName = Form("wDist_%s%d",
@@ -135,6 +147,24 @@ Asymmetry::Asymmetry(Int_t phiModulation, Bool_t singleBinMode=false) {
   // instantiate 2-d distributions
   for(int v1=0; v1<nIV; v1++) {
     for(int v2=0; v2<nIV; v2++) {
+
+      plotName = Form("bDist_%s_%s",
+        IVname[v1].Data(),
+        IVname[v2].Data()
+      );
+      plotTitle = 
+        Form("full %s vs %s distribution",
+        IVtitle[v2].Data(),IVtitle[v1].Data()
+      );
+      plotTitle = plotTitle + Form(";%s;%s",
+        IVtitle[v1].Data(),IVtitle[v2].Data()
+      );
+      bDist2[v1][v2] = new TH2D(plotName,plotTitle,
+        w2Bins,bound[v1][0],bound[v1][nBins[v1]],
+        w2Bins,bound[v2][0],bound[v2][nBins[v2]]
+      );
+
+
       for(int b1=0; b1<nBins[v1]; b1++) {
         for(int b2=0; b2<nBins[v2]; b2++) {
 
@@ -278,6 +308,11 @@ void Asymmetry::AddBinBound(Int_t ivIdx, Float_t newBound) {
     return;
   };
 
+  if(nBins[ivIdx]+1 > nBinsMax) {
+    fprintf(stderr,"ERROR: AddBinBound requests more bins than nBinsMax\n");
+    return;
+  };
+
   bound[ivIdx][++nBins[ivIdx]] = newBound;
 
   return;
@@ -338,6 +373,7 @@ void Asymmetry::FillPlots() {
   
   // fill 1D plots
   for(int v=0; v<nIV; v++) {
+    bDist1[v]->Fill(iv[v]);
     wDist1[v][binn[v]]->Fill(iv[v]);
     mDist1[spinn][v][binn[v]]->Fill(modulation);
   };
@@ -345,6 +381,7 @@ void Asymmetry::FillPlots() {
   // fill 2D plots
   for(int v1=0; v1<nIV; v1++) {
     for(int v2=0; v2<nIV; v2++) {
+      bDist2[v1][v2]->Fill(iv[v1],iv[v2]);
       wDist2[v1][v2][binn[v1]][binn[v2]]->Fill(iv[v1],iv[v2]);
       mDist2[spinn][v1][v2][binn[v1]][binn[v2]]->Fill(modulation);
     };
@@ -498,13 +535,73 @@ void Asymmetry::ResetVars() {
 };
 
 
+void Asymmetry::DrawBoundLines() {
+
+  // 1D 
+  for(int v=0; v<nIV; v++) {
+    canvName = Form("bCistCanv_%s",IVname[v].Data());
+    bDistCanv1[v] = new TCanvas(canvName,canvName,1000,1000);
+    bDist1[v]->SetLineColor(kBlack);
+    bDist1[v]->SetLineWidth(3);
+    bDist1[v]->Draw();
+
+    bMax = bDist1[v]->GetMaximum();
+    for(int b=1; b<nBins[v]; b++) {
+      boundLine1[v][b] = new TLine(
+        bound[v][b], 0,
+        bound[v][b], bMax
+      );
+      boundLine1[v][b]->SetLineColor(kBlue);
+      boundLine1[v][b]->SetLineWidth(2);
+      boundLine1[v][b]->Draw();
+    };
+
+  };
+
+
+  // 2D 
+  for(int v0=0; v0<nIV; v0++) {
+    for(int v1=0; v1<nIV; v1++) {
+      canvName = Form("bCistCanv_%s_%s",IVname[v0].Data(),IVname[v1].Data());
+      bDistCanv2[v0][v1] = new TCanvas(canvName,canvName,1000,1000);
+      bDist2[v0][v1]->Draw("colz");
+
+      for(int b=1; b<nBins[v0]; b++) {
+        vertLine[v0][v1][b] = new TLine(
+          bound[v0][b], bound[v1][0],
+          bound[v0][b], bound[v1][nBins[v1]]
+        );
+        vertLine[v0][v1][b]->SetLineColor(kBlack);
+        vertLine[v0][v1][b]->SetLineWidth(3);
+        vertLine[v0][v1][b]->Draw();
+      };
+      
+      for(int b=1; b<nBins[v1]; b++) {
+        horizLine[v0][v1][b] = new TLine(
+          bound[v0][0], bound[v1][b],
+          bound[v0][nBins[v0]], bound[v1][b]
+        );
+        horizLine[v0][v1][b]->SetLineColor(kBlack);
+        horizLine[v0][v1][b]->SetLineWidth(3);
+        horizLine[v0][v1][b]->Draw();
+      };
+
+    };
+  };
+};
+
 
 void Asymmetry::Write(TFile * f) {
+
+  this->DrawBoundLines();
+
   f->cd();
 
   // 1D 
   f->mkdir("1D"); f->mkdir("1D/wdists"); f->cd("/1D/wdists");
   for(int v=0; v<nIV; v++) {
+    bDistCanv1[v]->Write();
+    bDist1[v]->Write();
     for(int b=0; b<nBins[v]; b++) {
       wDist1[v][b]->Write();
     };
@@ -529,6 +626,8 @@ void Asymmetry::Write(TFile * f) {
   f->mkdir("2D"); f->mkdir("2D/wdists"); f->cd("/2D/wdists");
   for(int v1=0; v1<nIV-1; v1++) {
     for(int v2=v1+1; v2<nIV; v2++) {
+      bDistCanv2[v1][v2]->Write();
+      bDist2[v1][v2]->Write();
       for(int b1=0; b1<nBins[v1]; b1++) {
         for(int b2=0; b2<nBins[v2]; b2++) {
           wDist2[v1][v2][b1][b2]->Write();

@@ -134,7 +134,7 @@ int main(int argc, char** argv) {
    Float_t sigmaMax = PI+1;
    //TString sigmaStr = "sin[ #phi_{R}(T,k_{T}) - #phi_{R}(#perp  ,rej) ]";
    TString sigmaStr = "#sigma";
-   plotTitle = sigmaStr+" vs. Q^{~2}";
+   plotTitle = sigmaStr+" vs. Q^{2}";
    TH2F * sigmaVsQ2 = new TH2F("sigmaVsQ2",plotTitle,
      NBINS,0,10,
      NBINS,-sigmaMax,sigmaMax);
