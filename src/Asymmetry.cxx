@@ -22,8 +22,8 @@ Asymmetry::Asymmetry(Int_t phiModulation, Bool_t singleBinMode=false) {
       modMax = 1;
       break;
     case modSinPhiHR:
-      ModulationTitle = "sin(#phi_{h}-#phi_{R})";
-      modMax = 1;
+      ModulationTitle = "P_{hT}sin(#phi_{h}-#phi_{R})";
+      modMax = 1.5;
       break;
     default:
       fprintf(stderr,"ERROR: bad phiModulation\n");
@@ -416,26 +416,32 @@ void Asymmetry::EvalAsymmetry(
   };
 
    
+  pointCnt = 0;
   for(int m=1; m<=nModBins; m++) {
+
     yL = mdistL->GetBinContent(m);
     yR = mdistR->GetBinContent(m);
 
-    // compute asymmetry value
     asymNumer = yL - yR;
     asymDenom = yL + yR;
-    asymVal = asymNumer / asymDenom;
 
-    // compute asymmetry error
-    asymErr = 1.0 / ( 0.86 * TMath::Sqrt(yL+yR) ); // to be updated...
+    if(asymDenom>0) {
+      // compute asymmetry value
+      asymVal = asymNumer / asymDenom;
 
-    // compute azimuthal modulation value
-    modVal = mdistL->GetBinCenter(m); // to be updated to bin mean...
-    
-    // compute azimuthal modulation error
-    modErr = 0; // azimuthal modulation error
+      // compute asymmetry error
+      asymErr = 1.0 / ( 0.86 * TMath::Sqrt(yL+yR) ); // to be updated...
 
-    asymGr->SetPoint(m-1,modVal,asymVal);
-    asymGr->SetPointError(m-1,modErr,asymErr);
+      // compute azimuthal modulation value
+      modVal = mdistL->GetBinCenter(m); // to be updated to bin mean...
+      
+      // compute azimuthal modulation error
+      modErr = 0; // azimuthal modulation error
+
+      asymGr->SetPoint(pointCnt,modVal,asymVal);
+      asymGr->SetPointError(pointCnt,modErr,asymErr);
+      pointCnt++;
+    };
   };
 
   // fit asymmetry
@@ -451,7 +457,7 @@ Float_t Asymmetry::EvalModulation(Float_t PhiH_, Float_t PhiR_) {
       return TMath::Sin(PhiR_);
       break;
     case modSinPhiHR:
-      return TMath::Sin(PhiH_-PhiR_);
+      return PhPerp * TMath::Sin(PhiH_-PhiR_);
       break;
     default:
       fprintf(stderr,"ERROR: bad phiModulation\n");

@@ -28,20 +28,16 @@ int main(int argc, char** argv) {
 
    // ARGUMENTS
    TString inDir = "outroot";
-   Bool_t useBreit = false;
+   Int_t whichPhiR = 3; // 1:phiRq  2:phiRp_r  3:phiRp
    if(argc>1) inDir = TString(argv[1]);
-   if(argc>2) useBreit = (Bool_t)strtof(argv[2],NULL);
-
-   EventTree * ev = new EventTree(TString(inDir+"/*.root"));
-   TString frame = useBreit ? " --- Breit frame":" --- Lab frame ";
-   printf("\n%s\n",frame.Data());
-
-   Asymmetry * asym = new Asymmetry(Asymmetry::modSinPhiR, false);
-   
-
+   if(argc>2) whichPhiR = (Int_t)strtof(argv[2],NULL);
 
    TFile * outfile = new TFile("spin.root","RECREATE");
 
+
+   EventTree * ev = new EventTree(TString(inDir+"/*.root"));
+   Asymmetry * asym = new Asymmetry(Asymmetry::modSinPhiR, false);
+   //Asymmetry * asym = new Asymmetry(Asymmetry::modSinPhiHR, false);
 
 
    printf("begin loop through %lld events...\n",ev->ENT);
@@ -56,8 +52,22 @@ int main(int argc, char** argv) {
        asym->eSpin = ev->helicity;
        asym->pSpin = 0;
        asym->PhiH = ev->PhiH;
+       asym->PhPerp = ev->PhPerp;
 
-       asym->PhiR = ev->PhiRq; ///////////////
+       switch(whichPhiR) {
+         case 1:
+           asym->PhiR = ev->PhiRq;
+           break;
+         case 2:
+           asym->PhiR = ev->PhiRp_r;
+           break;
+         case 3:
+           asym->PhiR = ev->PhiRp;
+           break;
+         default:
+           fprintf(stderr,"ERROR: invalid whichPhiR\n");
+           return 0;
+       };
 
        asym->FillPlots();
 
@@ -70,6 +80,7 @@ int main(int argc, char** argv) {
 
    asym->Write(outfile);
    kd->Write(outfile);
+   kd->PrintPNGs(whichPhiR);
 
    outfile->Close();
 

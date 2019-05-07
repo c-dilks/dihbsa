@@ -19,7 +19,7 @@ KinDep::KinDep(Asymmetry * asym_) {
 
 
   // formatting
-  canvSize = 400;
+  canvSize = 800;
 
   fitName = "pol1"; // fit function used in Asymmetry fits
 
@@ -35,7 +35,10 @@ KinDep::KinDep(Asymmetry * asym_) {
   //
   for(int v=0; v<N; v++) {
     grName = Form("asymGr_%s",A->IVname[v].Data());
-    grTitle = Form("asymmetry vs. %s",A->IVtitle[v].Data());
+    grTitle = Form("%s asymmetry vs. %s",
+      A->ModulationTitle.Data(),
+      A->IVtitle[v].Data()
+    );
     asymGr1[v] = new TGraphErrors();
     asymGr1[v]->SetName(grName);
     asymGr1[v]->SetTitle(grTitle);
@@ -62,7 +65,8 @@ KinDep::KinDep(Asymmetry * asym_) {
           A->IVname[v0].Data(),A->IVname[v1].Data(),
           b
         );
-        grTitle = Form("asymmetry vs. %s :: %s#in[%.2f,%.2f)",
+        grTitle = Form("%s asymmetry vs. %s :: %s#in[%.2f,%.2f)",
+          A->ModulationTitle.Data(),
           A->IVname[v0].Data(),
           A->IVname[v1].Data(),A->bound[v1][b],A->bound[v1][b+1]
         );
@@ -98,7 +102,8 @@ KinDep::KinDep(Asymmetry * asym_) {
               A->IVname[v1].Data(),b1,
               A->IVname[v2].Data(),b2
             );
-            grTitle = Form("asymmetry vs. %s :: %s#in[%.2f,%.2f),  %s#in[%.2f,%.2f)",
+            grTitle = Form("%s asymmetry vs. %s :: %s#in[%.2f,%.2f),  %s#in[%.2f,%.2f)",
+              A->ModulationTitle.Data(),
               A->IVname[v0].Data(),
               A->IVname[v1].Data(),A->bound[v1][b1],A->bound[v1][b1+1],
               A->IVname[v2].Data(),A->bound[v2][b2],A->bound[v2][b2+1]
@@ -112,6 +117,24 @@ KinDep::KinDep(Asymmetry * asym_) {
     };
   };
 
+
+  // get minimum/maximum IVs and set zeroLines 
+  for(int v=0; v<N; v++) {
+    
+    //ivMin[v] = Tools::GetFirstFilledX(A->wDist1[v][0]);
+    //ivMax[v] = Tools::GetLastFilledX(A->wDist1[v][NB[v]-1]);
+    ivMin[v] = A->wDist1[v][0]->GetMean() - 3 * A->wDist1[v][0]->GetRMS();
+    ivMax[v] = A->wDist1[v][NB[v]-1]->GetMean() + 2 * A->wDist1[v][NB[v]-1]->GetRMS();
+
+    zeroLine[v] = new TLine(ivMin[v],0,ivMax[v],0);
+    zeroLine[v]->SetLineColor(kBlack);
+    zeroLine[v]->SetLineWidth(1.5);
+    zeroLine[v]->SetLineStyle(kDashed);
+  };
+
+
+
+  // fill graphs and canvases
   FillAsymGraphs();
   FillCanvases();
         
@@ -133,7 +156,8 @@ void KinDep::FormatAsymGr(TGraphErrors * g, Int_t ivNum) {
   g->SetMarkerColor(kBlack);
   g->SetMarkerSize(1.3);
 
-  g->GetYaxis()->SetRangeUser(-0.05,0.1);
+  g->GetYaxis()->SetRangeUser(-0.07,0.1);
+  g->GetXaxis()->SetLimits(ivMin[ivNum],ivMax[ivNum]);
 };
 
   
@@ -142,18 +166,23 @@ void KinDep::FillAsymGraphs() {
 
   // fill 1D graphs
   for(int v=0; v<N; v++) {
+    cnt=0;
     for(int p=0; p<NB[v]; p++) {
 
       fitFunc = A->asym1[v][p]->GetFunction(fitName);
 
-      asymValue = fitFunc->GetParameter(1);
-      asymError = fitFunc->GetParError(1);
+      if(fitFunc!=NULL) {
 
-      kinValue = A->wDist1[v][p]->GetMean();
-      kinError = A->wDist1[v][p]->GetRMS();
+        asymValue = fitFunc->GetParameter(1);
+        asymError = fitFunc->GetParError(1);
 
-      asymGr1[v]->SetPoint(p,kinValue,asymValue);
-      asymGr1[v]->SetPointError(p,kinError,asymError);
+        kinValue = A->wDist1[v][p]->GetMean();
+        kinError = A->wDist1[v][p]->GetRMS();
+
+        asymGr1[v]->SetPoint(cnt,kinValue,asymValue);
+        asymGr1[v]->SetPointError(cnt,kinError,asymError);
+        cnt++;
+      };
     };
   };
 
@@ -163,18 +192,23 @@ void KinDep::FillAsymGraphs() {
     for(int v1=0; v1<N; v1++) {
       for(int b1=0; b1<NB[v1]; b1++) {
 
+        cnt = 0;
         for(int p=0; p<NB[v0]; p++) {
 
           fitFunc = A->asym2[v0][v1][p][b1]->GetFunction(fitName);
 
-          asymValue = fitFunc->GetParameter(1);
-          asymError = fitFunc->GetParError(1);
+          if(fitFunc!=NULL) {
 
-          kinValue = A->wDist2[v0][v1][p][b1]->GetMean(1);
-          kinError = A->wDist2[v0][v1][p][b1]->GetRMS(1);
+            asymValue = fitFunc->GetParameter(1);
+            asymError = fitFunc->GetParError(1);
 
-          asymGr2[v0][v1][b1]->SetPoint(p,kinValue,asymValue);
-          asymGr2[v0][v1][b1]->SetPointError(p,kinError,asymError);
+            kinValue = A->wDist2[v0][v1][p][b1]->GetMean(1);
+            kinError = A->wDist2[v0][v1][p][b1]->GetRMS(1);
+
+            asymGr2[v0][v1][b1]->SetPoint(cnt,kinValue,asymValue);
+            asymGr2[v0][v1][b1]->SetPointError(cnt,kinError,asymError);
+            cnt++;
+          };
         };
       };
     };
@@ -189,6 +223,7 @@ void KinDep::FillAsymGraphs() {
         for(int b1=0; b1<NB[v1]; b1++) {
           for(int b2=0; b2<NB[v2]; b2++) {
 
+            cnt = 0;
             for(int p=0; p<NB[v0]; p++) {
 
               printf("aqui %d %d %d %d %d %d\n",v0,v1,v2,b1,b2,p);
@@ -215,17 +250,21 @@ void KinDep::FillAsymGraphs() {
               fitFunc = asymGrCurr->GetFunction(fitName);
               printf("aqui switch %p\n",(void*)fitFunc);
 
-              asymValue = fitFunc->GetParameter(1);
-              asymError = fitFunc->GetParError(1);
+              if(fitFunc!=NULL) {
+                asymValue = fitFunc->GetParameter(1);
+                asymError = fitFunc->GetParError(1);
 
-              kinValue = wDistCurr->GetMean(v0+1);
-              kinError = wDistCurr->GetRMS(v0+1);
+                kinValue = wDistCurr->GetMean(v0+1);
+                kinError = wDistCurr->GetRMS(v0+1);
 
-              printf("aqui vals\n");
+                printf("aqui vals\n");
 
-              asymGr3[v0][v1][v2][b1][b2]->SetPoint(p,kinValue,asymValue);
-              asymGr3[v0][v1][v2][b1][b2]->SetPointError(p,kinError,asymError);
-              printf("aqui fills\n");
+                asymGr3[v0][v1][v2][b1][b2]->SetPoint(cnt,kinValue,asymValue);
+                asymGr3[v0][v1][v2][b1][b2]->SetPointError(cnt,kinError,asymError);
+                cnt++;
+
+                printf("aqui fills\n");
+              };
             };
           };
         };
@@ -247,6 +286,7 @@ void KinDep::FillCanvases() {
     asymGr1[v]->Draw("APE");
     FormatAsymGr(asymGr1[v],v);
     asymGr1[v]->Draw("APE");
+    zeroLine[v]->Draw();
   };
 
 
@@ -258,6 +298,7 @@ void KinDep::FillCanvases() {
         asymGr2[v0][v1][b1]->Draw("APE");
         FormatAsymGr(asymGr2[v0][v1][b1],v0);
         asymGr2[v0][v1][b1]->Draw("APE");
+        zeroLine[v0]->Draw();
       };
     };
   };
@@ -279,6 +320,7 @@ void KinDep::FillCanvases() {
             asymGr3[v0][v1][v2][b1][b2]->Draw("APE");
             FormatAsymGr(asymGr3[v0][v1][v2][b1][b2],v0);
             asymGr3[v0][v1][v2][b1][b2]->Draw("APE");
+            zeroLine[v0]->Draw();
           };
         };
       };
@@ -316,6 +358,44 @@ void KinDep::Write(TFile * f) {
       };
     };
   };
+  */
+};
+
+
+void KinDep::PrintPNGs(Int_t whichPhiR_) {
+  switch(whichPhiR_) {
+    case 1:
+      printSuffix = "_Rq";
+      break;
+    case 2:
+      printSuffix = "_Rp_r";
+      break;
+    case 3:
+      printSuffix = "_Rp";
+      break;
+    default:
+      fprintf(stderr,"ERROR: invalid whichPhiR in KinDep::PrintPNGs\n");
+      return ;
+  };
+
+  // 1D
+  printName = Form("%s_%s.png",canv1->GetName(),printSuffix.Data());
+  canv1->Print(printName,"png");
+
+  // 2D
+  for(int v0=0; v0<N; v0++) {
+    for(int v1=0; v1<N; v1++) {
+      if(v0!=v1) {
+        printName = Form("%s_%s.png",
+          canv2[v0][v1]->GetName(),printSuffix.Data()
+        );
+        canv2[v0][v1]->Print(printName,"png");
+      };
+    };
+  };
+
+  // 3D
+  /*
   */
 };
 

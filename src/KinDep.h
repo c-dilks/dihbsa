@@ -19,6 +19,7 @@
 #include "TF1.h"
 #include "TGraphErrors.h"
 #include "TCanvas.h"
+#include "TLine.h"
 
 // dihbsa
 #include "Constants.h"
@@ -35,6 +36,7 @@ class KinDep : public TObject
     void FillCanvases();
     void FormatAsymGr(TGraphErrors * g, Int_t ivNum);
     void Write(TFile * f);
+    void PrintPNGs(Int_t whichPhiR_);
 
     Asymmetry * A;
     Int_t canvSize;
@@ -62,6 +64,11 @@ class KinDep : public TObject
     TGraphErrors * asymGr3[Asymmetry::nIV][Asymmetry::nIV][Asymmetry::nIV][Asymmetry::nBinsMax][Asymmetry::nBinsMax];
 
 
+    TLine * zeroLine[Asymmetry::nIV];
+    Float_t ivMin[Asymmetry::nIV];
+    Float_t ivMax[Asymmetry::nIV];
+
+
     
   private:
     Int_t N;
@@ -75,6 +82,11 @@ class KinDep : public TObject
 
     TGraphErrors * asymGrCurr;
     TH3D * wDistCurr;
+
+    TString printName;
+    TString printSuffix;
+
+    Int_t cnt;
 
   ClassDef(KinDep,1);
 };

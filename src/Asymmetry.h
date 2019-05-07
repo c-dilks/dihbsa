@@ -129,12 +129,12 @@ class Asymmetry : public TObject
 
     TString IVname[nIV];
     TString IVtitle[nIV];
+    TString ModulationTitle;
     
   private:
     TString SpinName[nSpin];
     TString SpinTitle[nSpin];
     TString plotTitle,plotName;
-    TString ModulationTitle;
 
 
     Float_t angle;
@@ -142,6 +142,7 @@ class Asymmetry : public TObject
     Float_t modulation;
     Int_t binn[nIV];
     Int_t spinn;
+    Int_t pointCnt;
 
     Double_t yL,yR;
     Double_t asymNumer,asymDenom;

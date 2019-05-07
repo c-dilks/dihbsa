@@ -131,7 +131,7 @@ int main(int argc, char** argv) {
 
 
    TString plotTitle;
-   Float_t sigmaMax = 1.5*distMax;
+   Float_t sigmaMax = PI+1;
    //TString sigmaStr = "sin[ #phi_{R}(T,k_{T}) - #phi_{R}(#perp  ,rej) ]";
    TString sigmaStr = "#sigma";
    plotTitle = sigmaStr+" vs. Q^{~2}";
@@ -204,6 +204,18 @@ int main(int argc, char** argv) {
      NBINS,0,5,
      NBINS,0,1.4);
 
+   TH2F * phiHvsPhiRq = new TH2F("phiHvsPhiRq",
+     "#phi_{h} vs. #phi_{Rq};#phi_{Rq};#phi_{h}",
+     NBINS,-PI-0.1,PI+0.1,
+     NBINS,-PI-0.1,PI+0.1);
+   TH2F * phiHvsPhiRp = new TH2F("phiHvsPhiRp",
+     "#phi_{h} vs. #phi_{Rp};#phi_{Rp};#phi_{h}",
+     NBINS,-PI-0.1,PI+0.1,
+     NBINS,-PI-0.1,PI+0.1);
+   TH2F * phiHvsPhiRp_r = new TH2F("phiHvsPhiRp_r",
+     "#phi_{h} vs. #phi_{Rp_r};#phi_{Rp_r};#phi_{h}",
+     NBINS,-PI-0.1,PI+0.1,
+     NBINS,-PI-0.1,PI+0.1);
 
 
    Float_t angPhiRp;
@@ -264,7 +276,7 @@ int main(int argc, char** argv) {
        diff_PhiRp_PhiRp_r->Fill(TMath::Sin(angDiff));
 
        angDiff = Tools::AdjAngle(angPhiRp - angPhiRq);
-       sigma = TMath::Sin(angDiff);
+       sigma = angDiff;
        diff_PhiRp_PhiRq->Fill(TMath::Sin(angDiff));
 
        angDiff = Tools::AdjAngle(angPhiRp_r - angPhiRq);
@@ -300,6 +312,10 @@ int main(int argc, char** argv) {
 
        sigmaVsD->Fill(D,sigma);
        alphaVsD->Fill(D,ev->alpha);
+
+       phiHvsPhiRq->Fill(angPhiRq,ev->PhiH);
+       phiHvsPhiRp->Fill(angPhiRp,ev->PhiH);
+       phiHvsPhiRp_r->Fill(angPhiRp_r,ev->PhiH);
      };
 
 
@@ -343,6 +359,10 @@ int main(int argc, char** argv) {
 
    sigmaDist->Write();
    alphaVsD->Write();
+
+   phiHvsPhiRq->Write();
+   phiHvsPhiRp->Write();
+   phiHvsPhiRp_r->Write();
 
 
    outfile->Close();
