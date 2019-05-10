@@ -58,26 +58,32 @@ class Dihadron : public TObject
     TLorentzVector disVecQ;
 
 
+    // BRANCHES  ///////////////////////////////////////
+    //
     Float_t PhMag; // dihadron total momentum
     Float_t PhPerpMag; // transverse component of dihadron total momentum (perp frame)
+    Float_t PhEta; // pseudorapidity of dihadron pair
+    Float_t PhPhi; // azimuth of dihadron pair
+
     Float_t RMag; // dihadron relative momentum
     Float_t RTMag; // transverse componet of relative momentum (T-frame)
     Float_t RPerpMag; // transverse componet of relative momentum (perp-frame)
-    Float_t PhiR; // angle[ reaction_plane, R^q etc. (see below) ]
+
     Float_t PhiH; // angle[ reaction_plane, Ph^q ]
     Float_t z[2]; // fraction of energy of fragmenting parton
                   // carried by the hadron
     Float_t zpair; // fraction of energy of fragmenting parton
                    // carried by the hadron pair
     Float_t Mh; // dihadron invariant mass
+    Float_t hadM[2]; // hadron mass
     Float_t Mmiss; // missing mass
     Float_t xF; // feynman-x
     Float_t alpha; // dihadron opening angle
 
 
-    // PhiR angle is defined a couple different ways since
-    // transverse components of R vary in definition; there are two
-    // frames to consider (see arXiv:1707.04999):
+    // PhiR angle
+    // defined a couple different ways since transverse components of R vary in
+    // definition; there are two frames to consider (see arXiv:1707.04999):
     // -- perp-frame: "transverse" plane is normal to fragmenting
     //                quark, i.e., to q
     // -- T-frame: "transverse" plane is normal to Ph
@@ -91,7 +97,12 @@ class Dihadron : public TObject
 
     Float_t PhiRp_r; // use R_T computed via rejection w.r.t. Ph (not frame independent)
     // -- HERMES 0803.2367 angle
+
+    Float_t PhiRp_g; // use R_T computed by projection operator "g_T", following
+    // equation 9 in 1408.5721 (gliske, bacchetta, radici)
     
+    //
+    ///////////////////////////////////////////////////
 
   private:
     int h;
@@ -101,9 +112,13 @@ class Dihadron : public TObject
     TVector3 pHad_Perp[2];
     TVector3 pPh_Perp;
 
+    TVector3 pR_Perp;
     TVector3 pR_T_byKt;
     TVector3 pR_T_byRej;
-    TVector3 pR_Perp;
+    TVector3 pR_T_byProj;
+    TLorentzVector vecR_T_byProj;
+
+    Float_t xi,ratio;
 
     Float_t proj;
     TVector3 crossAB,crossCD;

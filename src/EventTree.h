@@ -54,7 +54,7 @@ class EventTree : public TObject
     Float_t hadPhi[2];
 
     // dihadron kinematics
-    Float_t Mh,Zpair,PhiH,PhiR,Mmiss,xF,alpha;
+    Float_t Mh,Zpair,PhiH,Mmiss,xF,alpha;
     Float_t Z[2];
     Float_t Ph,PhPerp;
     Float_t R,RPerp,RT;
@@ -65,7 +65,7 @@ class EventTree : public TObject
     Float_t torus;
     Long64_t triggerBits;
 
-    // PhiR tests
+    // PhiR 
     Float_t PhiRq;
     Float_t PhiRp;
     Float_t PhiRp_r;

@@ -43,7 +43,6 @@ EventTree::EventTree(TString filelist) {
   chain->SetBranchAddress("RT",&RT);
 
   chain->SetBranchAddress("PhiH",&PhiH);
-  chain->SetBranchAddress("PhiR",&PhiR);
 
   chain->SetBranchAddress("PhiRq",&PhiRq);
   chain->SetBranchAddress("PhiRp",&PhiRp);
@@ -125,7 +124,6 @@ void EventTree::Print() {
       PMsym(hM).Data(),Z[hM]);
   printf("\n");
   printf("  PhiH=%.2f",PhiH);
-  printf("  PhiR=%.2f",PhiR);
   printf("\n");
   printf("[---] PhiR Tests\n");
   printf("  PhiRq=%.2f",PhiRq);

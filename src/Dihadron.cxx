@@ -64,8 +64,10 @@ void Dihadron::SetEvent(
   for(h=0; h<2; h++) z[h] = disVecTarget.Dot(vecHad[h]) / disVecTarget.Dot(disVecQ);
   zpair = disVecTarget.Dot(vecPh) / disVecTarget.Dot(disVecQ);
 
-  // compute invariant mass
+  // compute invariant mass (and hadron masses)
   Mh = vecPh.M();
+  for(h=0; h<2; h++) hadM[h] = vecHad[h].M();
+  
 
   // compute missing mass
   vecMmiss = disVecW - vecPh;
@@ -127,10 +129,18 @@ void Dihadron::ComputeAngles() {
   // -- in T-frame, via kT relation (following 1707.04999)
   pR_T_byKt = 1 / ( z[hP] + z[hM] ) *  
               ( z[hM] * pHad_Perp[hP]  -  z[hP] * pHad_Perp[hM] );
+
   // -- in T-frame, via rejection
   pR_T_byRej = Reject(pR,pPh);
+
   // -- in perp-frame, via rejection
   pR_Perp= Reject(pR,pQ);
+
+  // -- by projection operator (eq. 9 in 1408.5721)
+  xi = 2 * vecR.Dot(disVecTarget) / ( vecPh.Dot(disVecTarget) );
+  ratio = (xi*Mh*Mh - (hadM[hP]*hadM[hP]-hadM[hM]*hadM[hM])) / ( (disEv->Q2) * zpair );
+  vecR_T_byProj = vecR - (xi/2.0)*vecPh + (disEv->x) * ratio * disVecTarget;
+  pR_T_byProj = vecR_T_byProj.Vect();
 
 
   // momentum magnitudes
@@ -139,6 +149,10 @@ void Dihadron::ComputeAngles() {
   RMag = pR.Mag(); // dihadron relative momentum R
   RTMag = pR_T_byKt.Mag(); // trans. comp. of R (perp frame)
   RPerpMag = pR_Perp.Mag(); // trans. comp. of R (perp frame)
+
+  // eta & phi of dihadron
+  PhEta = pPh.Eta();
+  PhPhi = pPh.Phi();
 
 
 
@@ -152,8 +166,8 @@ void Dihadron::ComputeAngles() {
   // -- HERMES 0803.2367 angle
   PhiRp_r = PlaneAngle(pQ,pL,pQ,pR_T_byRej);
 
-  // finally set the "preferred" PhiR angle
-  PhiR = PhiRp;
+  // equation 9 in 1408.5721 (gliske, bacchetta, radici)
+  PhiRp_g = PlaneAngle(pQ,pL,pQ,pR_T_byProj);
 };
 
 

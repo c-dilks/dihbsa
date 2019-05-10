@@ -101,29 +101,33 @@ int main(int argc, char** argv) {
    tree->Branch("alpha",&(dih->alpha),"alpha/F");
    tree->Branch("Ph",&(dih->PhMag),"Ph/F");
    tree->Branch("PhPerp",&(dih->PhPerpMag),"PhPerp/F");
+   tree->Branch("PhEta",&(dih->PhEta),"PhEta/F");
+   tree->Branch("PhPhi",&(dih->PhPhi),"PhPhi/F");
    tree->Branch("R",&(dih->RMag),"R/F");
    tree->Branch("RPerp",&(dih->RPerpMag),"RPerp/F");
    tree->Branch("RT",&(dih->RTMag),"RT/F");
    tree->Branch("PhiH",&(dih->PhiH),"PhiH/F");
-   tree->Branch("PhiR",&(dih->PhiR),"PhiR/F");
-   // -- phiR angle test branches
+   // -- phiR angles
    tree->Branch("PhiRq",&(dih->PhiRq),"PhiRq/F"); // via R_perp
    tree->Branch("PhiRp",&(dih->PhiRp),"PhiRp/F"); // via R_T
    tree->Branch("PhiRp_r",&(dih->PhiRp_r),"PhiRp_r/F"); // via R_T (frame-dependent)
+   tree->Branch("PhiRp_g",&(dih->PhiRp_g),"PhiRp_g/F"); // via eq. 9 in 1408.5721
 
    // breit frame dihadron branches
    tree->Branch("b_alpha",&(dihBr->alpha),"b_alpha/F");
    tree->Branch("b_Ph",&(dihBr->PhMag),"b_Ph/F");
    tree->Branch("b_PhPerp",&(dihBr->PhPerpMag),"b_PhPerp/F");
+   tree->Branch("b_PhEta",&(dihBr->PhEta),"b_PhEta/F");
+   tree->Branch("b_PhPhi",&(dihBr->PhPhi),"b_PhPhi/F");
    tree->Branch("b_R",&(dihBr->RMag),"b_R/F");
    tree->Branch("b_RPerp",&(dihBr->RPerpMag),"b_RPerp/F");
    tree->Branch("b_RT",&(dihBr->RTMag),"b_RT/F");
    tree->Branch("b_PhiH",&(dihBr->PhiH),"b_PhiH/F");
-   tree->Branch("b_PhiR",&(dihBr->PhiR),"b_PhiR/F");
-   // -- phiR angle test branches
+   // -- phiR angles
    tree->Branch("b_PhiRq",&(dihBr->PhiRq),"b_PhiRq/F"); // via R_perp
    tree->Branch("b_PhiRp",&(dihBr->PhiRp),"b_PhiRp/F"); // via R_T
    tree->Branch("b_PhiRp_r",&(dihBr->PhiRp_r),"b_PhiRp_r/F"); // via R_T (frame-dependent)
+   tree->Branch("b_PhiRp_g",&(dihBr->PhiRp_g),"b_PhiRp_g/F"); // via eq. 9 in 1408.5721
 
    // define reader and particle list
    hipo::reader reader;
