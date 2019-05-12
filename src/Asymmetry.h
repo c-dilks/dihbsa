@@ -44,7 +44,7 @@ class Asymmetry : public TObject
     void EvalAsymmetry(TGraphErrors * asymGr, TH1D * mdistL, TH1D * mdistR);
 
     void DrawBoundLines();
-    void Write(TFile * f);
+    void WriteObjects(TFile * f);
 
     void FillPlots();
     Float_t EvalModulation(Float_t PhiH_, Float_t PhiR_);
@@ -72,6 +72,7 @@ class Asymmetry : public TObject
     Float_t PhiH;
     Float_t PhiR;
     Float_t PhPerp;
+    Float_t pol;
 
 
     // enumerators 
@@ -152,6 +153,8 @@ class Asymmetry : public TObject
     Int_t binn[nIV];
     Int_t spinn;
     Int_t pointCnt;
+
+    Double_t rellumNumer,rellumDenom,rellum;
 
     Double_t yL,yR;
     Double_t asymNumer,asymDenom;

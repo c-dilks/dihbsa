@@ -30,6 +30,10 @@ Asymmetry::Asymmetry(Int_t phiModulation, Bool_t singleBinMode=false) {
   };
 
 
+  // fix polarization (for now...)
+  pol = 0.86;
+
+
   // set up (default) binning
   minIV[vM] = 0;   maxIV[vM] = 3;
   minIV[vX] = 0;   maxIV[vX] = 1;
@@ -452,22 +456,38 @@ void Asymmetry::EvalAsymmetry(
     return;
   };
 
+
+  // compute relative luminosity
+  rellumNumer = 0;
+  rellumDenom = 0;
+  for(int m=1; m<=nModBins; m++) {
+    rellumNumer += mdistL->GetBinContent(m);
+    rellumDenom += mdistR->GetBinContent(m);
+  };
+  if(rellumDenom>0) rellum = rellumNumer / rellumDenom;
+  else {
+    fprintf(stderr,"WARNING: mdistR has 0 yield, abort asym calculation for this bin\n");
+    return;
+  };
+
    
+  // compute asymmetry
   pointCnt = 0;
   for(int m=1; m<=nModBins; m++) {
 
     yL = mdistL->GetBinContent(m);
     yR = mdistR->GetBinContent(m);
 
-    asymNumer = yL - yR;
-    asymDenom = yL + yR;
+    asymNumer = yL - (rellum * yR);
+    asymDenom = yL + (rellum * yR);
 
     if(asymDenom>0) {
       // compute asymmetry value
-      asymVal = asymNumer / asymDenom;
+      //asymVal = (1.0/pol) * (asymNumer/asymDenom); // +++
+      asymVal = asymNumer/asymDenom;
 
       // compute asymmetry error
-      asymErr = 1.0 / ( 0.86 * TMath::Sqrt(yL+yR) ); // to be updated...
+      asymErr = 1.0 / ( pol * TMath::Sqrt(yL+yR) ); // to be updated...
 
       // compute azimuthal modulation value
       modVal = mdistL->GetBinCenter(m); // to be updated to bin mean...
@@ -591,7 +611,7 @@ void Asymmetry::DrawBoundLines() {
 };
 
 
-void Asymmetry::Write(TFile * f) {
+void Asymmetry::WriteObjects(TFile * f) {
 
   this->DrawBoundLines();
 
@@ -696,5 +716,82 @@ void Asymmetry::Write(TFile * f) {
 
 
 Asymmetry::~Asymmetry() {
+
+  // destroy 1-d distributions
+  for(int v=0; v<nIV; v++) {
+
+    if(bDist1[v]) delete bDist1[v];
+    if(bDistCanv1[v]) delete bDistCanv1[v];
+
+    for(int b=0; b<nBins[v]; b++) {
+
+      if(wDist1[v][b]) delete wDist1[v][b];
+      if(asym1[v][b]) delete asym1[v][b];
+
+      for(int s=0; s<nSpin; s++) {
+        if(mDist1[s][v][b]) delete mDist1[s][v][b];
+      };
+
+    };
+  };
+
+
+  // destroy 2-d distributions
+  for(int v1=0; v1<nIV; v1++) {
+    for(int v2=0; v2<nIV; v2++) {
+
+      if(bDist2[v1][v2]) delete bDist2[v1][v2];
+      if(bDistCanv2[v1][v2]) delete bDistCanv2[v1][v2];
+
+      for(int b1=0; b1<nBins[v1]; b1++) {
+        for(int b2=0; b2<nBins[v2]; b2++) {
+
+          if(wDist2[v1][v2][b1][b2]) delete wDist2[v1][v2][b1][b2];
+          if(asym2[v1][v2][b1][b2]) delete asym2[v1][v2][b1][b2];
+
+          for(int s=0; s<nSpin; s++) {
+            if(mDist2[s][v1][v2][b1][b2]) delete mDist2[s][v1][v2][b1][b2];
+          };
+
+        };
+      };
+    };
+  };
+
+
+  // destroy 3-d distributions
+  for(int bM=0; bM<nBins[vM]; bM++) {
+    for(int bX=0; bX<nBins[vX]; bX++) {
+      for(int bZ=0; bZ<nBins[vZ]; bZ++) {
+
+        if(wDist3[bM][bX][bZ]) delete wDist3[bM][bX][bZ];
+        if(asym3[bM][bX][bZ]) delete asym3[bM][bX][bZ];
+
+        for(int s=0; s<nSpin; s++) {
+          if(mDist3[s][bM][bX][bZ]) delete mDist3[s][bM][bX][bZ];
+        };
+
+      };
+    };
+  };
+
+
+  // destroy lines
+  for(int v=0; v<nIV; v++) {
+    for(int b=1; b<nBins[v]; b++) {
+      if(boundLine1[v][b]) delete boundLine1[v][b];
+    };
+  };
+  for(int v0=0; v0<nIV; v0++) {
+    for(int v1=0; v1<nIV; v1++) {
+      for(int b=1; b<nBins[v0]; b++) {
+        if(vertLine[v0][v1][b]) delete vertLine[v0][v1][b];
+      };
+      for(int b=1; b<nBins[v1]; b++) {
+        if(horizLine[v0][v1][b]) delete horizLine[v0][v1][b];
+      };
+    };
+  };
+
 };
 

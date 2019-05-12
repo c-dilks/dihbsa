@@ -169,20 +169,14 @@ void KinDep::FillAsymGraphs() {
     cnt=0;
     for(int p=0; p<NB[v]; p++) {
 
-      fitFunc = A->asym1[v][p]->GetFunction(fitName);
+      SetAsymPoint(
+        asymGr1[v],
+        A->asym1[v][p],
+        A->wDist1[v][p],
+        cnt,
+        1
+      );
 
-      if(fitFunc!=NULL) {
-
-        asymValue = fitFunc->GetParameter(1);
-        asymError = fitFunc->GetParError(1);
-
-        kinValue = A->wDist1[v][p]->GetMean();
-        kinError = A->wDist1[v][p]->GetRMS();
-
-        asymGr1[v]->SetPoint(cnt,kinValue,asymValue);
-        asymGr1[v]->SetPointError(cnt,kinError,asymError);
-        cnt++;
-      };
     };
   };
 
@@ -195,20 +189,14 @@ void KinDep::FillAsymGraphs() {
         cnt = 0;
         for(int p=0; p<NB[v0]; p++) {
 
-          fitFunc = A->asym2[v0][v1][p][b1]->GetFunction(fitName);
+          SetAsymPoint(
+            asymGr2[v0][v1][b1],
+            A->asym2[v0][v1][p][b1],
+            A->wDist2[v0][v1][p][b1],
+            cnt,
+            1
+          );
 
-          if(fitFunc!=NULL) {
-
-            asymValue = fitFunc->GetParameter(1);
-            asymError = fitFunc->GetParError(1);
-
-            kinValue = A->wDist2[v0][v1][p][b1]->GetMean(1);
-            kinError = A->wDist2[v0][v1][p][b1]->GetRMS(1);
-
-            asymGr2[v0][v1][b1]->SetPoint(cnt,kinValue,asymValue);
-            asymGr2[v0][v1][b1]->SetPointError(cnt,kinError,asymError);
-            cnt++;
-          };
         };
       };
     };
@@ -231,40 +219,27 @@ void KinDep::FillAsymGraphs() {
               // TODO -- check this assigment
               switch(v0) {
                 case Asymmetry::vM: 
-                  asymGrCurr = A->asym3[p][b1][b2];
+                  asymCurr = A->asym3[p][b1][b2];
                   wDistCurr = A->wDist3[p][b1][b2];
                   break;
                 case Asymmetry::vX: 
-                  asymGrCurr = A->asym3[b1][p][b2];
+                  asymCurr = A->asym3[b1][p][b2];
                   wDistCurr = A->wDist3[b1][p][b2];
                   break;
                 case Asymmetry::vZ: 
-                  asymGrCurr = A->asym3[b1][b2][p];
+                  asymCurr = A->asym3[b1][b2][p];
                   wDistCurr = A->wDist3[b1][b2][p];
                   break;
               };
 
+              SetAsymPoint(
+                asymGr3[v0][v1][v2][b1][b2],
+                asymCurr,
+                wDistCurr,
+                cnt,
+                v0+1
+              );
 
-
-              printf("aqui switch %p\n",(void*)asymGrCurr);
-              fitFunc = asymGrCurr->GetFunction(fitName);
-              printf("aqui switch %p\n",(void*)fitFunc);
-
-              if(fitFunc!=NULL) {
-                asymValue = fitFunc->GetParameter(1);
-                asymError = fitFunc->GetParError(1);
-
-                kinValue = wDistCurr->GetMean(v0+1);
-                kinError = wDistCurr->GetRMS(v0+1);
-
-                printf("aqui vals\n");
-
-                asymGr3[v0][v1][v2][b1][b2]->SetPoint(cnt,kinValue,asymValue);
-                asymGr3[v0][v1][v2][b1][b2]->SetPointError(cnt,kinError,asymError);
-                cnt++;
-
-                printf("aqui fills\n");
-              };
             };
           };
         };
@@ -273,6 +248,29 @@ void KinDep::FillAsymGraphs() {
   };
   */
 
+};
+
+
+
+void KinDep::SetAsymPoint(
+  TGraphErrors * asymGr_, TGraphErrors * asym_, TH1 * wdist_,
+  Int_t &cnt_, Int_t wdistAxis
+) {
+
+  fitFunc = asym_->GetFunction(fitName);
+
+  if(fitFunc!=NULL) {
+
+    asymValue = fitFunc->GetParameter(1);
+    asymError = fitFunc->GetParError(1); // use fit parameter error
+
+    kinValue = wdist_->GetMean(wdistAxis);
+    kinError = wdist_->GetRMS(wdistAxis);
+
+    asymGr_->SetPoint(cnt_,kinValue,asymValue);
+    asymGr_->SetPointError(cnt_,kinError,asymError);
+    cnt_++;
+  };
 };
 
 
@@ -332,8 +330,8 @@ void KinDep::FillCanvases() {
 };
 
 
-// to be called AFTER Asymmetry::Write()
-void KinDep::Write(TFile * f) {
+// to be called AFTER Asymmetry::WriteObjects()
+void KinDep::WriteObjects(TFile * f) {
   f->cd();
 
   // 1D write
@@ -402,5 +400,34 @@ void KinDep::PrintPNGs(Int_t whichPhiR_) {
 
 
 KinDep::~KinDep() {
+  // destroy 1D
+  if(canv1) delete canv1;
+  for(int v=0; v<N; v++) {
+    if(asymGr1[v]) delete asymGr1[v];
+  };
+
+  // destroy 2D
+  for(int v0=0; v0<N; v0++) {
+    for(int v1=0; v1<N; v1++) {
+      if(canv2[v0][v1]) delete canv2[v0][v1];
+      for(int b=0; b<NB[v1]; b++) {
+        if(asymGr2[v0][v1][b]) delete asymGr2[v0][v1][b];
+      };
+    };
+  };
+  
+  // destroy 3D
+  for(int v0=0; v0<N; v0++) {
+    for(int v1=0; v1<N; v1++) {
+      for(int v2=0; v2<N; v2++) {
+        if(canv3[v0][v1][v2]) delete canv3[v0][v1][v2];
+        for(int b1=0; b1<NB[v1]; b1++) {
+          for(int b2=0; b2<NB[v1]; b2++) {
+            if(asymGr3[v0][v1][v2][b1][b2]) delete asymGr3[v0][v1][v2][b1][b2];
+          };
+        };
+      };
+    };
+  };
 };
 

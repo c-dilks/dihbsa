@@ -78,8 +78,8 @@ int main(int argc, char** argv) {
 
    KinDep * kd = new KinDep(asym);
 
-   asym->Write(outfile);
-   kd->Write(outfile);
+   asym->WriteObjects(outfile);
+   kd->WriteObjects(outfile);
    kd->PrintPNGs(whichPhiR);
 
    outfile->Close();

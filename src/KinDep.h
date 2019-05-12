@@ -33,9 +33,13 @@ class KinDep : public TObject
     KinDep(Asymmetry * asym_);
     ~KinDep();
     void FillAsymGraphs();
+    void SetAsymPoint(
+      TGraphErrors * asymGr_, TGraphErrors * asym_, TH1 * wdist_,
+      Int_t &cnt_, Int_t wdistAxis
+    );
     void FillCanvases();
     void FormatAsymGr(TGraphErrors * g, Int_t ivNum);
-    void Write(TFile * f);
+    void WriteObjects(TFile * f);
     void PrintPNGs(Int_t whichPhiR_);
 
     Asymmetry * A;
@@ -80,7 +84,7 @@ class KinDep : public TObject
     Float_t asymValue,asymError;
     Float_t kinValue,kinError;
 
-    TGraphErrors * asymGrCurr;
+    TGraphErrors * asymCurr;
     TH3D * wDistCurr;
 
     TString printName;
