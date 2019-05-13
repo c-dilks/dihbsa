@@ -470,6 +470,8 @@ void Asymmetry::EvalAsymmetry(
     return;
   };
 
+  printf("rellum = %f / %f = %f\n",rellumNumer,rellumDenom,rellum);
+
    
   // compute asymmetry
   pointCnt = 0;
@@ -483,14 +485,13 @@ void Asymmetry::EvalAsymmetry(
 
     if(asymDenom>0) {
       // compute asymmetry value
-      //asymVal = (1.0/pol) * (asymNumer/asymDenom); // +++
-      asymVal = asymNumer/asymDenom;
+      asymVal = (1.0/pol) * (asymNumer/asymDenom);
 
-      // compute asymmetry error
-      asymErr = 1.0 / ( pol * TMath::Sqrt(yL+yR) ); // to be updated...
+      // compute asymmetry statistical error
+      asymErr = 1.0 / ( pol * TMath::Sqrt(yL+yR) );
 
       // compute azimuthal modulation value
-      modVal = mdistL->GetBinCenter(m); // to be updated to bin mean...
+      modVal = mdistL->GetBinCenter(m); // to be updated to bin mean... // TODO
       
       // compute azimuthal modulation error
       modErr = 0; // azimuthal modulation error

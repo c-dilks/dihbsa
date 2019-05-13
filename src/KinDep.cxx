@@ -261,8 +261,13 @@ void KinDep::SetAsymPoint(
 
   if(fitFunc!=NULL) {
 
+    // asymmetry value = amplitude of modulation = slope of fit
     asymValue = fitFunc->GetParameter(1);
-    asymError = fitFunc->GetParError(1); // use fit parameter error
+
+    // asymmetry statistical error
+    //asymError = fitFunc->GetParError(1); // via slope error
+    wDistYield = wdist_->GetEntries();
+    asymError = 1 / ( (A->pol) * TMath::Sqrt(wDistYield) );
 
     kinValue = wdist_->GetMean(wdistAxis);
     kinError = wdist_->GetRMS(wdistAxis);

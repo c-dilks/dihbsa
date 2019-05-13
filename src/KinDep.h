@@ -91,6 +91,7 @@ class KinDep : public TObject
     TString printSuffix;
 
     Int_t cnt;
+    Double_t wDistYield;
 
   ClassDef(KinDep,1);
 };
