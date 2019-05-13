@@ -188,10 +188,10 @@ int main(int argc, char** argv) {
          MmissDist->Fill(ev->Mmiss);
 
          PhiHDist->Fill(ev->PhiH);
-         PhiRDist->Fill(ev->PhiR);
-         PhiHvsPhiR->Fill(ev->PhiR,ev->PhiH);
+         PhiRDist->Fill(ev->PhiRp);
+         PhiHvsPhiR->Fill(ev->PhiRp,ev->PhiH);
 
-         PhiHR = Tools::AdjAngle(ev->PhiH - ev->PhiR);
+         PhiHR = Tools::AdjAngle(ev->PhiH - ev->PhiRp);
          PhiHRDist->Fill(PhiHR);
        };
 
