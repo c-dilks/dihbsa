@@ -547,7 +547,7 @@ void Asymmetry::ResetVars() {
   Mh = -10000;
   x = -10000;
   z = -10000;
-  eSpin = 0;
+  eSpin = -10000;
   pSpin = 0;
   PhiH = -10000;
   PhiR = -10000;

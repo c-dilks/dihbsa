@@ -57,6 +57,7 @@ class EventTree : public TObject
     Float_t Mh,Zpair,PhiH,Mmiss,xF,alpha;
     Float_t Z[2];
     Float_t Ph,PhPerp;
+    Float_t PhEta,PhPhi;
     Float_t R,RPerp,RT;
 
     // event-level branches
@@ -69,10 +70,12 @@ class EventTree : public TObject
     Float_t PhiRq;
     Float_t PhiRp;
     Float_t PhiRp_r;
+    Float_t PhiRp_g;
 
     Float_t b_PhiRq;
     Float_t b_PhiRp;
     Float_t b_PhiRp_r;
+    Float_t b_PhiRp_g;
     ///////////////////////////
 
 

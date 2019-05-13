@@ -6,7 +6,6 @@
 <!-- sample XML Files in /u/group/hps/production/ -->
 
   <List name="hipoFile">
-<!--
 4013_4
 4014_4
 4015_4
@@ -27,7 +26,6 @@
 4044_4
 4045_4
 4050_4
--->
 4053_4
 4054_4
 4055_4

@@ -38,6 +38,8 @@ EventTree::EventTree(TString filelist) {
   chain->SetBranchAddress("alpha",&alpha);
   chain->SetBranchAddress("Ph",&Ph);
   chain->SetBranchAddress("PhPerp",&PhPerp);
+  chain->SetBranchAddress("PhEta",&PhEta);
+  chain->SetBranchAddress("PhPhi",&PhPhi);
   chain->SetBranchAddress("R",&R);
   chain->SetBranchAddress("RPerp",&RPerp);
   chain->SetBranchAddress("RT",&RT);
@@ -47,10 +49,12 @@ EventTree::EventTree(TString filelist) {
   chain->SetBranchAddress("PhiRq",&PhiRq);
   chain->SetBranchAddress("PhiRp",&PhiRp);
   chain->SetBranchAddress("PhiRp_r",&PhiRp_r);
+  chain->SetBranchAddress("PhiRp_g",&PhiRp_g);
 
   chain->SetBranchAddress("b_PhiRq",&b_PhiRq);
   chain->SetBranchAddress("b_PhiRp",&b_PhiRp);
   chain->SetBranchAddress("b_PhiRp_r",&b_PhiRp_r);
+  chain->SetBranchAddress("b_PhiRp_g",&b_PhiRp_g);
 
   
   chain->SetBranchAddress("runnum",&runnum);
