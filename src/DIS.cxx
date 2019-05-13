@@ -80,7 +80,7 @@ void DIS::Analyse() {
 
 
   if(debug) {
-    Print();
+    PrintEvent();
     BreitPrint();
     ComPrint();
   };
@@ -89,7 +89,7 @@ void DIS::Analyse() {
 };
 
 
-void DIS::Print() {
+void DIS::PrintEvent() {
 
   printf("------------------\n");
   printf("Kinematics:\n");

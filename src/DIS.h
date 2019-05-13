@@ -30,7 +30,7 @@ class DIS : public TObject
     void SetBeamEn(Float_t newBeamEn);
     void SetElectron(Float_t px, Float_t py, Float_t pz);
     void Analyse();
-    void Print();
+    void PrintEvent();
 
     void ComputeBreitKinematics();
     void ComputeComKinematics();

@@ -34,7 +34,7 @@ class EventTree : public TObject
     ~EventTree();
 
     void GetEvent(Int_t i);
-    void Print();
+    void PrintEvent();
 
     Bool_t debug;
     Long64_t ENT;

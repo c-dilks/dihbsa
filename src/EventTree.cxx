@@ -87,7 +87,7 @@ void EventTree::GetEvent(Int_t i) {
 };
 
 
-void EventTree::Print() {
+void EventTree::PrintEvent() {
   printf("[---] Event Info\n");
   printf("  evnum=%d",evnum);
   printf("  runnum=%d",runnum);
