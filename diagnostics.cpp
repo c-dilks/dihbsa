@@ -43,9 +43,9 @@ int main(int argc, char** argv) {
    TH1F * XDist = new TH1F("XDist","x distribution",
      NBINS,0,1);
    TH2F * Q2vsW = new TH2F("Q2vsW","Q^{2} vs. W (w/o W cut);W;Q^{2}",
-     NBINS,0,6,NBINS,0,10);
+     NBINS,0,6,NBINS,0,12);
    TH2F * Q2vsX = new TH2F("Q2vsX","Q^{2} vs. x;x;Q^{2}",
-     NBINS,0,1,NBINS,0,10);
+     NBINS,0,1,NBINS,0,12);
    TH1F * YDist = new TH1F("YDist","y distribution (w/o y cut)",
      NBINS,0,1);
 

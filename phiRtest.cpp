@@ -154,15 +154,19 @@ int main(int argc, char** argv) {
    TH2F * sigmaVsPhPerp = new TH2F("sigmaVsPhPerp",plotTitle,
      NBINS,0,2,
      NBINS,-sigmaMax,sigmaMax);
+   plotTitle = sigmaStr+" vs. #eta(P_{h})";
+   TH2F * sigmaVsPhEta = new TH2F("sigmaVsPhEta",plotTitle,
+     NBINS,0.5,7,
+     NBINS,-sigmaMax,sigmaMax);
    plotTitle = sigmaStr+" vs. R";
    TH2F * sigmaVsR = new TH2F("sigmaVsR",plotTitle,
      NBINS,0,4,
      NBINS,-sigmaMax,sigmaMax);
-   plotTitle = sigmaStr+" vs. R_{q}";
+   plotTitle = sigmaStr+" vs. R_{p}";
    TH2F * sigmaVsRT = new TH2F("sigmaVsRT",plotTitle,
      NBINS,0,1.5,
      NBINS,-sigmaMax,sigmaMax);
-   plotTitle = sigmaStr+" vs. R_{p}";
+   plotTitle = sigmaStr+" vs. R_{q}";
    TH2F * sigmaVsRPerp = new TH2F("sigmaVsRPerp",plotTitle,
      NBINS,0,1.5,
      NBINS,-sigmaMax,sigmaMax);
@@ -242,14 +246,16 @@ int main(int argc, char** argv) {
      if(ev->cutDihadron && ev->cutQ2 && ev->cutW && ev->cutY) {
 
        // lab frame
+       l_angPhiRq = ev->PhiRq;
        l_angPhiRp = ev->PhiRp;
        l_angPhiRp_r = ev->PhiRp_r;
-       l_angPhiRq = ev->PhiRq;
+       //l_angPhiRp_r = ev->PhiRp_g; // test eq. 9 from 1408.5721 (agrees with PhiRp)
 
        // breit frame
+       b_angPhiRq = ev->b_PhiRq;
        b_angPhiRp = ev->b_PhiRp;
        b_angPhiRp_r = ev->b_PhiRp_r;
-       b_angPhiRq = ev->b_PhiRq;
+       //b_angPhiRp_r = ev->b_PhiRp_g; // test eq. 9 from 1408.5721 (agrees with PhiRp)
 
        if(useBreit) {
          angPhiRp = b_angPhiRp;
@@ -292,6 +298,7 @@ int main(int argc, char** argv) {
        sigmaVsMh->Fill(ev->Mh,sigma);
        sigmaVsPh->Fill(ev->Ph,sigma);
        sigmaVsPhPerp->Fill(ev->PhPerp,sigma);
+       sigmaVsPhEta->Fill(ev->PhEta,sigma);
        sigmaVsR->Fill(ev->R,sigma);
        sigmaVsRT->Fill(ev->RT,sigma);
        sigmaVsRPerp->Fill(ev->RPerp,sigma);
@@ -346,6 +353,7 @@ int main(int argc, char** argv) {
 
    sigmaVsPh->Write();
    sigmaVsPhPerp->Write();
+   sigmaVsPhEta->Write();
    sigmaVsR->Write();
    sigmaVsRT->Write();
    sigmaVsRPerp->Write();

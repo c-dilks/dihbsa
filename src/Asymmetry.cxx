@@ -19,11 +19,11 @@ Asymmetry::Asymmetry(Int_t phiModulation, Bool_t singleBinMode=false) {
   switch(whichMod) {
     case modSinPhiR:
       ModulationTitle = "sin(#phi_{R})";
-      modMax = 1;
+      modMax = 1.1;
       break;
     case modSinPhiHR:
-      ModulationTitle = "P_{hT}sin(#phi_{h}-#phi_{R})";
-      modMax = 1.5;
+      ModulationTitle = "(P_{hT}/M_{h})sin(#phi_{h}-#phi_{R})";
+      modMax = 5;
       break;
     default:
       fprintf(stderr,"ERROR: bad phiModulation\n");
@@ -34,24 +34,24 @@ Asymmetry::Asymmetry(Int_t phiModulation, Bool_t singleBinMode=false) {
   pol = 0.86;
 
 
-  // set up (default) binning
+  // set up dnp2018 binning
   minIV[vM] = 0;   maxIV[vM] = 3;
-  minIV[vX] = 0;   maxIV[vX] = 1;
-  minIV[vZ] = 0;   maxIV[vZ] = 1;
+  minIV[vX] = 0;   maxIV[vX] = 1.2;
+  minIV[vZ] = 0;   maxIV[vZ] = 1.2;
   for(int v=0; v<nIV; v++) nBins[v]=-1;
   // -- mass
   AddBinBound(vM,minIV[vM]);
-  AddBinBound(vM,0.45);
-  AddBinBound(vM,0.9);
+  AddBinBound(vM,0.4);
+  AddBinBound(vM,0.8);
   AddBinBound(vM,maxIV[vM]);
   // -- x
   AddBinBound(vX,minIV[vX]);
   AddBinBound(vX,0.2);
-  AddBinBound(vX,0.35);
+  AddBinBound(vX,0.4);
   AddBinBound(vX,maxIV[vX]);
   // -- z
   AddBinBound(vZ,minIV[vZ]);
-  AddBinBound(vZ,0.42);
+  AddBinBound(vZ,0.4);
   AddBinBound(vZ,0.6);
   AddBinBound(vZ,maxIV[vZ]);
 
@@ -302,6 +302,27 @@ Asymmetry::Asymmetry(Int_t phiModulation, Bool_t singleBinMode=false) {
   };
 
 
+  // instantiate finely-binned modulation dists
+  plotTitle = ModulationTitle + " distribution";
+  mbDist = new TH1D("mbDist",plotTitle,w1Bins,-modMax,modMax);
+  for(int m=0; m<nModBins; m++) {
+    plotName = Form("mwDist_%d",m);
+    plotTitle = Form("%s distribution -- bin %d",ModulationTitle.Data(),m);
+    mwDist[m] = new TH1D(plotName,plotTitle,w1Bins,-modMax,modMax);
+  };
+  for(int v=0; v<nIV; v++) {
+    plotName = Form("IVvsMdist_%s",IVname[v].Data());
+    plotTitle = IVtitle[v] + " vs. " + ModulationTitle;
+    IVvsMdist[v] = new TH2D(plotName,plotTitle,
+      w1Bins,-modMax,modMax,
+      w1Bins,bound[v][0],bound[v][nBins[v]]
+    );
+  };
+
+    
+
+
+
 };
 
 
@@ -394,6 +415,23 @@ void Asymmetry::FillPlots() {
   // fill 3D plot
   wDist3[binn[vM]][binn[vX]][binn[vZ]]->Fill(iv[vM],iv[vX],iv[vZ]);
   mDist3[spinn][binn[vM]][binn[vX]][binn[vZ]]->Fill(modulation);
+
+
+
+  // fill finely-binned modulation dists
+  mbDist->Fill(modulation);
+
+  fbin = mDist1[0][0][0]->FindBin(modulation);
+  //printf("fbin=%d\n",fbin);
+  if(fbin>=1 && fbin<=nModBins) mwDist[fbin-1]->Fill(modulation);
+  else {
+    fprintf(stderr,
+      "ERROR: Asymmetry::FillPlots bad fbin (%d); modulation=%f\n",
+      fbin,modulation
+    );
+  };
+
+  for(int v=0; v<nIV; v++) IVvsMdist[v]->Fill(modulation,iv[v]);
 
 
   nEvents++;
@@ -491,7 +529,8 @@ void Asymmetry::EvalAsymmetry(
       asymErr = 1.0 / ( pol * TMath::Sqrt(yL+yR) );
 
       // compute azimuthal modulation value
-      modVal = mdistL->GetBinCenter(m); // to be updated to bin mean... // TODO
+      //modVal = mdistL->GetBinCenter(m); // use modulation bin's center
+      modVal = mwDist[m-1]->GetMean(); // use modulation bin's mean
       
       // compute azimuthal modulation error
       modErr = 0; // azimuthal modulation error
@@ -515,7 +554,7 @@ Float_t Asymmetry::EvalModulation(Float_t PhiH_, Float_t PhiR_) {
       return TMath::Sin(PhiR_);
       break;
     case modSinPhiHR:
-      return PhPerp * TMath::Sin(PhiH_-PhiR_);
+      return (PhPerp/Mh) * TMath::Sin(PhiH_-PhiR_);
       break;
     default:
       fprintf(stderr,"ERROR: bad phiModulation\n");
@@ -529,7 +568,7 @@ Int_t Asymmetry::SpinState(Int_t spin_) {
     case -1: return sM;
     case 1: return sP;
     default:
-      fprintf(stderr,"ERROR: bad SpinState request: %d\n",spin_);
+      fprintf(stderr,"WARNING: bad SpinState request: %d\n",spin_);
       return -10000;
   };
   */
@@ -537,7 +576,7 @@ Int_t Asymmetry::SpinState(Int_t spin_) {
     case 0: return sP; // dnp2019 // TODO
     case 1: return sM;
     default:
-      fprintf(stderr,"ERROR: bad SpinState request: %d\n",spin_);
+      fprintf(stderr,"WARNING: bad SpinState request: %d\n",spin_);
       return -10000;
   };
 };
@@ -708,6 +747,12 @@ void Asymmetry::WriteObjects(TFile * f) {
     };
   };
   f->cd("/");
+ 
+  mbDist->Write();
+  for(int m=0; m<nModBins; m++) mwDist[m]->Write();
+  for(int v=0; v<nIV; v++) IVvsMdist[v]->Write();
+
+
 
   printf("\nnEvents = %d\n\n",nEvents);
       
@@ -717,6 +762,7 @@ void Asymmetry::WriteObjects(TFile * f) {
 
 
 Asymmetry::~Asymmetry() {
+  printf("destroy Asymmetry instance\n");
 
   // destroy 1-d distributions
   for(int v=0; v<nIV; v++) {
@@ -793,6 +839,16 @@ Asymmetry::~Asymmetry() {
       };
     };
   };
+
+  // destroy finely-binned modulation dists
+  if(mbDist) delete mbDist;
+  for(int m=0; m<nModBins; m++) {
+    if(mwDist[m]) delete mwDist[m];
+  };
+  for(int v=0; v<nIV; v++) {
+    if(IVvsMdist[v]) delete IVvsMdist[v];
+  };
+  printf("done\n");
 
 };
 
