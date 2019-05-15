@@ -30,16 +30,19 @@
 #include "Tools.h"
 #include "Trajectory.h"
 #include "DIS.h"
+#include "Binning.h"
 
 
 class Asymmetry : public TObject
 {
   public:
-    Asymmetry(Int_t phiModulation, Bool_t singleBinMode);
+    Asymmetry(
+      Binning * binScheme,
+      Int_t phiModulation, Int_t dimension, 
+      Int_t var0=0, Int_t var1=-1, Int_t var2=-1
+    );
     ~Asymmetry();
-    void AddBinBound(Int_t ivIdx, Float_t newBound);
-    void PrintBinBounds();
-    Int_t GetBin(Int_t v_, Float_t iv_);
+
     void CalculateAsymmetries();
     void EvalAsymmetry(TGraphErrors * asymGr, TH1D * mdistL, TH1D * mdistR);
 
@@ -49,6 +52,7 @@ class Asymmetry : public TObject
     void FillPlots();
     Float_t EvalModulation(Float_t PhiH_, Float_t PhiR_);
     Int_t SpinState(Int_t spin_);
+
     void ResetVars();
 
     Int_t nEvents;
@@ -61,6 +65,8 @@ class Asymmetry : public TObject
       nMod
     };
     Int_t whichMod;
+    Int_t whichDim;
+    Binning * BS;
 
     // event-level variables -- these must be set for each event,
     // prior to calling FillHists
@@ -76,11 +82,7 @@ class Asymmetry : public TObject
 
 
     // enumerators 
-    enum ivEnum { vM, vX, vZ, nIV }; // Independent Variables (IV)
     enum spinEnum { sP, sM, nSpin }; // spin state
-    static const Int_t nBinsMax = 7;
-    Float_t minIV[nIV];
-    Float_t maxIV[nIV];
 
     static const Int_t w1Bins = 100; // number of bins for wDist1 plots
     static const Int_t w2Bins = 50; // number of bins for wDist2 plots
@@ -89,65 +91,50 @@ class Asymmetry : public TObject
     Float_t modMax;
 
 
-    // 1-dim binning:
-    // distributions for each bin for a specific IV; 
-    // [spin] [IV] [bin]
-    // -- [IV] is that specific IV; the other 2 IVs are integrated 
-    // -- [bin] is the bin in that IV
-    TH1D * wDist1[nIV][nBinsMax]; // "weight dist": finely-binned IV distribution
-    TH1D * mDist1[nSpin][nIV][nBinsMax]; // "modulation dist": 
-                                         // filled with, e.g., Sin(phiR) for each spin
-    TGraphErrors * asym1[nIV][nBinsMax]; // asymmetry vs. azimuthal modulation bin
-    TH1D * bDist1[nIV]; // "binning dist": full IV distribution, for showing bin bounds
-    TCanvas * bDistCanv1[nIV]; // canvas for bDist
+    // "iv dist": finely-binned IV distribution (for each whichDim)
+    vector<TH1D*> ivVec1;
+    vector<TH2D*> ivVec2;
+    vector<TH3D*> ivVec3;
+    TH1D * ivDist1;
+    TH2D * ivDist2;
+    TH3D * ivDist3;
+    TH1D * ivFullDist1;
+    TH2D * ivFullDist2;
+    TH3D * ivFullDist3;
+    TCanvas * ivFullCanv;
 
+    // "azimuthal modulation dist" filled with, e.g., Sin(phiR) for each spin
+    vector<TH1D*> aziVec[nSpin]; 
+    TH1D * aziDist[nSpin];
 
-    // 2-dim binning:
-    // distributions for each pair of bins in 2 IVs; the third
-    // IV not considered is integrated over
-    // [spin] [IV1] [IV2] [bin1] [bin2]
-    // -- [IV1] is the first IV
-    // -- [IV2] is the second IV
-    // -- [bin1] is the first IV's bin
-    // -- [bin2] is the second IV's bin
-    TH2D * wDist2[nIV][nIV][nBinsMax][nBinsMax];
-    TH1D * mDist2[nSpin][nIV][nIV][nBinsMax][nBinsMax];
-    TGraphErrors * asym2[nIV][nIV][nBinsMax][nBinsMax];
-    TH2D * bDist2[nIV][nIV];
-    TCanvas * bDistCanv2[nIV][nIV];
+    // "finely-binnd azimuthal modulation dist" filled for all spins
+    vector<TH1D*> modVec;
+    TH1D * modDist;
+    TH1D * modFullDist;
+    TH2D * IVvsModDist;
 
-    // 3-dim binning:
-    // distributions for each triple of bins; since no IVs are integated
-    // over, we only need one distribution; the three bins are in alphabetical
-    // order
-    // [vM bin] [vX bin] [vZ bin]
-    TH3D * wDist3[nBinsMax][nBinsMax][nBinsMax];
-    TH1D * mDist3[nSpin][nBinsMax][nBinsMax][nBinsMax];
-    TGraphErrors * asym3[nBinsMax][nBinsMax][nBinsMax];
+    // asymmetry vs. azimuthal modulation bin
+    vector<TGraphErrors*> asymVec;
+    TGraphErrors * asymDist;
+    
+    // bin lines
+    vector<TLine*> boundLineVec;
+    TLine * boundLine;
 
-
-    // full, finely-binned modulation dists
-    TH1D * mbDist; // full distribution for all modulation bins
-    TH1D * mwDist[nModBins]; // one for each modulation bin
-    TH2D * IVvsMdist[nIV]; // IV vs. modulation, for each IV
-
-
-    // bin boundaries
-    Int_t nBins[nIV]; // the number of bins
-    Float_t bound[nIV][nBinsMax]; // [IV] [bin#]; this is the lower bound
-                                  // for bin "bin#"; to get the upper bound
-                                  // of the highest bin, use bin#+1
-    Float_t nModMax;
-
-    TLine * boundLine1[nIV][nBinsMax];
-    TLine * vertLine[nIV][nIV][nBinsMax];
-    TLine * horizLine[nIV][nIV][nBinsMax];
-
-    TString IVname[nIV];
-    TString IVtitle[nIV];
     TString ModulationTitle;
+
+    Bool_t success;
+    Bool_t successIVmode;
     
   private:
+    Int_t I[3];
+    Float_t iv[3]; // independent variable
+    Float_t ivMin[3];
+    Float_t ivMax[3];
+    Int_t nBin[3];
+    TString ivN[3];
+    TString ivT[3];
+
     TString SpinName[nSpin];
     TString SpinTitle[nSpin];
     TString plotTitle,plotName;
@@ -155,7 +142,6 @@ class Asymmetry : public TObject
 
 
     Float_t angle;
-    Float_t iv[nIV]; // independent variable
     Float_t modulation;
     Int_t binn[nIV];
     Int_t spinn;

@@ -14,9 +14,8 @@ CXX = g++ -std=c++11
 
 ifeq ($(ARCH),linux)
 CXX = g++ -std=c++11
-CXXFLAGS = -g -O -Wno-deprecated -fPIC -m32 -fno-inline -Wno-write-strings
+CXXFLAGS = -g -Wno-deprecated -fPIC -m32 -fno-inline -Wno-write-strings
 LD = g++
-LDFLAGS = -O
 SOFLAGS = -shared
 INCLUDE = $(ROOTSYS)/include/
 endif
@@ -27,8 +26,8 @@ GLIBS = $(ROOTGLIBS) $(SYSLIBS) $(HIPOLIBS)
 
 #-----------------------------------------------
 
-CXXFILES = DIS.cxx Trajectory.cxx Dihadron.cxx EventTree.cxx Asymmetry.cxx KinDep.cxx
-HEADERS = Constants.h Tools.h DIS.h Trajectory.h Dihadron.h EventTree.h Asymmetry.h KinDep.h
+CXXFILES = DIS.cxx Trajectory.cxx Dihadron.cxx EventTree.cxx Binning.cxx Asymmetry.cxx KinDep.cxx
+HEADERS = Constants.h Tools.h DIS.h Trajectory.h Dihadron.h EventTree.h Binning.h Asymmetry.h KinDep.h
 
 #-----------------------------------------------
 

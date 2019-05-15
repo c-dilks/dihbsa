@@ -55,4 +55,4 @@ clean:
 	@rm -rf *.exe
 
 %.o: %.cpp
-	$(CXX) -c $< -O2 $(ROOTCFLAGS) $(DIHBSACFLAGS) $(HIPOCFLAGS) $(LZ4INCLUDES)
+	$(CXX) -c $< $(ROOTCFLAGS) $(DIHBSACFLAGS) $(HIPOCFLAGS) $(LZ4INCLUDES)

@@ -1,5 +1,7 @@
+#include "Binning.h"
+
 void TestDIS() {
-  gSystem->Load("src/DihBsa.so");
-  Asymmetry * asym = new Asymmetry();
+  gSystem->Load("DihBsa.so");
+  Binning * B = new Binning();
 };
 

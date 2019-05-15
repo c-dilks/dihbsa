@@ -19,6 +19,7 @@
 #include "Trajectory.h"
 #include "Dihadron.h"
 #include "EventTree.h"
+#include "Binning.h"
 #include "Asymmetry.h"
 #include "KinDep.h"
 
@@ -28,16 +29,21 @@ int main(int argc, char** argv) {
 
    // ARGUMENTS
    TString inDir = "outroot";
+   Int_t whichModulation = 0; // see src/Asymmetry.h
    Int_t whichPhiR = 3; // 1:phiRq  2:phiRp_r  3:phiRp // Alessandro prefers 3:phiRp
    if(argc>1) inDir = TString(argv[1]);
-   if(argc>2) whichPhiR = (Int_t)strtof(argv[2],NULL);
+   if(argc>2) whichModulation = (Int_t)strtof(argv[2],NULL);
+   if(argc>3) whichPhiR = (Int_t)strtof(argv[2],NULL);
+
+   Binning * B = new Binning();
+   return 0;
 
    TFile * outfile = new TFile("spin.root","RECREATE");
 
 
    EventTree * ev = new EventTree(TString(inDir+"/*.root"));
-   //Asymmetry * asym = new Asymmetry(Asymmetry::modSinPhiR, false);
-   Asymmetry * asym = new Asymmetry(Asymmetry::modSinPhiHR, false);
+   Asymmetry * asym = new Asymmetry(whichModulation, false);
+   if(!(asym->success)) return 0;
 
 
    printf("begin loop through %lld events...\n",ev->ENT);
@@ -77,11 +83,11 @@ int main(int argc, char** argv) {
 
    asym->CalculateAsymmetries();
 
-   KinDep * kd = new KinDep(asym);
+   //KinDep * kd = new KinDep(asym);
 
    asym->WriteObjects(outfile);
-   kd->WriteObjects(outfile);
-   kd->PrintPNGs(whichPhiR);
+   //kd->WriteObjects(outfile);
+   //kd->PrintPNGs(whichPhiR);
 
    outfile->Close();
 

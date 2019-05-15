@@ -9,6 +9,7 @@
 #pragma link C++ class Trajectory+;
 #pragma link C++ class Dihadron+;
 #pragma link C++ class EventTree+;
+#pragma link C++ class Binning+;
 #pragma link C++ class Asymmetry+;
 #pragma link C++ class KinDep+;
 

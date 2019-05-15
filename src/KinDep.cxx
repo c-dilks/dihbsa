@@ -10,10 +10,12 @@ KinDep::KinDep(Asymmetry * asym_) {
 
 
   A = asym_;
+  /*
   if(Asymmetry::nIV != 3) {
     fprintf(stderr,"ERROR: KinDep does not know how to process nIV!=3\n");
     return;
   };
+  */
   N = Asymmetry::nIV;
   for(int b=0; b<N; b++) NB[b] = A->nBins[b];
 
