@@ -6,6 +6,7 @@
 
 static Double_t PI = TMath::Pi();
 
+// particles constants
 enum particle_enum {
   kE,
   kP,
@@ -18,7 +19,6 @@ enum particle_enum {
   kPhoton,
   nParticles
 };
-
 
 static TString PartName(int p) {
   switch(p) {
@@ -37,7 +37,6 @@ static TString PartName(int p) {
   };
 };
 
-
 static TString PartTitle(int p) {
   switch(p) {
     case kE: return "e^{-}";
@@ -55,7 +54,6 @@ static TString PartTitle(int p) {
   };
 };
 
-
 static int PartPID(int p) {
   switch(p) {
     case kE: return 11;
@@ -72,7 +70,6 @@ static int PartPID(int p) {
       return -10000;
   };
 };
-
 
 static float PartMass(int p) {
   switch(p) {
@@ -92,6 +89,7 @@ static float PartMass(int p) {
 };
 
 
+// charge sign constants
 enum plusminus {hP,hM};
 
 static TString PMstr(int h) {
@@ -113,5 +111,30 @@ static TString PMsym(int h) {
       return "unknown";
   };
 };
+
+
+// spin constants
+enum spinEnum { sP, sM, nSpin };
+
+static TString SpinName(int s) {
+  switch(s) {
+    case sP: return "P";
+    case sM: return "M";
+    default:
+      fprintf(stderr,"ERROR: bad SpinName request\n");
+      return "unknown";
+  };
+};
+
+static TString SpinTitle(int s) {
+  switch(s) {
+    case sP: return "spin +";
+    case sM: return "spin -";
+    default:
+      fprintf(stderr,"ERROR: bad SpinTitle request\n");
+      return "unknown";
+  };
+};
+
 
 #endif

@@ -15,7 +15,6 @@
 #include "TTree.h"
 #include "TChain.h"
 #include "TFile.h"
-#include "TCanvas.h"
 #include "TLorentzVector.h"
 #include "TString.h"
 #include "TMath.h"
@@ -39,15 +38,15 @@ class Asymmetry : public TObject
     Asymmetry(
       Binning * binScheme,
       Int_t phiModulation, Int_t dimension, 
-      Int_t var0=0, Int_t var1=-1, Int_t var2=-1
+      Int_t var0=0,  Int_t bin0=0,
+      Int_t var1=-1, Int_t bin1=-1,
+      Int_t var2=-1, Int_t bin2=-1
     );
     ~Asymmetry();
 
     void CalculateAsymmetries();
     void EvalAsymmetry(TGraphErrors * asymGr, TH1D * mdistL, TH1D * mdistR);
 
-    void DrawBoundLines();
-    void WriteObjects(TFile * f);
 
     void FillPlots();
     Float_t EvalModulation(Float_t PhiH_, Float_t PhiR_);
@@ -81,9 +80,7 @@ class Asymmetry : public TObject
     Float_t pol;
 
 
-    // enumerators 
-    enum spinEnum { sP, sM, nSpin }; // spin state
-
+    // number of bins
     static const Int_t w1Bins = 100; // number of bins for wDist1 plots
     static const Int_t w2Bins = 50; // number of bins for wDist2 plots
     static const Int_t w3Bins = 30; // number of bins for wDist3 plots
@@ -92,53 +89,45 @@ class Asymmetry : public TObject
 
 
     // "iv dist": finely-binned IV distribution (for each whichDim)
-    vector<TH1D*> ivVec1;
-    vector<TH2D*> ivVec2;
-    vector<TH3D*> ivVec3;
     TH1D * ivDist1;
     TH2D * ivDist2;
     TH3D * ivDist3;
-    TH1D * ivFullDist1;
-    TH2D * ivFullDist2;
-    TH3D * ivFullDist3;
-    TCanvas * ivFullCanv;
+    TString ivName,ivTitle;
 
     // "azimuthal modulation dist" filled with, e.g., Sin(phiR) for each spin
-    vector<TH1D*> aziVec[nSpin]; 
     TH1D * aziDist[nSpin];
+    TString aziName[nSpin];
+    TString aziTitle[nSpin];
 
     // "finely-binnd azimuthal modulation dist" filled for all spins
-    vector<TH1D*> modVec;
     TH1D * modDist;
-    TH1D * modFullDist;
     TH2D * IVvsModDist;
+    TString modName,modTitle;
+    TString IVvsModName,IVvsModTitle;
 
     // asymmetry vs. azimuthal modulation bin
-    vector<TGraphErrors*> asymVec;
     TGraphErrors * asymDist;
+    TString asymName,asymTitle;
     
     // bin lines
-    vector<TLine*> boundLineVec;
     TLine * boundLine;
 
     TString ModulationTitle;
 
+    Bool_t debug;
     Bool_t success;
     Bool_t successIVmode;
     
   private:
     Int_t I[3];
+    Int_t B[3];
     Float_t iv[3]; // independent variable
     Float_t ivMin[3];
     Float_t ivMax[3];
-    Int_t nBin[3];
     TString ivN[3];
     TString ivT[3];
+    TString binT,binN;
 
-    TString SpinName[nSpin];
-    TString SpinTitle[nSpin];
-    TString plotTitle,plotName;
-    TString canvName;
 
 
     Float_t angle;
