@@ -89,21 +89,21 @@ void Binning::PrintBinBounds() {
 };
 
 
-Int_t Binning::GetBin(Int_t v_, Float_t iv_) {
-  if(iv_<0 || iv_>=nIV) {
+Int_t Binning::GetBin(Int_t ivIdx_, Float_t iv_) {
+  if(ivIdx_<0 || ivIdx_>=nIV) {
     fprintf(stderr,"ERROR: bad Binning::GetBin call\n");
     return -1;
   };
 
-  for(int b=0; b<nBins[v_]; b++) {
+  for(int b=0; b<nBins[ivIdx_]; b++) {
 
-    if( iv_ >= bound[v_][b] &&
-        iv_ <  bound[v_][b+1] ) {
+    if( iv_ >= bound[ivIdx_].at(b) &&
+        iv_ <  bound[ivIdx_].at(b+1) ) {
       return b;
     };
   };
 
-  fprintf(stderr,"ERROR bin not found for iv[%d]=%.2f\n",v_,iv_);
+  fprintf(stderr,"ERROR bin not found for %s=%.2f\n",IVname[ivIdx_].Data(),iv_);
   return -1;
 };
 
@@ -122,9 +122,6 @@ TString Binning::GetBoundStr(Int_t v_, Int_t b_) {
   return retStr;
 };
     
-    
-
-
 
 Binning::~Binning() {};
 

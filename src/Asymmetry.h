@@ -49,7 +49,7 @@ class Asymmetry : public TObject
 
 
     void FillPlots();
-    Float_t EvalModulation(Float_t PhiH_, Float_t PhiR_);
+    Float_t EvalModulation();
     Int_t SpinState(Int_t spin_);
 
     void ResetVars();
@@ -66,6 +66,7 @@ class Asymmetry : public TObject
     Int_t whichMod;
     Int_t whichDim;
     Binning * BS;
+
 
     // event-level variables -- these must be set for each event,
     // prior to calling FillHists
@@ -94,19 +95,24 @@ class Asymmetry : public TObject
     TH3D * ivDist3;
     TString ivName,ivTitle;
 
-    // "azimuthal modulation dist" filled with, e.g., Sin(phiR) for each spin
+    // "azimuthal modulation dist" filled with, e.g., Sin(phiR) for each spin, binned
+    // for the asymmetry plots
     TH1D * aziDist[nSpin];
     TString aziName[nSpin];
     TString aziTitle[nSpin];
 
-    // "finely-binnd azimuthal modulation dist" filled for all spins
-    TH1D * modDist;
+    // "finely-binnd azimuthal modulation dist" filled for all spins, used for getting
+    // mean value of azimuthal modulation 
+    TH1D * modBinDist[nModBins]; // one for each modulation bin
+    TH1D * modDist; // for all modulation bins
     TH2D * IVvsModDist;
     TString modName,modTitle;
+    TString modBinName[nModBins];
+    TString modBinTitle[nModBins];
     TString IVvsModName,IVvsModTitle;
 
     // asymmetry vs. azimuthal modulation bin
-    TGraphErrors * asymDist;
+    TGraphErrors * asymGr;
     TString asymName,asymTitle;
     
     // bin lines
@@ -119,20 +125,18 @@ class Asymmetry : public TObject
     Bool_t successIVmode;
     
   private:
-    Int_t I[3];
-    Int_t B[3];
-    Float_t iv[3]; // independent variable
-    Float_t ivMin[3];
-    Float_t ivMax[3];
-    TString ivN[3];
-    TString ivT[3];
-    TString binT,binN;
+    // variables for each dimension
+    Int_t I[3]; // IV index number
+    Int_t B[3]; // IV bin number
+    Float_t iv[3]; // IV
+    Float_t ivMin[3]; // IV minimum value (for histo ranges)
+    Float_t ivMax[3]; // IV maximum value (for histo ranges)
+    TString ivN[3]; // IV name
+    TString ivT[3]; // IV title
+    TString binT,binN; // bin title/name suffixes
 
-
-
-    Float_t angle;
     Float_t modulation;
-    Int_t binn[nIV];
+    Int_t modbin;
     Int_t spinn;
     Int_t pointCnt;
 
@@ -145,7 +149,6 @@ class Asymmetry : public TObject
 
     Double_t bMax;
 
-    Int_t fbin;
 
 
 

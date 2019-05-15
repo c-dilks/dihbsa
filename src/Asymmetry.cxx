@@ -8,18 +8,18 @@ using namespace std;
 Asymmetry::Asymmetry(
   Binning * binScheme,
   Int_t phiModulation, Int_t dimension, 
-  Int_t var0=0,  Int_t bin0=0,
-  Int_t var1=-1, Int_t bin1=-1,
-  Int_t var2=-1, Int_t bin2=-1
+  Int_t var0, Int_t bin0,
+  Int_t var1, Int_t bin1,
+  Int_t var2, Int_t bin2
 ) {
 
-  printf("Instantiating Asymmetry...\n");
   success = false;
   debug = true;
+  if(debug) printf("Instantiating Asymmetry...\n");
 
 
   // set up number of dimensions
-  if(dimensions>=1 && dimensions<=2) whichDim = dimension;
+  if(dimension>=1 && dimension<=3) whichDim = dimension;
   else {
     fprintf(stderr,"ERROR: bad number of dimensions\n");
     return;
@@ -32,9 +32,9 @@ Asymmetry::Asymmetry(
 
   // check IV mode
   successIVmode = true;
-  if(whichDim>=1 && (var0<0 || var0>Binning:nIV) ) successIVmode = false;
-  if(whichDim>=2 && (var1<0 || var1>Binning:nIV) ) successIVmode = false;
-  if(whichDim>=3 && (var2<0 || var2>Binning:nIV) ) successIVmode = false;
+  if(whichDim>=1 && (var0<0 || var0>Binning::nIV) ) successIVmode = false;
+  if(whichDim>=2 && (var1<0 || var1>Binning::nIV) ) successIVmode = false;
+  if(whichDim>=3 && (var2<0 || var2>Binning::nIV) ) successIVmode = false;
   if(successIVmode) {
     I[0] = var0;  B[0] = bin0;
     I[1] = var1;  B[1] = bin1;
@@ -43,6 +43,10 @@ Asymmetry::Asymmetry(
     fprintf(stderr,"ERROR: bad IV vars\n");
     return;
   };
+  if(debug) {
+    for(Int_t d=0; d<whichDim; d++) printf("I[%d]=%d B[%d]=%d\n",d,I[d],d,B[d]);
+  };
+
 
 
   // set relevant variables for the given IV mode
@@ -88,7 +92,6 @@ Asymmetry::Asymmetry(
     binT = binT + "  " + BS->GetBoundStr(I[d],B[d]);
     binN = Form("%s_%s%d",binN.Data(),ivN[d].Data(),B[d]);
   };
-  binT = binT + "  ::";
   if(debug) printf("binT = %s\nbinN = %s\n",binT.Data(),binN.Data());
 
 
@@ -124,15 +127,24 @@ Asymmetry::Asymmetry(
       w3Bins,ivMin[2],ivMax[2]
     );
   };
+  //if(debug) printf("built %s\n\t%s\n",ivName.Data(),ivTitle.Data());
 
 
-
-  // modDist
+  // modDist and modBinDist
   modName = Form("modDist%s",binN.Data());
   modTitle = Form("%s distribution %s;%s",
-    ModulationTitle(),binT.Data(),ModulationTitle()
+    ModulationTitle.Data(),binT.Data(),ModulationTitle.Data()
   );
   modDist = new TH1D(modName,modTitle,w1Bins,-modMax,modMax);
+  //if(debug) printf("built %s\n\t%s\n",modName.Data(),modTitle.Data());
+
+  for(int m=0; m<nModBins; m++) {
+    modBinName[m] = Form("%s_bin%d",modName.Data(),m);
+    modBinTitle[m] = Form("bin %d %s",m,modTitle.Data());
+    modBinDist[m] = new TH1D(
+      modBinName[m].Data(),modBinTitle[m].Data(),w1Bins,-modMax,modMax);
+    //if(debug) printf("built %s\n\t%s\n",modBinName[m].Data(),modBinTitle[m].Data());
+  };
 
 
   // IVvsModDist (only for 1D!)
@@ -140,12 +152,13 @@ Asymmetry::Asymmetry(
     IVvsModName = Form("IVvsMdist%s",binN.Data());
     IVvsModTitle = Form("%s vs. %s %s;%s;%s",
       ivT[0].Data(),ModulationTitle.Data(),binT.Data(),
-      ModulationTitle.Data(),ivT[0]
+      ModulationTitle.Data(),ivT[0].Data()
     );
     IVvsModDist = new TH2D(IVvsModName,IVvsModTitle,
       w1Bins,-modMax,modMax,
       w1Bins,ivMin[0],ivMax[0]
     );
+    //if(debug) printf("built %s\n\t%s\n",IVvsModName.Data(),IVvsModTitle.Data());
   };
 
 
@@ -153,20 +166,20 @@ Asymmetry::Asymmetry(
   for(int s=0; s<nSpin; s++) {
     aziName[s] = Form("aziDist_%s%s",SpinName(s).Data(),binN.Data());
     aziTitle[s] = Form("%s binned distribution :: %s %s;%s",
-      ModulationTitle(), SpinTitle(s).Data(), binT.Data(), ModulationTitle()
+      ModulationTitle.Data(),SpinTitle(s).Data(),binT.Data(),ModulationTitle.Data()
     );
     aziDist[s] = new TH1D(aziName[s],aziTitle[s],nModBins,-modMax,modMax);
   };
 
 
-  // asymDist
+  // asymGr
   asymName = Form("asym%s",binN.Data());
   asymTitle = Form("%s asymmetry %s;%s;asymmetry",
     ModulationTitle.Data(), binT.Data(),  ModulationTitle.Data()
   );
-  asymDist = new TGraphErrors();
-  asymDist->SetName(asymName);
-  asymDist->SetTitle(asymTitle);
+  asymGr = new TGraphErrors();
+  asymGr->SetName(asymName);
+  asymGr->SetTitle(asymTitle);
 
 
   // initialize kinematic variables
@@ -176,187 +189,80 @@ Asymmetry::Asymmetry(
 
   success = true;
 
+  if(debug) printf("Asymmetry instantiated.\n");
+
 };
 
 
 
-void Asymmetry::AddBinBound(Int_t ivIdx, Float_t newBound) {
-  if(ivIdx<0 || ivIdx>=nIV) {
-    fprintf(stderr,"ERROR: bad Asymmetry::AddBinBound call");
-    return;
-  };
-
-  if(nBins[ivIdx]+1 > nBinsMax) {
-    fprintf(stderr,"ERROR: AddBinBound requests more bins than nBinsMax\n");
-    return;
-  };
-
-  bound[ivIdx][++nBins[ivIdx]] = newBound;
-
-  return;
-};
-
-
-void Asymmetry::PrintBinBounds() {
-  printf("\n");
-  for(int v=0; v<nIV; v++) {
-    printf("[ %s ] %s bins:  (nbins=%d)\n",IVname[v].Data(),IVtitle[v].Data(),nBins[v]);
-    for(int b=0; b<nBins[v]; b++) {
-      printf(" bin %d:\t\t%.2f\t%.2f\n",b,bound[v][b],bound[v][b+1]);
-    };
-  };
-  printf("\n");
-};
-
-
-Int_t Asymmetry::GetBin(Int_t v_, Float_t iv_) {
-  if(iv_<0 || iv_>=nIV) {
-    fprintf(stderr,"ERROR: bad Asymmetry::GetBin call\n");
-    return -1;
-  };
-
-  for(int b=0; b<nBins[v_]; b++) {
-
-    if( iv_ >= bound[v_][b] &&
-        iv_ <  bound[v_][b+1] ) {
-      return b;
-    };
-  };
-
-  fprintf(stderr,"ERROR bin not found for iv[%d]=%.2f\n",v_,iv_);
-  return -1;
-};
-
-
-
-
-
+// fill all the plots
+// WARNING: you must control what goes into these plots externally; there's no
+// "double-checking" of the proper bin in this method. The only thing that specifying
+// the bin numbers in the constructor does is set up the plot names and titles
 void Asymmetry::FillPlots() {
-  iv[vM] = Mh;
-  iv[vX] = x;
-  iv[vZ] = z;
-  iv[vPt] = PhPerp;
+
+  // set iv variable
+  for(int d=0; d<whichDim; d++) {
+    switch(I[d]) {
+      case Binning::vM: iv[d] = Mh; break;
+      case Binning::vX: iv[d] = x; break;
+      case Binning::vZ: iv[d] = z; break;
+      case Binning::vPt: iv[d] = PhPerp; break;
+      default: 
+        fprintf(stderr,
+          "ERROR: Asymmetry::FillPlots does not understand I[%d]=%d\n",d,I[d]);
+        return;
+    };
+  };
+
 
   // evaluate modulation 
-  modulation = EvalModulation(PhiH,PhiR);
+  modulation = EvalModulation();
+
 
   // get spin state number
   spinn = SpinState(eSpin);
   if(spinn<0) return;
 
-  // get bin numbers
-  for(int v=0; v<nIV; v++) {
-    binn[v] = GetBin(v,iv[v]);
-    if(binn[v]<0) return;
+
+  // fill plots
+
+  modbin = aziDist[sP]->FindBin(modulation);
+  if(modbin>=1 && modbin<=nModBins) 
+    modBinDist[modbin-1]->Fill(modulation);
+  else {
+    fprintf(stderr,"ERROR: modulation bin not found for modulation=%f\n",modulation);
+    return;
   };
+
+  modDist->Fill(modulation);
+
+  switch(whichDim) {
+    case 1: ivDist1->Fill(iv[0]); break;
+    case 2: ivDist2->Fill(iv[0],iv[1]); break;
+    case 3: ivDist3->Fill(iv[0],iv[1],iv[2]); break;
+  };
+
+  aziDist[spinn]->Fill(modulation);
+
+  if(whichDim==1) IVvsModDist->Fill(modulation,iv[0]);
 
 
   
-  // fill 1D plots
-  for(int v=0; v<nIV; v++) {
-    bDist1[v]->Fill(iv[v]);
-    wDist1[v][binn[v]]->Fill(iv[v]);
-    mDist1[spinn][v][binn[v]]->Fill(modulation);
-  };
-
-  // fill 2D plots
-  for(int v1=0; v1<nIV; v1++) {
-    for(int v2=0; v2<nIV; v2++) {
-      bDist2[v1][v2]->Fill(iv[v1],iv[v2]);
-      wDist2[v1][v2][binn[v1]][binn[v2]]->Fill(iv[v1],iv[v2]);
-      mDist2[spinn][v1][v2][binn[v1]][binn[v2]]->Fill(modulation);
-    };
-  };
-
-  // fill 3D plot
-  wDist3[binn[vM]][binn[vX]][binn[vZ]]->Fill(iv[vM],iv[vX],iv[vZ]);
-  mDist3[spinn][binn[vM]][binn[vX]][binn[vZ]]->Fill(modulation);
-
-
-
-  // fill finely-binned modulation dists
-  mbDist->Fill(modulation);
-
-  fbin = mDist1[0][0][0]->FindBin(modulation);
-  //printf("fbin=%d\n",fbin);
-  if(fbin>=1 && fbin<=nModBins) mwDist[fbin-1]->Fill(modulation);
-  else {
-    fprintf(stderr,
-      "ERROR: Asymmetry::FillPlots bad fbin (%d); modulation=%f\n",
-      fbin,modulation
-    );
-  };
-
-  for(int v=0; v<nIV; v++) IVvsMdist[v]->Fill(modulation,iv[v]);
-
-
+  // increment event counter
   nEvents++;
 };
   
 
 
 void Asymmetry::CalculateAsymmetries() {
-  
-  // evaluate 1D asymmetries
-  for(int v=0; v<nIV; v++) {
-    for(int b=0; b<nBins[v]; b++) {
-      EvalAsymmetry(
-        asym1[v][b],
-        mDist1[sP][v][b],
-        mDist1[sM][v][b]
-      );
-    };
-  };
-
-  // evaluate 2D asymmetries
-  for(int v1=0; v1<nIV; v1++) {
-    for(int v2=0; v2<nIV; v2++) {
-      for(int b1=0; b1<nBins[v1]; b1++) {
-        for(int b2=0; b2<nBins[v2]; b2++) {
-          EvalAsymmetry(
-            asym2[v1][v2][b1][b2],
-            mDist2[sP][v1][v2][b1][b2],
-            mDist2[sM][v1][v2][b1][b2]
-          );
-        };
-      };
-    };
-  };
-
-  // evaluate 3D asymmetries
-  for(int bM=0; bM<nBins[vM]; bM++) {
-    for(int bX=0; bX<nBins[vX]; bX++) {
-      for(int bZ=0; bZ<nBins[vZ]; bZ++) {
-        EvalAsymmetry(
-          asym3[bM][bX][bZ],
-          mDist3[sP][bM][bX][bZ],
-          mDist3[sM][bM][bX][bZ]
-        );
-      };
-    };
-  };
-
-};
-
-
-void Asymmetry::EvalAsymmetry(
-  TGraphErrors * asymGr,
-  TH1D * mdistL,
-  TH1D * mdistR
-) {
-
-  if(asymGr==NULL || mdistL==NULL || mdistR==NULL) {
-    fprintf(stderr,"ERROR: null pointer in Asymmetry::EvalAsymmetry\n");
-    return;
-  };
-
 
   // compute relative luminosity
   rellumNumer = 0;
   rellumDenom = 0;
   for(int m=1; m<=nModBins; m++) {
-    rellumNumer += mdistL->GetBinContent(m);
-    rellumDenom += mdistR->GetBinContent(m);
+    rellumNumer += aziDist[sP]->GetBinContent(m);
+    rellumDenom += aziDist[sM]->GetBinContent(m);
   };
   if(rellumDenom>0) rellum = rellumNumer / rellumDenom;
   else {
@@ -367,12 +273,12 @@ void Asymmetry::EvalAsymmetry(
   printf("rellum = %f / %f = %f\n",rellumNumer,rellumDenom,rellum);
 
    
-  // compute asymmetry
+  // compute asymmetry for each modulation bin
   pointCnt = 0;
   for(int m=1; m<=nModBins; m++) {
 
-    yL = mdistL->GetBinContent(m);
-    yR = mdistR->GetBinContent(m);
+    yL = aziDist[sP]->GetBinContent(m);
+    yR = aziDist[sM]->GetBinContent(m);
 
     asymNumer = yL - (rellum * yR);
     asymDenom = yL + (rellum * yR);
@@ -385,8 +291,7 @@ void Asymmetry::EvalAsymmetry(
       asymErr = 1.0 / ( pol * TMath::Sqrt(yL+yR) );
 
       // compute azimuthal modulation value
-      //modVal = mdistL->GetBinCenter(m); // use modulation bin's center
-      modVal = mwDist[m-1]->GetMean(); // use modulation bin's mean
+      modVal = modBinDist[m-1]->GetMean(); // use modulation bin's mean
       
       // compute azimuthal modulation error
       modErr = 0; // azimuthal modulation error
@@ -404,18 +309,20 @@ void Asymmetry::EvalAsymmetry(
 
   
     
-Float_t Asymmetry::EvalModulation(Float_t PhiH_, Float_t PhiR_) {
+Float_t Asymmetry::EvalModulation() {
+
   switch(whichMod) {
     case modSinPhiR:
-      return TMath::Sin(PhiR_);
+      return TMath::Sin(PhiR);
       break;
     case modSinPhiHR:
-      return (PhPerp/Mh) * TMath::Sin(PhiH_-PhiR_);
+      return (PhPerp/Mh) * TMath::Sin(PhiH-PhiR);
       break;
     default:
       fprintf(stderr,"ERROR: bad phiModulation\n");
       return -10000;
   };
+
 };
 
 
@@ -440,11 +347,8 @@ void Asymmetry::ResetVars() {
   PhiH = -10000;
   PhiR = -10000;
   PhPerp = -10000;
-  for(int v=0; v<nIV; v++) iv[v]=-10000;
+  for(int d=0; d<3; d++) iv[d]=-10000;
 };
-
-
-
 
 
 
