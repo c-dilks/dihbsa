@@ -48,11 +48,12 @@ class Asymmetry : public TObject
     void EvalAsymmetry(TGraphErrors * asymGr, TH1D * mdistL, TH1D * mdistR);
 
 
-    void FillPlots();
+    Bool_t FillPlots();
     Float_t EvalModulation();
     Int_t SpinState(Int_t spin_);
 
     void ResetVars();
+    void PrintSettings();
 
     Int_t nEvents;
 

@@ -44,7 +44,7 @@ Asymmetry::Asymmetry(
     return;
   };
   if(debug) {
-    for(Int_t d=0; d<whichDim; d++) printf("I[%d]=%d B[%d]=%d\n",d,I[d],d,B[d]);
+    PrintSettings();
   };
 
 
@@ -195,11 +195,9 @@ Asymmetry::Asymmetry(
 
 
 
-// fill all the plots
-// WARNING: you must control what goes into these plots externally; there's no
-// "double-checking" of the proper bin in this method. The only thing that specifying
-// the bin numbers in the constructor does is set up the plot names and titles
-void Asymmetry::FillPlots() {
+// fill all the plots; returns true if filled successfully, or false
+// if not (which usually happens if it's the wrong bin)
+Bool_t Asymmetry::FillPlots() {
 
   // set iv variable
   for(int d=0; d<whichDim; d++) {
@@ -211,8 +209,14 @@ void Asymmetry::FillPlots() {
       default: 
         fprintf(stderr,
           "ERROR: Asymmetry::FillPlots does not understand I[%d]=%d\n",d,I[d]);
-        return;
+        return false;
     };
+  };
+
+
+  // check if we're in the proper bin; if not, simply return
+  for(int d=0; d<whichDim; d++) {
+    if(B[d] != BS->GetBin(I[d],iv[d])) return false;
   };
 
 
@@ -222,7 +226,7 @@ void Asymmetry::FillPlots() {
 
   // get spin state number
   spinn = SpinState(eSpin);
-  if(spinn<0) return;
+  if(spinn<0) return false;
 
 
   // fill plots
@@ -232,7 +236,7 @@ void Asymmetry::FillPlots() {
     modBinDist[modbin-1]->Fill(modulation);
   else {
     fprintf(stderr,"ERROR: modulation bin not found for modulation=%f\n",modulation);
-    return;
+    return false;
   };
 
   modDist->Fill(modulation);
@@ -251,11 +255,16 @@ void Asymmetry::FillPlots() {
   
   // increment event counter
   nEvents++;
+  return true;
 };
   
 
 
 void Asymmetry::CalculateAsymmetries() {
+  if(debug) {
+    printf("calculate asymmetries for:\n");
+    PrintSettings(); 
+  };
 
   // compute relative luminosity
   rellumNumer = 0;
@@ -348,6 +357,14 @@ void Asymmetry::ResetVars() {
   PhiR = -10000;
   PhPerp = -10000;
   for(int d=0; d<3; d++) iv[d]=-10000;
+};
+
+
+void Asymmetry::PrintSettings() {
+  for(Int_t d=0; d<whichDim; d++) printf("  %s bin %d (I[%d]=%d B[%d]=%d)\n",
+    (BS->IVname[I[d]]).Data(),B[d],
+    d,I[d],d,B[d]
+  );
 };
 
 

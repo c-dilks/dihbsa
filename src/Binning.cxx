@@ -82,7 +82,7 @@ void Binning::PrintBinBounds() {
   for(int v=0; v<nIV; v++) {
     printf("[ %s ] %s bins:  (nbins=%d)\n",IVname[v].Data(),IVtitle[v].Data(),nBins[v]);
     for(int b=0; b<nBins[v]; b++) {
-      printf(" bin %d:\t\t%.2f\t%.2f\n",b,bound[v][b],bound[v][b+1]);
+      printf(" bin %d:\t\t%.2f\t%.2f\n",b,bound[v].at(b),bound[v].at(b+1));
     };
   };
   printf("\n");
@@ -121,7 +121,7 @@ TString Binning::GetBoundStr(Int_t v_, Int_t b_) {
   retStr = Form("%s#in[%.2f, %.2f)",IVtitle[v_].Data(),lb,ub);
   return retStr;
 };
-    
+
 
 Binning::~Binning() {};
 
