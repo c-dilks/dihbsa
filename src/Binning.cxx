@@ -123,5 +123,15 @@ TString Binning::GetBoundStr(Int_t v_, Int_t b_) {
 };
 
 
+Int_t Binning::GetColor(Int_t v_) {
+  switch(v_) {
+    case vM: return kRed;
+    case vX: return kGreen+1;
+    case vZ: return kViolet+2;
+    case vPt: return kAzure;
+    default: return kBlack;
+  };
+};
+
 Binning::~Binning() {};
 

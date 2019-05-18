@@ -83,9 +83,9 @@ class Asymmetry : public TObject
 
 
     // number of bins
-    static const Int_t w1Bins = 100; // number of bins for wDist1 plots
-    static const Int_t w2Bins = 50; // number of bins for wDist2 plots
-    static const Int_t w3Bins = 30; // number of bins for wDist3 plots
+    static const Int_t iv1Bins = 100; // number of bins for ivDist1 plots
+    static const Int_t iv2Bins = 50; // number of bins for ivDist2 plots
+    static const Int_t iv3Bins = 30; // number of bins for ivDist3 plots
     static const Int_t nModBins = 7; // number of bins in azimuthal modulation
     Float_t modMax;
 
@@ -125,7 +125,6 @@ class Asymmetry : public TObject
     Bool_t success;
     Bool_t successIVmode;
     
-  private:
     // variables for each dimension
     Int_t I[3]; // IV index number
     Int_t B[3]; // IV bin number
@@ -135,6 +134,8 @@ class Asymmetry : public TObject
     TString ivN[3]; // IV name
     TString ivT[3]; // IV title
     TString binT,binN; // bin title/name suffixes
+
+  private:
 
     Float_t modulation;
     Int_t modbin;

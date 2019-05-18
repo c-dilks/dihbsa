@@ -103,7 +103,7 @@ Asymmetry::Asymmetry(
       ivT[0].Data()
     );
     ivDist1 = new TH1D(ivName,ivTitle,
-      w1Bins,ivMin[0],ivMax[0]
+      iv1Bins,ivMin[0],ivMax[0]
     );
   }
   else if(whichDim == 2) {
@@ -112,8 +112,8 @@ Asymmetry::Asymmetry(
       ivT[0].Data(), ivT[1].Data()
     );
     ivDist2 = new TH2D(ivName,ivTitle,
-      w2Bins,ivMin[0],ivMax[0],
-      w2Bins,ivMin[1],ivMax[1]
+      iv2Bins,ivMin[0],ivMax[0],
+      iv2Bins,ivMin[1],ivMax[1]
     );
   }
   else if(whichDim == 3) {
@@ -122,9 +122,9 @@ Asymmetry::Asymmetry(
       ivT[0].Data(), ivT[1].Data(), ivT[2].Data()
     );
     ivDist3 = new TH3D(ivName,ivTitle,
-      w3Bins,ivMin[0],ivMax[0],
-      w3Bins,ivMin[1],ivMax[1],
-      w3Bins,ivMin[2],ivMax[2]
+      iv3Bins,ivMin[0],ivMax[0],
+      iv3Bins,ivMin[1],ivMax[1],
+      iv3Bins,ivMin[2],ivMax[2]
     );
   };
   //if(debug) printf("built %s\n\t%s\n",ivName.Data(),ivTitle.Data());
@@ -135,14 +135,14 @@ Asymmetry::Asymmetry(
   modTitle = Form("%s distribution %s;%s",
     ModulationTitle.Data(),binT.Data(),ModulationTitle.Data()
   );
-  modDist = new TH1D(modName,modTitle,w1Bins,-modMax,modMax);
+  modDist = new TH1D(modName,modTitle,iv1Bins,-modMax,modMax);
   //if(debug) printf("built %s\n\t%s\n",modName.Data(),modTitle.Data());
 
   for(int m=0; m<nModBins; m++) {
     modBinName[m] = Form("%s_bin%d",modName.Data(),m);
     modBinTitle[m] = Form("bin %d %s",m,modTitle.Data());
     modBinDist[m] = new TH1D(
-      modBinName[m].Data(),modBinTitle[m].Data(),w1Bins,-modMax,modMax);
+      modBinName[m].Data(),modBinTitle[m].Data(),iv1Bins,-modMax,modMax);
     //if(debug) printf("built %s\n\t%s\n",modBinName[m].Data(),modBinTitle[m].Data());
   };
 
@@ -155,8 +155,8 @@ Asymmetry::Asymmetry(
       ModulationTitle.Data(),ivT[0].Data()
     );
     IVvsModDist = new TH2D(IVvsModName,IVvsModTitle,
-      w1Bins,-modMax,modMax,
-      w1Bins,ivMin[0],ivMax[0]
+      iv1Bins,-modMax,modMax,
+      iv1Bins,ivMin[0],ivMax[0]
     );
     //if(debug) printf("built %s\n\t%s\n",IVvsModName.Data(),IVvsModTitle.Data());
   };
