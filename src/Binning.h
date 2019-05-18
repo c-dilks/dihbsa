@@ -47,7 +47,7 @@ class Binning : public TObject
 
 
     // enumerators 
-    enum ivEnum { vM, vX, vZ, vPt, nIV }; // Independent Variables (IV)
+    enum ivEnum { vZ, vX, vM, vPt, nIV }; // Independent Variables (IV)
     Float_t minIV[nIV];
     Float_t maxIV[nIV];
 

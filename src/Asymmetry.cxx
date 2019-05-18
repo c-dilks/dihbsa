@@ -186,7 +186,6 @@ Asymmetry::Asymmetry(
   ResetVars();
   nEvents = 0;
 
-
   success = true;
 
   if(debug) printf("Asymmetry instantiated.\n");

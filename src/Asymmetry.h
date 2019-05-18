@@ -11,6 +11,7 @@
 
 // ROOT
 #include "TSystem.h"
+#include "TStyle.h"
 #include "TObject.h"
 #include "TTree.h"
 #include "TChain.h"

@@ -10,8 +10,8 @@ Binning::Binning() {
 
   // set up dnp2018 binning
   minIV[vM] = 0;   maxIV[vM] = 3;
-  minIV[vX] = 0;   maxIV[vX] = 1.2;
-  minIV[vZ] = 0;   maxIV[vZ] = 1.2;
+  minIV[vX] = 0;   maxIV[vX] = 1;
+  minIV[vZ] = 0;   maxIV[vZ] = 1;
   minIV[vPt] = 0;  maxIV[vPt] = 3;
   for(int v=0; v<nIV; v++) nBins[v]=-1;
   // -- mass

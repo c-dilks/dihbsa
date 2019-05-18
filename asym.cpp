@@ -16,6 +16,7 @@
 #include "TF1.h"
 #include "TCanvas.h"
 #include "TLine.h"
+#include "TStyle.h"
 
 // DihBsa
 #include "Constants.h"
@@ -28,6 +29,8 @@
 
 Int_t GetBinNum(Int_t bin0, Int_t bin1=-1, Int_t bin2=-1);
 void DrawKinDepGraph(TGraphErrors * g_, Binning * B_, Int_t v_);
+void DrawChiNdfGraph(TGraphErrors * g_, Binning * B_, Int_t v_);
+void DrawAsymGr(TGraphErrors * g_);
 
 
 int main(int argc, char** argv) {
@@ -131,9 +134,11 @@ int main(int argc, char** argv) {
                                           // use this map to get the index of the
                                           // corresponding kinematic-dependent asymmetry
                                           // graph
+   std::map<int,TGraphErrors*> chindfMap; // kindepMap for chindfGr
 
    Asymmetry * A;
    TGraphErrors * kindepGr;
+   TGraphErrors * chindfGr;
    TString grTitle,grName;
 
    Int_t binNum;
@@ -156,9 +161,16 @@ int main(int argc, char** argv) {
          kindepGr = new TGraphErrors();
          kindepGr->SetName(grName);
          kindepGr->SetTitle(grTitle);
+
+         grTitle = "#chi^{2}/NDF of " + grTitle;
+         grName.ReplaceAll("kindep","chindf");
+         chindfGr = new TGraphErrors();
+         chindfGr->SetName(grName);
+         chindfGr->SetTitle(grTitle);
        };
 
        kindepMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,kindepGr));
+       chindfMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,chindfGr));
 
      };
    }
@@ -185,9 +197,16 @@ int main(int argc, char** argv) {
            kindepGr = new TGraphErrors();
            kindepGr->SetName(grName);
            kindepGr->SetTitle(grTitle);
+
+           grTitle = "#chi^{2}/NDF of " + grTitle;
+           grName.ReplaceAll("kindep","chindf");
+           chindfGr = new TGraphErrors();
+           chindfGr->SetName(grName);
+           chindfGr->SetTitle(grTitle);
          };
 
          kindepMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,kindepGr));
+         chindfMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,chindfGr));
 
        };
      };
@@ -218,9 +237,16 @@ int main(int argc, char** argv) {
              kindepGr = new TGraphErrors();
              kindepGr->SetName(grName);
              kindepGr->SetTitle(grTitle);
+
+             grTitle = "#chi^{2}/NDF of " + grTitle;
+             grName.ReplaceAll("kindep","chindf");
+             chindfGr = new TGraphErrors();
+             chindfGr->SetName(grName);
+             chindfGr->SetTitle(grTitle);
            };
 
            kindepMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,kindepGr));
+           chindfMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,chindfGr));
 
          };
        };
@@ -283,6 +309,7 @@ int main(int argc, char** argv) {
    // compute asymmetries
    Float_t asymValue,asymError;
    Float_t kinValue,kinError;
+   Float_t chisq,ndf;
    TF1 * fitFunc;
    printf("--- calculate asymmetries\n");
    for(std::vector<Asymmetry*>::iterator it = asymVec.begin(); 
@@ -318,15 +345,26 @@ int main(int argc, char** argv) {
            break;
        };
 
+       // chi2 and ndf
+       chisq = fitFunc->GetChisquare();
+       ndf = fitFunc->GetNDF();
+
+       // set points
        binNum = GetBinNum(A->B[0], A->B[1], A->B[2]);
+
        kindepGr = kindepMap.at(binNum);
        kindepGr->SetPoint(A->B[0],kinValue,asymValue);
        kindepGr->SetPointError(A->B[0],kinError,asymError);
+
+       chindfGr = chindfMap.at(binNum);
+       chindfGr->SetPoint(A->B[0],kinValue,chisq/ndf);
+
      };
 
    };
 
 
+   //gStyle->SetOptFit(1); // (better to put this in your ~/.rootlogon.C file)
 
    // -- instantiate canvases
    TString canvName = "kindepCanv";
@@ -335,64 +373,88 @@ int main(int argc, char** argv) {
      else canvName = Form("%s_%s",canvName.Data(),(BS->IVname[ivVar[d]]).Data());
    };
    Int_t canvX,canvY,divX,divY;
+   Int_t canvModX,canvModY,divModX,divModY;
    Int_t canvSize = 800;
    switch(dimensions) {
      case 1:
        canvX=canvSize; canvY=canvSize;
        divX=1; divY=1;
+       canvModX=NB[0]*canvSize; canvModY=canvSize;
+       divModX=NB[0]; divModY=1;
        break;
      case 2:
        canvX=NB[1]*canvSize; canvY=canvSize;
        divX=NB[1]; divY=1;
+       canvModX=NB[1]*canvSize; canvModY=NB[0]*canvSize;
+       divModX=NB[1]; divModY=NB[0];
        break;
      case 3:
        canvX=3*canvSize; canvY=3*canvSize;
-       divX=NB[1]; divY=NB[2];
+       divX=NB[2]; divY=NB[1];
+       canvModX=canvSize; canvModY=canvSize; // (not used) 
+       divModX=1; divModY=1; // (not used) 
        break;
    };
    TCanvas * kindepCanv = new TCanvas(canvName,canvName,canvX,canvY);
    kindepCanv->Divide(divX,divY);
+   canvName.ReplaceAll("kindep","chindf");
+   TCanvas * chindfCanv = new TCanvas(canvName,canvName,canvX,canvY);
+   chindfCanv->Divide(divX,divY);
+   canvName.ReplaceAll("chindf","asymMod");
+   TCanvas * asymModCanv = new TCanvas(canvName,canvName,canvModX,canvModY); 
+   asymModCanv->Divide(divModX,divModY);
 
 
-   // -- zero line
-   //TLine * zeroLine;
-   //Float_t drawMin,drawMax;
-   /*
-   Float_t drawMean,drawRMS;
-   switch(dimensions) {
-     case 1:
-       binNum = GetBinNum(0);
-       kindepGr = kindepMap.at(binNum);
-       drawMean = (asymMap.at(binNum))->wdist1->
-   = new TLine(BS->minIV[ivVar[0]],0,BS->maxIV[ivVar[0]],0);
-   zeroLine->SetLineColor(kBlack);
-   zeroLine->SetLineWidth(1.5);
-   zeroLine->SetLineStyle(kDashed);
-   */
 
 
    // -- add objects to canvases
+   Int_t pad;
    if(dimensions==1) {
-     kindepCanv->cd();
      binNum = GetBinNum(0);
      kindepGr = kindepMap.at(binNum);
+     kindepCanv->cd();
      DrawKinDepGraph(kindepGr,BS,ivVar[0]);
+     chindfGr = chindfMap.at(binNum);
+     chindfCanv->cd();
+     DrawChiNdfGraph(chindfGr,BS,ivVar[0]);
+
+     for(int b0=0; b0<NB[0]; b0++) {
+       binNum = GetBinNum(b0);
+       A = asymMap.at(binNum);
+       asymModCanv->cd(b0+1);
+       DrawAsymGr(A->asymGr);
+     };
    }
    else if(dimensions==2) {
      for(int b1=0; b1<NB[1]; b1++) {
-       kindepCanv->cd(b1+1);
+       pad = b1+1;
        binNum = GetBinNum(0,b1);
        kindepGr = kindepMap.at(binNum);
+       kindepCanv->cd(pad);
        DrawKinDepGraph(kindepGr,BS,ivVar[0]);
+       chindfGr = chindfMap.at(binNum);
+       chindfCanv->cd(pad);
+       DrawChiNdfGraph(chindfGr,BS,ivVar[0]);
+
+       for(int b0=0; b0<NB[0]; b0++) {
+         binNum = GetBinNum(b0,b1);
+         A = asymMap.at(binNum);
+         asymModCanv->cd(b0*NB[1]+b1+1);
+         DrawAsymGr(A->asymGr);
+       };
      };
    }
    else if(dimensions==3) {
      for(int b1=0; b1<NB[1]; b1++) {
        for(int b2=0; b2<NB[2]; b2++) {
-         kindepCanv->cd(b1*NB[1]+b2+1);
+         pad = b1*NB[2]+b2+1;
          binNum = GetBinNum(0,b1,b2);
          kindepGr = kindepMap.at(binNum);
+         kindepCanv->cd(pad);
          DrawKinDepGraph(kindepGr,BS,ivVar[0]);
+         chindfGr = chindfMap.at(binNum);
+         chindfCanv->cd(pad);
+         DrawChiNdfGraph(chindfGr,BS,ivVar[0]);
        };
      };
    };
@@ -444,6 +506,9 @@ int main(int argc, char** argv) {
    };
 
    kindepCanv->Write();
+   chindfCanv->Write();
+   if(dimensions==1 || dimensions==2) asymModCanv->Write();
+
      
 
    outfile->Close();
@@ -494,4 +559,64 @@ void DrawKinDepGraph(TGraphErrors * g_, Binning * B_, Int_t v_) {
   zeroLine->SetLineWidth(1.5);
   zeroLine->SetLineStyle(kDashed);
   zeroLine->Draw();
+};
+
+
+void DrawChiNdfGraph(TGraphErrors * g_, Binning * B_, Int_t v_) {
+
+  g_->Draw("AP"); // draw once, so we can then format it
+
+  //g_->SetLineColor(B_->GetColor(v_));
+  //g_->SetLineWidth(2);
+
+  g_->SetMarkerStyle(kFullCircle);
+  g_->SetMarkerColor(kBlack);
+  g_->SetMarkerSize(1.3);
+
+  // set vertical axis range (it is overridden if the plot's vertical range
+  // is larger than the desired range)
+  Float_t yMin = 0;
+  Float_t yMax = 2;
+  if(g_->GetYaxis()->GetXmin() < yMin) yMin = g_->GetYaxis()->GetXmin() - 0.2;
+  if(g_->GetYaxis()->GetXmax() > yMax) yMax = g_->GetYaxis()->GetXmax() + 0.2;
+  g_->GetYaxis()->SetRangeUser(yMin,yMax);
+
+  // set horizontal range
+  //g_->GetXaxis()->SetLimits(B_->minIV[v_],B_->maxIV[v_]);
+
+  g_->Draw("AP"); // draw again to apply the formatting
+
+
+  // unity line
+  Float_t drawMin = g_->GetXaxis()->GetXmin();
+  Float_t drawMax = g_->GetXaxis()->GetXmax();
+  TLine * unityLine = new TLine(drawMin,1,drawMax,1);
+  unityLine->SetLineColor(kBlack);
+  unityLine->SetLineWidth(1.5);
+  unityLine->SetLineStyle(kDashed);
+  unityLine->Draw();
+};
+
+
+void DrawAsymGr(TGraphErrors * g_) {
+
+  g_->Draw("APE"); // draw once, so we can then format it
+
+  g_->SetLineColor(kBlack);
+  g_->SetLineWidth(2);
+
+  g_->SetMarkerStyle(kFullCircle);
+  g_->SetMarkerColor(kBlack);
+  g_->SetMarkerSize(1.3);
+
+  // set vertical axis range (it is overridden if the plot's vertical range
+  // is larger than the desired range)
+  Float_t yMin = -0.2;
+  Float_t yMax = 0.2;
+  if(g_->GetYaxis()->GetXmin() < yMin) yMin = g_->GetYaxis()->GetXmin() - 0.05;
+  if(g_->GetYaxis()->GetXmax() > yMax) yMax = g_->GetYaxis()->GetXmax() + 0.05;
+  g_->GetYaxis()->SetRangeUser(yMin,yMax);
+
+  g_->Draw("APE"); // draw again to apply the formatting
+
 };
