@@ -31,16 +31,46 @@ Int_t GetBinNum(Int_t bin0, Int_t bin1=-1, Int_t bin2=-1);
 void DrawKinDepGraph(TGraphErrors * g_, Binning * B_, Int_t v_);
 void DrawChiNdfGraph(TGraphErrors * g_, Binning * B_, Int_t v_);
 void DrawAsymGr(TGraphErrors * g_);
+void SetCloneName(TH1 * clone_);
 
 
 int main(int argc, char** argv) {
+
+   
+   Binning * BS = new Binning(); // instantiate binning scheme 
+   Asymmetry * A; // Asymmetry pointer
 
    // ARGUMENTS
    TString inDir = "outroot";
    Int_t whichModulation = 0; // see src/Asymmetry.h
    Int_t dimensions = 1; // number of dimensions 
-   Int_t ivType = 0; // which variables to bin in (see below)
+   Int_t ivType = 1; // which variables to bin in (see below)
    Int_t whichPhiR = 3; // 1:phiRq  2:phiRp_r  3:phiRp // Alessandro prefers 3:phiRp
+
+   // help printout
+   if(argc==1) {
+     fprintf(stderr,
+       "\nUSAGE: %s [inDir] [whichModulation] [dimensions] [ivType] [whichPhiR]\n",
+       argv[0]);
+     printf("\n- inDir: directory of ROOT files to analyse\n");
+     printf("\n- whichModulation:\n");
+     for(int m=0; m<Asymmetry::nMod; m++) {
+       A = new Asymmetry(BS,m,-10000);
+       printf("   %d = %s\n",m,A->ModulationTitle.Data());
+     };
+     printf("\n- dimensions: for multi-dimensional asymmetry analysis in 1, 2, or 3-D\n");
+     printf("\n- ivType: 3-digit number, one for each dimension, ");
+     printf("where the digits represent:\n");
+     for(int i=0; i<Binning::nIV; i++) {
+       printf("   %d = %s\n",i,BS->IVtitle[i].Data());
+     };
+     printf("\n- whichPhiR:\n");
+     printf("   1 = PhiRq: from R_perp via vector rejection\n");
+     printf("   2 = PhiRp_r: from R_T via vector rejection\n");
+     printf("   3 = PhiRp: from R_T via k_T relation (PREFERRED)\n");
+     printf("\n");
+     return 0;
+   };
 
    if(argc>1) inDir = TString(argv[1]);
    if(argc>2) whichModulation = (Int_t)strtof(argv[2],NULL);
@@ -55,8 +85,6 @@ int main(int argc, char** argv) {
    printf("whichPhiR = %d\n",whichPhiR);
    printf("\n");
 
-   // instantiate binning scheme
-   Binning * BS = new Binning();
 
    // ivType:
    // -- if dimensions==1, all asymetries will be plotted against one independent
@@ -114,6 +142,7 @@ int main(int argc, char** argv) {
    TFile * outfile = new TFile("spin.root","RECREATE");
    EventTree * ev = new EventTree(TString(inDir+"/*.root"));
 
+
    
    // instantiate Asymmetry pointers 
    std::vector<Asymmetry*> asymVec; // vector of Asymmetry instances, one for each bin
@@ -136,7 +165,6 @@ int main(int argc, char** argv) {
                                           // graph
    std::map<int,TGraphErrors*> chindfMap; // kindepMap for chindfGr
 
-   Asymmetry * A;
    TGraphErrors * kindepGr;
    TGraphErrors * chindfGr;
    TString grTitle,grName;
@@ -148,6 +176,7 @@ int main(int argc, char** argv) {
      for(int b=0; b<NB[0]; b++) {
 
        A = new Asymmetry(BS, whichModulation, 1, ivVar[0], b);
+       if(!(A->success)) return 0;
        asymVec.push_back(A);
        binNum = GetBinNum(b);
        binMap.insert(std::pair<int,int>(binNum,bcnt));
@@ -182,6 +211,7 @@ int main(int argc, char** argv) {
            ivVar[0], b0,
            ivVar[1], b1
          );
+         if(!(A->success)) return 0;
          asymVec.push_back(A);
          binNum = GetBinNum(b0,b1);
          binMap.insert(std::pair<int,int>(binNum,bcnt));
@@ -221,6 +251,7 @@ int main(int argc, char** argv) {
              ivVar[1], b1,
              ivVar[2], b2
            );
+           if(!(A->success)) return 0;
            asymVec.push_back(A);
            binNum = GetBinNum(b0,b1,b2);
            binMap.insert(std::pair<int,int>(binNum,bcnt));
@@ -459,6 +490,70 @@ int main(int argc, char** argv) {
      };
    };
 
+   
+   // sum distributions (for showing bin boundaries)
+   TH1D * ivFullDist1;
+   TH2D * ivFullDist2;
+   TH3D * ivFullDist3;
+   TH1D * modFullDist;
+   TH2D * IVvsModFullDist;
+
+   if(dimensions==1) {
+     for(int b0=0; b0<NB[0]; b0++) {
+       binNum = GetBinNum(b0);
+       A = asymMap.at(binNum);
+       if(b0==0) {
+         ivFullDist1 = (TH1D*)(A->ivDist1)->Clone();
+         IVvsModFullDist = (TH2D*)(A->IVvsModDist)->Clone();
+         modFullDist = (TH1D*)(A->modDist)->Clone();
+         SetCloneName(ivFullDist1);
+         SetCloneName(IVvsModFullDist);
+         SetCloneName(modFullDist);
+       } else {
+         ivFullDist1->Add(A->ivDist1);
+         IVvsModFullDist->Add(A->IVvsModDist);
+         modFullDist->Add(A->modDist);
+       };
+     };
+   }
+   else if(dimensions==2) {
+     for(int b1=0; b1<NB[1]; b1++) {
+       for(int b0=0; b0<NB[0]; b0++) {
+         binNum = GetBinNum(b0,b1);
+         A = asymMap.at(binNum);
+         if(b0==0 && b1==0) {
+           ivFullDist2 = (TH2D*)(A->ivDist2)->Clone();
+           modFullDist = (TH1D*)(A->modDist)->Clone();
+           SetCloneName(ivFullDist2);
+           SetCloneName(modFullDist);
+         } else {
+           ivFullDist2->Add(A->ivDist2);
+           modFullDist->Add(A->modDist);
+         };
+       };
+     };
+   }
+   else if(dimensions==3) {
+     for(int b2=0; b2<NB[2]; b2++) {
+       for(int b1=0; b1<NB[1]; b1++) {
+         for(int b0=0; b0<NB[0]; b0++) {
+           binNum = GetBinNum(b0,b1,b2);
+           A = asymMap.at(binNum);
+           if(b0==0 && b1==0 && b2==0) {
+             ivFullDist3 = (TH3D*)(A->ivDist3)->Clone();
+             modFullDist = (TH1D*)(A->modDist)->Clone();
+             SetCloneName(ivFullDist3);
+             SetCloneName(modFullDist);
+           } else {
+             ivFullDist3->Add(A->ivDist3);
+             modFullDist->Add(A->modDist);
+           };
+         };
+       };
+     };
+   };
+
+
 
 
    // write output to TFile
@@ -484,6 +579,17 @@ int main(int argc, char** argv) {
      if(dimensions==1) A->IVvsModDist->Write();
      for(Int_t s=0; s<nSpin; s++) A->aziDist[s]->Write();
    };
+
+   if(dimensions==1) {
+     ivFullDist1->Write();
+     IVvsModFullDist->Write();
+   } else if(dimensions==2) {
+     ivFullDist2->Write();
+   } else if(dimensions==3) {
+     ivFullDist3->Write();
+   };
+   modFullDist->Write();
+
 
    // -- asymmetries and kindep graphs
    printf("--- write kinematic-dependent asymmetries\n");
@@ -619,4 +725,16 @@ void DrawAsymGr(TGraphErrors * g_) {
 
   g_->Draw("APE"); // draw again to apply the formatting
 
+};
+
+
+void SetCloneName(TH1 * clone_) {
+  TString cloneName,cloneTitle;
+  cloneName = clone_->GetName();
+  cloneName.ReplaceAll("Dist","FullDist");
+  cloneName.ReplaceAll("0","");
+  cloneTitle = clone_->GetTitle();
+  cloneTitle(TRegexp("::.*$")) = "";
+  clone_->SetName(cloneName);
+  clone_->SetTitle(cloneTitle);
 };

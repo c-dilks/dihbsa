@@ -133,5 +133,25 @@ Int_t Binning::GetColor(Int_t v_) {
   };
 };
 
+
+Float_t Binning::GetAziMax(Int_t v_, Int_t b_) {
+  Float_t lowEdge = bound[v_].at(b_);
+  Float_t highEdge = bound[v_].at(b_+1);
+  switch(v_) {
+    case vM:
+      return TMath::Max( 
+        lowEdge>0 ? 1 + 1/lowEdge  : 5.0,
+        lowEdge>0 ? 1 + 1/highEdge : 5.0
+      );
+    case vPt:
+      return TMath::Max( lowEdge, highEdge );
+    default:
+      return 5;
+  };
+};
+
+
+
+
 Binning::~Binning() {};
 

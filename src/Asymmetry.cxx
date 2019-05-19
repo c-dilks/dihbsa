@@ -15,8 +15,45 @@ Asymmetry::Asymmetry(
 
   success = false;
   debug = true;
-  if(debug) printf("Instantiating Asymmetry...\n");
 
+
+  // set binning scheme pointer
+  BS = binScheme;
+
+  // set up azimuthal modulation
+  whichMod = phiModulation;
+  modMaxDefault = 1.1;
+  switch(whichMod) {
+    case modSinPhiR:
+      ModulationTitle = "sin(#phi_{R})";
+      modMax = modMaxDefault;
+      aziMax = modMaxDefault;
+      break;
+    case modSinPhiHR:
+      ModulationTitle = "sin(#phi_{h}-#phi_{R})";
+      modMax = modMaxDefault;
+      aziMax = modMaxDefault;
+      break;
+    case scaleSinPhiHR:
+      ModulationTitle = "(P_{h}^{perp}/M_{h})sin(#phi_{h}-#phi_{R})";
+      modMax = 5;
+      aziMax = BS->GetAziMax(var0,bin0);
+      break;
+    case weightSinPhiHR:
+      ModulationTitle = "P_{h}^{perp}/M_{h}-weighted sin(#phi_{h}-#phi_{R})";
+      modMax = modMaxDefault;
+      aziMax = modMaxDefault;
+      break;
+    default:
+      fprintf(stderr,"ERROR: bad phiModulation\n");
+      return;
+  };
+  if(dimension==-10000) return; // (use this if you only want to set ModulationTitle,
+                                // which is useful for printing usage-printouts)
+
+  if(debug) printf("Instantiating Asymmetry...\n");
+  printf("  ModulationTitle = %s\n",ModulationTitle.Data());
+  printf("  modMax = %f   aziMax = %f\n",modMax,aziMax);
 
   // set up number of dimensions
   if(dimension>=1 && dimension<=3) whichDim = dimension;
@@ -25,9 +62,6 @@ Asymmetry::Asymmetry(
     return;
   };
 
-
-  // set binning scheme pointer
-  BS = binScheme;
 
 
   // check IV mode
@@ -64,21 +98,6 @@ Asymmetry::Asymmetry(
   };
 
 
-  // set up azimuthal modulation
-  whichMod = phiModulation;
-  switch(whichMod) {
-    case modSinPhiR:
-      ModulationTitle = "sin(#phi_{R})";
-      modMax = 1.1;
-      break;
-    case modSinPhiHR:
-      ModulationTitle = "(P_{h}^{perp}/M_{h})sin(#phi_{h}-#phi_{R})";
-      modMax = 5;
-      break;
-    default:
-      fprintf(stderr,"ERROR: bad phiModulation\n");
-      return;
-  };
 
 
   // fix polarization (for now...)
@@ -149,7 +168,7 @@ Asymmetry::Asymmetry(
 
   // IVvsModDist (only for 1D!)
   if(whichDim == 1) {
-    IVvsModName = Form("IVvsMdist%s",binN.Data());
+    IVvsModName = Form("IVvsModDist%s",binN.Data());
     IVvsModTitle = Form("%s vs. %s %s;%s;%s",
       ivT[0].Data(),ModulationTitle.Data(),binT.Data(),
       ModulationTitle.Data(),ivT[0].Data()
@@ -168,7 +187,7 @@ Asymmetry::Asymmetry(
     aziTitle[s] = Form("%s binned distribution :: %s %s;%s",
       ModulationTitle.Data(),SpinTitle(s).Data(),binT.Data(),ModulationTitle.Data()
     );
-    aziDist[s] = new TH1D(aziName[s],aziTitle[s],nModBins,-modMax,modMax);
+    aziDist[s] = new TH1D(aziName[s],aziTitle[s],nModBins,-aziMax,aziMax);
   };
 
 
@@ -228,17 +247,22 @@ Bool_t Asymmetry::FillPlots() {
   if(spinn<0) return false;
 
 
+  // set weight (if doing weighted analysis)
+  weight = 1;
+  if(whichMod == weightSinPhiHR) weight = PhPerp/Mh;
+
+
   // fill plots
 
   modbin = aziDist[sP]->FindBin(modulation);
   if(modbin>=1 && modbin<=nModBins) 
-    modBinDist[modbin-1]->Fill(modulation);
+    modBinDist[modbin-1]->Fill(modulation,weight);
   else {
     fprintf(stderr,"ERROR: modulation bin not found for modulation=%f\n",modulation);
     return false;
   };
 
-  modDist->Fill(modulation);
+  modDist->Fill(modulation,weight);
 
   switch(whichDim) {
     case 1: ivDist1->Fill(iv[0]); break;
@@ -246,9 +270,9 @@ Bool_t Asymmetry::FillPlots() {
     case 3: ivDist3->Fill(iv[0],iv[1],iv[2]); break;
   };
 
-  aziDist[spinn]->Fill(modulation);
+  aziDist[spinn]->Fill(modulation,weight);
 
-  if(whichDim==1) IVvsModDist->Fill(modulation,iv[0]);
+  if(whichDim==1) IVvsModDist->Fill(modulation,iv[0],weight);
 
 
   
@@ -311,7 +335,7 @@ void Asymmetry::CalculateAsymmetries() {
   };
 
   // fit asymmetry
-  asymGr->Fit("pol1","Q","",-modMax,modMax);
+  asymGr->Fit("pol1","Q","",-aziMax,aziMax);
 };
 
 
@@ -324,7 +348,13 @@ Float_t Asymmetry::EvalModulation() {
       return TMath::Sin(PhiR);
       break;
     case modSinPhiHR:
+      return TMath::Sin(PhiH-PhiR);
+      break;
+    case scaleSinPhiHR:
       return (PhPerp/Mh) * TMath::Sin(PhiH-PhiR);
+      break;
+    case weightSinPhiHR:
+      return TMath::Sin(PhiH-PhiR);
       break;
     default:
       fprintf(stderr,"ERROR: bad phiModulation\n");
@@ -365,7 +395,6 @@ void Asymmetry::PrintSettings() {
     d,I[d],d,B[d]
   );
 };
-
 
 
 Asymmetry::~Asymmetry() {

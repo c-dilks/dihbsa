@@ -135,6 +135,12 @@ int main(int argc, char** argv) {
      "#phi_{h}-#phi_{R} distribution;#phi_{h}-#phi_{R}",
      NBINS,-PI-1,PI+1);
 
+   TH2F * g1perpWeightVsMod = new TH2F("g1perpWeightVsMod",
+     "P_{h}^{perp}/M_{h} vs. #sin(#phi_{h}-#phi_{R});#sin(#phi_{h}-#phi_{R});P_{h}^{perp}/M_{h}",
+     NBINS,-1.1,1.1,
+     NBINS,0,3);
+   // aqui
+
 
 
 

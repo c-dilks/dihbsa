@@ -40,6 +40,7 @@ class Binning : public TObject
     Int_t GetBin(Int_t v_, Float_t iv_);
     TString GetBoundStr(Int_t v_, Int_t b_);
     Int_t GetColor(Int_t v_);
+    Float_t GetAziMax(Int_t v_, Int_t b_);
 
     Bool_t ValidIV(Int_t v_) { return v_>=0 && v_<nIV; };
 

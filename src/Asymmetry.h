@@ -38,7 +38,7 @@ class Asymmetry : public TObject
   public:
     Asymmetry(
       Binning * binScheme,
-      Int_t phiModulation, Int_t dimension, 
+      Int_t phiModulation, Int_t dimension=1, 
       Int_t var0=0,  Int_t bin0=0,
       Int_t var1=-1, Int_t bin1=-1,
       Int_t var2=-1, Int_t bin2=-1
@@ -63,6 +63,8 @@ class Asymmetry : public TObject
     enum modEnum {
       modSinPhiR,
       modSinPhiHR,
+      scaleSinPhiHR,
+      weightSinPhiHR,
       nMod
     };
     Int_t whichMod;
@@ -88,7 +90,10 @@ class Asymmetry : public TObject
     static const Int_t iv2Bins = 50; // number of bins for ivDist2 plots
     static const Int_t iv3Bins = 30; // number of bins for ivDist3 plots
     static const Int_t nModBins = 7; // number of bins in azimuthal modulation
-    Float_t modMax;
+
+    Float_t modMaxDefault;
+    Float_t modMax,aziMax;
+    Float_t weight;
 
 
     // "iv dist": finely-binned IV distribution (for each whichDim)
@@ -151,6 +156,8 @@ class Asymmetry : public TObject
     Double_t asymErr,modErr;
 
     Double_t bMax;
+
+
 
 
 
