@@ -26,21 +26,31 @@ Asymmetry::Asymmetry(
   switch(whichMod) {
     case modSinPhiR:
       ModulationTitle = "sin(#phi_{R})";
+      ModulationName = "sinPhiR";
       modMax = modMaxDefault;
       aziMax = modMaxDefault;
       break;
     case modSinPhiHR:
       ModulationTitle = "sin(#phi_{h}-#phi_{R})";
+      ModulationName = "sinPhiHR";
       modMax = modMaxDefault;
       aziMax = modMaxDefault;
       break;
     case scaleSinPhiHR:
       ModulationTitle = "(P_{h}^{perp}/M_{h})sin(#phi_{h}-#phi_{R})";
+      ModulationName = "sinPhiHR_scale";
       modMax = 5;
       aziMax = BS->GetAziMax(var0,bin0);
       break;
     case weightSinPhiHR:
       ModulationTitle = "P_{h}^{perp}/M_{h}-weighted sin(#phi_{h}-#phi_{R})";
+      ModulationName = "sinPhiHR_weight";
+      modMax = modMaxDefault;
+      aziMax = modMaxDefault;
+      break;
+    case modSinPhiH:
+      ModulationTitle = "sin(#phi_{h})";
+      ModulationName = "sinPhiH";
       modMax = modMaxDefault;
       aziMax = modMaxDefault;
       break;
@@ -48,8 +58,9 @@ Asymmetry::Asymmetry(
       fprintf(stderr,"ERROR: bad phiModulation\n");
       return;
   };
-  if(dimension==-10000) return; // (use this if you only want to set ModulationTitle,
-                                // which is useful for printing usage-printouts)
+  if(dimension==-10000) return; // (use this if you only want to do basic things,
+                                // like calculate modulations or access modulation
+                                // names)
 
   if(debug) printf("Instantiating Asymmetry...\n");
   printf("  ModulationTitle = %s\n",ModulationTitle.Data());
@@ -247,9 +258,8 @@ Bool_t Asymmetry::FillPlots() {
   if(spinn<0) return false;
 
 
-  // set weight (if doing weighted analysis)
-  weight = 1;
-  if(whichMod == weightSinPhiHR) weight = PhPerp/Mh;
+  // set weight (it's just 1, unless whichMod is set to do a weighted analysis)
+  weight = EvalWeight();
 
 
   // fill plots
@@ -356,6 +366,9 @@ Float_t Asymmetry::EvalModulation() {
     case weightSinPhiHR:
       return TMath::Sin(PhiH-PhiR);
       break;
+    case modSinPhiH:
+      return TMath::Sin(PhiH);
+      break;
     default:
       fprintf(stderr,"ERROR: bad phiModulation\n");
       return -10000;
@@ -364,6 +377,12 @@ Float_t Asymmetry::EvalModulation() {
 };
 
 
+Float_t Asymmetry::EvalWeight() {
+  if(whichMod == weightSinPhiHR) return PhPerp/Mh;
+  else return 1;
+};
+
+ 
 Int_t Asymmetry::SpinState(Int_t spin_) {
   // DNP 2018 convention
   switch(spin_) {

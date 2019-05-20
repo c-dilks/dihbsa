@@ -84,6 +84,9 @@ void EventTree::GetEvent(Int_t i) {
     Mmiss > 1.05 &&
     xF > 0 &&
     hadP[hP] > 1.0 && hadP[hM] > 1.0;
+
+  // set preferred PhiR definition
+  PhiR = PhiRp;
 };
 
 

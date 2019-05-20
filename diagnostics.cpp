@@ -136,10 +136,9 @@ int main(int argc, char** argv) {
      NBINS,-PI-1,PI+1);
 
    TH2F * g1perpWeightVsMod = new TH2F("g1perpWeightVsMod",
-     "P_{h}^{perp}/M_{h} vs. #sin(#phi_{h}-#phi_{R});#sin(#phi_{h}-#phi_{R});P_{h}^{perp}/M_{h}",
+     "P_{h}^{perp}/M_{h} vs. sin(#phi_{h}-#phi_{R});sin(#phi_{h}-#phi_{R});P_{h}^{perp}/M_{h}",
      NBINS,-1.1,1.1,
-     NBINS,0,3);
-   // aqui
+     NBINS,0,6);
 
 
 
@@ -194,11 +193,12 @@ int main(int argc, char** argv) {
          MmissDist->Fill(ev->Mmiss);
 
          PhiHDist->Fill(ev->PhiH);
-         PhiRDist->Fill(ev->PhiRp);
-         PhiHvsPhiR->Fill(ev->PhiRp,ev->PhiH);
+         PhiRDist->Fill(ev->PhiR);
+         PhiHvsPhiR->Fill(ev->PhiR,ev->PhiH);
 
-         PhiHR = Tools::AdjAngle(ev->PhiH - ev->PhiRp);
+         PhiHR = Tools::AdjAngle(ev->PhiH - ev->PhiR);
          PhiHRDist->Fill(PhiHR);
+         g1perpWeightVsMod->Fill(TMath::Sin(PhiHR),ev->PhPerp/ev->Mh);
        };
 
 
@@ -246,6 +246,7 @@ int main(int argc, char** argv) {
    PhiHvsPhiR->Write();
 
    PhiHRDist->Write();
+   g1perpWeightVsMod->Write();
 
    outfile->Close();
 

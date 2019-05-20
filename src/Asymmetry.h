@@ -51,6 +51,7 @@ class Asymmetry : public TObject
 
     Bool_t FillPlots();
     Float_t EvalModulation();
+    Float_t EvalWeight();
     Int_t SpinState(Int_t spin_);
 
     void ResetVars();
@@ -65,6 +66,7 @@ class Asymmetry : public TObject
       modSinPhiHR,
       scaleSinPhiHR,
       weightSinPhiHR,
+      modSinPhiH,
       nMod
     };
     Int_t whichMod;
@@ -125,7 +127,7 @@ class Asymmetry : public TObject
     // bin lines
     TLine * boundLine;
 
-    TString ModulationTitle;
+    TString ModulationTitle,ModulationName;
 
     Bool_t debug;
     Bool_t success;

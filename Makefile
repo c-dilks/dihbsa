@@ -32,6 +32,8 @@ all:
 	@echo ""
 	make diagnostics
 	@echo ""
+	make acceptance
+	@echo ""
 	make phiRtest
 	@echo ""
 	make asym
@@ -42,6 +44,9 @@ analysis: analysis.o
 	 
 diagnostics: diagnostics.o
 	$(CXX) -o diagnostics.exe $< $(ALLFLAGS)
+
+acceptance: acceptance.o
+	$(CXX) -o acceptance.exe $< $(ALLFLAGS)
 
 phiRtest: phiRtest.o
 	$(CXX) -o phiRtest.exe $< $(ALLFLAGS)

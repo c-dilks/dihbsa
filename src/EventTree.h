@@ -67,6 +67,7 @@ class EventTree : public TObject
     Long64_t triggerBits;
 
     // PhiR 
+    Float_t PhiR; // set to the preferred one
     Float_t PhiRq;
     Float_t PhiRp;
     Float_t PhiRp_r;
