@@ -35,8 +35,9 @@ void SetCloneName(TH1 * clone_);
 
 
 int main(int argc, char** argv) {
-
    
+   gStyle->SetOptFit(1);
+
    Binning * BS = new Binning(); // instantiate binning scheme 
    Asymmetry * A; // Asymmetry pointer
 
@@ -46,11 +47,12 @@ int main(int argc, char** argv) {
    Int_t dimensions = 1; // number of dimensions 
    Int_t ivType = 1; // which variables to bin in (see below)
    Int_t whichPhiR = 3; // 1:phiRq  2:phiRp_r  3:phiRp // Alessandro prefers 3:phiRp
+   Bool_t batchMode = 0; // if true, renames output files and prints pngs
 
    // help printout
    if(argc==1) {
      fprintf(stderr,
-       "\nUSAGE: %s [inDir] [whichModulation] [dimensions] [ivType] [whichPhiR]\n",
+       "\nUSAGE: %s [inDir] [whichModulation] [dimensions] [ivType] [whichPhiR] [batchMode]\n",
        argv[0]);
      printf("\n- inDir: directory of ROOT files to analyse\n");
      printf("\n- whichModulation:\n");
@@ -68,6 +70,8 @@ int main(int argc, char** argv) {
      printf("   1 = PhiRq: from R_perp via vector rejection\n");
      printf("   2 = PhiRp_r: from R_T via vector rejection\n");
      printf("   3 = PhiRp: from R_T via k_T relation (PREFERRED)\n");
+     printf("\n- batchMode: boolean, where if true, renames output root file\n");
+     printf("  and prints pngs\n");
      printf("\n");
      return 0;
    };
@@ -77,12 +81,14 @@ int main(int argc, char** argv) {
    if(argc>3) dimensions = (Int_t)strtof(argv[3],NULL);
    if(argc>3) ivType = (Int_t)strtof(argv[4],NULL);
    if(argc>5) whichPhiR = (Int_t)strtof(argv[5],NULL);
+   if(argc>6) batchMode = (Bool_t)strtof(argv[6],NULL);
 
    printf("inDir = %s\n",inDir.Data());
    printf("whichModulation = %d\n",whichModulation);
    printf("dimensions = %d\n",dimensions);
    printf("ivType = %d\n",ivType);
    printf("whichPhiR = %d\n",whichPhiR);
+   printf("batchMode = %d\n",(Int_t)batchMode);
    printf("\n");
 
 
@@ -139,7 +145,19 @@ int main(int argc, char** argv) {
    
 
    // set output file
-   TFile * outfile = new TFile("spin.root","RECREATE");
+   A = new Asymmetry(BS,whichModulation,-10000);
+   TString modN = A->ModulationName;
+   TString outfileName = "spin";
+   if(batchMode) {
+     for(int d=0; d<dimensions; d++) 
+       outfileName = outfileName + "_" + BS->IVname[ivVar[d]];
+     outfileName = outfileName + "_" + modN;
+   };
+   outfileName = outfileName + ".root";
+   printf("outfileName = %s\n",outfileName.Data());
+   TFile * outfile = new TFile(outfileName,"RECREATE");
+
+
    EventTree * ev = new EventTree(TString(inDir+"/*.root"));
 
 
@@ -164,9 +182,11 @@ int main(int argc, char** argv) {
                                           // corresponding kinematic-dependent asymmetry
                                           // graph
    std::map<int,TGraphErrors*> chindfMap; // kindepMap for chindfGr
+   std::map<int,TGraphErrors*> rellumMap; // kindepMap for rellumGr
 
    TGraphErrors * kindepGr;
    TGraphErrors * chindfGr;
+   TGraphErrors * rellumGr;
    TString grTitle,grName;
 
    Int_t binNum;
@@ -196,10 +216,19 @@ int main(int argc, char** argv) {
          chindfGr = new TGraphErrors();
          chindfGr->SetName(grName);
          chindfGr->SetTitle(grTitle);
+
+         // aqui
+         grTitle = Form("relative luminosity vs. %s",
+           BS->IVtitle[ivVar[0]].Data());
+         grName.ReplaceAll("chindf","rellum");
+         rellumGr = new TGraphErrors();
+         rellumGr->SetName(grName);
+         rellumGr->SetTitle(grTitle);
        };
 
        kindepMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,kindepGr));
        chindfMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,chindfGr));
+       rellumMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,rellumGr));
 
      };
    }
@@ -351,6 +380,7 @@ int main(int argc, char** argv) {
      A->CalculateAsymmetries();
 
      fitFunc = A->asymGr->GetFunction("pol1");
+     relativeLumi = A->rellum;
 
      if(fitFunc!=NULL) {
        
@@ -398,7 +428,7 @@ int main(int argc, char** argv) {
    //gStyle->SetOptFit(1); // (better to put this in your ~/.rootlogon.C file)
 
    // -- instantiate canvases
-   TString canvName = "kindepCanv";
+   TString canvName = "kindepCanv_" + modN;
    for(int d=0; d<dimensions; d++) {
      if(d==1) canvName = Form("%s_bins_%s",canvName.Data(),(BS->IVname[ivVar[d]]).Data());
      else canvName = Form("%s_%s",canvName.Data(),(BS->IVname[ivVar[d]]).Data());
@@ -420,7 +450,7 @@ int main(int argc, char** argv) {
        divModX=NB[1]; divModY=NB[0];
        break;
      case 3:
-       canvX=3*canvSize; canvY=3*canvSize;
+       canvX=NB[2]*canvSize; canvY=NB[1]*canvSize;
        divX=NB[2]; divY=NB[1];
        canvModX=canvSize; canvModY=canvSize; // (not used) 
        divModX=1; divModY=1; // (not used) 
@@ -434,7 +464,6 @@ int main(int argc, char** argv) {
    canvName.ReplaceAll("chindf","asymMod");
    TCanvas * asymModCanv = new TCanvas(canvName,canvName,canvModX,canvModY); 
    asymModCanv->Divide(divModX,divModY);
-
 
 
 
@@ -615,7 +644,40 @@ int main(int argc, char** argv) {
    chindfCanv->Write();
    if(dimensions==1 || dimensions==2) asymModCanv->Write();
 
-     
+
+   // print modDist boundaries (used for determining modDist boundaries
+   // which depend on kinematics, for g1perp modulation PhPerp/Mh-scaling test)
+   Float_t mbound;
+   if(dimensions==1 && whichModulation==Asymmetry::scaleSinPhiHR) {
+     printf("MBOUND\n");
+     printf("if(v_==v%s) {\n",BS->IVname[ivVar[0]].Data());
+     for(int b=0; b<NB[0]; b++) {
+       binNum = GetBinNum(b);
+       A = asymMap.at(binNum);
+       mbound = TMath::Max(
+         TMath::Abs(Tools::GetFirstFilledX(A->modDist)),
+         TMath::Abs(Tools::GetLastFilledX(A->modDist))
+       );
+       mbound += 0.1;
+       printf("  if(b_==%d) return %f;\n",b,mbound);
+     };
+     printf("};\n");
+   };
+
+
+
+   // print images
+   TString pngName;
+   if(batchMode) {
+     pngName = Form("%s.png",kindepCanv->GetName());
+     kindepCanv->Print(pngName,"png");
+     pngName = Form("%s.png",chindfCanv->GetName());
+     chindfCanv->Print(pngName,"png");
+     if(dimensions==1 || dimensions==2) {
+       pngName = Form("%s.png",asymModCanv->GetName());
+       asymModCanv->Print(pngName,"png"); 
+     };
+   };
 
    outfile->Close();
 

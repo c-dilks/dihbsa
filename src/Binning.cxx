@@ -135,19 +135,32 @@ Int_t Binning::GetColor(Int_t v_) {
 
 
 Float_t Binning::GetAziMax(Int_t v_, Int_t b_) {
-  Float_t lowEdge = bound[v_].at(b_);
-  Float_t highEdge = bound[v_].at(b_+1);
-  switch(v_) {
-    case vM:
-      return TMath::Max( 
-        lowEdge>0 ? 1 + 1/lowEdge  : 5.0,
-        lowEdge>0 ? 1 + 1/highEdge : 5.0
-      );
-    case vPt:
-      return TMath::Max( lowEdge, highEdge );
-    default:
-      return 5;
+
+  if(v_==vZ) {
+    if(b_==0) return 3.950000;
+    if(b_==1) return 4.450000;
+    if(b_==2) return 4.350000;
   };
+
+  if(v_==vX) {
+    if(b_==0) return 4.350000;
+    if(b_==1) return 4.450000;
+    if(b_==2) return 3.450000;
+  };
+
+  if(v_==vM) {
+    if(b_==0) return 4.450000;
+    if(b_==1) return 3.350000;
+    if(b_==2) return 1.650000;
+  };
+
+  if(v_==vPt) {
+    if(b_==0) return 1.850000;
+    if(b_==1) return 4.450000;
+  };
+
+  fprintf(stderr,"ERROR: Binning::GetAziMax needs to be updated!\n");
+  return 5;
 };
 
 

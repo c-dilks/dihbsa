@@ -53,22 +53,22 @@ int main(int argc, char** argv) {
   
    TH1F * deltaPhiDist = new TH1F("deltaPhiDist",
      "#Delta#phi=#phi^{+}-#phi^{-} distribution;#Delta#phi",
-     NBINS,-PI-1,PI+1);
+     NBINS,-PI,PI);
    
    TH1F * PhiHDist = new TH1F("PhiHDist",
      "#phi_{h} distribution;#phi_{h}",
-     NBINS,-PI-1,PI+1);
+     NBINS,-PI,PI);
    TH1F * PhiRDist = new TH1F("PhiRDist",
      "#phi_{R} distribution;#phi_{R}",
-     NBINS,-PI-1,PI+1);
+     NBINS,-PI,PI);
    TH2F * PhiHvsPhiR = new TH2F("PhiHvsPhiR",
      "#phi_{h} vs. #phi_{R};#phi_{R};#phi_{h}",
-     NBINS,-PI-1,PI+1,
-     NBINS,-PI-1,PI+1);
+     NBINS,-PI,PI,
+     NBINS,-PI,PI);
 
    TH1F * PhiHRDist = new TH1F("PhiHRDist",
      "#phi_{h}-#phi_{R} distribution;#phi_{h}-#phi_{R}",
-     NBINS,-PI-1,PI+1);
+     NBINS,-PI,PI);
 
 
    TH2D * ModVsZ[Asymmetry::nMod];
@@ -128,6 +128,16 @@ int main(int argc, char** argv) {
 
      if(ev->cutDihadron && ev->cutQ2 && ev->cutW && ev->cutY) {
 
+       PhiHDist->Fill(ev->PhiH);
+       PhiRDist->Fill(ev->PhiR);
+       PhiHvsPhiR->Fill(ev->PhiR,ev->PhiH);
+
+       PhiHR = Tools::AdjAngle(ev->PhiH - ev->PhiR);
+       PhiHRDist->Fill(PhiHR);
+
+       deltaPhi = Tools::AdjAngle(ev->hadPhi[hP] - ev->hadPhi[hM]);
+       deltaPhiDist->Fill(deltaPhi);
+
        // set Asymmetry branches and fill modulation plots
        for(int m=0; m<Asymmetry::nMod; m++) {
 
@@ -138,8 +148,8 @@ int main(int argc, char** argv) {
          A[m]->pSpin = 0;
          A[m]->PhPerp = ev->PhPerp;
          A[m]->PhiH = ev->PhiH;
-         //A[m]->PhiR = ev->PhiR;
-         A[m]->PhiR = ev->PhiRq;
+         A[m]->PhiR = ev->PhiR;
+         //A[m]->PhiR = ev->PhiRq;
 
          modulation = A[m]->EvalModulation();
          weight = A[m]->EvalWeight();
@@ -156,6 +166,11 @@ int main(int argc, char** argv) {
      };
    };
 
+   deltaPhiDist->Write();
+   PhiHDist->Write();
+   PhiRDist->Write();
+   PhiHvsPhiR->Write();
+   PhiHRDist->Write();
 
    for(int m=0; m<Asymmetry::nMod; m++) {
      WriteCanvas(ModVsZ[m]);

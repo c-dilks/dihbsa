@@ -123,7 +123,7 @@ class Asymmetry : public TObject
     // asymmetry vs. azimuthal modulation bin
     TGraphErrors * asymGr;
     TString asymName,asymTitle;
-    
+
     // bin lines
     TLine * boundLine;
 
@@ -143,6 +143,8 @@ class Asymmetry : public TObject
     TString ivT[3]; // IV title
     TString binT,binN; // bin title/name suffixes
 
+    Double_t rellumNumer,rellumDenom,rellum;
+
   private:
 
     Float_t modulation;
@@ -150,7 +152,6 @@ class Asymmetry : public TObject
     Int_t spinn;
     Int_t pointCnt;
 
-    Double_t rellumNumer,rellumDenom,rellum;
 
     Double_t yL,yR;
     Double_t asymNumer,asymDenom;
