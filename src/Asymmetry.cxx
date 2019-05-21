@@ -215,6 +215,7 @@ Asymmetry::Asymmetry(
   // initialize kinematic variables
   ResetVars();
   nEvents = 0;
+  for(int s=0; s<nSpin; s++) yield[s]=0;
 
   success = true;
 
@@ -288,6 +289,7 @@ Bool_t Asymmetry::FillPlots() {
   
   // increment event counter
   nEvents++;
+  yield[spinn]++;
   return true;
 };
   
@@ -300,19 +302,22 @@ void Asymmetry::CalculateAsymmetries() {
   };
 
   // compute relative luminosity
-  rellumNumer = 0;
-  rellumDenom = 0;
-  for(int m=1; m<=nModBins; m++) {
-    rellumNumer += aziDist[sP]->GetBinContent(m);
-    rellumDenom += aziDist[sM]->GetBinContent(m);
-  };
-  if(rellumDenom>0) rellum = rellumNumer / rellumDenom;
-  else {
+  //
+  rNumer = yield[sP];
+  rDenom = yield[sM];
+
+  if(rDenom>0) {
+    // -- relative luminosity
+    rellum = rNumer / rDenom;
+    // -- relative luminosity statistical uncertainty (assume poison yields)
+    rellumErr = sqrt( rNumer * (rNumer+rDenom) / pow(rDenom,3) );
+  } else {
+    rellum = 0;
+    rellumErr = 0;
     fprintf(stderr,"WARNING: mdistR has 0 yield, abort asym calculation for this bin\n");
     return;
   };
-
-  printf("rellum = %f / %f = %f\n",rellumNumer,rellumDenom,rellum);
+  printf("rellum = %f / %f =  %.3f  +-  %f\n",rNumer,rDenom,rellum,rellumErr);
 
    
   // compute asymmetry for each modulation bin
@@ -378,8 +383,10 @@ Float_t Asymmetry::EvalModulation() {
 
 
 Float_t Asymmetry::EvalWeight() {
-  if(whichMod == weightSinPhiHR) return PhPerp/Mh;
-  else return 1;
+  if(whichMod == weightSinPhiHR) {
+    return Mh>0 ? PhPerp/Mh : 0;
+  };
+  return 1;
 };
 
  

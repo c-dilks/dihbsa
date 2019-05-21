@@ -58,13 +58,14 @@ int main(int argc, char** argv) {
      printf("\n- whichModulation:\n");
      for(int m=0; m<Asymmetry::nMod; m++) {
        A = new Asymmetry(BS,m,-10000);
-       printf("   %d = %s\n",m,A->ModulationTitle.Data());
+       printf("   %d = %s =  %s\n",m,
+         (A->ModulationName).Data(),(A->ModulationTitle).Data());
      };
      printf("\n- dimensions: for multi-dimensional asymmetry analysis in 1, 2, or 3-D\n");
      printf("\n- ivType: 3-digit number, one for each dimension, ");
      printf("where the digits represent:\n");
      for(int i=0; i<Binning::nIV; i++) {
-       printf("   %d = %s\n",i,BS->IVtitle[i].Data());
+       printf("   %d = %s\n",i,(BS->IVtitle[i]).Data());
      };
      printf("\n- whichPhiR:\n");
      printf("   1 = PhiRq: from R_perp via vector rejection\n");
@@ -136,7 +137,10 @@ int main(int argc, char** argv) {
 
 
    // print which IV will be analyzed
-   printf("--------> Analysing asymmetries vs. %s ",(BS->IVname[ivVar[0]]).Data());
+   A = new Asymmetry(BS,whichModulation,-10000);
+   TString modN = A->ModulationName;
+   printf("--------> Analysing %s asymmetries vs. %s ",
+     modN.Data(),(BS->IVname[ivVar[0]]).Data());
    if(dimensions>=2)
      printf("in bins of %s ",(BS->IVname[ivVar[1]]).Data());
    if(dimensions>=3)
@@ -145,8 +149,6 @@ int main(int argc, char** argv) {
    
 
    // set output file
-   A = new Asymmetry(BS,whichModulation,-10000);
-   TString modN = A->ModulationName;
    TString outfileName = "spin";
    if(batchMode) {
      for(int d=0; d<dimensions; d++) 
@@ -205,8 +207,8 @@ int main(int argc, char** argv) {
 
        if(b==0) {
          grTitle = Form("%s asymmetry vs. %s",
-           A->ModulationTitle.Data(),BS->IVtitle[ivVar[0]].Data());
-         grName = Form("kindep_%s",BS->IVname[ivVar[0]].Data());
+           (A->ModulationTitle).Data(),(BS->IVtitle[ivVar[0]]).Data());
+         grName = Form("kindep_%s",(BS->IVname[ivVar[0]]).Data());
          kindepGr = new TGraphErrors();
          kindepGr->SetName(grName);
          kindepGr->SetTitle(grTitle);
@@ -218,7 +220,7 @@ int main(int argc, char** argv) {
          chindfGr->SetTitle(grTitle);
 
          grTitle = Form("relative luminosity vs. %s",
-           BS->IVtitle[ivVar[0]].Data());
+           (BS->IVtitle[ivVar[0]]).Data());
          grName.ReplaceAll("chindf","rellum");
          rellumGr = new TGraphErrors();
          rellumGr->SetName(grName);
@@ -248,10 +250,10 @@ int main(int argc, char** argv) {
 
          if(b0==0) {
            grTitle = Form("%s asymmetry vs. %s :: %s",
-             A->ModulationTitle.Data(),BS->IVtitle[ivVar[0]].Data(),
+             (A->ModulationTitle).Data(),(BS->IVtitle[ivVar[0]]).Data(),
              (BS->GetBoundStr(ivVar[1],b1)).Data());
-           grName = Form("kindep_%s_bin_%s%d",BS->IVname[ivVar[0]].Data(),
-             BS->IVname[ivVar[1]].Data(),b1);
+           grName = Form("kindep_%s_bin_%s%d",(BS->IVname[ivVar[0]]).Data(),
+             (BS->IVname[ivVar[1]]).Data(),b1);
            kindepGr = new TGraphErrors();
            kindepGr->SetName(grName);
            kindepGr->SetTitle(grTitle);
@@ -263,7 +265,7 @@ int main(int argc, char** argv) {
            chindfGr->SetTitle(grTitle);
 
            grTitle = Form("relative luminosity vs. %s :: %s",
-             BS->IVtitle[ivVar[0]].Data(),
+             (BS->IVtitle[ivVar[0]]).Data(),
              (BS->GetBoundStr(ivVar[1],b1)).Data());
            grName.ReplaceAll("chindf","rellum");
            rellumGr = new TGraphErrors();
@@ -297,11 +299,11 @@ int main(int argc, char** argv) {
 
            if(b0==0) {
              grTitle = Form("%s asymmetry vs. %s :: %s, %s",
-               A->ModulationTitle.Data(),BS->IVtitle[ivVar[0]].Data(),
+               (A->ModulationTitle).Data(),(BS->IVtitle[ivVar[0]]).Data(),
                (BS->GetBoundStr(ivVar[1],b1)).Data(),
                (BS->GetBoundStr(ivVar[2],b2)).Data());
-             grName = Form("kindep_%s_bin_%s%d_%s%d",BS->IVname[ivVar[0]].Data(),
-               BS->IVname[ivVar[1]].Data(),b1,BS->IVname[ivVar[2]].Data(),b2);
+             grName = Form("kindep_%s_bin_%s%d_%s%d",(BS->IVname[ivVar[0]]).Data(),
+               (BS->IVname[ivVar[1]]).Data(),b1,(BS->IVname[ivVar[2]]).Data(),b2);
              kindepGr = new TGraphErrors();
              kindepGr->SetName(grName);
              kindepGr->SetTitle(grTitle);
@@ -313,7 +315,7 @@ int main(int argc, char** argv) {
              chindfGr->SetTitle(grTitle);
 
              grTitle = Form("relative luminosity vs. %s :: %s, %s",
-               BS->IVtitle[ivVar[0]].Data(),
+               (BS->IVtitle[ivVar[0]]).Data(),
                (BS->GetBoundStr(ivVar[1],b1)).Data(),
                (BS->GetBoundStr(ivVar[2],b2)).Data());
              grName.ReplaceAll("chindf","rellum");
@@ -440,6 +442,7 @@ int main(int argc, char** argv) {
 
        rellumGr = rellumMap.at(binNum);
        rellumGr->SetPoint(A->B[0],kinValue,A->rellum);
+       rellumGr->SetPointError(A->B[0],0,A->rellumErr);
 
      };
 
@@ -694,7 +697,7 @@ int main(int argc, char** argv) {
    Float_t mbound;
    if(dimensions==1 && whichModulation==Asymmetry::scaleSinPhiHR) {
      printf("MBOUND\n");
-     printf("if(v_==v%s) {\n",BS->IVname[ivVar[0]].Data());
+     printf("if(v_==v%s) {\n",(BS->IVname[ivVar[0]]).Data());
      for(int b=0; b<NB[0]; b++) {
        binNum = GetBinNum(b);
        A = asymMap.at(binNum);

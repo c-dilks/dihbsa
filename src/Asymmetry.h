@@ -6,7 +6,9 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <math.h>
 #include <map>
+#include <vector>
 #include <vector>
 
 // ROOT
@@ -57,7 +59,8 @@ class Asymmetry : public TObject
     void ResetVars();
     void PrintSettings();
 
-    Int_t nEvents;
+    Double_t nEvents;
+    Double_t yield[nSpin];
 
 
     // modulations
@@ -143,7 +146,7 @@ class Asymmetry : public TObject
     TString ivT[3]; // IV title
     TString binT,binN; // bin title/name suffixes
 
-    Double_t rellumNumer,rellumDenom,rellum;
+    Double_t rNumer,rDenom,rellum,rellumErr;
 
   private:
 
