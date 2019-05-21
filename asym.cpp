@@ -29,7 +29,7 @@
 
 Int_t GetBinNum(Int_t bin0, Int_t bin1=-1, Int_t bin2=-1);
 void DrawKinDepGraph(TGraphErrors * g_, Binning * B_, Int_t v_);
-void DrawChiNdfGraph(TGraphErrors * g_, Binning * B_, Int_t v_);
+void DrawSimpleGraph(TGraphErrors * g_, Binning * B_, Int_t v, Bool_t setRange_=true);
 void DrawAsymGr(TGraphErrors * g_);
 void SetCloneName(TH1 * clone_);
 
@@ -217,7 +217,6 @@ int main(int argc, char** argv) {
          chindfGr->SetName(grName);
          chindfGr->SetTitle(grTitle);
 
-         // aqui
          grTitle = Form("relative luminosity vs. %s",
            BS->IVtitle[ivVar[0]].Data());
          grName.ReplaceAll("chindf","rellum");
@@ -262,10 +261,19 @@ int main(int argc, char** argv) {
            chindfGr = new TGraphErrors();
            chindfGr->SetName(grName);
            chindfGr->SetTitle(grTitle);
+
+           grTitle = Form("relative luminosity vs. %s :: %s",
+             BS->IVtitle[ivVar[0]].Data(),
+             (BS->GetBoundStr(ivVar[1],b1)).Data());
+           grName.ReplaceAll("chindf","rellum");
+           rellumGr = new TGraphErrors();
+           rellumGr->SetName(grName);
+           rellumGr->SetTitle(grTitle);
          };
 
          kindepMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,kindepGr));
          chindfMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,chindfGr));
+         rellumMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,rellumGr));
 
        };
      };
@@ -303,10 +311,20 @@ int main(int argc, char** argv) {
              chindfGr = new TGraphErrors();
              chindfGr->SetName(grName);
              chindfGr->SetTitle(grTitle);
+
+             grTitle = Form("relative luminosity vs. %s :: %s, %s",
+               BS->IVtitle[ivVar[0]].Data(),
+               (BS->GetBoundStr(ivVar[1],b1)).Data(),
+               (BS->GetBoundStr(ivVar[2],b2)).Data());
+             grName.ReplaceAll("chindf","rellum");
+             rellumGr = new TGraphErrors();
+             rellumGr->SetName(grName);
+             rellumGr->SetTitle(grTitle);
            };
 
            kindepMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,kindepGr));
            chindfMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,chindfGr));
+           rellumMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,rellumGr));
 
          };
        };
@@ -380,7 +398,7 @@ int main(int argc, char** argv) {
      A->CalculateAsymmetries();
 
      fitFunc = A->asymGr->GetFunction("pol1");
-     relativeLumi = A->rellum;
+     //relativeLumi = A->rellum;
 
      if(fitFunc!=NULL) {
        
@@ -420,6 +438,9 @@ int main(int argc, char** argv) {
        chindfGr = chindfMap.at(binNum);
        chindfGr->SetPoint(A->B[0],kinValue,chisq/ndf);
 
+       rellumGr = rellumMap.at(binNum);
+       rellumGr->SetPoint(A->B[0],kinValue,A->rellum);
+
      };
 
    };
@@ -456,12 +477,19 @@ int main(int argc, char** argv) {
        divModX=1; divModY=1; // (not used) 
        break;
    };
+
    TCanvas * kindepCanv = new TCanvas(canvName,canvName,canvX,canvY);
    kindepCanv->Divide(divX,divY);
+
    canvName.ReplaceAll("kindep","chindf");
    TCanvas * chindfCanv = new TCanvas(canvName,canvName,canvX,canvY);
    chindfCanv->Divide(divX,divY);
-   canvName.ReplaceAll("chindf","asymMod");
+   
+   canvName.ReplaceAll("chindf","rellum");
+   TCanvas * rellumCanv = new TCanvas(canvName,canvName,canvX,canvY);
+   rellumCanv->Divide(divX,divY);
+
+   canvName.ReplaceAll("rellum","asymMod");
    TCanvas * asymModCanv = new TCanvas(canvName,canvName,canvModX,canvModY); 
    asymModCanv->Divide(divModX,divModY);
 
@@ -474,9 +502,14 @@ int main(int argc, char** argv) {
      kindepGr = kindepMap.at(binNum);
      kindepCanv->cd();
      DrawKinDepGraph(kindepGr,BS,ivVar[0]);
+
      chindfGr = chindfMap.at(binNum);
      chindfCanv->cd();
-     DrawChiNdfGraph(chindfGr,BS,ivVar[0]);
+     DrawSimpleGraph(chindfGr,BS,ivVar[0]);
+
+     rellumGr = rellumMap.at(binNum);
+     rellumCanv->cd();
+     DrawSimpleGraph(rellumGr,BS,ivVar[0],false);
 
      for(int b0=0; b0<NB[0]; b0++) {
        binNum = GetBinNum(b0);
@@ -492,9 +525,14 @@ int main(int argc, char** argv) {
        kindepGr = kindepMap.at(binNum);
        kindepCanv->cd(pad);
        DrawKinDepGraph(kindepGr,BS,ivVar[0]);
+       
        chindfGr = chindfMap.at(binNum);
        chindfCanv->cd(pad);
-       DrawChiNdfGraph(chindfGr,BS,ivVar[0]);
+       DrawSimpleGraph(chindfGr,BS,ivVar[0]);
+       
+       rellumGr = rellumMap.at(binNum);
+       rellumCanv->cd(pad);
+       DrawSimpleGraph(rellumGr,BS,ivVar[0],false);
 
        for(int b0=0; b0<NB[0]; b0++) {
          binNum = GetBinNum(b0,b1);
@@ -512,9 +550,14 @@ int main(int argc, char** argv) {
          kindepGr = kindepMap.at(binNum);
          kindepCanv->cd(pad);
          DrawKinDepGraph(kindepGr,BS,ivVar[0]);
+
          chindfGr = chindfMap.at(binNum);
          chindfCanv->cd(pad);
-         DrawChiNdfGraph(chindfGr,BS,ivVar[0]);
+         DrawSimpleGraph(chindfGr,BS,ivVar[0]);
+
+         rellumGr = rellumMap.at(binNum);
+         rellumCanv->cd(pad);
+         DrawSimpleGraph(rellumGr,BS,ivVar[0],false);
        };
      };
    };
@@ -642,6 +685,7 @@ int main(int argc, char** argv) {
 
    kindepCanv->Write();
    chindfCanv->Write();
+   rellumCanv->Write();
    if(dimensions==1 || dimensions==2) asymModCanv->Write();
 
 
@@ -673,6 +717,8 @@ int main(int argc, char** argv) {
      kindepCanv->Print(pngName,"png");
      pngName = Form("%s.png",chindfCanv->GetName());
      chindfCanv->Print(pngName,"png");
+     pngName = Form("%s.png",rellumCanv->GetName());
+     rellumCanv->Print(pngName,"png");
      if(dimensions==1 || dimensions==2) {
        pngName = Form("%s.png",asymModCanv->GetName());
        asymModCanv->Print(pngName,"png"); 
@@ -730,7 +776,7 @@ void DrawKinDepGraph(TGraphErrors * g_, Binning * B_, Int_t v_) {
 };
 
 
-void DrawChiNdfGraph(TGraphErrors * g_, Binning * B_, Int_t v_) {
+void DrawSimpleGraph(TGraphErrors * g_, Binning * B_, Int_t v_, Bool_t setRange) {
 
   g_->Draw("AP"); // draw once, so we can then format it
 
@@ -741,16 +787,18 @@ void DrawChiNdfGraph(TGraphErrors * g_, Binning * B_, Int_t v_) {
   g_->SetMarkerColor(kBlack);
   g_->SetMarkerSize(1.3);
 
-  // set vertical axis range (it is overridden if the plot's vertical range
-  // is larger than the desired range)
-  Float_t yMin = 0;
-  Float_t yMax = 2;
-  if(g_->GetYaxis()->GetXmin() < yMin) yMin = g_->GetYaxis()->GetXmin() - 0.2;
-  if(g_->GetYaxis()->GetXmax() > yMax) yMax = g_->GetYaxis()->GetXmax() + 0.2;
-  g_->GetYaxis()->SetRangeUser(yMin,yMax);
+  if(setRange) {
+    // set vertical axis range (it is overridden if the plot's vertical range
+    // is larger than the desired range)
+    Float_t yMin = 0;
+    Float_t yMax = 2;
+    if(g_->GetYaxis()->GetXmin() < yMin) yMin = g_->GetYaxis()->GetXmin() - 0.2;
+    if(g_->GetYaxis()->GetXmax() > yMax) yMax = g_->GetYaxis()->GetXmax() + 0.2;
+    g_->GetYaxis()->SetRangeUser(yMin,yMax);
 
-  // set horizontal range
-  //g_->GetXaxis()->SetLimits(B_->minIV[v_],B_->maxIV[v_]);
+    // set horizontal range
+    //g_->GetXaxis()->SetLimits(B_->minIV[v_],B_->maxIV[v_]);
+  };
 
   g_->Draw("AP"); // draw again to apply the formatting
 
