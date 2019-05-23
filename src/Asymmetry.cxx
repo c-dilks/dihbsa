@@ -211,6 +211,12 @@ Asymmetry::Asymmetry(
   asymGr->SetName(asymName);
   asymGr->SetTitle(asymTitle);
 
+  // fit function
+  fitFuncName = "fit_"+asymName;
+  fitFunc = new TF1(fitFuncName,"[0]+[1]*x",-aziMax,aziMax);
+  fitFunc->SetParName(0,"B");
+  fitFunc->SetParName(1,"A_{LU}");
+
 
   // initialize kinematic variables
   ResetVars();
@@ -335,7 +341,11 @@ void Asymmetry::CalculateAsymmetries() {
       asymVal = (1.0/pol) * (asymNumer/asymDenom);
 
       // compute asymmetry statistical error
-      asymErr = 1.0 / ( pol * TMath::Sqrt(yL+yR) );
+      // -- full formula
+      asymErr = ( 2 * rellum * sqrt( yL*pow(yR,2) + yR*pow(yL,2) ) ) / 
+                ( pol * pow(yL+rellum*yR,2) );
+      // -- compare to simple formula (assumes asym*pol<<1 and R~1)
+      //printf("difference = %f\n",asymErr - 1.0 / ( pol * sqrt(yL+yR) ));
 
       // compute azimuthal modulation value
       modVal = modBinDist[m-1]->GetMean(); // use modulation bin's mean
@@ -350,7 +360,8 @@ void Asymmetry::CalculateAsymmetries() {
   };
 
   // fit asymmetry
-  asymGr->Fit("pol1","Q","",-aziMax,aziMax);
+  //fitFunc->FixParameter(0,0);
+  asymGr->Fit(fitFunc,"Q","",-aziMax,aziMax);
 };
 
 

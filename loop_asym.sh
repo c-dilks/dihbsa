@@ -10,7 +10,7 @@ if [ $# -ge 3 ]; then phiR=$3; fi
 
 exe="asym.exe"
 outdir="spinout"
-allCombos=0
+allPermutations=0
 argfile="args.dat"
 > $argfile
 
@@ -30,7 +30,7 @@ done
 
 # 2D
 for ((iv1=0; iv1<$nIV; iv1++)); do
-  if [ $allCombos -eq 1 ]; then start=$[$iv1+1];
+  if [ $allPermutations -eq 0 ]; then start=$[$iv1+1];
   else start=0; fi
   for ((iv2=$start; iv2<$nIV; iv2++)); do
     if [ $iv1 -eq $iv2 ]; then continue; fi
@@ -43,10 +43,10 @@ done
 
 # 3D
 for ((iv1=0; iv1<$nIV; iv1++)); do
-  if [ $allCombos -eq 1 ]; then start1=$[$iv1+1];
+  if [ $allPermutations -eq 0 ]; then start1=$[$iv1+1];
   else start1=0; fi
   for ((iv2=$start1; iv2<$nIV; iv2++)); do
-    if [ $allCombos -eq 1 ]; then start2=$[$iv2+1];
+    if [ $allPermutations -eq 0 ]; then start2=$[$iv2+1];
     else start2=0; fi
     for ((iv3=$start2; iv3<$nIV; iv3++)); do
       if [ $iv1 -eq $iv2 ]; then continue; fi
@@ -69,5 +69,7 @@ while read args; do
 done < $argfile
 
 
+rm spin.root # (spin.root from non-batchMode execution of asym.exe)
 mv -v spin*.root $outdir
 mv -v *Canv_*.png $outdir
+hadd -f $outdir/all.root $outdir/spin*.root

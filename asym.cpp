@@ -334,6 +334,9 @@ int main(int argc, char** argv) {
    };
 
 
+   // overall summary plots
+   TH1F * chisqDist = new TH1F("chisqDist","#chi^{2} distribution",100,0,20);
+
 
    // EVENT LOOP -------------------------------------------
    printf("begin loop through %lld events...\n",ev->ENT);
@@ -390,7 +393,6 @@ int main(int argc, char** argv) {
    Float_t asymValue,asymError;
    Float_t kinValue,kinError;
    Float_t chisq,ndf;
-   TF1 * fitFunc;
    printf("--- calculate asymmetries\n");
    for(std::vector<Asymmetry*>::iterator it = asymVec.begin(); 
      it!=asymVec.end(); ++it
@@ -399,16 +401,13 @@ int main(int argc, char** argv) {
      A = *it;
      A->CalculateAsymmetries();
 
-     fitFunc = A->asymGr->GetFunction("pol1");
-     //relativeLumi = A->rellum;
-
-     if(fitFunc!=NULL) {
+     if(A->fitFunc!=NULL) {
        
        // asymmetry value
-       asymValue = fitFunc->GetParameter(1);
+       asymValue = A->fitFunc->GetParameter(1);
 
        // asymmetry statistical uncertainty
-       asymError = fitFunc->GetParError(1);
+       asymError = A->fitFunc->GetParError(1);
 
        // IV value and uncertainty
        switch(dimensions) {
@@ -427,8 +426,9 @@ int main(int argc, char** argv) {
        };
 
        // chi2 and ndf
-       chisq = fitFunc->GetChisquare();
-       ndf = fitFunc->GetNDF();
+       chisq = A->fitFunc->GetChisquare();
+       ndf = A->fitFunc->GetNDF();
+       chisqDist->Fill(chisq);
 
        // set points
        binNum = GetBinNum(A->B[0], A->B[1], A->B[2]);
@@ -688,8 +688,10 @@ int main(int argc, char** argv) {
 
    kindepCanv->Write();
    chindfCanv->Write();
+   chisqDist->Write();
    rellumCanv->Write();
    if(dimensions==1 || dimensions==2) asymModCanv->Write();
+
 
 
    // print modDist boundaries (used for determining modDist boundaries

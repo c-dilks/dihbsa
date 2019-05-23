@@ -16,8 +16,11 @@ Binning::Binning() {
   for(int v=0; v<nIV; v++) nBins[v]=-1;
   // -- mass
   AddBinBound(vM,minIV[vM]);
+  ///*
   AddBinBound(vM,0.4);
   AddBinBound(vM,0.8);
+  //*/
+  //AddBinBound(vM,0.9);
   AddBinBound(vM,maxIV[vM]);
   // -- x
   AddBinBound(vX,minIV[vX]);

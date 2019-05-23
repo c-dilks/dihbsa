@@ -24,6 +24,7 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
+#include "TF1.h"
 #include "TGraphErrors.h"
 #include "TLine.h"
 
@@ -126,6 +127,8 @@ class Asymmetry : public TObject
     // asymmetry vs. azimuthal modulation bin
     TGraphErrors * asymGr;
     TString asymName,asymTitle;
+    TF1 * fitFunc;
+    TString fitFuncName;
 
     // bin lines
     TLine * boundLine;
