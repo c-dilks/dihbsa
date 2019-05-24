@@ -57,8 +57,9 @@ int main(int argc, char** argv) {
    Dihadron * dih = new Dihadron(); dih->useBreit = false;
    Dihadron * dihBr = new Dihadron(); dihBr->useBreit = true;
 
-   hadron[hP] = new Trajectory(kPip);
-   hadron[hM] = new Trajectory(kPim);
+   for(int h=0; h<2; h++) {
+     hadron[h] = new Trajectory(PMidx(pairSetting,h));
+   };
 
    hipo::benchmark bench;
 
@@ -208,6 +209,7 @@ int main(int argc, char** argv) {
        if      (pidCur == PartPID(kE)   )  oCur=kE;
        else if (pidCur == PartPID(kPip) )  oCur=kPip;
        else if (pidCur == PartPID(kPim) )  oCur=kPim;
+       else if (pidCur == PartPID(kPi0) )  oCur=kPi0;
        else oCur=-10000;
 
        if(oCur>-10000) {
@@ -221,7 +223,17 @@ int main(int argc, char** argv) {
      };
      // -- check if we have an electron and pi+/pi- dihadron in this
      //    event; skip if we don't
-     foundAllObservables = Idx[kE]>=0 && Idx[kPip]>=0 && Idx[kPim]>=0;
+     switch(pairSetting) {
+       case pairPM:
+         foundAllObservables = Idx[kE]>=0 && Idx[kPip]>=0 && Idx[kPim]>=0;
+         break;
+       case pairP0:
+         foundAllObservables = Idx[kE]>=0 && Idx[kPip]>=0 && Idx[kPi0]>=0;
+         break;
+       case pair0M:
+         foundAllObservables = Idx[kE]>=0 && Idx[kPi0]>=0 && Idx[kPim]>=0;
+         break;
+     };
      if(!foundAllObservables) continue;
      if(debug) printf(">>> BEGIN DIHADRON EVENT\n");
      // -- set energy and momentum for all observables
@@ -248,18 +260,14 @@ int main(int argc, char** argv) {
 
 
 
-     // set pi+ and pi- momenta
-     hadron[hP]->SetMomentum(
-       P[kPip][dX],
-       P[kPip][dY],
-       P[kPip][dZ]
-     );
-     hadron[hM]->SetMomentum(
-       P[kPim][dX],
-       P[kPim][dY],
-       P[kPim][dZ]
-     );
+     // set hadron momenta
      for(int h=0; h<2; h++) {
+       hadron[hP]->SetMomentum(
+         P[PMidx(pairSetting,h)][dX],
+         P[PMidx(pairSetting,h)][dY],
+         P[PMidx(pairSetting,h)][dZ]
+       );
+
        hadE[h] = (hadron[h]->Vec).E();
        hadP[h] = (hadron[h]->Vec).P();
        hadPt[h] = (hadron[h]->Vec).Pt();

@@ -27,7 +27,9 @@ int main(int argc, char** argv) {
 
    // ARGUMENTS
    TString inDir = "outroot";
+   Int_t pairSetting = pairPM;
    if(argc>1) inDir = TString(argv[1]);
+   if(argc>2) pairSetting = (Int_t)strtof(argv[2],NULL);
 
    EventTree * ev = new EventTree(TString(inDir+"/*.root"));
 
@@ -37,6 +39,8 @@ int main(int argc, char** argv) {
    const Int_t NBINS = 100;
    Float_t deltaPhi;
    Float_t PhiHR;
+
+   TString plotTitle,plotName;
 
    TH1F * WDist = new TH1F("WDist","W distribution (w/o W cut);W",
      NBINS,0,6);
@@ -49,23 +53,41 @@ int main(int argc, char** argv) {
    TH1F * YDist = new TH1F("YDist","y distribution (w/o y cut)",
      NBINS,0,1);
 
+   plotTitle = Form("E^{%s} vs. E^{%s};E^{%s};E^{%s}",
+     PMsym(pairSetting,hP).Data(),PMsym(pairSetting,hM),
+     PMsym(pairSetting,hM).Data(),PMsym(pairSetting,hP));
    TH2F * hadECorr = new TH2F("hadECorr",
-     "E^{+} vs. E^{-};E^{-};E^{+}",
+     plotTitle.Data(),
      NBINS,0,10,NBINS,0,10);
+   plotTitle = Form("p^{%s} vs. p^{%s};p^{%s};p^{%s}",
+     PMsym(pairSetting,hP).Data(),PMsym(pairSetting,hM),
+     PMsym(pairSetting,hM).Data(),PMsym(pairSetting,hP));
    TH2F * hadPCorr = new TH2F("hadPCorr",
-     "p^{+} vs. p^{-};p^{-};p^{+}",
+     plotTitle.Data(),
      NBINS,0,10,NBINS,0,10);
+   plotTitle = Form("p_{T}^{%s} vs. p_{T}^{%s};p_{T}^{%s};p_{T}^{%s}",
+     PMsym(pairSetting,hP).Data(),PMsym(pairSetting,hM),
+     PMsym(pairSetting,hM).Data(),PMsym(pairSetting,hP));
    TH2F * hadPtCorr = new TH2F("hadPtCorr",
-     "p_{T}^{+} vs. p_{T}^{-};p_{T}^{-};p_{T}^{+}",
+     plotTitle.Data(),
      NBINS,0,4,NBINS,0,4);
+   plotTitle = Form("#eta^{%s} vs. #eta^{%s};#eta^{%s};#eta^{%s}",
+     PMsym(pairSetting,hP).Data(),PMsym(pairSetting,hM),
+     PMsym(pairSetting,hM).Data(),PMsym(pairSetting,hP));
    TH2F * hadEtaCorr = new TH2F("hadEtaCorr",
-     "#eta^{+} vs. #eta^{-};#eta^{-};#eta^{+}",
+     plotTitle.Data(),
      NBINS,0,5,NBINS,0,5);
+   plotTitle = Form("#phi^{%s} vs. #phi^{%s};#phi^{%s};#phi^{%s}",
+     PMsym(pairSetting,hP).Data(),PMsym(pairSetting,hM),
+     PMsym(pairSetting,hM).Data(),PMsym(pairSetting,hP));
    TH2F * hadPhiCorr = new TH2F("hadPhiCorr",
-     "#phi^{+} vs. #phi^{-};#phi^{-};#phi^{+}",
+     plotTitle.Data(),
      NBINS,-PI-1,PI+1,NBINS,-PI-1,PI+1);
+   plotTitle = Form("z^{%s} vs. z^{%s};z^{%s};z^{%s}",
+     PMsym(pairSetting,hP).Data(),PMsym(pairSetting,hM),
+     PMsym(pairSetting,hM).Data(),PMsym(pairSetting,hP));
    TH2F * hadZCorr = new TH2F("hadZCorr",
-     "z^{+} vs. z^{-};z^{-};z^{+}",
+     plotTitle.Data(),
      NBINS,0,1,NBINS,0,1);
    
    TH1F * hadEDist[2];
@@ -74,38 +96,45 @@ int main(int argc, char** argv) {
    TH1F * hadEtaDist[2];
    TH1F * hadPhiDist[2];
    TH1F * hadZDist[2];
-   TString plotTitle,plotName;
    for(int h=0; h<2; h++) {
-     plotTitle = "E distribution (blue:#pi^{+} red:#pi^{-})";
-     plotName = PMstr(h)+"hadEDist";
+     plotTitle = Form("E distribution (blue:#pi^{%s} red:#pi^{%s})",
+       PMsym(pairSetting,hP).Data(),PMsym(pairSetting,hM).Data());
+     plotName = PMstr(pairSetting,h)+"hadEDist";
      hadEDist[h] = new TH1F(plotName,plotTitle,
        NBINS,0,10);
-     plotTitle = "p distribution (blue:#pi^{+} red:#pi^{-})";
-     plotName = PMstr(h)+"hadPDist";
+     plotTitle = Form("p distribution (blue:#pi^{%s} red:#pi^{%s})",
+       PMsym(pairSetting,hP).Data(),PMsym(pairSetting,hM).Data());
+     plotName = PMstr(pairSetting,h)+"hadPDist";
      hadPDist[h] = new TH1F(plotName,plotTitle,
        NBINS,0,10);
-     plotTitle = "p_{T} distribution (blue:#pi^{+} red:#pi^{-})";
-     plotName = PMstr(h)+"hadPtDist";
+     plotTitle = Form("p_{T} distribution (blue:#pi^{%s} red:#pi^{%s})",
+       PMsym(pairSetting,hP).Data(),PMsym(pairSetting,hM).Data());
+     plotName = PMstr(pairSetting,h)+"hadPtDist";
      hadPtDist[h] = new TH1F(plotName,plotTitle,
        NBINS,0,4);
-     plotTitle = "#eta distribution (blue:#pi^{+} red:#pi^{-})";
-     plotName = PMstr(h)+"hadEtaDist";
+     plotTitle = Form("#eta distribution (blue:#pi^{%s} red:#pi^{%s})",
+       PMsym(pairSetting,hP).Data(),PMsym(pairSetting,hM).Data());
+     plotName = PMstr(pairSetting,h)+"hadEtaDist";
      hadEtaDist[h] = new TH1F(plotName,plotTitle,
        NBINS,0,5);
-     plotTitle = "#phi distribution (blue:#pi^{+} red:#pi^{-})";
-     plotName = PMstr(h)+"hadPhiDist";
+     plotTitle = Form("#phi distribution (blue:#pi^{%s} red:#pi^{%s})",
+       PMsym(pairSetting,hP).Data(),PMsym(pairSetting,hM).Data());
+     plotName = PMstr(pairSetting,h)+"hadPhiDist";
      hadPhiDist[h] = new TH1F(plotName,plotTitle,
        NBINS,-PI-1,PI+1);
-     plotTitle = "Z distribution (blue:#pi^{+} red:#pi^{-})";
-     plotName = PMstr(h)+"hadZDist";
+     plotTitle = Form("Z distribution (blue:#pi^{%s} red:#pi^{%s})",
+       PMsym(pairSetting,hP).Data(),PMsym(pairSetting,hM).Data());
+     plotName = PMstr(pairSetting,h)+"hadZDist";
      hadZDist[h] = new TH1F(plotName,plotTitle,
        NBINS,0,1);
    };
 
 
 
+   plotTitle = Form("#Delta#phi=#phi^{%s}-#phi^{%s} distribution;#Delta#phi",
+     PMsym(pairSetting,hP).Data(),PMsym(pairSetting,hM).Data());
    TH1F * deltaPhiDist = new TH1F("deltaPhiDist",
-     "#Delta#phi=#phi^{+}-#phi^{-} distribution;#Delta#phi",
+     plotTitle,
      NBINS,-PI-1,PI+1);
 
    TH1F * MhDist = new TH1F("MhDist",

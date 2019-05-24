@@ -91,15 +91,40 @@ static float PartMass(int p) {
 
 // charge sign constants
 enum plusminus {hP,hM};
+enum pairSettingEnum { pairPM, pair0M, pairP0 };
 
-static TString PMstr(int h) {
-  switch(h) {
-    case hP: return "p";
-    case hM: return "m";
-    default: 
-      fprintf(stderr,"ERROR: bad PMstr request\n");
-      return "unknown";
+static Int_t PMidx(int pair, int h) {
+  if(pair == pairPM) {
+    if(h == hP)      return kPip;
+    else if(h == hM) return kPim;
+  } 
+  else if(pair == pair0M) {
+    if(h == hP)      return kPi0;
+    else if(h == hM) return kPim;
+  }
+  else if(pair == pairP0) {
+    if(h == hP)      return kPip;
+    else if(h == hM) return kPi0;
   };
+  fprintf(stderr,"ERROR: bad PMidx request\n");
+  return -1;
+};
+
+static TString PMstr(int pair, int h) {
+  if(pair == pairPM) {
+    if(h == hP)      return "p";
+    else if(h == hM) return "m";
+  } 
+  else if(pair == pair0M) {
+    if(h == hP)      return "0";
+    else if(h == hM) return "m";
+  }
+  else if(pair == pairP0) {
+    if(h == hP)      return "p";
+    else if(h == hM) return "0";
+  };
+  fprintf(stderr,"ERROR: bad PMstr request\n");
+  return "unknown";
 };
 
 static TString PMsym(int h) {
