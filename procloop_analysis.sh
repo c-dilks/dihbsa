@@ -4,7 +4,7 @@ exe="analysis.exe"
 
 # default arguments
 hipodir=../hipo  # directory of hipo files to analyse
-njobsMax=4  # maximum number of parallel jobs to run
+njobsMax=6  # maximum number of parallel jobs to run
             # (set this to zero to use all accessible threads)
 
 if [ $# -ge 1 ]; then hipodir=$1; fi
@@ -36,8 +36,8 @@ mkdir -p $outdir
 
 
 # filter for hipo files
-hipofilter="32\.evio.1.*\.hipo"
-#hipofilter="evio"
+#hipofilter="32\.evio.1.*\.hipo"
+hipofilter="evio"
 
 # get list of hipo files
 ls ${hipodir}/*.hipo | grep -E $hipofilter > hipoz

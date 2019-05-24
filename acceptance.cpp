@@ -30,9 +30,11 @@ int main(int argc, char** argv) {
 
    // ARGUMENTS
    TString inDir = "outroot";
+   Int_t whichPair = pairPM;
    if(argc>1) inDir = TString(argv[1]);
+   if(argc>2) whichPair = (Int_t)strtof(argv[2],NULL);
 
-   EventTree * ev = new EventTree(TString(inDir+"/*.root"));
+   EventTree * ev = new EventTree(TString(inDir+"/*.root"),whichPair);
 
 
    TFile * outfile = new TFile("acc.root","RECREATE");

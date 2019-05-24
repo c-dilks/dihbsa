@@ -39,9 +39,8 @@ void DIS::SetBeamEn(Float_t newBeamEn) {
 };
 
 
-void DIS::SetElectron(Float_t px, Float_t py, Float_t pz) {
-  vecElectron.SetXYZM(px,py,pz,PartMass(kE));
-  return;
+void DIS::SetElectron(Trajectory * tr) {
+  vecElectron = tr->Vec;
 };
 
 

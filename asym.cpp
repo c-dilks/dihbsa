@@ -49,6 +49,10 @@ int main(int argc, char** argv) {
    Int_t whichPhiR = 3; // 1:phiRq  2:phiRp_r  3:phiRp // Alessandro prefers 3:phiRp
    Bool_t batchMode = 0; // if true, renames output files and prints pngs
 
+
+   Int_t whichPair = pairPM; // LOCKED AT PM pair for now!!  // TODO
+
+
    // help printout
    if(argc==1) {
      fprintf(stderr,
@@ -160,7 +164,7 @@ int main(int argc, char** argv) {
    TFile * outfile = new TFile(outfileName,"RECREATE");
 
 
-   EventTree * ev = new EventTree(TString(inDir+"/*.root"));
+   EventTree * ev = new EventTree(TString(inDir+"/*.root"),whichPair);
 
 
    

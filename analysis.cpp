@@ -53,13 +53,12 @@ int main(int argc, char** argv) {
 
    // load libs
    DIS * disEv = new DIS();
-   Trajectory * hadron[2];
+   Trajectory * traj[nParticles];
+   Trajectory * had[2]; // for dihadron pair; points to traj instances
    Dihadron * dih = new Dihadron(); dih->useBreit = false;
    Dihadron * dihBr = new Dihadron(); dihBr->useBreit = true;
 
-   for(int h=0; h<2; h++) {
-     hadron[h] = new Trajectory(PMidx(pairSetting,h));
-   };
+   for(int o=0; o<nParticles; o++) traj[o] = new Trajectory(o);
 
    hipo::benchmark bench;
 
@@ -80,6 +79,10 @@ int main(int argc, char** argv) {
    tree->Branch("Nu",&(disEv->Nu),"Nu/F");
    tree->Branch("x",&(disEv->x),"x/F");
    tree->Branch("y",&(disEv->y),"y/F");
+
+   // pair type (see Constants.h)
+   Int_t pairType;
+   tree->Branch("pairType",&pairType,"pairType/I");
 
    // hadron branches
    Float_t hadE[2]; // [enum plus_minus (0=+, 1=-)]
@@ -172,15 +175,16 @@ int main(int argc, char** argv) {
    Float_t E[nParticles]; // energy 
    Float_t Emax[nParticles]; // maximum energy 
    Int_t Idx[nParticles]; // index of observable in particleList
-   Float_t P[nParticles][3]; // momentum [x,y,z]
    enum xyz {dX,dY,dZ};
    clas12::vector4 vecObs; // observable 4-momentum
    Int_t oCur,pidCur;
 
 
-   Bool_t foundAllObservables;
+   Bool_t foundAllObservables[nPairType];
 
    Int_t evCount = 0;
+   Int_t pairCount[nPairType];
+   for(int pp=0; pp<nPairType; pp++) pairCount[pp]=0;
 
    printf("begin event loop...");
    while(reader.next()==true) {
@@ -196,12 +200,13 @@ int main(int argc, char** argv) {
 
 
      // search for highest-energy observables
-     // -- reset indices and max energy
+     // -- first reset indices and max energy
      for(int o=0; o<nParticles; o++) {
        Emax[o] = 0;
        Idx[o] = -1;
      };
-     // -- if it's an electron or pion, check if it has
+     
+     // -- if it's an electron or hadron that we want, check if it has
      //    higher energy than any previous one found
      for(int i=0; i<particleList.getSize(); i++) {
 
@@ -221,77 +226,76 @@ int main(int argc, char** argv) {
          };
        };
      };
-     // -- check if we have an electron and pi+/pi- dihadron in this
-     //    event; skip if we don't
-     switch(pairSetting) {
-       case pairPM:
-         foundAllObservables = Idx[kE]>=0 && Idx[kPip]>=0 && Idx[kPim]>=0;
-         break;
-       case pairP0:
-         foundAllObservables = Idx[kE]>=0 && Idx[kPip]>=0 && Idx[kPi0]>=0;
-         break;
-       case pair0M:
-         foundAllObservables = Idx[kE]>=0 && Idx[kPi0]>=0 && Idx[kPim]>=0;
-         break;
-     };
-     if(!foundAllObservables) continue;
-     if(debug) printf(">>> BEGIN DIHADRON EVENT\n");
-     // -- set energy and momentum for all observables
+
+     // -- set trajectory momenta for all observables
      for(int o=0; o<nParticles; o++) { 
        if(Idx[o]>=0) {
-         E[o] = Emax[o];
-
-         particleList.getVector4(Idx[o],vecObs,PartMass(o)); 
-
-         P[o][dX] = particleList.getPx(Idx[o]);
-         P[o][dY] = particleList.getPy(Idx[o]);
-         P[o][dZ] = particleList.getPz(Idx[o]);
+         traj[o]->SetMomentum(
+           particleList.getPx(Idx[o]),
+           particleList.getPy(Idx[o]),
+           particleList.getPz(Idx[o])
+         );
+       } else {
+         traj[o]->SetMomentum(0,0,0);
        };
      };
 
 
-     // compute DIS kinematics
-     disEv->SetElectron(
-       P[kE][dX],
-       P[kE][dY],
-       P[kE][dZ]
-     );
-     disEv->Analyse();
+     // -- check if we found all the observables for a given pairType
+     foundAllObservables[pairPM] = Idx[kE]>=0 && Idx[kPip]>=0 && Idx[kPim]>=0;
+     foundAllObservables[pairP0] = Idx[kE]>=0 && Idx[kPip]>=0 && Idx[kPi0]>=0;
+     foundAllObservables[pair0M] = Idx[kE]>=0 && Idx[kPi0]>=0 && Idx[kPim]>=0;
+
+     if(Idx[kPi0]>=0) printf("pi0 found\n");
 
 
+     
+     // loop through pair types
+     for(int pp=0; pp<nPairType; pp++) {
 
-     // set hadron momenta
-     for(int h=0; h<2; h++) {
-       hadron[hP]->SetMomentum(
-         P[PMidx(pairSetting,h)][dX],
-         P[PMidx(pairSetting,h)][dY],
-         P[PMidx(pairSetting,h)][dZ]
-       );
+       if(foundAllObservables[pp]) {
 
-       hadE[h] = (hadron[h]->Vec).E();
-       hadP[h] = (hadron[h]->Vec).P();
-       hadPt[h] = (hadron[h]->Vec).Pt();
-       hadEta[h] = (hadron[h]->Vec).Eta();
-       hadPhi[h] = (hadron[h]->Vec).Phi();
-       if(debug) {
-         printf("[+] %s 4-momentum:\n",(hadron[h]->Title()).Data());
-         (hadron[h]->Vec).Print();
-       };
-     };
+         pairType = pp;
+
+         if(debug) printf(">>> BEGIN DIHADRON EVENT %s%s\n",
+           PMsym(pairType,hP).Data(),PMsym(pairType,hM).Data());
+
+         // compute DIS kinematics
+         disEv->SetElectron(traj[kE]);
+         disEv->Analyse();
 
 
-     // set dihadron momenta
-     dih->SetEvent(hadron[hP],hadron[hM],disEv);
-     dihBr->SetEvent(hadron[hP],hadron[hM],disEv);
+         // set hadron momenta
+         for(int h=0; h<2; h++) {
+           had[h] = traj[PMidx(pairType,h)];
+
+           hadE[h] = (had[h]->Vec).E();
+           hadP[h] = (had[h]->Vec).P();
+           hadPt[h] = (had[h]->Vec).Pt();
+           hadEta[h] = (had[h]->Vec).Eta();
+           hadPhi[h] = (had[h]->Vec).Phi();
+           if(debug) {
+             printf("[+] %s 4-momentum:\n",(had[h]->Title()).Data());
+             (had[h]->Vec).Print();
+           };
+         };
 
 
-       
+         // compute dihadron kinematics
+         dih->SetEvent(had[hP],had[hM],disEv);
+         dihBr->SetEvent(had[hP],had[hM],disEv);
 
 
-     tree->Fill();
-     evCount++;
-     if(evCount%100==0) 
-       printf("[---] %d dihadron events found\n",evCount);
+         // fill tree
+         tree->Fill();
+
+         // increment event counter
+         evCount++;
+         pairCount[pairType]++;
+         if(evCount%100==0) printf("[---] %d dihadron events found\n",evCount);
+
+       }; // eo if foundAllObservables for this pairType
+     }; // eo pairType loop
 
      bench.pause();
    };
@@ -300,7 +304,11 @@ int main(int argc, char** argv) {
      bench.getTime()*1e-9,
      bench.getCounter());
    tree->Write("tree");
-   printf("\nDIHADRON EVENT COUNT: %d\n\n",evCount);
+   printf("\nDIHADRON EVENT COUNT: %d\n",evCount);
+   for(int pp=0; pp<nPairType; pp++) 
+     printf(" %s : %d\n",pairName(pp).Data(),pairCount[pp]);
+   printf("\n");
+
 
    outfile->Close();
 };

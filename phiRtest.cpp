@@ -29,8 +29,10 @@ int main(int argc, char** argv) {
    // ARGUMENTS
    TString inDir = "outroot";
    Bool_t useBreit = false;
+   Int_t whichPair = pairPM;
    if(argc>1) inDir = TString(argv[1]);
    if(argc>2) useBreit = (Bool_t)strtof(argv[2],NULL);
+   if(argc>3) whichPair = (Int_t)strtof(argv[3],NULL);
 
    EventTree * ev = new EventTree(TString(inDir+"/*.root"));
    TString frame = useBreit ? " --- Breit frame":" --- Lab frame ";

@@ -30,7 +30,7 @@
 class EventTree : public TObject
 {
   public:
-    EventTree(TString filelist);
+    EventTree(TString filelist, Int_t whichPair_=pairPM);
     ~EventTree();
 
     void GetEvent(Int_t i);
@@ -54,6 +54,7 @@ class EventTree : public TObject
     Float_t hadPhi[2];
 
     // dihadron kinematics
+    Int_t pairType;
     Float_t Mh,Zpair,PhiH,Mmiss,xF,alpha;
     Float_t Z[2];
     Float_t Ph,PhPerp;
@@ -88,6 +89,7 @@ class EventTree : public TObject
     
   private:
     TChain * chain;
+    Int_t whichPair;
 
 
   ClassDef(EventTree,1);

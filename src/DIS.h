@@ -18,6 +18,7 @@
 
 // dihbsa
 #include "Constants.h"
+#include "Trajectory.h"
 
 
 
@@ -28,7 +29,7 @@ class DIS : public TObject
     ~DIS();
 
     void SetBeamEn(Float_t newBeamEn);
-    void SetElectron(Float_t px, Float_t py, Float_t pz);
+    void SetElectron(Trajectory * tr);
     void Analyse();
     void PrintEvent();
 

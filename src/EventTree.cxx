@@ -5,10 +5,12 @@ ClassImp(EventTree)
 using namespace std;
 
 
-EventTree::EventTree(TString filelist) {
+EventTree::EventTree(TString filelist, Int_t whichPair_) {
   printf("EventTree instantiated\n");
 
   debug = true;
+
+  whichPair = whichPair_;
 
   printf("reading tree chain from %s\n",filelist.Data());
 
@@ -30,6 +32,7 @@ EventTree::EventTree(TString filelist) {
   chain->SetBranchAddress("hadEta",hadEta);
   chain->SetBranchAddress("hadPhi",hadPhi);
 
+  chain->SetBranchAddress("pairType",&pairType);
   chain->SetBranchAddress("Mh",&Mh);
   chain->SetBranchAddress("Mmiss",&Mmiss);
   chain->SetBranchAddress("Z",Z);
@@ -79,6 +82,7 @@ void EventTree::GetEvent(Int_t i) {
 
   // Dihadron kinematics cuts
   cutDihadron = 
+    pairType == whichPair && 
     Z[hP] > 0.1 && Z[hM] > 0.1 &&
     Zpair < 0.95 &&
     Mmiss > 1.05 &&
@@ -110,7 +114,7 @@ void EventTree::PrintEvent() {
   printf("\n");
   printf("[---] Hadron Kinematics\n");
   for(int h=0; h<2; h++) {
-    printf(" (h%s)\n",PMsym(h).Data());
+    printf(" (h%s)\n",PMsym(pairType,h).Data());
     printf("  E=%.2f",hadE[h]);
     printf("  P=%.2f",hadP[h]);
     printf("  Pt=%.2f",hadPt[h]);
@@ -127,8 +131,8 @@ void EventTree::PrintEvent() {
   printf("\n");
   printf("  Zpair=%.2f  Z[%s]=%.2f  Z[%s]=%.2f",
       Zpair,
-      PMsym(hP).Data(),Z[hP],
-      PMsym(hM).Data(),Z[hM]);
+      PMsym(pairType,hP).Data(),Z[hP],
+      PMsym(pairType,hM).Data(),Z[hM]);
   printf("\n");
   printf("  PhiH=%.2f",PhiH);
   printf("\n");
