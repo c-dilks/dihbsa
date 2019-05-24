@@ -49,7 +49,6 @@ class Asymmetry : public TObject
     ~Asymmetry();
 
     void CalculateAsymmetries();
-    void EvalAsymmetry(TGraphErrors * asymGr, TH1D * mdistL, TH1D * mdistR);
 
 
     Bool_t FillPlots();

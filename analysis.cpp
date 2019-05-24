@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
 
 
    // if true, print more to stdout
-   bool debug = 0;
+   bool debug = 1;
 
    // set output file name
    TString outfileN;
@@ -216,6 +216,8 @@ int main(int argc, char** argv) {
        else if (pidCur == PartPID(kPim) )  oCur=kPim;
        else if (pidCur == PartPID(kPi0) )  oCur=kPi0;
        else oCur=-10000;
+
+       if(debug) printf(" pid=%d\n",pidCur);
 
        if(oCur>-10000) {
          particleList.getVector4(i,vecObs,PartMass(oCur));
