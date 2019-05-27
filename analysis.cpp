@@ -23,6 +23,7 @@
 #include "DIS.h"
 #include "Trajectory.h"
 #include "Dihadron.h"
+#include "Diphoton.h"
 
 
 
@@ -58,11 +59,12 @@ int main(int argc, char** argv) {
    DIS * disEv = new DIS();
    Dihadron * dih = new Dihadron(); dih->useBreit = false;
    Dihadron * dihBr = new Dihadron(); dihBr->useBreit = true;
+   Diphoton * diPhot = new Diphoton();
 
    // define trajectories
    Trajectory * had[2]; // for dihadron pair; points to traj instances
    Trajectory * ele; // for electron
-   Trajectory * photon[2]; // for diphoton (for pi0)
+   Trajectory * phot[2]; // for diphoton (for pi0)
 
    // set up structure for sorting particles by E
    //   each particle has a trajectory pointer array,
@@ -108,9 +110,16 @@ int main(int argc, char** argv) {
 
    // miscellaneous branches for classifying the type of observables
    Int_t pairType;
+   Int_t particleCntAll;
    TString particleCntStr = Form("particleCnt[%d]/I",nParticles);
    tree->Branch("pairType",&pairType,"pairType/I"); // dihadron pair type (see Constants.h)
-   tree->Branch("particleCnt",trajCnt,particleCntStr); // number of particles
+   tree->Branch("particleCnt",trajCnt,particleCntStr); // number of each type of particle
+                                                     // that we consider, as defined in
+                                                     // Constants.h
+   tree->Branch("particleCntAll",&particleCntAll,"particleCntAll/I"); // total number
+                                                     // of particles in the event (note:
+                                                     // includes particles not in
+                                                     // Constants.h)
 
 
    // hadron branches
@@ -162,6 +171,17 @@ int main(int argc, char** argv) {
    tree->Branch("b_PhiRp_r",&(dihBr->PhiRp_r),"b_PhiRp_r/F"); // via R_T (frame-dependent)
    tree->Branch("b_PhiRp_g",&(dihBr->PhiRp_g),"b_PhiRp_g/F"); // via eq. 9 in 1408.5721
 
+   // pi0 (diphoton) branches
+   tree->Branch("diphE",&(diPhot->E),"diphE/F"); // diphoton energy
+   tree->Branch("diphEphot",diPhot->Ephot,"diphEphot[2]/F"); // energy of each photon
+   tree->Branch("diphZ",&(diPhot->Z),"diphZ/F"); // diphoton energy sharing
+   tree->Branch("diphPt",&(diPhot->Pt),"diphPt/F"); // diphoton transverse momentum
+   tree->Branch("diphM",&(diPhot->Mgg),"diphM/F"); // diphoton invariant mass
+   tree->Branch("diphAlpha",&(diPhot->Alpha),"diphAlpha/F"); // diphoton opening angle
+   tree->Branch("diphEta",&(diPhot->Eta),"diphEta/F"); // diphoton pseudorapidity
+   tree->Branch("diphPhi",&(diPhot->Phi),"diphPhi/F"); // diphoton pseudorapidity
+
+
    // define reader and particle list
    hipo::reader reader;
    reader.open(infileN.Data());
@@ -212,6 +232,7 @@ int main(int argc, char** argv) {
 
 
    Bool_t foundAllObservables[nPairType];
+   Bool_t foundPhotons;
 
    Int_t evCount = 0;
    Int_t pairCount[nPairType];
@@ -250,7 +271,8 @@ int main(int argc, char** argv) {
      // -- if it's an observable that we want, add its trajectory
      //    to the unsorted trajectory array and its energy to list
      //    of energies for this observable
-     for(int i=0; i<particleList.getSize(); i++) {
+     particleCntAll = particleList.getSize();
+     for(int i=0; i<particleCntAll; i++) {
 
        pidCur = particleList.getPid(i);
        if      (pidCur == PartPID(kE)   )  oCur=kE;
@@ -329,11 +351,28 @@ int main(int argc, char** argv) {
      // ---------------------------------------------------
 
 
+     // check if there are 2 or more photons (used for looking for pi0s)
+     foundPhotons = trajCnt[kPhoton] >= 2;
 
      // check if we found all the observables for a given pairType
      foundAllObservables[pairPM] = trajCnt[kE]>0 && trajCnt[kPip]>0 && trajCnt[kPim]>0;
-     foundAllObservables[pairP0] = trajCnt[kE]>0 && trajCnt[kPip]>0 && trajCnt[kPi0]>0;
-     foundAllObservables[pair0M] = trajCnt[kE]>0 && trajCnt[kPi0]>0 && trajCnt[kPim]>0;
+     foundAllObservables[pairP0] = trajCnt[kE]>0 && trajCnt[kPip]>0 && foundPhotons;
+     foundAllObservables[pairM0] = trajCnt[kE]>0 && trajCnt[kPim]>0 && foundPhotons;
+
+
+     // look for pi0s
+     if(trajCnt[kPi0] > 0) {
+       fprintf(stderr,"WARNING: found reconstructed pi0 in paricle bank!!!\n");
+     };
+     if(foundPhotons) {
+       phot[0] = (Trajectory*) trajArr[kPhoton]->At(0);
+       phot[1] = (Trajectory*) trajArr[kPhoton]->At(1);
+
+       diPhot->SetEvent(phot[0],phot[1]);
+
+       trajArr[kPi0]->AddLast(diPhot->Traj);
+       trajCnt[kPi0]++;
+     };
 
      
      // loop through pair types

@@ -1,3 +1,5 @@
+R__LOAD_LIBRARY(DihBsa)
+
 void checkChiSq(TString dir="spinout.free") {
   TString fname = dir+"/all.root";
   TFile * infile = new TFile(fname,"READ");

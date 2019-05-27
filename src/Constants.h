@@ -93,13 +93,13 @@ static float PartMass(int p) {
 enum plusminus {hP,hM};
 
 // pair types
-enum pairTypeEnum { pairPM, pair0M, pairP0, nPairType };
+enum pairTypeEnum { pairPM, pairP0, pairM0, nPairType };
 
 static TString pairName(int pair) {
   switch(pair) {
     case pairPM: return "pi+ pi-";
-    case pair0M: return "pi0 pi-";
     case pairP0: return "pi+ pi0";
+    case pairM0: return "pi0 pi-";
     default:
       fprintf(stderr,"ERROR: bad pairName request\n");
       return "unknown";
@@ -112,13 +112,13 @@ static Int_t PMidx(int pair, int h) {
     if(h == hP)      return kPip;
     else if(h == hM) return kPim;
   } 
-  else if(pair == pair0M) {
-    if(h == hP)      return kPi0;
-    else if(h == hM) return kPim;
-  }
   else if(pair == pairP0) {
-    if(h == hP)      return kPip;
-    else if(h == hM) return kPi0;
+    if(h == hP)      return kPip; // higher charge
+    else if(h == hM) return kPi0; // lower charge
+  }
+  else if(pair == pairM0) {
+    if(h == hP)      return kPi0; // higher charge
+    else if(h == hM) return kPim; // lower charge
   };
   fprintf(stderr,"ERROR: bad PMidx request\n");
   return -1;
@@ -129,13 +129,13 @@ static TString PMstr(int pair, int h) {
     if(h == hP)      return "p";
     else if(h == hM) return "m";
   } 
-  else if(pair == pair0M) {
-    if(h == hP)      return "0";
-    else if(h == hM) return "m";
-  }
   else if(pair == pairP0) {
     if(h == hP)      return "p";
     else if(h == hM) return "0";
+  }
+  else if(pair == pairM0) {
+    if(h == hP)      return "0";
+    else if(h == hM) return "m";
   };
   fprintf(stderr,"ERROR: bad PMstr request\n");
   return "unknown";
@@ -146,13 +146,13 @@ static TString PMsym(int pair, int h) {
     if(h == hP)      return "+";
     else if(h == hM) return "-";
   } 
-  else if(pair == pair0M) {
-    if(h == hP)      return "0";
-    else if(h == hM) return "-";
-  }
   else if(pair == pairP0) {
     if(h == hP)      return "+";
     else if(h == hM) return "0";
+  }
+  else if(pair == pairM0) {
+    if(h == hP)      return "0";
+    else if(h == hM) return "-";
   };
   fprintf(stderr,"ERROR: bad PMsym request\n");
   return "unknown";

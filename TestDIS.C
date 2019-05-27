@@ -1,7 +1,6 @@
-#include "Binning.h"
+R__LOAD_LIBRARY(DihBsa)
 
 void TestDIS() {
-  gSystem->Load("DihBsa.so");
   Binning * B = new Binning();
 };
 

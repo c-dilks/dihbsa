@@ -29,6 +29,7 @@ class Trajectory : public TObject
     ~Trajectory();
 
     void SetMomentum(Float_t px, Float_t py, Float_t pz);
+    void SetVec(TLorentzVector v_) { Vec=v_; };
     void SetIdx(Int_t particle_index) { Idx = particle_index; };
     TString Name() { return PartName(Idx); };
     TString Title() { return PartTitle(Idx); };
