@@ -41,8 +41,8 @@ int main(int argc, char** argv) {
 
 
    // if true, print more to stdout
-   bool debug = 1;
-   bool debugSort = 1;
+   bool debug = 0;
+   bool debugSort = 0;
 
    // set output file name
    TString outfileN;
@@ -420,7 +420,7 @@ int main(int argc, char** argv) {
          // increment event counter
          evCount++;
          pairCount[pairType]++;
-         if(evCount%100==0) printf("[---] %d dihadron events found\n",evCount);
+         if(evCount%1000==0) printf("[---] %d dihadron events found\n",evCount);
 
        }; // eo if foundAllObservables for this pairType
      }; // eo pairType loop
