@@ -8,6 +8,8 @@
 #include "TMath.h"
 #include "TSystem.h"
 #include "TRegexp.h"
+#include "TObjArray.h"
+
 
 // Clas12Tool
 #include "reader.h"
@@ -39,6 +41,7 @@ int main(int argc, char** argv) {
 
    // if true, print more to stdout
    bool debug = 1;
+   bool debugSort = 1;
 
    // set output file name
    TString outfileN;
@@ -53,12 +56,35 @@ int main(int argc, char** argv) {
 
    // load libs
    DIS * disEv = new DIS();
-   Trajectory * traj[nParticles];
-   Trajectory * had[2]; // for dihadron pair; points to traj instances
    Dihadron * dih = new Dihadron(); dih->useBreit = false;
    Dihadron * dihBr = new Dihadron(); dihBr->useBreit = true;
 
-   for(int o=0; o<nParticles; o++) traj[o] = new Trajectory(o);
+   // define trajectories
+   Trajectory * had[2]; // for dihadron pair; points to traj instances
+   Trajectory * ele; // for electron
+   Trajectory * photon[2]; // for diphoton (for pi0)
+
+   // set up structure for sorting particles by E
+   //   each particle has a trajectory pointer array,
+   //   which will be sorted by energy later
+   const Int_t maxTraj = 40;
+   TObjArray * trajArrUS[nParticles]; // unsorted array
+   TObjArray * trajArr[nParticles]; // sorted array
+   Trajectory * traj[nParticles][maxTraj]; // array of trajectory pointers
+   Trajectory * tr; // set to a pointer in traj array
+   Int_t trajIdx[nParticles][maxTraj]; // sort index for each particle
+   Float_t trajE[nParticles][maxTraj]; // sorted energy for each particle
+   Int_t trajCnt[nParticles]; // number of particles for each type of observable
+   
+   for(int o=0; o<nParticles; o++) {
+     trajArrUS[o] = new TObjArray();
+     trajArr[o] = new TObjArray();
+     trajCnt[o] = 0;
+     for(int t=0; t<maxTraj; t++) {
+       traj[o][t] = new Trajectory(o);
+     };
+   };
+       
 
    hipo::benchmark bench;
 
@@ -80,9 +106,12 @@ int main(int argc, char** argv) {
    tree->Branch("x",&(disEv->x),"x/F");
    tree->Branch("y",&(disEv->y),"y/F");
 
-   // pair type (see Constants.h)
+   // miscellaneous branches for classifying the type of observables
    Int_t pairType;
-   tree->Branch("pairType",&pairType,"pairType/I");
+   TString particleCntStr = Form("particleCnt[%d]/I",nParticles);
+   tree->Branch("pairType",&pairType,"pairType/I"); // dihadron pair type (see Constants.h)
+   tree->Branch("particleCnt",trajCnt,particleCntStr); // number of particles
+
 
    // hadron branches
    Float_t hadE[2]; // [enum plus_minus (0=+, 1=-)]
@@ -137,6 +166,7 @@ int main(int argc, char** argv) {
    hipo::reader reader;
    reader.open(infileN.Data());
    clas12::particle particleList("REC::Particle",reader);
+   //hipo::bank particleBank("REC::Particle",reader); // (only used for printout for debug)
 
 
    // define additional banks
@@ -172,10 +202,11 @@ int main(int argc, char** argv) {
 
 
    // define observable variables
+   /*
    Float_t E[nParticles]; // energy 
    Float_t Emax[nParticles]; // maximum energy 
    Int_t Idx[nParticles]; // index of observable in particleList
-   enum xyz {dX,dY,dZ};
+   */
    clas12::vector4 vecObs; // observable 4-momentum
    Int_t oCur,pidCur;
 
@@ -198,16 +229,27 @@ int main(int argc, char** argv) {
      torus = configBank.getFloat(o_torus,0);
      triggerBits = configBank.getLong(o_triggerBits,0);
 
+     //if(debugSort) particleBank.show();
+     if(debugSort) { for(int l=0; l<30; l++) printf("-"); printf("\n"); };
 
-     // search for highest-energy observables
-     // -- first reset indices and max energy
+
+     // search for observables, sorting each kind by energy
+     // ---------------------------------------------------
+     //
+     // -- reset trajectory-sorting data structures
      for(int o=0; o<nParticles; o++) {
-       Emax[o] = 0;
-       Idx[o] = -1;
+       trajCnt[o] = 0;
+       trajArrUS[o]->Clear();
+       trajArr[o]->Clear();
+       for(int t=0; t<maxTraj; t++) {
+         trajIdx[o][t] = -1;
+         trajE[o][t] = -1;
+       };
      };
      
-     // -- if it's an electron or hadron that we want, check if it has
-     //    higher energy than any previous one found
+     // -- if it's an observable that we want, add its trajectory
+     //    to the unsorted trajectory array and its energy to list
+     //    of energies for this observable
      for(int i=0; i<particleList.getSize(); i++) {
 
        pidCur = particleList.getPid(i);
@@ -215,41 +257,83 @@ int main(int argc, char** argv) {
        else if (pidCur == PartPID(kPip) )  oCur=kPip;
        else if (pidCur == PartPID(kPim) )  oCur=kPim;
        else if (pidCur == PartPID(kPi0) )  oCur=kPi0;
+       else if (pidCur == PartPID(kPhoton) ) oCur=kPhoton;
        else oCur=-10000;
 
-       if(debug) printf(" pid=%d\n",pidCur);
+       if(debugSort) printf(" pid=%d  oCur=%d\n",pidCur,oCur);
 
        if(oCur>-10000) {
+
          particleList.getVector4(i,vecObs,PartMass(oCur));
-         E[oCur] = vecObs.e();
-         if(E[oCur] > Emax[oCur]) {
-           Emax[oCur] = E[oCur];
-           Idx[oCur] = i;
+
+         // set Trajectory pointer tr to proper allocated Trajectory instance;
+         // if there are more instances of this observable than we allocated for,
+         // we could allocate more memory for the extra ones (which could cause
+         // a memory leak or eventual segfault if maxTraj is not high enough...),
+         // or ignore the extra particles
+         if(trajCnt[oCur]<maxTraj) {
+           tr = traj[oCur][trajCnt[oCur]]; // set tr to allocated Trajectory instance
+         } else {
+           fprintf(stderr,"WARNING: more than maxTraj observables of type %s found\n",
+             PartName(oCur).Data());
+           //tr = new Trajectory(oCur); // allocate more memory
+           continue; // ignore this particle 
+         };
+
+         // add this Trajectory to the unsorted array
+         tr->SetMomentum(
+           particleList.getPx(i),
+           particleList.getPy(i),
+           particleList.getPz(i)
+         );
+         trajArrUS[oCur]->AddLast(tr);
+
+         // add this trajectory's energy to the energy array
+         trajE[oCur][trajCnt[oCur]] = vecObs.e();
+
+         // increment the trajectory counter
+         trajCnt[oCur]++;
+
+         if(debugSort) {
+           printf("found %s (pid=%d):\n",PartName(oCur).Data(),pidCur);
+           tr->Vec.Print();
          };
        };
      };
+     if(debugSort) printf(">>\n");
 
-     // -- set trajectory momenta for all observables
+     // -- sort each list of each type of observable by E; trajArr will 
+     //    be the sorted trajectory array and the 0th entry will be the 
+     //    highest energy trajectory 
      for(int o=0; o<nParticles; o++) { 
-       if(Idx[o]>=0) {
-         traj[o]->SetMomentum(
-           particleList.getPx(Idx[o]),
-           particleList.getPy(Idx[o]),
-           particleList.getPz(Idx[o])
-         );
-       } else {
-         traj[o]->SetMomentum(0,0,0);
+       if(trajCnt[o]>0) {
+
+         // sort the energy array
+         TMath::Sort(trajCnt[o],trajE[o],trajIdx[o]);
+
+         // sort the trajectory array according to the sorted energy array
+         for(int t=0; t<trajCnt[o]; t++) {
+           tr = (Trajectory*) trajArrUS[o]->At(trajIdx[o][t]);
+           trajArr[o]->AddLast(tr);
+         };
+
+         if(debugSort) {
+           printf("sorted list: %s cnt=%d\n",PartName(o).Data(),trajCnt[o]);
+           for(int t=0; t<trajCnt[o]; t++)
+             ((Trajectory*)(trajArr[o]->At(t)))->Vec.Print();
+         };
        };
+
      };
+     //
+     // ---------------------------------------------------
 
 
-     // -- check if we found all the observables for a given pairType
-     foundAllObservables[pairPM] = Idx[kE]>=0 && Idx[kPip]>=0 && Idx[kPim]>=0;
-     foundAllObservables[pairP0] = Idx[kE]>=0 && Idx[kPip]>=0 && Idx[kPi0]>=0;
-     foundAllObservables[pair0M] = Idx[kE]>=0 && Idx[kPi0]>=0 && Idx[kPim]>=0;
 
-     if(Idx[kPi0]>=0) printf("pi0 found\n");
-
+     // check if we found all the observables for a given pairType
+     foundAllObservables[pairPM] = trajCnt[kE]>0 && trajCnt[kPip]>0 && trajCnt[kPim]>0;
+     foundAllObservables[pairP0] = trajCnt[kE]>0 && trajCnt[kPip]>0 && trajCnt[kPi0]>0;
+     foundAllObservables[pair0M] = trajCnt[kE]>0 && trajCnt[kPi0]>0 && trajCnt[kPim]>0;
 
      
      // loop through pair types
@@ -263,13 +347,16 @@ int main(int argc, char** argv) {
            PMsym(pairType,hP).Data(),PMsym(pairType,hM).Data());
 
          // compute DIS kinematics
-         disEv->SetElectron(traj[kE]);
+         ele = (Trajectory*) trajArr[kE]->At(0); // select highest-E electron
+         disEv->SetElectron(ele);
          disEv->Analyse();
 
 
-         // set hadron momenta
+         // set hadron kinematics
          for(int h=0; h<2; h++) {
-           had[h] = traj[PMidx(pairType,h)];
+
+           // select highest-E hadron
+           had[h] = (Trajectory*) trajArr[PMidx(pairType,h)]->At(0); 
 
            hadE[h] = (had[h]->Vec).E();
            hadP[h] = (had[h]->Vec).P();

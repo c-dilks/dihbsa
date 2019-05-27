@@ -15,7 +15,7 @@ Trajectory::Trajectory(Int_t particle_index) {
     0.0,
     PartMass(Idx)
   );
-  printf("Trajectory instantiated\n");
+  if(debug) printf("Trajectory instantiated\n");
 };
 
 
