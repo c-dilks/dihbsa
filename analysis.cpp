@@ -306,31 +306,30 @@ int main(int argc, char** argv) {
          // a memory leak or eventual segfault if maxTraj is not high enough...),
          // or ignore the extra particles
          if(trajCnt[oCur]<maxTraj) {
-           tr = traj[oCur][trajCnt[oCur]]; // set tr to allocated Trajectory instance
+
+           // set tr to allocated Trajectory instance and add it to the unsorted array
+           tr = traj[oCur][trajCnt[oCur]]; 
+           tr->SetMomentum(
+             particleList.getPx(i),
+             particleList.getPy(i),
+             particleList.getPz(i)
+           );
+           trajArrUS[oCur]->AddLast(tr);
+
+           // add this trajectory's energy to the energy array
+           trajE[oCur][trajCnt[oCur]] = vecObs.e();
+
+           // increment the trajectory counter
+           trajCnt[oCur]++;
+
+           if(debugSort) {
+             printf("found %s (pid=%d):\n",PartName(oCur).Data(),pidCur);
+             tr->Vec.Print();
+           };
          } else {
            fprintf(stderr,"WARNING: more than maxTraj observables of type %s found\n",
              PartName(oCur).Data());
            //tr = new Trajectory(oCur); // allocate more memory
-           continue; // ignore this particle 
-         };
-
-         // add this Trajectory to the unsorted array
-         tr->SetMomentum(
-           particleList.getPx(i),
-           particleList.getPy(i),
-           particleList.getPz(i)
-         );
-         trajArrUS[oCur]->AddLast(tr);
-
-         // add this trajectory's energy to the energy array
-         trajE[oCur][trajCnt[oCur]] = vecObs.e();
-
-         // increment the trajectory counter
-         trajCnt[oCur]++;
-
-         if(debugSort) {
-           printf("found %s (pid=%d):\n",PartName(oCur).Data(),pidCur);
-           tr->Vec.Print();
          };
        };
      };
