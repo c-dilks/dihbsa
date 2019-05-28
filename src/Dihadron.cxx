@@ -150,9 +150,15 @@ void Dihadron::ComputeAngles() {
   RTMag = pR_T_byKt.Mag(); // trans. comp. of R (perp frame)
   RPerpMag = pR_Perp.Mag(); // trans. comp. of R (perp frame)
 
+
   // eta & phi of dihadron
-  PhEta = pPh.Eta();
-  PhPhi = pPh.Phi();
+  if(PhMag>0 && PhPerpMag>0) {
+    PhEta = pPh.Eta();
+    PhPhi = pPh.Phi();
+  } else {
+    PhEta = -10000;
+    PhPhi = -10000;
+  };
 
 
 

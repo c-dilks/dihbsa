@@ -503,8 +503,15 @@ int main(int argc, char** argv) {
            hadE[h] = (had[h]->Vec).E();
            hadP[h] = (had[h]->Vec).P();
            hadPt[h] = (had[h]->Vec).Pt();
-           hadEta[h] = (had[h]->Vec).Eta();
-           hadPhi[h] = (had[h]->Vec).Phi();
+
+           if(hadE[h]>0 && hadPt[h]>0) {
+             hadEta[h] = (had[h]->Vec).Eta();
+             hadPhi[h] = (had[h]->Vec).Phi();
+           } else {
+             hadEta[h] = -10000;
+             hadPhi[h] = -10000;
+           };
+
            if(debug) {
              printf("[+] %s 4-momentum:\n",(had[h]->Title()).Data());
              (had[h]->Vec).Print();
