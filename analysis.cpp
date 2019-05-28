@@ -41,8 +41,9 @@ int main(int argc, char** argv) {
 
 
    // if true, print more to stdout
-   bool debug = 0;
-   bool debugSort = 0;
+   bool debug = 0; // general debugging statements
+   bool debugSort = 0; // sorting each type of particle by energy
+   bool debugPHPsort = 0; // sorting photon pairs by energy
 
    // set output file name
    TString outfileN;
@@ -228,7 +229,6 @@ int main(int argc, char** argv) {
 
    // booleans for which observables have been found in the event
    Bool_t foundAllObservables[nPairType]; // general observable boolean
-   Bool_t foundPhotons; // there are some photons (for looking for pi0s)
    Bool_t foundPhotPair; // photon pair, used for pi0s
 
 
@@ -250,7 +250,7 @@ int main(int argc, char** argv) {
 
 
    // EVENT LOOP ----------------------------------------------
-   printf("begin event loop...");
+   printf("begin event loop...\n");
    while(reader.next()==true) {
      bench.resume();
 
@@ -266,7 +266,7 @@ int main(int argc, char** argv) {
      if(debugSort) { for(int l=0; l<30; l++) printf("-"); printf("\n"); };
 
 
-     // search for observables, sorting each kind by energy
+     // SEARCH FOR OBSERVABLES, SORTING EACH KIND BY ENERGY
      // ---------------------------------------------------
      //
      // -- reset trajectory-sorting data structures
@@ -365,8 +365,8 @@ int main(int argc, char** argv) {
      
      // PI0 SEARCHING
      // -- this is done by sorting all photon pairs by energy, and picking the
-     //    highest-E pair that satisfies basic requirements, such as an opening angle
-     //    cut
+     //    highest-E pair that satisfies basic requirements set in Diphoton class
+     //    booleans (e.g., an opening angle cut)
 
      // if a pi0 has been found in the particle bank, its trajectory will already be in
      // trajArr, and the highest-E pi0 found here will be the one sent into the tree;
@@ -376,14 +376,12 @@ int main(int argc, char** argv) {
      };
 
 
-     // check if there are 2 or more photons (used for looking for pi0s)
-     foundPhotons = trajCnt[kPhoton] >= 2;
 
-
-     // sorting algorithm
-     // -----------------
+     // photon pair sorting algorithm
+     // -----------------------------
      
      // -- reset data structures for photon pair sorting
+     foundPhotPair = false;
      phpCnt = 0;
      for(int php=0; php<phpCntMax; php++) {
        phpIdx[php][0] = -1;
@@ -391,10 +389,12 @@ int main(int argc, char** argv) {
        phpE[php] = -1;
        phpSortIdx[php] = -1;
      };
-     foundPhotPair = false;
 
 
-     if(foundPhotons) {
+     // if there are at least 2 photons, we can look for pi0s
+     if( trajCnt[kPhoton] >= 2 ) {
+       
+       if(debugPHPsort) printf(">>>>>>\n");
 
        // -- loop through pairs of photons
        for(int p0=0; p0<trajCnt[kPhoton]; p0++) {
@@ -412,13 +412,28 @@ int main(int argc, char** argv) {
              phot[1] = (Trajectory*) trajArr[kPhoton]->At(p1);
              phpE[phpCnt] = (phot[0]->Vec).E() + (phot[1]->Vec).E();
 
+             if(debugPHPsort) {
+               printf("phpIdx[%d] = (%d,%d)  E = %.3f + %.3f = %.3f\n",
+                 phpCnt, p0, p1, (phot[0]->Vec).E(), (phot[1]->Vec).E(), phpE[phpCnt]);
+             };
+
              phpCnt++;
+
            };
          };
        };
 
        // -- sort photon pairs by E
        TMath::Sort(phpCnt,phpE,phpSortIdx);
+
+       // -- test sorting output
+       if(debugPHPsort) {
+         printf("-----  sorted:  -----\n");
+         for(int php=0; php<phpCnt; php++) {
+           for(int h=0; h<2; h++) phpSI[h] = phpIdx[phpSortIdx[php]][h];
+           printf("(%d,%d)  E=%.4f\n",phpSI[0],phpSI[1],phpE[phpSortIdx[php]]);
+         };
+       };
 
        // -- find the highest-E pair that satisfies basic requirements
        phpI = 0;
@@ -438,6 +453,13 @@ int main(int argc, char** argv) {
          foundPhotPair = diPhot->validDiphoton;
 
          phpI++;
+       };
+
+
+       // -- print chosen trajectory
+       if(debugPHPsort) {
+         printf("chosen diphoton trajectory:\n");
+         (diPhot->Traj->Vec).Print();
        };
 
 
