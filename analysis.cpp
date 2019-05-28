@@ -435,7 +435,7 @@ int main(int argc, char** argv) {
          diPhot->SetEvent(phot[0],phot[1]);
 
          // check basic requirments:
-         foundPhotPair = diPhot->Alpha < 1;
+         foundPhotPair = diPhot->validDiphoton;
 
          phpI++;
        };

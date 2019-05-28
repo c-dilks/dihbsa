@@ -17,6 +17,8 @@ Diphoton::Diphoton() {
 
 void Diphoton::SetEvent(Trajectory * traj1, Trajectory * traj2) {
 
+  ResetVars();
+
   photon[0] = traj1;
   photon[1] = traj2;
   vecDiphoton = photon[0]->Vec + photon[1]->Vec;
@@ -31,6 +33,14 @@ void Diphoton::SetEvent(Trajectory * traj1, Trajectory * traj2) {
 
   // transverse momentum
   Pt = vecDiphoton.Pt(); // IN LAB FRAME, wrt BEAM AXIS (maybe change to w.r.t. q?)
+
+
+  // prevent dividing by 0 issues
+  if(E<=0 || Pt<=0) {
+    ResetVars();
+    return;
+  };
+
 
   // eta and phi
   Eta = vecDiphoton.Eta();
@@ -48,8 +58,31 @@ void Diphoton::SetEvent(Trajectory * traj1, Trajectory * traj2) {
   );
 
 
+  // set Trajectory
   Traj->SetVec(vecDiphoton);
+
+
+  // set booleans
+  validDiphoton = Alpha < 3;
+
 };
+
+
+void Diphoton::ResetVars() {
+  E = -10000;
+  Ephot[0] = -10000;
+  Ephot[1] = -10000;
+  Z = -10000;
+  Pt = -10000;
+  Mgg = -10000;
+  Alpha = -10000;
+  Eta = -10000;
+  Phi = -10000;
+
+  validDiphoton = false;
+};
+
+
 
 
 Diphoton::~Diphoton() {

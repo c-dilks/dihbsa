@@ -33,6 +33,7 @@ class Diphoton : public TObject
     Bool_t debug;
 
     void SetEvent(Trajectory * traj1, Trajectory * traj2);
+    void ResetVars();
 
     Trajectory * photon[2]; // photon trajectories
     Trajectory * Traj; // diphoton trajectory
@@ -47,6 +48,9 @@ class Diphoton : public TObject
     Float_t Alpha; // diphoton opening angle
     Float_t Eta; // pseudorapidity
     Float_t Phi; // azimuth
+
+    // booleans
+    Bool_t validDiphoton;
 
 
 
