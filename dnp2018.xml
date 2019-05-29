@@ -1,6 +1,6 @@
 <Request>
   <Project name="clas12"/>
-  <Track name="analysis"/>
+  <Track name="debug"/>
   <Name name="dihbsa"/>
 
 <!-- sample XML Files in /u/group/hps/production/ -->
@@ -9,6 +9,7 @@
 4013_4
 4014_4
 4015_4
+<!--
 4016_4
 4017_4
 4018_4
@@ -22,7 +23,7 @@
 4037_4
 4038_4
 4039_4
-<!--4041_4
+4041_4
 4044_4
 4045_4
 4050_4
@@ -41,7 +42,8 @@
 4071_4
 4073_4
 4074_4
-4078_4-->
+4078_4
+-->
   </List>
 
   <Variable name="hipoDir" value="/mss/clas12/rg-a/production/trains/dnp2018/v0/skim4_inclusive" />

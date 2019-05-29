@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
    // if true, print more to stdout
    bool debug = 0; // general debugging statements
    bool debugSort = 0; // sorting each type of particle by energy
-   bool debugPHPsort = 0; // sorting photon pairs by energy
+   bool debugPHPsort = 1; // sorting photon pairs by energy
 
    // set output file name
    TString outfileN;
@@ -322,7 +322,8 @@ int main(int argc, char** argv) {
            // increment the trajectory counter
            trajCnt[oCur]++;
 
-           if(debugSort) {
+           //if(debugSort) { //+++
+           if(oCur==kPhoton) {
              printf("found %s (pid=%d):\n",PartName(oCur).Data(),pidCur);
              tr->Vec.Print();
            };
@@ -434,6 +435,13 @@ int main(int argc, char** argv) {
          };
        };
 
+       //+++ VVV
+         for(int php=0; php<phpCnt; php++) {
+           for(int h=0; h<2; h++) phpSI[h] = phpIdx[phpSortIdx[php]][h];
+           fprintf(stderr,"(%d,%d)  E=%.4f\n",phpSI[0],phpSI[1],phpE[phpSortIdx[php]]);
+         };
+       //+++ ^^^
+
        // -- find the highest-E pair that satisfies basic requirements
        phpI = 0;
        // loop through sorted pair list; exit when we found a good one
@@ -446,7 +454,9 @@ int main(int argc, char** argv) {
          };
 
          // compute kinematics
+         fprintf(stderr,"antes (%d,%d)\n",phpSI[0],phpSI[1]);//+++
          diPhot->SetEvent(phot[0],phot[1]);
+         fprintf(stderr,"despues\n");//+++
 
          // check basic requirments:
          foundPhotPair = diPhot->validDiphoton;
