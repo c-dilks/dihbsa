@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
    // if true, print more to stdout
    bool debug = 0; // general debugging statements
    bool debugSort = 0; // sorting each type of particle by energy
-   bool debugPHPsort = 1; // sorting photon pairs by energy
+   bool debugPHPsort = 0; // sorting photon pairs by energy
 
    // set output file name
    TString outfileN;
@@ -78,11 +78,13 @@ int main(int argc, char** argv) {
    Int_t trajIdx[nParticles][maxTraj]; // sort index for each particle
    Float_t trajE[nParticles][maxTraj]; // sorted energy for each particle
    Int_t trajCnt[nParticles]; // number of particles for each type of observable
+   Int_t nanCnt[nParticles]; // counts number of particles which have NaN 4-momenta
    
    for(int o=0; o<nParticles; o++) {
      trajArrUS[o] = new TObjArray();
      trajArr[o] = new TObjArray();
      trajCnt[o] = 0;
+     nanCnt[o] = 0;
      for(int t=0; t<maxTraj; t++) {
        traj[o][t] = new Trajectory(o);
      };
@@ -304,28 +306,43 @@ int main(int argc, char** argv) {
          // if there are more instances of this observable than we allocated for,
          // we could allocate more memory for the extra ones (which could cause
          // a memory leak or eventual segfault if maxTraj is not high enough...),
-         // or ignore the extra particles
+         // or just ignore the extra particles and print a warning 
          if(trajCnt[oCur]<maxTraj) {
+           
+           // make sure particle has sensible momentum and energy 
+           // (sometimes photons in dnp2018 skim files don't...)
+           if( !isnan(vecObs.vect().x()) && !isnan(vecObs.vect().y()) && 
+               !isnan(vecObs.vect().z()) && !isnan(vecObs.e()) ) {
 
-           // set tr to allocated Trajectory instance and add it to the unsorted array
-           tr = traj[oCur][trajCnt[oCur]]; 
-           tr->SetMomentum(
-             particleList.getPx(i),
-             particleList.getPy(i),
-             particleList.getPz(i)
-           );
-           trajArrUS[oCur]->AddLast(tr);
+             // set tr to allocated Trajectory instance and add it to the unsorted array
+             tr = traj[oCur][trajCnt[oCur]]; 
+             tr->SetMomentum(
+               vecObs.vect().x(),
+               vecObs.vect().y(),
+               vecObs.vect().z()
+             );
+             /*
+             tr->SetMomentum(
+               particleList.getPx(i),
+               particleList.getPy(i),
+               particleList.getPz(i)
+             );
+             */
 
-           // add this trajectory's energy to the energy array
-           trajE[oCur][trajCnt[oCur]] = vecObs.e();
+             trajArrUS[oCur]->AddLast(tr);
 
-           // increment the trajectory counter
-           trajCnt[oCur]++;
+             // add this trajectory's energy to the energy array
+             trajE[oCur][trajCnt[oCur]] = vecObs.e();
 
-           //if(debugSort) { //+++
-           if(oCur==kPhoton) {
-             printf("found %s (pid=%d):\n",PartName(oCur).Data(),pidCur);
-             tr->Vec.Print();
+             // increment the trajectory counter
+             trajCnt[oCur]++;
+
+             if(debugSort) {
+               printf("found %s (pid=%d):\n",PartName(oCur).Data(),pidCur);
+               tr->Vec.Print();
+             };
+           } else {
+             nanCnt[oCur]++; // count instances of NaN particles
            };
          } else {
            fprintf(stderr,"WARNING: more than maxTraj observables of type %s found\n",
@@ -435,13 +452,6 @@ int main(int argc, char** argv) {
          };
        };
 
-       //+++ VVV
-         for(int php=0; php<phpCnt; php++) {
-           for(int h=0; h<2; h++) phpSI[h] = phpIdx[phpSortIdx[php]][h];
-           fprintf(stderr,"(%d,%d)  E=%.4f\n",phpSI[0],phpSI[1],phpE[phpSortIdx[php]]);
-         };
-       //+++ ^^^
-
        // -- find the highest-E pair that satisfies basic requirements
        phpI = 0;
        // loop through sorted pair list; exit when we found a good one
@@ -454,9 +464,7 @@ int main(int argc, char** argv) {
          };
 
          // compute kinematics
-         fprintf(stderr,"antes (%d,%d)\n",phpSI[0],phpSI[1]);//+++
          diPhot->SetEvent(phot[0],phot[1]);
-         fprintf(stderr,"despues\n");//+++
 
          // check basic requirments:
          foundPhotPair = diPhot->validDiphoton;
@@ -547,16 +555,31 @@ int main(int argc, char** argv) {
 
      bench.pause();
    };
+
+   // print benchmark
    reader.showBenchmark();
    printf(" time spend on analysis = %8.5f (ms) events = %8d\n",
      bench.getTime()*1e-9,
      bench.getCounter());
+
+   // write output tree
    tree->Write("tree");
+
+   // print number of NaN particles (if nonzero)
+   for(int o=0; o<nParticles; o++) {
+     if(nanCnt[o]>0) {
+       fprintf(stderr,"WARNING: %d NaN %s 4-momenta were found (and ignored)\n",
+         nanCnt[o],PartName(o).Data());
+     };
+   };
+
+   // print dihadron event count
    printf("\nDIHADRON EVENT COUNT: %d\n",evCount);
    for(int pp=0; pp<nPairType; pp++) 
      printf(" %s : %d\n",pairName(pp).Data(),pairCount[pp]);
    printf("\n");
 
 
+   // close the output ROOT file
    outfile->Close();
 };

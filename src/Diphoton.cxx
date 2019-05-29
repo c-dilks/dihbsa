@@ -43,14 +43,7 @@ void Diphoton::SetEvent(Trajectory * traj1, Trajectory * traj2) {
 
 
   // eta and phi
-  fprintf(stderr,"Diphoton eta call\n");//+++
   Eta = vecDiphoton.Eta();
-  for(int h=0; h<2; h++) {
-    fprintf(stderr,"phot %d: (%f, %f, %f, %f)\n",
-    h, (photon[h]->Vec).Px(), (photon[h]->Vec).Py(), (photon[h]->Vec).Pz(), 
-    (photon[h]->Vec).E());
-  }; //+++
-  fprintf(stderr,"eta=%f\n",Eta);//+++
   Phi = vecDiphoton.Phi();
 
   // energy sharing
