@@ -33,6 +33,11 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("hadPhi",hadPhi);
 
   chain->SetBranchAddress("pairType",&pairType);
+  /*
+  chain->SetBranchAddress("particleCnt",particleCnt);
+  chain->SetBranchAddress("particleCntAll",&particleCntAll);
+  */
+
   chain->SetBranchAddress("Mh",&Mh);
   chain->SetBranchAddress("Mmiss",&Mmiss);
   chain->SetBranchAddress("Z",Z);
@@ -59,13 +64,22 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("b_PhiRp_r",&b_PhiRp_r);
   chain->SetBranchAddress("b_PhiRp_g",&b_PhiRp_g);
 
-  
   chain->SetBranchAddress("runnum",&runnum);
   chain->SetBranchAddress("evnum",&evnum);
   chain->SetBranchAddress("helicity",&helicity);
   chain->SetBranchAddress("torus",&torus);
   chain->SetBranchAddress("triggerBits",&triggerBits);
 
+  /*
+  chain->SetBranchAddress("diphE",&diphE);
+  chain->SetBranchAddress("diphEphot",diphEphot);
+  chain->SetBranchAddress("diphZ",&diphZ);
+  chain->SetBranchAddress("diphPt",&diphPt);
+  chain->SetBranchAddress("diphM",&diphM);
+  chain->SetBranchAddress("diphAlpha",&diphAlpha);
+  chain->SetBranchAddress("diphEta",&diphEta);
+  chain->SetBranchAddress("diphPhi",&diphPhi);
+  */
 
 };
 
@@ -73,16 +87,39 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
 void EventTree::GetEvent(Int_t i) {
   if(i%10000==0) printf("[+] %.2f%%\n",100*(float)i/((float)ENT));
 
+  printf("a\n");
   chain->GetEntry(i);
+  printf("b\n");
+
 
   // DIS cuts
   cutQ2 = Q2 > 1.0;
   cutW = W > 2.0;
   cutY = y < 0.8;
 
+
+  // pi0 cut
+  // -- if pairType does not include pi0s, just
+  //    set this cut to true, since cutDihadron requires
+  //    cutPi0 to be true
+  /*
+  if(whichPair==pairP0 || whichPair==pairM0) {
+    printf("aqui\n");
+    cutPi0 = diphAlpha < 0.19 &&
+             diphE > 2.0 &&
+             diphZ < 0.6 &&
+             diphM >= 0.13 && diphM <= 0.16;
+    printf("noaqui\n");
+  } else {
+    */
+    cutPi0 = true;
+  //};
+
+
   // Dihadron kinematics cuts
   cutDihadron = 
     pairType == whichPair && 
+    cutPi0 &&
     Z[hP] > 0.1 && Z[hM] > 0.1 &&
     Zpair < 0.95 &&
     Mmiss > 1.05 &&

@@ -9,7 +9,7 @@ void LookForPi0s(TString dir="outroot") {
 
   TString cutStr;
 
-  cutStr = Form("pairType==%d",pairM0);
+  cutStr = Form("pairType==%d",pairP0);
   cutStr += " && diphE>2";
   cutStr += " && diphZ<0.6";
 

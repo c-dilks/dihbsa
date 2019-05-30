@@ -576,7 +576,7 @@ int main(int argc, char** argv) {
    // print dihadron event count
    printf("\nDIHADRON EVENT COUNT: %d\n",evCount);
    for(int pp=0; pp<nPairType; pp++) 
-     printf(" %s : %d\n",pairName(pp).Data(),pairCount[pp]);
+     printf(" %s : %d\n",pairTitle(pp).Data(),pairCount[pp]);
    printf("\n");
 
 

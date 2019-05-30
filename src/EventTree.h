@@ -55,6 +55,8 @@ class EventTree : public TObject
 
     // dihadron kinematics
     Int_t pairType;
+    Int_t particleCnt[nParticles];
+    Int_t particleCntAll;
     Float_t Mh,Zpair,PhiH,Mmiss,xF,alpha;
     Float_t Z[2];
     Float_t Ph,PhPerp;
@@ -78,6 +80,16 @@ class EventTree : public TObject
     Float_t b_PhiRp;
     Float_t b_PhiRp_r;
     Float_t b_PhiRp_g;
+
+    // diphotons
+    Float_t diphE;
+    Float_t diphEphot[2];
+    Float_t diphZ;
+    Float_t diphPt;
+    Float_t diphM;
+    Float_t diphAlpha;
+    Float_t diphEta;
+    Float_t diphPhi;
     ///////////////////////////
 
 
@@ -86,6 +98,7 @@ class EventTree : public TObject
     ///////////////////////////
    Bool_t cutQ2,cutW,cutY;
    Bool_t cutDihadron;
+   Bool_t cutPi0;
     
   private:
     TChain * chain;

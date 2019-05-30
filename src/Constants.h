@@ -97,6 +97,17 @@ enum pairTypeEnum { pairPM, pairP0, pairM0, nPairType };
 
 static TString pairName(int pair) {
   switch(pair) {
+    case pairPM: return "pairPM";
+    case pairP0: return "pairP0";
+    case pairM0: return "pairM0";
+    default:
+      fprintf(stderr,"ERROR: bad pairName request\n");
+      return "unknown";
+  };
+};
+
+static TString pairTitle(int pair) {
+  switch(pair) {
     case pairPM: return "pi+ pi-";
     case pairP0: return "pi+ pi0";
     case pairM0: return "pi0 pi-";
