@@ -43,6 +43,8 @@ class Dihadron : public TObject
     TVector3 Reject(TVector3 vA, TVector3 vB);
     TVector3 Project(TVector3 vA, TVector3 vB);
 
+    void ResetVars();
+
     Trajectory * hadron[2];
     DIS * disEv;
 

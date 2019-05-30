@@ -201,6 +201,7 @@ void DIS::ResetVars() {
   Q2 = -10000;
   Nu = -10000;
   x = -10000;
+  y = -10000;
   return;
 };
 

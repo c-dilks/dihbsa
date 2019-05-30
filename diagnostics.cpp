@@ -22,12 +22,17 @@
 #include "EventTree.h"
 
 void HadronCompareCanv(TCanvas * canv, TH1F * dist[2], TH2F * corr);
+TString corrTitle(TString var);
+TString distTitle(TString var);
+
+TString inDir;
+Int_t whichPair;
 
 int main(int argc, char** argv) {
 
    // ARGUMENTS
-   TString inDir = "outroot";
-   Int_t whichPair = pairPM;
+   inDir = "outroot";
+   whichPair = pairPM;
    if(argc>1) inDir = TString(argv[1]);
    if(argc>2) whichPair = (Int_t)strtof(argv[2],NULL);
 
@@ -40,55 +45,22 @@ int main(int argc, char** argv) {
    Float_t deltaPhi;
    Float_t PhiHR;
 
-   TString plotTitle,plotName;
+   TString plotName;
 
-   TH1F * WDist = new TH1F("WDist","W distribution (w/o W cut);W",
-     NBINS,0,6);
-   TH1F * XDist = new TH1F("XDist","x distribution",
-     NBINS,0,1);
+   TH1F * WDist = new TH1F("WDist","W distribution (w/o W cut);W",NBINS,0,6);
+   TH1F * XDist = new TH1F("XDist","x distribution",NBINS,0,1);
    TH2F * Q2vsW = new TH2F("Q2vsW","Q^{2} vs. W (w/o W cut);W;Q^{2}",
-     NBINS,0,6,NBINS,0,12);
-   TH2F * Q2vsX = new TH2F("Q2vsX","Q^{2} vs. x;x;Q^{2}",
-     NBINS,0,1,NBINS,0,12);
-   TH1F * YDist = new TH1F("YDist","y distribution (w/o y cut)",
-     NBINS,0,1);
+                                   NBINS,0,6,NBINS,0,12);
+   TH2F * Q2vsX = new TH2F("Q2vsX","Q^{2} vs. x;x;Q^{2}",NBINS,0,1,NBINS,0,12);
+   TH1F * YDist = new TH1F("YDist","y distribution (w/o y cut)",NBINS,0,1);
 
-   plotTitle = Form("E^{%s} vs. E^{%s};E^{%s};E^{%s}",
-     PMsym(whichPair,hP).Data(),PMsym(whichPair,hM).Data(),
-     PMsym(whichPair,hM).Data(),PMsym(whichPair,hP).Data());
-   TH2F * hadECorr = new TH2F("hadECorr",
-     plotTitle.Data(),
-     NBINS,0,10,NBINS,0,10);
-   plotTitle = Form("p^{%s} vs. p^{%s};p^{%s};p^{%s}",
-     PMsym(whichPair,hP).Data(),PMsym(whichPair,hM).Data(),
-     PMsym(whichPair,hM).Data(),PMsym(whichPair,hP).Data());
-   TH2F * hadPCorr = new TH2F("hadPCorr",
-     plotTitle.Data(),
-     NBINS,0,10,NBINS,0,10);
-   plotTitle = Form("p_{T}^{%s} vs. p_{T}^{%s};p_{T}^{%s};p_{T}^{%s}",
-     PMsym(whichPair,hP).Data(),PMsym(whichPair,hM).Data(),
-     PMsym(whichPair,hM).Data(),PMsym(whichPair,hP).Data());
-   TH2F * hadPtCorr = new TH2F("hadPtCorr",
-     plotTitle.Data(),
-     NBINS,0,4,NBINS,0,4);
-   plotTitle = Form("#eta^{%s} vs. #eta^{%s};#eta^{%s};#eta^{%s}",
-     PMsym(whichPair,hP).Data(),PMsym(whichPair,hM).Data(),
-     PMsym(whichPair,hM).Data(),PMsym(whichPair,hP).Data());
-   TH2F * hadEtaCorr = new TH2F("hadEtaCorr",
-     plotTitle.Data(),
-     NBINS,0,5,NBINS,0,5);
-   plotTitle = Form("#phi^{%s} vs. #phi^{%s};#phi^{%s};#phi^{%s}",
-     PMsym(whichPair,hP).Data(),PMsym(whichPair,hM).Data(),
-     PMsym(whichPair,hM).Data(),PMsym(whichPair,hP).Data());
-   TH2F * hadPhiCorr = new TH2F("hadPhiCorr",
-     plotTitle.Data(),
-     NBINS,-PI-1,PI+1,NBINS,-PI-1,PI+1);
-   plotTitle = Form("z^{%s} vs. z^{%s};z^{%s};z^{%s}",
-     PMsym(whichPair,hP).Data(),PMsym(whichPair,hM).Data(),
-     PMsym(whichPair,hM).Data(),PMsym(whichPair,hP).Data());
-   TH2F * hadZCorr = new TH2F("hadZCorr",
-     plotTitle.Data(),
-     NBINS,0,1,NBINS,0,1);
+   TH2F * hadECorr = new TH2F("hadECorr",corrTitle("E"),NBINS,0,10,NBINS,0,10);
+   TH2F * hadPCorr = new TH2F("hadPCorr",corrTitle("p"),NBINS,0,10,NBINS,0,10);
+   TH2F * hadPtCorr = new TH2F("hadPtCorr",corrTitle("p_{T}"),NBINS,0,4,NBINS,0,4);
+   TH2F * hadEtaCorr = new TH2F("hadEtaCorr",corrTitle("#eta"),NBINS,0,5,NBINS,0,5);
+   TH2F * hadPhiCorr = new TH2F("hadPhiCorr",corrTitle("#phi"),
+                                             NBINS,-PI-1,PI+1,NBINS,-PI-1,PI+1);
+   TH2F * hadZCorr = new TH2F("hadZCorr",corrTitle("z"),NBINS,0,1,NBINS,0,1);
    
    TH1F * hadEDist[2];
    TH1F * hadPDist[2];
@@ -97,34 +69,36 @@ int main(int argc, char** argv) {
    TH1F * hadPhiDist[2];
    TH1F * hadZDist[2];
    for(int h=0; h<2; h++) {
+     // aqui
      plotTitle = Form("E distribution (blue:#pi^{%s} red:#pi^{%s})",
-       PMsym(whichPair,hP).Data(),PMsym(whichPair,hM).Data());
-     plotName = PMstr(whichPair,h)+"hadEDist";
+       pmTitle(whichPair,hP).Data(),pmTitle(whichPair,hM).Data());
+     plotName = pmName(whichPair,h)+"hadEDist";
+     printf("plotName=%s\n",plotName.Data());
      hadEDist[h] = new TH1F(plotName,plotTitle,
        NBINS,0,10);
      plotTitle = Form("p distribution (blue:#pi^{%s} red:#pi^{%s})",
-       PMsym(whichPair,hP).Data(),PMsym(whichPair,hM).Data());
-     plotName = PMstr(whichPair,h)+"hadPDist";
+       pmTitle(whichPair,hP).Data(),pmTitle(whichPair,hM).Data());
+     plotName = pmName(whichPair,h)+"hadPDist";
      hadPDist[h] = new TH1F(plotName,plotTitle,
        NBINS,0,10);
      plotTitle = Form("p_{T} distribution (blue:#pi^{%s} red:#pi^{%s})",
-       PMsym(whichPair,hP).Data(),PMsym(whichPair,hM).Data());
-     plotName = PMstr(whichPair,h)+"hadPtDist";
+       pmTitle(whichPair,hP).Data(),pmTitle(whichPair,hM).Data());
+     plotName = pmName(whichPair,h)+"hadPtDist";
      hadPtDist[h] = new TH1F(plotName,plotTitle,
        NBINS,0,4);
      plotTitle = Form("#eta distribution (blue:#pi^{%s} red:#pi^{%s})",
-       PMsym(whichPair,hP).Data(),PMsym(whichPair,hM).Data());
-     plotName = PMstr(whichPair,h)+"hadEtaDist";
+       pmTitle(whichPair,hP).Data(),pmTitle(whichPair,hM).Data());
+     plotName = pmName(whichPair,h)+"hadEtaDist";
      hadEtaDist[h] = new TH1F(plotName,plotTitle,
        NBINS,0,5);
      plotTitle = Form("#phi distribution (blue:#pi^{%s} red:#pi^{%s})",
-       PMsym(whichPair,hP).Data(),PMsym(whichPair,hM).Data());
-     plotName = PMstr(whichPair,h)+"hadPhiDist";
+       pmTitle(whichPair,hP).Data(),pmTitle(whichPair,hM).Data());
+     plotName = pmName(whichPair,h)+"hadPhiDist";
      hadPhiDist[h] = new TH1F(plotName,plotTitle,
        NBINS,-PI-1,PI+1);
      plotTitle = Form("Z distribution (blue:#pi^{%s} red:#pi^{%s})",
-       PMsym(whichPair,hP).Data(),PMsym(whichPair,hM).Data());
-     plotName = PMstr(whichPair,h)+"hadZDist";
+       pmTitle(whichPair,hP).Data(),pmTitle(whichPair,hM).Data());
+     plotName = pmName(whichPair,h)+"hadZDist";
      hadZDist[h] = new TH1F(plotName,plotTitle,
        NBINS,0,1);
    };
@@ -132,7 +106,7 @@ int main(int argc, char** argv) {
 
 
    plotTitle = Form("#Delta#phi=#phi^{%s}-#phi^{%s} distribution;#Delta#phi",
-     PMsym(whichPair,hP).Data(),PMsym(whichPair,hM).Data());
+     pmTitle(whichPair,hP).Data(),pmTitle(whichPair,hM).Data());
    TH1F * deltaPhiDist = new TH1F("deltaPhiDist",
      plotTitle,
      NBINS,-PI-1,PI+1);
@@ -283,6 +257,27 @@ int main(int argc, char** argv) {
 
 
 
+// make title for hadron correlation plots
+TString corrTitle(TString var) {
+  TString varX = var + "(" + pmTitle(whichPair,hM) + ")";
+  TString varY = var + "(" + pmTitle(whichPair,hP) + ")";
+  TString ret = varY + " vs. " + varX + ";" + varX + ";" + varY;
+  return ret;
+};
+
+
+TString distTitle(TString var) {
+  TString col[2]; 
+  for(int cc=0; cc<2; cc++) {
+    col[cc] = PartColorName(pmIdx(whichPair,cc)) + ":" + PartTitle(pmIdx(whichPair,cc));
+  };
+  TString ret = var + " distribution (" + col[0] + " " + col[1] + ");" + var;
+  return ret;
+};
+
+
+
+// make canvas for hadron correlation plots
 void HadronCompareCanv(TCanvas * canv, TH1F * dist[2], TH2F * corr) {
 
   dist[hP]->SetLineColor(kBlue);

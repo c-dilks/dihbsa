@@ -33,10 +33,8 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("hadPhi",hadPhi);
 
   chain->SetBranchAddress("pairType",&pairType);
-  /*
   chain->SetBranchAddress("particleCnt",particleCnt);
   chain->SetBranchAddress("particleCntAll",&particleCntAll);
-  */
 
   chain->SetBranchAddress("Mh",&Mh);
   chain->SetBranchAddress("Mmiss",&Mmiss);
@@ -70,7 +68,6 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("torus",&torus);
   chain->SetBranchAddress("triggerBits",&triggerBits);
 
-  /*
   chain->SetBranchAddress("diphE",&diphE);
   chain->SetBranchAddress("diphEphot",diphEphot);
   chain->SetBranchAddress("diphZ",&diphZ);
@@ -79,17 +76,13 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("diphAlpha",&diphAlpha);
   chain->SetBranchAddress("diphEta",&diphEta);
   chain->SetBranchAddress("diphPhi",&diphPhi);
-  */
-
 };
 
 
 void EventTree::GetEvent(Int_t i) {
   if(i%10000==0) printf("[+] %.2f%%\n",100*(float)i/((float)ENT));
 
-  printf("a\n");
   chain->GetEntry(i);
-  printf("b\n");
 
 
   // DIS cuts
@@ -102,18 +95,14 @@ void EventTree::GetEvent(Int_t i) {
   // -- if pairType does not include pi0s, just
   //    set this cut to true, since cutDihadron requires
   //    cutPi0 to be true
-  /*
   if(whichPair==pairP0 || whichPair==pairM0) {
-    printf("aqui\n");
     cutPi0 = diphAlpha < 0.19 &&
              diphE > 2.0 &&
              diphZ < 0.6 &&
              diphM >= 0.13 && diphM <= 0.16;
-    printf("noaqui\n");
   } else {
-    */
     cutPi0 = true;
-  //};
+  };
 
 
   // Dihadron kinematics cuts
@@ -151,7 +140,7 @@ void EventTree::PrintEvent() {
   printf("\n");
   printf("[---] Hadron Kinematics\n");
   for(int h=0; h<2; h++) {
-    printf(" (h%s)\n",PMsym(pairType,h).Data());
+    printf(" (%s)\n",pmName(pairType,h).Data());
     printf("  E=%.2f",hadE[h]);
     printf("  P=%.2f",hadP[h]);
     printf("  Pt=%.2f",hadPt[h]);
@@ -168,8 +157,8 @@ void EventTree::PrintEvent() {
   printf("\n");
   printf("  Zpair=%.2f  Z[%s]=%.2f  Z[%s]=%.2f",
       Zpair,
-      PMsym(pairType,hP).Data(),Z[hP],
-      PMsym(pairType,hM).Data(),Z[hM]);
+      pmName(pairType,hP).Data(),Z[hP],
+      pmName(pairType,hM).Data(),Z[hM]);
   printf("\n");
   printf("  PhiH=%.2f",PhiH);
   printf("\n");

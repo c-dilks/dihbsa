@@ -235,6 +235,33 @@ TVector3 Dihadron::Project(TVector3 vA, TVector3 vB) {
 
 };
 
+
+void Dihadron::ResetVars() {
+  Mh = -10000;
+  Mmiss = -10000;
+  for(int h=0; h<2; h++) z[h] = -10000;
+  zpair = -10000;
+  xF = -10000;
+  alpha = -10000;
+
+  PhMag = -10000;
+  PhPerpMag = -10000;
+  PhEta = -10000;
+  PhPhi = -10000;
+
+  RMag = -10000;
+  RPerpMag = -10000;
+  RTMag = -10000;
+
+  PhiH = -10000;
+
+  PhiRq = -10000;
+  PhiRp = -10000;
+  PhiRp_r = -10000;
+  PhiRp_g = -10000;
+};
+
+
   
 
 Dihadron::~Dihadron() {

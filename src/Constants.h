@@ -89,6 +89,41 @@ static float PartMass(int p) {
 };
 
 
+static Int_t PartColor(int p) {
+  switch(p) {
+    case kE: return kGray+2;
+    case kP: return kAzure;
+    case kN: return kAzure+10;
+    case kPip: return kBlue;
+    case kPim: return kRed;
+    case kPi0: return kMagenta;
+    case kKp: return kGreen+1;
+    case kKm: return kGreen-1;
+    case kPhoton: return kOrange;
+    default: 
+      fprintf(stderr,"ERROR: bad PartColor request\n");
+      return kBlack;
+  };
+};
+
+static TString PartColorName(int p) {
+  switch(p) {
+    case kE: return "grey";
+    case kP: return "darkBlue";
+    case kN: return "lightBlue";
+    case kPip: return "blue";
+    case kPim: return "red";
+    case kPi0: return "magenta";
+    case kKp: return "lightGreen";
+    case kKm: return "darkGreen";
+    case kPhoton: return "orange";
+    default: 
+      fprintf(stderr,"ERROR: bad PartColor request\n");
+      return "black";
+  };
+};
+
+
 // charge sign constants
 enum plusminus {hP,hM};
 
@@ -118,7 +153,7 @@ static TString pairTitle(int pair) {
 };
 
 
-static Int_t PMidx(int pair, int h) {
+static Int_t pmIdx(int pair, int h) {
   if(pair == pairPM) {
     if(h == hP)      return kPip;
     else if(h == hM) return kPim;
@@ -131,42 +166,18 @@ static Int_t PMidx(int pair, int h) {
     if(h == hP)      return kPi0; // higher charge
     else if(h == hM) return kPim; // lower charge
   };
-  fprintf(stderr,"ERROR: bad PMidx request\n");
+  fprintf(stderr,"ERROR: bad pmIdx request\n");
   return -1;
 };
 
-static TString PMstr(int pair, int h) {
-  if(pair == pairPM) {
-    if(h == hP)      return "p";
-    else if(h == hM) return "m";
-  } 
-  else if(pair == pairP0) {
-    if(h == hP)      return "p";
-    else if(h == hM) return "0";
-  }
-  else if(pair == pairM0) {
-    if(h == hP)      return "0";
-    else if(h == hM) return "m";
-  };
-  fprintf(stderr,"ERROR: bad PMstr request\n");
-  return "unknown";
+
+static TString pmName(int pair, int h) {
+  return PartName(pmIdx(pair,h));
 };
 
-static TString PMsym(int pair, int h) {
-  if(pair == pairPM) {
-    if(h == hP)      return "+";
-    else if(h == hM) return "-";
-  } 
-  else if(pair == pairP0) {
-    if(h == hP)      return "+";
-    else if(h == hM) return "0";
-  }
-  else if(pair == pairM0) {
-    if(h == hP)      return "0";
-    else if(h == hM) return "-";
-  };
-  fprintf(stderr,"ERROR: bad PMsym request\n");
-  return "unknown";
+
+static TString pmTitle(int pair, int h) {
+  return PartTitle(pmIdx(pair,h));
 };
 
 

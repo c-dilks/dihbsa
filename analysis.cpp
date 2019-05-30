@@ -256,13 +256,27 @@ int main(int argc, char** argv) {
    while(reader.next()==true) {
      bench.resume();
 
+     // reset branches
+     disEv->ResetVars();
+     dih->ResetVars();
+     dihBr->ResetVars();
+     diPhot->ResetVars();
+     for(int h=0; h<0; h++) {
+       hadE[0] = -10000;
+       hadP[0] = -10000;
+       hadPt[0] = -10000;
+       hadEta[0] = -10000;
+       hadPhi[0] = -10000;
+     };
+
+
 
      // read event-level banks
-     evnum = evBank.getInt(o_evnum,0);
-     runnum = evBank.getInt(o_runnum,0);
-     helicity = evBank.getInt(o_helicity,0);
-     torus = configBank.getFloat(o_torus,0);
-     triggerBits = configBank.getLong(o_triggerBits,0);
+     evnum = evBank.getInt(o_evnum,0); // -->tree
+     runnum = evBank.getInt(o_runnum,0); // -->tree
+     helicity = evBank.getInt(o_helicity,0); // -->tree
+     torus = configBank.getFloat(o_torus,0); // -->tree
+     triggerBits = configBank.getLong(o_triggerBits,0); // -->tree
 
      //if(debugSort) particleBank.show();
      if(debugSort) { for(int l=0; l<30; l++) printf("-"); printf("\n"); };
@@ -285,7 +299,7 @@ int main(int argc, char** argv) {
      // -- if it's an observable that we want, add its trajectory
      //    to the unsorted trajectory array and its energy to list
      //    of energies for this observable
-     particleCntAll = particleList.getSize();
+     particleCntAll = particleList.getSize(); // -->tree
      for(int i=0; i<particleCntAll; i++) {
 
        pidCur = particleList.getPid(i);
@@ -335,7 +349,7 @@ int main(int argc, char** argv) {
              trajE[oCur][trajCnt[oCur]] = vecObs.e();
 
              // increment the trajectory counter
-             trajCnt[oCur]++;
+             trajCnt[oCur]++; // -->tree
 
              if(debugSort) {
                printf("found %s (pid=%d):\n",PartName(oCur).Data(),pidCur);
@@ -464,7 +478,7 @@ int main(int argc, char** argv) {
          };
 
          // compute kinematics
-         diPhot->SetEvent(phot[0],phot[1]);
+         diPhot->SetEvent(phot[0],phot[1]); // -->tree
 
          // check basic requirments:
          foundPhotPair = diPhot->validDiphoton;
@@ -501,30 +515,30 @@ int main(int argc, char** argv) {
 
        if(foundAllObservables[pp]) {
 
-         pairType = pp;
+         pairType = pp; // -->tree
 
-         if(debug) printf(">>> BEGIN DIHADRON EVENT %s%s\n",
-           PMsym(pairType,hP).Data(),PMsym(pairType,hM).Data());
+         if(debug) printf(">>> BEGIN DIHADRON EVENT %s %s\n",
+           pmName(pairType,hP).Data(),pmName(pairType,hM).Data());
 
          // compute DIS kinematics
          ele = (Trajectory*) trajArr[kE]->At(0); // select highest-E electron
          disEv->SetElectron(ele);
-         disEv->Analyse();
+         disEv->Analyse(); // -->tree
 
 
          // set hadron kinematics
          for(int h=0; h<2; h++) {
 
            // select highest-E hadron
-           had[h] = (Trajectory*) trajArr[PMidx(pairType,h)]->At(0); 
+           had[h] = (Trajectory*) trajArr[pmIdx(pairType,h)]->At(0); 
 
-           hadE[h] = (had[h]->Vec).E();
-           hadP[h] = (had[h]->Vec).P();
-           hadPt[h] = (had[h]->Vec).Pt();
+           hadE[h] = (had[h]->Vec).E(); // -->tree
+           hadP[h] = (had[h]->Vec).P(); // -->tree
+           hadPt[h] = (had[h]->Vec).Pt(); // -->tree
 
            if(hadE[h]>0 && hadPt[h]>0) {
-             hadEta[h] = (had[h]->Vec).Eta();
-             hadPhi[h] = (had[h]->Vec).Phi();
+             hadEta[h] = (had[h]->Vec).Eta(); // -->tree
+             hadPhi[h] = (had[h]->Vec).Phi(); // -->tree
            } else {
              hadEta[h] = -10000;
              hadPhi[h] = -10000;
@@ -538,8 +552,8 @@ int main(int argc, char** argv) {
 
 
          // compute dihadron kinematics
-         dih->SetEvent(had[hP],had[hM],disEv);
-         dihBr->SetEvent(had[hP],had[hM],disEv);
+         dih->SetEvent(had[hP],had[hM],disEv); // -->tree
+         dihBr->SetEvent(had[hP],had[hM],disEv); // -->tree
 
 
          // fill tree
