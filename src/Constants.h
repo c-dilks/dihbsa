@@ -5,6 +5,7 @@
 #include "TMath.h"
 
 static Double_t PI = TMath::Pi();
+static Double_t PIe = TMath::Pi() + 0.3;
 
 // particles constants
 enum particle_enum {

@@ -190,15 +190,15 @@ int main(int argc, char** argv) {
      NBINS,-sigmaMax,sigmaMax);
    plotTitle = sigmaStr+" vs. #phi_{h}";
    TH2F * sigmaVsPhiH = new TH2F("sigmaVsPhiH",plotTitle,
-     NBINS,-PI-0.1,PI+0.1,
+     NBINS,-PIe,PIe,
      NBINS,-sigmaMax,sigmaMax);
    plotTitle = sigmaStr+" vs. #phi_{Rq}";
    TH2F * sigmaVsPhiRq = new TH2F("sigmaVsPhiRq",plotTitle,
-     NBINS,-PI-0.1,PI+0.1,
+     NBINS,-PIe,PIe,
      NBINS,-sigmaMax,sigmaMax);
    plotTitle = sigmaStr+" vs. #phi_{Rp}";
    TH2F * sigmaVsPhiRp = new TH2F("sigmaVsPhiRp",plotTitle,
-     NBINS,-PI-0.1,PI+0.1,
+     NBINS,-PIe,PIe,
      NBINS,-sigmaMax,sigmaMax);
 
    TH1F * sigmaDist = new TH1F("sigmaDist",sigmaStr,
@@ -212,16 +212,16 @@ int main(int argc, char** argv) {
 
    TH2F * phiHvsPhiRq = new TH2F("phiHvsPhiRq",
      "#phi_{h} vs. #phi_{Rq};#phi_{Rq};#phi_{h}",
-     NBINS,-PI-0.1,PI+0.1,
-     NBINS,-PI-0.1,PI+0.1);
+     NBINS,-PIe,PIe,
+     NBINS,-PIe,PIe);
    TH2F * phiHvsPhiRp = new TH2F("phiHvsPhiRp",
      "#phi_{h} vs. #phi_{Rp};#phi_{Rp};#phi_{h}",
-     NBINS,-PI-0.1,PI+0.1,
-     NBINS,-PI-0.1,PI+0.1);
+     NBINS,-PIe,PIe,
+     NBINS,-PIe,PIe);
    TH2F * phiHvsPhiRp_r = new TH2F("phiHvsPhiRp_r",
      "#phi_{h} vs. #phi_{Rp_r};#phi_{Rp_r};#phi_{h}",
-     NBINS,-PI-0.1,PI+0.1,
-     NBINS,-PI-0.1,PI+0.1);
+     NBINS,-PIe,PIe,
+     NBINS,-PIe,PIe);
 
 
    Float_t angPhiRp;

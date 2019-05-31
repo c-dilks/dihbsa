@@ -63,8 +63,7 @@ void Diphoton::SetEvent(Trajectory * traj1, Trajectory * traj2) {
 
 
   // set booleans
-  validDiphoton = Alpha < 0.19;
-  //validDiphoton = Alpha<0.19 && E>2 && Z<0.6;
+  validDiphoton = Alpha < 0.3;
 
 };
 

@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
    TH2F * hadPtCorr = new TH2F("hadPtCorr",corrTitle("p_{T}"),NBINS,0,4,NBINS,0,4);
    TH2F * hadEtaCorr = new TH2F("hadEtaCorr",corrTitle("#eta"),NBINS,0,5,NBINS,0,5);
    TH2F * hadPhiCorr = new TH2F("hadPhiCorr",corrTitle("#phi"),
-                                             NBINS,-PI-1,PI+1,NBINS,-PI-1,PI+1);
+                                             NBINS,-PIe,PIe,NBINS,-PIe,PIe);
    TH2F * hadZCorr = new TH2F("hadZCorr",corrTitle("z"),NBINS,0,1,NBINS,0,1);
    
    TH1F * hadEDist[2];
@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
      hadEtaDist[h] = new TH1F(TString(pmName(whichPair,h)+"hadEtaDist"),distTitle("#eta"),
        NBINS,0,5);
      hadPhiDist[h] = new TH1F(TString(pmName(whichPair,h)+"hadPhiDist"),distTitle("#phi"),
-       NBINS,-PI-1,PI+1);
+       NBINS,-PIe,PIe);
      hadZDist[h] = new TH1F(TString(pmName(whichPair,h)+"hadZDist"),distTitle("z"),
        NBINS,0,1);
    };
@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
    TString plotTitle = "#Delta#phi = #phi(" + pmTitle(whichPair,hP) + ")" +
                                  " - #phi(" + pmTitle(whichPair,hM) + 
                                  ") distribution;#Delta#phi";
-   TH1F * deltaPhiDist = new TH1F("deltaPhiDist",plotTitle,NBINS,-PI-1,PI+1);
+   TH1F * deltaPhiDist = new TH1F("deltaPhiDist",plotTitle,NBINS,-PIe,PIe);
 
    TH1F * MhDist = new TH1F("MhDist","M_{h} distribution;M_{h}",NBINS,0,4);
    TH1F * ZpairDist = new TH1F("ZpairDist","z_{pair} distribution;z_{pair}",NBINS,0,1);
@@ -94,14 +94,14 @@ int main(int argc, char** argv) {
    TH1F * MmissDist = new TH1F("MmissDist","M_{miss} distribution;M_{miss}",NBINS,-2,6);
    
    TH1F * PhiHDist = new TH1F("PhiHDist","#phi_{h} distribution;#phi_{h}",
-     NBINS,-PI-1,PI+1);
+     NBINS,-PIe,PIe);
    TH1F * PhiRDist = new TH1F("PhiRDist","#phi_{R} distribution;#phi_{R}",
-     NBINS,-PI-1,PI+1);
+     NBINS,-PIe,PIe);
    TH2F * PhiHvsPhiR = new TH2F("PhiHvsPhiR","#phi_{h} vs. #phi_{R};#phi_{R};#phi_{h}",
-     NBINS,-PI-1,PI+1,NBINS,-PI-1,PI+1);
+     NBINS,-PIe,PIe,NBINS,-PIe,PIe);
    TH1F * PhiHRDist = new TH1F("PhiHRDist",
      "#phi_{h}-#phi_{R} distribution;#phi_{h}-#phi_{R}",
-     NBINS,-PI-1,PI+1);
+     NBINS,-PIe,PIe);
 
    plotTitle = "P_{h}^{perp}/M_{h} vs. sin(#phi_{h}-#phi_{R});";
    plotTitle += "sin(#phi_{h}-#phi_{R});P_{h}^{perp}/M_{h}";

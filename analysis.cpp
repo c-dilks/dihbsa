@@ -231,7 +231,6 @@ int main(int argc, char** argv) {
 
    // booleans for which observables have been found in the event
    Bool_t foundAllObservables[nPairType]; // general observable boolean
-   Bool_t foundPhotPair; // photon pair, used for pi0s
 
 
    // photon pair ("php") variables
@@ -240,8 +239,10 @@ int main(int argc, char** argv) {
    Int_t phpIdx[phpCntMax][2]; // index of each photon in the pair
    Float_t phpE[phpCntMax]; // energy of photon pair (to be sorted)
    Int_t phpSortIdx[phpCntMax]; // sorted pair index
-   Int_t phpI; // iterator
    Int_t phpSI[2]; // index of photon from the sorted pair list
+
+   Diphoton * diPhotTmp[phpCntMax]; // used to compute kinematics for photon pairs
+   for(int php=0; php<phpCntMax; php++) diPhotTmp[php] = new Diphoton();
 
 
    // event and pair counters
@@ -261,6 +262,7 @@ int main(int argc, char** argv) {
      dih->ResetVars();
      dihBr->ResetVars();
      diPhot->ResetVars();
+     for(int php=0; php<phpCntMax; php++) diPhotTmp[php]->ResetVars();
      for(int h=0; h<0; h++) {
        hadE[0] = -10000;
        hadP[0] = -10000;
@@ -403,7 +405,9 @@ int main(int argc, char** argv) {
      // trajArr, and the highest-E pi0 found here will be the one sent into the tree;
      // the user will be warned of this happening
      if(trajCnt[kPi0] > 0) {
-       fprintf(stderr,"WARNING: found reconstructed pi0 in paricle bank!!!\n");
+       fprintf(stderr,
+         "WARNING WARNING WARNING WARNING WARNING: found pi0 in paricle bank!!!\n");
+       // note that EventTree is not yet programmed to accept these pions... TODO
      };
 
 
@@ -412,7 +416,6 @@ int main(int argc, char** argv) {
      // -----------------------------
      
      // -- reset data structures for photon pair sorting
-     foundPhotPair = false;
      phpCnt = 0;
      for(int php=0; php<phpCntMax; php++) {
        phpIdx[php][0] = -1;
@@ -466,46 +469,36 @@ int main(int argc, char** argv) {
          };
        };
 
-       // -- find the highest-E pair that satisfies basic requirements
-       phpI = 0;
-       // loop through sorted pair list; exit when we found a good one
-       while(!foundPhotPair && phpI<phpCnt) {
+       // loop through sorted pair list, adding satisfactory diphotons to trajArr
+       if(phpCnt>0) { 
+         for(int php=0; php<phpCnt; php++) {
 
-         // set phot Trajectories to this pair of photons
-         for(int h=0; h<2; h++) {
-           phpSI[h] = phpIdx[phpSortIdx[phpI]][h];
-           phot[h] = (Trajectory*) trajArr[kPhoton]->At(phpSI[h]);
+           // set phot Trajectories to this pair of photons
+           for(int h=0; h<2; h++) {
+             phpSI[h] = phpIdx[phpSortIdx[php]][h];
+             phot[h] = (Trajectory*) trajArr[kPhoton]->At(phpSI[h]);
+           };
+
+           // compute kinematics
+           diPhotTmp[php]->SetEvent(phot[0],phot[1]);
+
+           // if it satisfies basic requirements, add it to trajArr; if it's the first
+           // one added to trajArr (i.e., highest-E), set diphoton tree branches too
+           if(diPhotTmp[php]->validDiphoton) {
+             trajArr[kPi0]->AddLast(diPhotTmp[php]->Traj);
+             if(trajCnt[kPi0]==0) diPhot->SetEvent(phot[0],phot[1]); // -->tree
+             trajCnt[kPi0]++;
+           };
+
          };
-
-         // compute kinematics
-         diPhot->SetEvent(phot[0],phot[1]); // -->tree
-
-         // check basic requirments:
-         foundPhotPair = diPhot->validDiphoton;
-
-         phpI++;
-       };
-
-
-       // -- print chosen trajectory
-       if(debugPHPsort) {
-         printf("chosen diphoton trajectory:\n");
-         (diPhot->Traj->Vec).Print();
-       };
-
-
-       // -- add it to trajArr if a good pair was found
-       if(foundPhotPair) {
-         trajArr[kPi0]->AddLast(diPhot->Traj);
-         trajCnt[kPi0]++;
        };
      };
 
 
      // check if we found all the observables for a given pairType
      foundAllObservables[pairPM] = trajCnt[kE]>0 && trajCnt[kPip]>0 && trajCnt[kPim]>0;
-     foundAllObservables[pairP0] = trajCnt[kE]>0 && trajCnt[kPip]>0 && foundPhotPair;
-     foundAllObservables[pairM0] = trajCnt[kE]>0 && trajCnt[kPim]>0 && foundPhotPair;
+     foundAllObservables[pairP0] = trajCnt[kE]>0 && trajCnt[kPip]>0 && trajCnt[kPi0]>0;
+     foundAllObservables[pairM0] = trajCnt[kE]>0 && trajCnt[kPim]>0 && trajCnt[kPi0]>0;
 
 
 
