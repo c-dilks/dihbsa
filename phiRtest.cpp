@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
    if(argc>2) useBreit = (Bool_t)strtof(argv[2],NULL);
    if(argc>3) whichPair = (Int_t)strtof(argv[3],NULL);
 
-   EventTree * ev = new EventTree(TString(inDir+"/*.root"));
+   EventTree * ev = new EventTree(TString(inDir+"/*.root"),whichPair);
    TString frame = useBreit ? " --- Breit frame":" --- Lab frame ";
    printf("\nPhiR definition comparison plots will be in %s\n",frame.Data());
 

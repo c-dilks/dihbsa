@@ -45,14 +45,13 @@ int main(int argc, char** argv) {
    Float_t deltaPhi;
    Float_t PhiHR;
 
-   TString plotName;
 
    TH1F * WDist = new TH1F("WDist","W distribution (w/o W cut);W",NBINS,0,6);
-   TH1F * XDist = new TH1F("XDist","x distribution",NBINS,0,1);
+   TH1F * XDist = new TH1F("XDist","x distribution;x",NBINS,0,1);
    TH2F * Q2vsW = new TH2F("Q2vsW","Q^{2} vs. W (w/o W cut);W;Q^{2}",
                                    NBINS,0,6,NBINS,0,12);
    TH2F * Q2vsX = new TH2F("Q2vsX","Q^{2} vs. x;x;Q^{2}",NBINS,0,1,NBINS,0,12);
-   TH1F * YDist = new TH1F("YDist","y distribution (w/o y cut)",NBINS,0,1);
+   TH1F * YDist = new TH1F("YDist","y distribution (w/o y cut);y",NBINS,0,1);
 
    TH2F * hadECorr = new TH2F("hadECorr",corrTitle("E"),NBINS,0,10,NBINS,0,10);
    TH2F * hadPCorr = new TH2F("hadPCorr",corrTitle("p"),NBINS,0,10,NBINS,0,10);
@@ -69,77 +68,44 @@ int main(int argc, char** argv) {
    TH1F * hadPhiDist[2];
    TH1F * hadZDist[2];
    for(int h=0; h<2; h++) {
-     // aqui
-     plotTitle = Form("E distribution (blue:#pi^{%s} red:#pi^{%s})",
-       pmTitle(whichPair,hP).Data(),pmTitle(whichPair,hM).Data());
-     plotName = pmName(whichPair,h)+"hadEDist";
-     printf("plotName=%s\n",plotName.Data());
-     hadEDist[h] = new TH1F(plotName,plotTitle,
+     hadEDist[h] = new TH1F(TString(pmName(whichPair,h)+"hadEDist"),distTitle("E"),
        NBINS,0,10);
-     plotTitle = Form("p distribution (blue:#pi^{%s} red:#pi^{%s})",
-       pmTitle(whichPair,hP).Data(),pmTitle(whichPair,hM).Data());
-     plotName = pmName(whichPair,h)+"hadPDist";
-     hadPDist[h] = new TH1F(plotName,plotTitle,
+     hadPDist[h] = new TH1F(TString(pmName(whichPair,h)+"hadPDist"),distTitle("p"),
        NBINS,0,10);
-     plotTitle = Form("p_{T} distribution (blue:#pi^{%s} red:#pi^{%s})",
-       pmTitle(whichPair,hP).Data(),pmTitle(whichPair,hM).Data());
-     plotName = pmName(whichPair,h)+"hadPtDist";
-     hadPtDist[h] = new TH1F(plotName,plotTitle,
+     hadPtDist[h] = new TH1F(TString(pmName(whichPair,h)+"hadPtDist"),distTitle("p_{T}"),
        NBINS,0,4);
-     plotTitle = Form("#eta distribution (blue:#pi^{%s} red:#pi^{%s})",
-       pmTitle(whichPair,hP).Data(),pmTitle(whichPair,hM).Data());
-     plotName = pmName(whichPair,h)+"hadEtaDist";
-     hadEtaDist[h] = new TH1F(plotName,plotTitle,
+     hadEtaDist[h] = new TH1F(TString(pmName(whichPair,h)+"hadEtaDist"),distTitle("#eta"),
        NBINS,0,5);
-     plotTitle = Form("#phi distribution (blue:#pi^{%s} red:#pi^{%s})",
-       pmTitle(whichPair,hP).Data(),pmTitle(whichPair,hM).Data());
-     plotName = pmName(whichPair,h)+"hadPhiDist";
-     hadPhiDist[h] = new TH1F(plotName,plotTitle,
+     hadPhiDist[h] = new TH1F(TString(pmName(whichPair,h)+"hadPhiDist"),distTitle("#phi"),
        NBINS,-PI-1,PI+1);
-     plotTitle = Form("Z distribution (blue:#pi^{%s} red:#pi^{%s})",
-       pmTitle(whichPair,hP).Data(),pmTitle(whichPair,hM).Data());
-     plotName = pmName(whichPair,h)+"hadZDist";
-     hadZDist[h] = new TH1F(plotName,plotTitle,
+     hadZDist[h] = new TH1F(TString(pmName(whichPair,h)+"hadZDist"),distTitle("z"),
        NBINS,0,1);
    };
 
 
+   TString plotTitle = "#Delta#phi = #phi(" + pmTitle(whichPair,hP) + ")" +
+                                 " - #phi(" + pmTitle(whichPair,hM) + 
+                                 ") distribution;#Delta#phi";
+   TH1F * deltaPhiDist = new TH1F("deltaPhiDist",plotTitle,NBINS,-PI-1,PI+1);
 
-   plotTitle = Form("#Delta#phi=#phi^{%s}-#phi^{%s} distribution;#Delta#phi",
-     pmTitle(whichPair,hP).Data(),pmTitle(whichPair,hM).Data());
-   TH1F * deltaPhiDist = new TH1F("deltaPhiDist",
-     plotTitle,
-     NBINS,-PI-1,PI+1);
-
-   TH1F * MhDist = new TH1F("MhDist",
-     "M_{h} distribution",
-     NBINS,0,4);
-   TH1F * ZpairDist = new TH1F("ZpairDist",
-     "Z_{pair} distribution;Z_{pair}",
-     NBINS,0,1);
-   TH1F * xFDist = new TH1F("xFDist",
-     "x_{F} distribution;x_{F}",
-     NBINS,-2,2);
-   TH1F * MmissDist = new TH1F("MmissDist",
-     "M_{miss} distribution;M_{miss}",
-     NBINS,-2,6);
+   TH1F * MhDist = new TH1F("MhDist","M_{h} distribution;M_{h}",NBINS,0,4);
+   TH1F * ZpairDist = new TH1F("ZpairDist","z_{pair} distribution;z_{pair}",NBINS,0,1);
+   TH1F * xFDist = new TH1F("xFDist","x_{F} distribution;x_{F}",NBINS,-2,2);
+   TH1F * MmissDist = new TH1F("MmissDist","M_{miss} distribution;M_{miss}",NBINS,-2,6);
    
-   TH1F * PhiHDist = new TH1F("PhiHDist",
-     "#phi_{h} distribution;#phi_{h}",
+   TH1F * PhiHDist = new TH1F("PhiHDist","#phi_{h} distribution;#phi_{h}",
      NBINS,-PI-1,PI+1);
-   TH1F * PhiRDist = new TH1F("PhiRDist",
-     "#phi_{R} distribution;#phi_{R}",
+   TH1F * PhiRDist = new TH1F("PhiRDist","#phi_{R} distribution;#phi_{R}",
      NBINS,-PI-1,PI+1);
-   TH2F * PhiHvsPhiR = new TH2F("PhiHvsPhiR",
-     "#phi_{h} vs. #phi_{R};#phi_{R};#phi_{h}",
-     NBINS,-PI-1,PI+1,
-     NBINS,-PI-1,PI+1);
+   TH2F * PhiHvsPhiR = new TH2F("PhiHvsPhiR","#phi_{h} vs. #phi_{R};#phi_{R};#phi_{h}",
+     NBINS,-PI-1,PI+1,NBINS,-PI-1,PI+1);
    TH1F * PhiHRDist = new TH1F("PhiHRDist",
      "#phi_{h}-#phi_{R} distribution;#phi_{h}-#phi_{R}",
      NBINS,-PI-1,PI+1);
 
-   TH2F * g1perpWeightVsMod = new TH2F("g1perpWeightVsMod",
-     "P_{h}^{perp}/M_{h} vs. sin(#phi_{h}-#phi_{R});sin(#phi_{h}-#phi_{R});P_{h}^{perp}/M_{h}",
+   plotTitle = "P_{h}^{perp}/M_{h} vs. sin(#phi_{h}-#phi_{R});";
+   plotTitle += "sin(#phi_{h}-#phi_{R});P_{h}^{perp}/M_{h}";
+   TH2F * g1perpWeightVsMod = new TH2F("g1perpWeightVsMod",plotTitle,
      NBINS,-1.1,1.1,
      NBINS,0,6);
 
@@ -280,9 +246,10 @@ TString distTitle(TString var) {
 // make canvas for hadron correlation plots
 void HadronCompareCanv(TCanvas * canv, TH1F * dist[2], TH2F * corr) {
 
-  dist[hP]->SetLineColor(kBlue);
-  dist[hM]->SetLineColor(kRed);
-  for(int h=0; h<2; h++) dist[h]->SetLineWidth(2);
+  for(int h=0; h<2; h++) {
+    dist[h]->SetLineColor(PartColor(pmIdx(whichPair,h)));
+    dist[h]->SetLineWidth(2);
+  };
 
   canv->Divide(2,1);
 

@@ -30,7 +30,7 @@
 class EventTree : public TObject
 {
   public:
-    EventTree(TString filelist, Int_t whichPair_=pairPM);
+    EventTree(TString filelist, Int_t whichPair_);
     ~EventTree();
 
     void GetEvent(Int_t i);

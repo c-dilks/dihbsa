@@ -402,6 +402,15 @@ Float_t Asymmetry::EvalWeight() {
 
  
 Int_t Asymmetry::SpinState(Int_t spin_) {
+  // +1 -1 convention
+  switch(spin_) {
+    case 1: return sP;
+    case -1: return sM;
+    default:
+      fprintf(stderr,"WARNING: bad SpinState request: %d\n",spin_);
+      return -10000;
+  };
+  /*
   // DNP 2018 convention
   switch(spin_) {
     case 0: return sP;
@@ -410,6 +419,7 @@ Int_t Asymmetry::SpinState(Int_t spin_) {
       fprintf(stderr,"WARNING: bad SpinState request: %d\n",spin_);
       return -10000;
   };
+  */
 };
 
 
