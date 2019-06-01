@@ -23,7 +23,7 @@ void LookForPi0s(TString dir="outroot", Int_t whichPair=pairP0) {
     "diphoton mass vs. energy;E;M",
     NBINS,0,7,NBINS,0,mMax);
   TH2D * hMZ = new TH2D("hMZ",
-    "diphoton mass vs. energy sharing (Z=|E_{1}-E_{2}|/E;Z;M",
+    "diphoton mass vs. energy sharing (Z=|E_{1}-E_{2}|/E);Z;M",
     NBINS,0,1,NBINS,0,mMax);
   TH2D * hMPt = new TH2D("hMPt",
     "diphoton mass vs. transverse momentum;p_{T};M",
