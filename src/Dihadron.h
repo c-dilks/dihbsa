@@ -22,6 +22,7 @@
 #include "Constants.h"
 #include "Trajectory.h"
 #include "DIS.h"
+#include "Tools.h"
 
 
 
@@ -40,8 +41,6 @@ class Dihadron : public TObject
     void ComputeAngles();
     Float_t PlaneAngle(TVector3 vA, TVector3 vB,
                        TVector3 vC, TVector3 vD);
-    TVector3 Reject(TVector3 vA, TVector3 vB);
-    TVector3 Project(TVector3 vA, TVector3 vB);
 
     void ResetVars();
 
@@ -122,7 +121,6 @@ class Dihadron : public TObject
 
     Float_t xi,ratio;
 
-    Float_t proj;
     TVector3 crossAB,crossCD;
     Float_t sgn,numer,denom;
 

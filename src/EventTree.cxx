@@ -95,6 +95,22 @@ void EventTree::GetEvent(Int_t i) {
   // -- if pairType does not include pi0s, just
   //    set this cut to true, since cutDihadron requires
   //    cutPi0 to be true
+  //
+  cutDiphPhi = Tools::PhiFiducialCut(diphPhi);
+  if(whichPair==pairP0 || whichPair==pairM0) {
+    cutPi0 = diphAlpha > 0.07 && diphAlpha < 0.25 &&
+             diphPt > 0.15 &&
+             diphE > 1.3 &&
+             diphZ < 0.6 &&
+             cutDiphPhi &&
+             diphM >= 0.105 && diphM <= 0.16;
+  } else {
+    cutPi0 = true;
+  };
+ 
+
+  // -- FOR 5038 SKIM FILE !!!!!!!!!!!!!!!!!!
+  /*
   if(whichPair==pairP0 || whichPair==pairM0) {
     cutPi0 = diphAlpha < 0.19 &&
              diphE > 2.0 &&
@@ -103,6 +119,7 @@ void EventTree::GetEvent(Int_t i) {
   } else {
     cutPi0 = true;
   };
+  */
 
 
   // Dihadron kinematics cuts

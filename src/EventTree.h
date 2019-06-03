@@ -23,6 +23,7 @@
 #include "Constants.h"
 #include "Trajectory.h"
 #include "DIS.h"
+#include "Tools.h"
 
 
 
@@ -99,6 +100,7 @@ class EventTree : public TObject
    Bool_t cutQ2,cutW,cutY;
    Bool_t cutDihadron;
    Bool_t cutPi0;
+   Bool_t cutDiphPhi;
     
   private:
     TChain * chain;

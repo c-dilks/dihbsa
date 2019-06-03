@@ -120,8 +120,8 @@ void Dihadron::ComputeAngles() {
   
 
   // perp-frame hadron 3-momenta
-  for(h=0; h<2; h++) pHad_Perp[h] = Reject(pHad[h],pQ);
-  pPh_Perp = Reject(pPh,pQ);
+  for(h=0; h<2; h++) pHad_Perp[h] = Tools::Reject(pHad[h],pQ);
+  pPh_Perp = Tools::Reject(pPh,pQ);
 
 
   // compute transverse components of R in different frames
@@ -131,10 +131,10 @@ void Dihadron::ComputeAngles() {
               ( z[hM] * pHad_Perp[hP]  -  z[hP] * pHad_Perp[hM] );
 
   // -- in T-frame, via rejection
-  pR_T_byRej = Reject(pR,pPh);
+  pR_T_byRej = Tools::Reject(pR,pPh);
 
   // -- in perp-frame, via rejection
-  pR_Perp= Reject(pR,pQ);
+  pR_Perp = Tools::Reject(pR,pQ);
 
   // -- by projection operator (eq. 9 in 1408.5721)
   xi = 2 * vecR.Dot(disVecTarget) / ( vecPh.Dot(disVecTarget) );
@@ -205,34 +205,6 @@ Float_t Dihadron::PlaneAngle(
   };
 
   return sgn * TMath::ACos(numer/denom);
-};
-
-
-// vector rejection: 
-// returns vA projected onto plane transverse to vB
-TVector3 Dihadron::Reject(TVector3 vA, TVector3 vB) {
-
-  if(fabs(vB.Dot(vB))<0.0001) {
-    //fprintf(stderr,"WARNING: Dihadron::Reject to null vector\n");
-    return TVector3(0,0,0);
-  };
-
-  return vA - Project(vA,vB);
-
-};
-
-// vector projection:
-// returns vA projected onto vB
-TVector3 Dihadron::Project(TVector3 vA, TVector3 vB) {
-
-  if(fabs(vB.Dot(vB))<0.0001) {
-    //fprintf(stderr,"WARNING: Dihadron::Project to null vector\n");
-    return TVector3(0,0,0);
-  };
-
-  proj = vA.Dot(vB) / ( vB.Dot(vB) );
-  return proj * vB;
-
 };
 
 

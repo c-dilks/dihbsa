@@ -2,18 +2,20 @@ R__LOAD_LIBRARY(DihBsa)
 
 #include "Constants.h"
 #include "EventTree.h"
+#include "Tools.h"
 
-void LookForPi0s(TString dir="outroot", Int_t whichPair=pairP0) {
+void LookForPi0s(TString dir="outroot.dnp2018.some", Int_t whichPair=pairP0) {
 
   TString files = dir + "/*.root";
   TFile * outfile = new TFile("pi0.root","RECREATE");
   EventTree * ev = new EventTree(files,pairP0);
 
   Bool_t cut;
+  Bool_t phiCut;
 
   const Int_t NBINS = 200;
   const Float_t mMax = 0.7;
-  const Float_t alphaMax = 0.3;
+  const Float_t alphaMax = 0.35;
   TH1D * hMass = new TH1D("hMass","diphoton mass;M",NBINS,0,mMax);
   TH1D * hAlpha = new TH1D("hAlpha","diphoton opening angle;#alpha",NBINS,0,alphaMax);
   TH2D * hMAlpha = new TH2D("hMAlpha",
@@ -39,10 +41,39 @@ void LookForPi0s(TString dir="outroot", Int_t whichPair=pairP0) {
   for(int i=0; i<ev->ENT; i++) {
     ev->GetEvent(i);
 
-    cut = true;
-    //cut = ev->diphE > 2;
-    //cut = ev->diphZ < 0.6;
-    //cut = ev->diphE > 2 && ev->diphZ < 0.6;
+
+    phiCut = Tools::PhiFiducialCut(ev->diphPhi);
+
+
+    //cut = true;
+    
+    // spans pi0 peak alpha range
+    //cut = ev->diphAlpha < 0.3 && ev->diphAlpha > 0.05;
+
+    // now cut out low pT radiative junk
+    //cut = ev->diphAlpha < 0.3 && ev->diphAlpha > 0.05 && ev->diphPt>0.15;
+
+    // add on E_hadron > 1 GeV cut (also mass peak is rather wide below 1 GeV)
+    //cut = ev->diphAlpha < 0.3 && ev->diphAlpha > 0.05 && ev->diphPt>0.15 &&
+          //ev->diphE > 1;
+
+    // standard high-Z cut
+    //cut = ev->diphAlpha < 0.3 && ev->diphAlpha > 0.05 && ev->diphPt>0.15 &&
+          //ev->diphE > 1 && ev->diphZ < 0.6;
+
+
+    // make sure pion is in one of the sectors (actually this cut ought to be done
+    // on each of the photons...)
+    //cut = ev->diphAlpha < 0.3 && ev->diphAlpha > 0.05 && ev->diphPt>0.15 &&
+          //ev->diphE > 1 && ev->diphZ < 0.6 && phiCut;
+
+    // tighten alpha and energy cuts
+    cut = ev->diphAlpha < 0.25 && ev->diphAlpha > 0.07 && ev->diphPt>0.15 &&
+          ev->diphE > 1.3 && ev->diphZ < 0.6 && phiCut;
+
+    
+
+    //cut = ev->diphE > 2 && ev->diphZ < 0.6; // 5038 skim file cuts
 
     if(cut) {
       hMass->Fill(ev->diphM);
@@ -56,6 +87,8 @@ void LookForPi0s(TString dir="outroot", Int_t whichPair=pairP0) {
     };
   };
 
+
+  hMass->Fit("gaus","","",0.105,0.16);
 
   hMass->Write();
   hAlpha->Write();
