@@ -4,6 +4,7 @@
 .*.sw*
 *.root
 *.png
+*.html
 logfiles/*
 src/DihBsaDict.*
 outz

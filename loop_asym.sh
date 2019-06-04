@@ -1,7 +1,7 @@
 #!/bin/bash
 
 dir="outroot.dnp2018"
-modulation=0
+modulation=3
 phiR=3
 
 if [ $# -ge 1 ]; then dir=$1; fi
