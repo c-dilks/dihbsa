@@ -149,25 +149,78 @@ static TString PartColorName(int p) {
 enum pair_enum { qH, qL }; // qH = high charge,  qL = low charge
 
 // return the hadron particleIndex within the dihadron pair, where "idx"
-// represents either the first or second hadron; by convention, the first
-// hadron has higher charge than the second
-static Int_t HadIdx(Int_t p1, Int_t p2, Int_t idx) {
-  if(idx == qH)      { return PartCharge(idx1) >= partCharge(idx2) ? idx1 : idx2; }
-  else if(idx == qL) { return PartCharge(idx1) <  partCharge(idx2) ? idx1 : idx2; }
-  else {
-    fprintf(stderr,"ERROR: bad HadIdx request\n");
-    return -10000;
+// represents either the first or second hadron (idx==qH or qL, respectively); 
+// -- Convention: 
+//    - if charges are different: qH has higher charge than qL
+//    - if charges are equal:
+//      - if particles are different: qH has higher mass than qL
+//      - if particles are same: indistinguishable and order doesn't matter
+static Int_t dihHadIdx(Int_t p1, Int_t p2, Int_t idx) {
+  if(p1==p2) {
+    switch(idx) {
+      case qH: return p1;
+      case qL: return p2;
+    };
+  } else {
+
+    if(idx==qH) {
+      if( PartCharge(p1) == PartCharge(p2) ) {
+        return PartMass(p1) >= PartMass(p2) ? p1 : p2;
+      } else {
+        return PartCharge(p1) > PartCharge(p2) ? p1 : p2;
+      };
+    }
+
+    else if(idx==qL) {
+      if( PartCharge(p1) == PartCharge(p2) ) {
+        return PartMass(p1) < PartMass(p2) ? p1 : p2;
+      } else {
+        return PartCharge(p1) < PartCharge(p2) ? p1 : p2;
+      };
+    };
+
   };
+  fprintf(stderr,"ERROR: bad dihHadIdx request\n");
+  return -10000;
 };
 
+
 static TString PairName(Int_t p1, Int_t p2) {
-  return TString( PartName(HadIdx(p1,p2,qH)) + "_" + PartName(HadIdx(p1,p2,qL)) );
+  return TString( PartName(dihHadIdx(p1,p2,qH)) + "_" + PartName(dihHadIdx(p1,p2,qL)) );
 };
 static TString PairTitle(Int_t p1, Int_t p2) {
   return TString(
-    "(" + PartTitle(HadIdx(p1,p2,qH)) + "," + PartTitle(HadIdx(p1,p2,qL)) + ")"
+    "(" + PartTitle(dihHadIdx(p1,p2,qH)) + "," + PartTitle(dihHadIdx(p1,p2,qL)) + ")"
   );
 };
+
+
+// enumerator for particles we consider in dihadron pairs (denoted "observable"); 
+// useful for looping over pairs we care about
+enum observable_enum {
+  sPip,
+  sPim,
+  sPi0,
+  sKp,
+  sKm,
+  nObservables
+};
+// observable's index ("OI")
+static Int_t OI(int s) {
+  switch(s) {
+    case sPip: return kPip;
+    case sPim: return kPim;
+    case sPi0: return kPi0;
+    case sKp: return kKp;
+    case sKm: return kKm;
+    default: 
+      fprintf(stderr,"ERROR: bad IdxOfSpecies request\n");
+      return -10000;
+  };
+};
+static TString ObsName(int s) { return PartName(OI(s)); };
+static TString ObsTitle(int s) { return PartTitle(OI(s)); };
+  
 
 // use these methods to change any pi0 names/titles to BG titles, when looking at BG
 static void TransformNameBG(TString & str) {
@@ -176,13 +229,6 @@ static void TransformNameBG(TString & str) {
 
 static void TransformTitleBG(TString & str) {
   str.ReplaceAll(PartTitle(kPi0),"#gamma#gamma_{BG}");
-};
-
-// return true if pair (a1,a2) is equal to (b1,b2), regardless of order
-// -- maybe move this to TOOLS; to be used to see if hadron types a1 and a2
-//    equal the one we want to look at, set by b1 and b2
-static Bool_t PairSame(Int_t a1, Int_t a2, Int_t b1, Int_t b2) {
-  return (a1==b1 && a2==b2) || (a1==b2 && a2==b1);
 };
 
 

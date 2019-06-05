@@ -112,10 +112,8 @@ int main(int argc, char** argv) {
    tree->Branch("y",&(disEv->y),"y/F");
 
    // miscellaneous branches for classifying the type of observables
-   Int_t pairType;
    Int_t particleCntAll;
    TString particleCntStr = Form("particleCnt[%d]/I",nParticles);
-   tree->Branch("pairType",&pairType,"pairType/I"); // dihadron pair type (see Constants.h)
    tree->Branch("particleCnt",trajCnt,particleCntStr); // number of each type of particle
                                                      // that we consider, as defined in
                                                      // Constants.h
@@ -125,12 +123,14 @@ int main(int argc, char** argv) {
                                                      // Constants.h)
 
 
-   // hadron branches
-   Float_t hadE[2]; // [enum plus_minus (0=+, 1=-)]
+   // hadron branches // [ordered such that first hadron has higher charge than second]
+   Int_t hadIdx[2]; // particle Idx of each hadron in the pair
+   Float_t hadE[2];
    Float_t hadP[2];
    Float_t hadPt[2];
    Float_t hadEta[2];
    Float_t hadPhi[2];
+   tree->Branch("hadIdx",hadIdx,"hadE[2]/I");
    tree->Branch("hadE",hadE,"hadE[2]/F");
    tree->Branch("hadP",hadP,"hadP[2]/F");
    tree->Branch("hadPt",hadPt,"hadPt[2]/F");
@@ -229,8 +229,7 @@ int main(int argc, char** argv) {
    Int_t oCur,pidCur;
 
 
-   // booleans for which observables have been found in the event
-   Bool_t foundAllObservables[nPairType]; // general observable boolean
+   Bool_t foundObservablePair;
 
 
    // photon pair ("php") variables
@@ -247,8 +246,6 @@ int main(int argc, char** argv) {
 
    // event and pair counters
    Int_t evCount = 0;
-   Int_t pairCount[nPairType];
-   for(int pp=0; pp<nPairType; pp++) pairCount[pp]=0;
 
 
 
@@ -495,70 +492,101 @@ int main(int argc, char** argv) {
      };
 
 
-     // check if we found all the observables for a given pairType
-     foundAllObservables[pairPM] = trajCnt[kE]>0 && trajCnt[kPip]>0 && trajCnt[kPim]>0;
-     foundAllObservables[pairP0] = trajCnt[kE]>0 && trajCnt[kPip]>0 && trajCnt[kPi0]>0;
-     foundAllObservables[pairM0] = trajCnt[kE]>0 && trajCnt[kPim]>0 && trajCnt[kPi0]>0;
-
-
-
      
-     // loop through pair types
-     for(int pp=0; pp<nPairType; pp++) {
+     // look for "observable pairs" -- these are pairs that we will use to
+     // form dihadrons; only the desired observables are paired (see observable_enum
+     // in Constants.h)
 
-       if(foundAllObservables[pp]) {
+     Int_t i1,i2;
 
-         pairType = pp; // -->tree
+     if(trajCnt[kE] > 0) {
 
-         if(debug) printf(">>> BEGIN DIHADRON EVENT %s %s\n",
-           pmName(pairType,hP).Data(),pmName(pairType,hM).Data());
-
-         // compute DIS kinematics
-         ele = (Trajectory*) trajArr[kE]->At(0); // select highest-E electron
-         disEv->SetElectron(ele);
-         disEv->Analyse(); // -->tree
+       // compute DIS kinematics
+       ele = (Trajectory*) trajArr[kE]->At(0); // select highest-E electron
+       disEv->SetElectron(ele);
+       disEv->Analyse(); // -->tree
 
 
-         // set hadron kinematics
-         for(int h=0; h<2; h++) {
+       // observable pairing algorithm
+       for(Int_t o1=0; o1<nObservables; o1++) {
+         for(Int_t o2=o1; o2<nObservables; o2++) {
 
-           // select highest-E hadron
-           had[h] = (Trajectory*) trajArr[pmIdx(pairType,h)]->At(0); 
+           foundObservablePair = false;
 
-           hadE[h] = (had[h]->Vec).E(); // -->tree
-           hadP[h] = (had[h]->Vec).P(); // -->tree
-           hadPt[h] = (had[h]->Vec).Pt(); // -->tree
+           // convert observable index to particle index
+           i1 = OI[o1];
+           i2 = OI[o2];
 
-           if(hadE[h]>0 && hadPt[h]>0) {
-             hadEta[h] = (had[h]->Vec).Eta(); // -->tree
-             hadPhi[h] = (had[h]->Vec).Phi(); // -->tree
+           if(o1==o2) {
+             // if the indices are the same, and we have at least 2 of this observable,
+             // set 1st hadron to the highest energy one, and 2nd to the next highest
+             if( trajCnt[i1] >=2 ) {
+               for(int h=0; h<2; h++) {
+                 had[h] = (Trajectory*) trajArr[dihHadIdx(i1,i2,h)]->At(h);
+               };
+               foundObservablePair = true;
+             };
+
            } else {
-             hadEta[h] = -10000;
-             hadPhi[h] = -10000;
+             // if the indices are different, set hadrons according to dihHadIdx
+             // (see Constants::dihHadIdx for convention)
+             if( trajCnt[i1] >= 1 && trajCnt[i2] >= 1 ) {
+               for(int h=0; h<2; h++) {
+                 had[h] = (Trajectory*) trajArr[dihHadIdx(i1,i2,h)]->At(0);
+               };
+               foundObservablePair = true;
+             };
            };
 
-           if(debug) {
-             printf("[+] %s 4-momentum:\n",(had[h]->Title()).Data());
-             (had[h]->Vec).Print();
-           };
-         };
+
+           // if a hadron pair was found, proceed with kinematics calculations
+           // and fill the tree
+           if(foundObservablePair) {
+
+             if(debug) printf(">>> BEGIN DIHADRON EVENT %s\n",PairName(i1,i2).Data());
+
+             // set hadron kinematics
+             hadIdx[0] = i1; // -->tree
+             hadIdx[1] = i2; // -->tree
+             for(int h=0; h<2; h++) {
+               hadE[h] = (had[h]->Vec).E(); // -->tree
+               hadP[h] = (had[h]->Vec).P(); // -->tree
+               hadPt[h] = (had[h]->Vec).Pt(); // -->tree
+
+               if(hadE[h]>0 && hadPt[h]>0) {
+                 hadEta[h] = (had[h]->Vec).Eta(); // -->tree
+                 hadPhi[h] = (had[h]->Vec).Phi(); // -->tree
+               } else {
+                 hadEta[h] = -10000;
+                 hadPhi[h] = -10000;
+               };
+
+               if(debug) {
+                 printf("[+] %s 4-momentum:\n",(had[h]->Title()).Data());
+                 (had[h]->Vec).Print();
+               };
+             };
 
 
-         // compute dihadron kinematics
-         dih->SetEvent(had[hP],had[hM],disEv); // -->tree
-         dihBr->SetEvent(had[hP],had[hM],disEv); // -->tree
+             // compute dihadron kinematics
+             dih->SetEvent(had[qH],had[qL],disEv); // -->tree
+             dihBr->SetEvent(had[qH],had[qL],disEv); // -->tree
 
 
-         // fill tree
-         tree->Fill();
+             // fill tree
+             tree->Fill();
 
-         // increment event counter
-         evCount++;
-         pairCount[pairType]++;
-         if(evCount%1000==0) printf("[---] %d dihadron events found\n",evCount);
+             // increment event counter
+             evCount++;
+             if(evCount%1000==0) printf("[---] %d dihadron events found\n",evCount);
 
-       }; // eo if foundAllObservables for this pairType
-     }; // eo pairType loop
+           }; // eo if foundObservablePair
+
+
+         }; // eo for o2
+       }; // eo for o1
+     }; // eo if #electrons > 0
+
 
      bench.pause();
    };
@@ -581,10 +609,7 @@ int main(int argc, char** argv) {
    };
 
    // print dihadron event count
-   printf("\nDIHADRON EVENT COUNT: %d\n",evCount);
-   for(int pp=0; pp<nPairType; pp++) 
-     printf(" %s : %d\n",pairTitle(pp).Data(),pairCount[pp]);
-   printf("\n");
+   printf("\nDIHADRON EVENT COUNT: %d\n\n",evCount);
 
 
    // close the output ROOT file

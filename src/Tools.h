@@ -67,6 +67,15 @@ class Tools {
     };
 
 
+
+    // compare integer pair (a1,a2) to (b1,b2), returns true if they're the same,
+    // regardless of order
+    static Bool_t PairSame(Int_t a1, Int_t a2, Int_t b1, Int_t b2) {
+      return (a1==b1 && a2==b2) || (a1==b2 && a2==b1);
+    };
+
+
+
     // azimuthal fiducial cut
     static Bool_t PhiFiducialCut(Float_t phi_) {
       for(int p=0; p<=3; p++) {
@@ -74,6 +83,7 @@ class Tools {
       };
       return false;
     };
+
 
 
     ClassDef(Tools,1);
