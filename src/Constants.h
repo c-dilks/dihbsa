@@ -4,10 +4,13 @@
 #include "TString.h"
 #include "TMath.h"
 
+// pi
+// ---------------------------------------------------
 static Double_t PI = TMath::Pi();
 static Double_t PIe = TMath::Pi() + 0.3;
 
 // particles constants
+// ---------------------------------------------------
 enum particle_enum {
   kE,
   kP,
@@ -89,6 +92,22 @@ static float PartMass(int p) {
   };
 };
 
+static Int_t PartCharge(int p) {
+  switch(p) {
+    case kE: return -1;
+    case kP: return 1;
+    case kN: return 0;
+    case kPip: return 1;
+    case kPim: return -1;
+    case kPi0: return 0;
+    case kKp: return 1;
+    case kKm: return -1;
+    case kPhoton: return 0;
+    default: 
+      fprintf(stderr,"ERROR: bad PartCharge request\n");
+      return -10000;
+  };
+};
 
 static Int_t PartColor(int p) {
   switch(p) {
@@ -125,10 +144,54 @@ static TString PartColorName(int p) {
 };
 
 
-// charge sign constants
-enum plusminus {hP,hM};
+// NEW CODE--------------
+
+enum pair_enum { qH, qL }; // qH = high charge,  qL = low charge
+
+// return the hadron particleIndex within the dihadron pair, where "idx"
+// represents either the first or second hadron; by convention, the first
+// hadron has higher charge than the second
+static Int_t HadIdx(Int_t p1, Int_t p2, Int_t idx) {
+  if(idx == qH)      { return PartCharge(idx1) >= partCharge(idx2) ? idx1 : idx2; }
+  else if(idx == qL) { return PartCharge(idx1) <  partCharge(idx2) ? idx1 : idx2; }
+  else {
+    fprintf(stderr,"ERROR: bad HadIdx request\n");
+    return -10000;
+  };
+};
+
+static TString PairName(Int_t p1, Int_t p2) {
+  return TString( PartName(HadIdx(p1,p2,qH)) + "_" + PartName(HadIdx(p1,p2,qL)) );
+};
+static TString PairTitle(Int_t p1, Int_t p2) {
+  return TString(
+    "(" + PartTitle(HadIdx(p1,p2,qH)) + "," + PartTitle(HadIdx(p1,p2,qL)) + ")"
+  );
+};
+
+// use these methods to change any pi0 names/titles to BG titles, when looking at BG
+static void TransformNameBG(TString & str) {
+  str.ReplaceAll(PartName(kPi0),"diphBG");
+};
+
+static void TransformTitleBG(TString & str) {
+  str.ReplaceAll(PartTitle(kPi0),"#gamma#gamma_{BG}");
+};
+
+// return true if pair (a1,a2) is equal to (b1,b2), regardless of order
+// -- maybe move this to TOOLS; to be used to see if hadron types a1 and a2
+//    equal the one we want to look at, set by b1 and b2
+static Bool_t PairSame(Int_t a1, Int_t a2, Int_t b1, Int_t b2) {
+  return (a1==b1 && a2==b2) || (a1==b2 && a2==b1);
+};
+
+
+
 
 // pair types
+// OLD CODE--------------
+// ---------------------------------------------------
+enum plusminus {hP,hM};
 enum pairTypeEnum { pairPM, pairP0, pairM0, nPairType };
 
 static TString pairName(int pair) {
@@ -183,6 +246,7 @@ static TString pmTitle(int pair, int h) {
 
 
 // spin constants
+// ---------------------------------------------------
 enum spinEnum { sP, sM, nSpin };
 
 static TString SpinName(int s) {

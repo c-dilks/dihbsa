@@ -71,6 +71,17 @@ void LookForPi0s(TString dir="outroot.dnp2018.some", Int_t whichPair=pairP0) {
     cut = ev->diphAlpha < 0.25 && ev->diphAlpha > 0.07 && ev->diphPt>0.15 &&
           ev->diphE > 1.3 && ev->diphZ < 0.6 && phiCut;
 
+
+
+
+          // CUT ON PHOTON ENERGIES !!!!!!!!!!!!!!!!!!!!!!!
+          // FOCAL photons
+          // THETA (com frame dihadron angle)
+          // Kaons
+          // MC
+          // bg corrections
+          //
+
     
 
     //cut = ev->diphE > 2 && ev->diphZ < 0.6; // 5038 skim file cuts

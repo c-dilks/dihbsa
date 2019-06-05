@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
    Bool_t batchMode = 0; // if true, renames output files and prints pngs
 
 
-   Int_t whichPair = pairM0; // LOCKED AT PM pair for now!!  // TODO
+   Int_t whichPair = pairPM; // LOCKED AT PM pair for now!!  // TODO
 
 
    // help printout

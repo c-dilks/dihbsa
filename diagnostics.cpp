@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
 
    // ARGUMENTS
    inDir = "outroot";
-   whichPair = pairPM;
+   whichPair = pairP0;
    if(argc>1) inDir = TString(argv[1]);
    if(argc>2) whichPair = (Int_t)strtof(argv[2],NULL);
 
