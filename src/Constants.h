@@ -24,7 +24,7 @@ enum particle_enum {
   nParticles
 };
 
-static TString PartName(int p) {
+static TString PartName(Int_t p) {
   switch(p) {
     case kE: return "electron";
     case kP: return "proton";
@@ -41,7 +41,7 @@ static TString PartName(int p) {
   };
 };
 
-static TString PartTitle(int p) {
+static TString PartTitle(Int_t p) {
   switch(p) {
     case kE: return "e^{-}";
     case kP: return "p";
@@ -58,7 +58,7 @@ static TString PartTitle(int p) {
   };
 };
 
-static int PartPID(int p) {
+static Int_t PartPID(Int_t p) {
   switch(p) {
     case kE: return 11;
     case kP: return 2212;
@@ -75,7 +75,12 @@ static int PartPID(int p) {
   };
 };
 
-static float PartMass(int p) {
+static Int_t PIDtoIdx(Int_t pid) {
+  for(int i=0; i<nParticles; i++) { if(pid==PartPID(i)) return i; };
+  return -10000;
+};
+
+static Float_t PartMass(Int_t p) {
   switch(p) {
     case kE: return 0.000511;
     case kP: return 0.938272;
@@ -92,7 +97,7 @@ static float PartMass(int p) {
   };
 };
 
-static Int_t PartCharge(int p) {
+static Int_t PartCharge(Int_t p) {
   switch(p) {
     case kE: return -1;
     case kP: return 1;
@@ -109,7 +114,7 @@ static Int_t PartCharge(int p) {
   };
 };
 
-static Int_t PartColor(int p) {
+static Int_t PartColor(Int_t p) {
   switch(p) {
     case kE: return kGray+2;
     case kP: return kAzure;
@@ -126,7 +131,7 @@ static Int_t PartColor(int p) {
   };
 };
 
-static TString PartColorName(int p) {
+static TString PartColorName(Int_t p) {
   switch(p) {
     case kE: return "grey";
     case kP: return "darkBlue";
@@ -206,7 +211,7 @@ enum observable_enum {
   nObservables
 };
 // observable's index ("OI")
-static Int_t OI(int s) {
+static Int_t OI(Int_t s) {
   switch(s) {
     case sPip: return kPip;
     case sPim: return kPim;
@@ -218,8 +223,8 @@ static Int_t OI(int s) {
       return -10000;
   };
 };
-static TString ObsName(int s) { return PartName(OI(s)); };
-static TString ObsTitle(int s) { return PartTitle(OI(s)); };
+static TString ObsName(Int_t s) { return PartName(OI(s)); };
+static TString ObsTitle(Int_t s) { return PartTitle(OI(s)); };
   
 
 // use these methods to change any pi0 names/titles to BG titles, when looking at BG
@@ -240,7 +245,7 @@ static void TransformTitleBG(TString & str) {
 enum plusminus {hP,hM};
 enum pairTypeEnum { pairPM, pairP0, pairM0, nPairType };
 
-static TString pairName(int pair) {
+static TString pairName(Int_t pair) {
   switch(pair) {
     case pairPM: return "pairPM";
     case pairP0: return "pairP0";
@@ -251,7 +256,7 @@ static TString pairName(int pair) {
   };
 };
 
-static TString pairTitle(int pair) {
+static TString pairTitle(Int_t pair) {
   switch(pair) {
     case pairPM: return "pi+ pi-";
     case pairP0: return "pi+ pi0";
@@ -263,7 +268,7 @@ static TString pairTitle(int pair) {
 };
 
 
-static Int_t pmIdx(int pair, int h) {
+static Int_t pmIdx(Int_t pair, Int_t h) {
   if(pair == pairPM) {
     if(h == hP)      return kPip;
     else if(h == hM) return kPim;
@@ -281,12 +286,12 @@ static Int_t pmIdx(int pair, int h) {
 };
 
 
-static TString pmName(int pair, int h) {
+static TString pmName(Int_t pair, Int_t h) {
   return PartName(pmIdx(pair,h));
 };
 
 
-static TString pmTitle(int pair, int h) {
+static TString pmTitle(Int_t pair, Int_t h) {
   return PartTitle(pmIdx(pair,h));
 };
 
@@ -295,7 +300,7 @@ static TString pmTitle(int pair, int h) {
 // ---------------------------------------------------
 enum spinEnum { sP, sM, nSpin };
 
-static TString SpinName(int s) {
+static TString SpinName(Int_t s) {
   switch(s) {
     case sP: return "P";
     case sM: return "M";
@@ -305,7 +310,7 @@ static TString SpinName(int s) {
   };
 };
 
-static TString SpinTitle(int s) {
+static TString SpinTitle(Int_t s) {
   switch(s) {
     case sP: return "spin +";
     case sM: return "spin -";
