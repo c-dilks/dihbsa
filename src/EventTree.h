@@ -48,14 +48,14 @@ class EventTree : public TObject
     Float_t W,Q2,Nu,x,y;
 
     // hadron kinematics
-    Float_t hadE[2]; // [enum plus_minus (0=+, 1=-)]
+    Int_t hadIdx[2];
+    Float_t hadE[2];
     Float_t hadP[2];
     Float_t hadPt[2];
     Float_t hadEta[2];
     Float_t hadPhi[2];
 
     // dihadron kinematics
-    Int_t pairType;
     Int_t particleCnt[nParticles];
     Int_t particleCntAll;
     Float_t Mh,Zpair,PhiH,Mmiss,xF,alpha;
@@ -98,13 +98,14 @@ class EventTree : public TObject
     //   EventCuts
     ///////////////////////////
    Bool_t cutQ2,cutW,cutY;
+   Bool_t cutDihadronKinematics;
    Bool_t cutDihadron;
    Bool_t cutPi0;
    Bool_t cutDiphPhi;
     
   private:
     TChain * chain;
-    Int_t whichPair;
+    Int_t whichHad[2];
 
 
   ClassDef(EventTree,1);

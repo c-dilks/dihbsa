@@ -151,24 +151,23 @@ static TString PartColorName(Int_t p) {
 
 // NEW CODE--------------
 
-enum pair_enum { qH, qL }; // qH = high charge,  qL = low charge
-
+enum pair_enum { qA, qB };
 // return the hadron particleIndex within the dihadron pair, where "idx"
-// represents either the first or second hadron (idx==qH or qL, respectively); 
+// represents either the first or second hadron (idx==qA or qB, respectively); 
 // -- Convention: 
-//    - if charges are different: qH has higher charge than qL
+//    - if charges are different: qA has higher charge than qB
 //    - if charges are equal:
-//      - if particles are different: qH has higher mass than qL
+//      - if particles are different: qA has higher mass than qB
 //      - if particles are same: indistinguishable and order doesn't matter
 static Int_t dihHadIdx(Int_t p1, Int_t p2, Int_t idx) {
   if(p1==p2) {
     switch(idx) {
-      case qH: return p1;
-      case qL: return p2;
+      case qA: return p1;
+      case qB: return p2;
     };
   } else {
 
-    if(idx==qH) {
+    if(idx==qA) {
       if( PartCharge(p1) == PartCharge(p2) ) {
         return PartMass(p1) >= PartMass(p2) ? p1 : p2;
       } else {
@@ -176,7 +175,7 @@ static Int_t dihHadIdx(Int_t p1, Int_t p2, Int_t idx) {
       };
     }
 
-    else if(idx==qL) {
+    else if(idx==qB) {
       if( PartCharge(p1) == PartCharge(p2) ) {
         return PartMass(p1) < PartMass(p2) ? p1 : p2;
       } else {
@@ -189,13 +188,23 @@ static Int_t dihHadIdx(Int_t p1, Int_t p2, Int_t idx) {
   return -10000;
 };
 
+static TString PairHadName(Int_t p1, Int_t p2, Int_t h) {
+  TString ret = PartName(dihHadIdx(p1,p2,h));
+  if(p1==p2) ret = Form("%s%d",ret.Data(),h+1);
+  return ret;
+};
+static TString PairHadTitle(Int_t p1, Int_t p2, Int_t h) {
+  TString ret = PartTitle(dihHadIdx(p1,p2,h));
+  if(p1==p2) ret = Form("%s_{%d}",ret.Data(),h+1);
+  return ret;
+};
 
 static TString PairName(Int_t p1, Int_t p2) {
-  return TString( PartName(dihHadIdx(p1,p2,qH)) + "_" + PartName(dihHadIdx(p1,p2,qL)) );
+  return TString( PairHadName(p1,p2,qA) + "_" + PairHadName(p1,p2,qB) );
 };
 static TString PairTitle(Int_t p1, Int_t p2) {
   return TString(
-    "(" + PartTitle(dihHadIdx(p1,p2,qH)) + "," + PartTitle(dihHadIdx(p1,p2,qL)) + ")"
+    "(" + PairHadTitle(p1,p2,qA) + "," + PairHadTitle(p1,p2,qB) + ")"
   );
 };
 
@@ -210,7 +219,8 @@ enum observable_enum {
   sKm,
   nObservables
 };
-// observable's index ("OI")
+
+// observable index to particle index
 static Int_t OI(Int_t s) {
   switch(s) {
     case sPip: return kPip;
@@ -219,12 +229,28 @@ static Int_t OI(Int_t s) {
     case sKp: return kKp;
     case sKm: return kKm;
     default: 
-      fprintf(stderr,"ERROR: bad IdxOfSpecies request\n");
+      fprintf(stderr,"ERROR: bad OI request\n");
       return -10000;
   };
 };
+
 static TString ObsName(Int_t s) { return PartName(OI(s)); };
 static TString ObsTitle(Int_t s) { return PartTitle(OI(s)); };
+
+
+// particle index to observable index
+static Int_t IO(Int_t s) {
+  switch(s) {
+    case kPip: return sPip;
+    case kPim: return sPim;
+    case kPi0: return sPi0;
+    case kKp: return sKp;
+    case kKm: return sKm;
+    default: 
+      fprintf(stderr,"ERROR: bad IO request\n");
+      return -10000;
+  };
+};
   
 
 // use these methods to change any pi0 names/titles to BG titles, when looking at BG

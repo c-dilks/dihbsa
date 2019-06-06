@@ -10,7 +10,9 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
 
   debug = true;
 
-  whichPair = whichPair_;
+  Tools::DecodeWhichPair(whichPair_,whichHad[qA],whichHad[qB]);
+  printf("\n>>> DIHADRON SELECTION: %s\n\n",PairName(whichHad[qA],whichHad[qB]).Data());
+
 
   printf("reading tree chain from %s\n",filelist.Data());
 
@@ -26,13 +28,13 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("x",&x);
   chain->SetBranchAddress("y",&y);
 
+  chain->SetBranchAddress("hadIdx",hadIdx);
   chain->SetBranchAddress("hadE",hadE);
   chain->SetBranchAddress("hadP",hadP);
   chain->SetBranchAddress("hadPt",hadPt);
   chain->SetBranchAddress("hadEta",hadEta);
   chain->SetBranchAddress("hadPhi",hadPhi);
 
-  chain->SetBranchAddress("pairType",&pairType);
   chain->SetBranchAddress("particleCnt",particleCnt);
   chain->SetBranchAddress("particleCntAll",&particleCntAll);
 
@@ -92,12 +94,11 @@ void EventTree::GetEvent(Int_t i) {
 
 
   // pi0 cut
-  // -- if pairType does not include pi0s, just
+  // -- if dihadron does not include pi0s, just
   //    set this cut to true, since cutDihadron requires
   //    cutPi0 to be true
-  //
   cutDiphPhi = Tools::PhiFiducialCut(diphPhi);
-  if(whichPair==pairP0 || whichPair==pairM0) {
+  if(whichHad[qA]==kPi0 || whichHad[qB]==kPi0) {
     cutPi0 = diphAlpha > 0.07 && diphAlpha < 0.25 &&
              diphPt > 0.15 &&
              diphE > 1.3 &&
@@ -111,7 +112,7 @@ void EventTree::GetEvent(Int_t i) {
 
   // -- FOR 5038 SKIM FILE !!!!!!!!!!!!!!!!!!
   /*
-  if(whichPair==pairP0 || whichPair==pairM0) {
+  if(whichHad[qA]==kPi0 || whichHad[qB]==kPi0) {
     cutPi0 = diphAlpha < 0.19 &&
              diphE > 2.0 &&
              diphZ < 0.6 &&
@@ -123,14 +124,18 @@ void EventTree::GetEvent(Int_t i) {
 
 
   // Dihadron kinematics cuts
-  cutDihadron = 
-    pairType == whichPair && 
+  cutDihadronKinematics = 
     cutPi0 &&
-    Z[hP] > 0.1 && Z[hM] > 0.1 &&
+    Z[qA] > 0.1 && Z[qB] > 0.1 &&
     Zpair < 0.95 &&
     Mmiss > 1.05 &&
     xF > 0 &&
-    hadP[hP] > 1.0 && hadP[hM] > 1.0;
+    hadP[qA] > 1.0 && hadP[qB] > 1.0;
+
+  // cutDihadron additionally makes sure the desired hadron pair is selected
+  cutDihadron = cutDihadronKinematics && 
+    Tools::PairSame(hadIdx[qA],hadIdx[qB],whichHad[qA],whichHad[qB]);
+    
 
   // set preferred PhiR definition
   PhiR = PhiRp;
@@ -155,9 +160,9 @@ void EventTree::PrintEvent() {
   printf("  Nu=%.2f",Nu);
   printf("  y=%.2f",y);
   printf("\n");
-  printf("[---] Hadron Kinematics\n");
+  printf("[---] Hadron Kinematics: %s\n",PairName(hadIdx[qA],hadIdx[qB]).Data());
   for(int h=0; h<2; h++) {
-    printf(" (%s)\n",pmName(pairType,h).Data());
+    printf(" (%s)\n",PartName(dihHadIdx(hadIdx[qA],hadIdx[qB],h)).Data());
     printf("  E=%.2f",hadE[h]);
     printf("  P=%.2f",hadP[h]);
     printf("  Pt=%.2f",hadPt[h]);
@@ -170,15 +175,9 @@ void EventTree::PrintEvent() {
   printf("  Mh=%.2f",Mh);
   printf("  Mmiss=%.2f",Mmiss);
   printf("  xF=%.2f",xF);
-  printf("  alpha=%.2f",alpha);
-  printf("\n");
-  printf("  Zpair=%.2f  Z[%s]=%.2f  Z[%s]=%.2f",
-      Zpair,
-      pmName(pairType,hP).Data(),Z[hP],
-      pmName(pairType,hM).Data(),Z[hM]);
-  printf("\n");
-  printf("  PhiH=%.2f",PhiH);
-  printf("\n");
+  printf("  alpha=%.2f\n",alpha);
+  printf("  Zpair=%.2f  Z(a)=%.2f  Z(b)=%.2f\n",Zpair,Z[qA],Z[qB]);
+  printf("  PhiH=%.2f\n",PhiH);
   printf("[---] PhiR Tests\n");
   printf("  PhiRq=%.2f",PhiRq);
   printf("  PhiRp=%.2f",PhiRp);

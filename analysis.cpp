@@ -566,8 +566,8 @@ int main(int argc, char** argv) {
 
 
              // compute dihadron kinematics
-             dih->SetEvent(had[qH],had[qL],disEv); // -->tree
-             dihBr->SetEvent(had[qH],had[qL],disEv); // -->tree
+             dih->SetEvent(had[qA],had[qB],disEv); // -->tree
+             dihBr->SetEvent(had[qA],had[qB],disEv); // -->tree
 
 
              // fill tree
