@@ -37,7 +37,7 @@ class Dihadron : public TObject
     Bool_t useBreit;
 
     void SetEvent(
-      Trajectory * trajPlus, Trajectory * trajMinus, DIS * disEv);
+      Trajectory * trajA, Trajectory * trajB, DIS * disEv);
     void ComputeAngles();
     Float_t PlaneAngle(TVector3 vA, TVector3 vB,
                        TVector3 vC, TVector3 vD);
@@ -80,6 +80,8 @@ class Dihadron : public TObject
     Float_t Mmiss; // missing mass
     Float_t xF; // feynman-x
     Float_t alpha; // dihadron opening angle
+    Float_t theta; // CoM-frame angle between Ph and P1
+    //Float_t theta2; // CoM-frame angle between Ph and P2 (for testing)
 
 
     // PhiR angle
@@ -124,10 +126,14 @@ class Dihadron : public TObject
     TVector3 crossAB,crossCD;
     Float_t sgn,numer,denom;
 
-    TLorentzVector vecPh_com; // P+q COM frame
-    TLorentzVector disVecQ_com; // P+q COM frame
-    TVector3 pPh_com; // COM frame
-    TVector3 pQ_com; // COM frame
+    TLorentzVector vecPh_com; // P+q COM frame Ph
+    TLorentzVector disVecQ_com; // P+q COM frame Q
+    TLorentzVector vecHad_com[2]; // P+q COM frame hadron momenta
+    TVector3 pHad_com[2];
+    TVector3 pPh_com;
+    TVector3 pQ_com;
+
+    TVector3 dihComBoost;
 
 
 

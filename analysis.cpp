@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
    // set up structure for sorting particles by E
    //   each particle has a trajectory pointer array,
    //   which will be sorted by energy later
-   const Int_t maxTraj = 40;
+   const Int_t maxTraj = 20;
    TObjArray * trajArrUS[nParticles]; // unsorted array
    TObjArray * trajArr[nParticles]; // sorted array
    Trajectory * traj[nParticles][maxTraj]; // array of trajectory pointers
@@ -78,12 +78,15 @@ int main(int argc, char** argv) {
    Float_t trajE[nParticles][maxTraj]; // sorted energy for each particle
    Int_t trajCnt[nParticles]; // number of particles for each type of observable
    Int_t nanCnt[nParticles]; // counts number of particles which have NaN 4-momenta
+   Int_t gtMaxTrajCnt[nParticles]; // counts number of particles that have multiplicity
+                                   // greater than maxTraj
    
    for(int p=0; p<nParticles; p++) {
      trajArrUS[p] = new TObjArray();
      trajArr[p] = new TObjArray();
      trajCnt[p] = 0;
      nanCnt[p] = 0;
+     gtMaxTrajCnt[p] = 0;
      for(int t=0; t<maxTraj; t++) {
        traj[p][t] = new Trajectory(p);
      };
@@ -109,6 +112,13 @@ int main(int argc, char** argv) {
    tree->Branch("Nu",&(disEv->Nu),"Nu/F");
    tree->Branch("x",&(disEv->x),"x/F");
    tree->Branch("y",&(disEv->y),"y/F");
+   
+   // electron kinematics branches
+   tree->Branch("eleE",&(disEv->eleE),"eleE/F");
+   tree->Branch("elePt",&(disEv->elePt),"elePt/F");
+   tree->Branch("eleEta",&(disEv->eleEta),"eleEta/F");
+   tree->Branch("elePhi",&(disEv->elePhi),"elePhi/F");
+
 
    // miscellaneous branches for classifying the type of observables
    Int_t particleCntAll;
@@ -123,13 +133,15 @@ int main(int argc, char** argv) {
 
 
    // hadron branches // [ordered such that first hadron has higher charge than second]
+   Int_t pairType;
    Int_t hadIdx[2]; // particle Idx of each hadron in the pair
    Float_t hadE[2];
    Float_t hadP[2];
    Float_t hadPt[2];
    Float_t hadEta[2];
    Float_t hadPhi[2];
-   tree->Branch("hadIdx",hadIdx,"hadE[2]/I");
+   tree->Branch("pairType",&pairType,"pairType/I");
+   tree->Branch("hadIdx",hadIdx,"hadIdx[2]/I");
    tree->Branch("hadE",hadE,"hadE[2]/F");
    tree->Branch("hadP",hadP,"hadP[2]/F");
    tree->Branch("hadPt",hadPt,"hadPt[2]/F");
@@ -143,6 +155,8 @@ int main(int argc, char** argv) {
    tree->Branch("Zpair",&(dih->zpair),"Zpair/F");
    tree->Branch("xF",&(dih->xF),"xF/F");
    tree->Branch("alpha",&(dih->alpha),"alpha/F");
+   tree->Branch("theta",&(dih->theta),"theta/F");
+
    tree->Branch("Ph",&(dih->PhMag),"Ph/F");
    tree->Branch("PhPerp",&(dih->PhPerpMag),"PhPerp/F");
    tree->Branch("PhEta",&(dih->PhEta),"PhEta/F");
@@ -174,8 +188,11 @@ int main(int argc, char** argv) {
    tree->Branch("b_PhiRp_g",&(dihBr->PhiRp_g),"b_PhiRp_g/F"); // via eq. 9 in 1408.5721
 
    // pi0 (diphoton) branches
+   tree->Branch("photE",diPhot->photE,"photE[2]/F"); // photon energy
+   tree->Branch("photPt",diPhot->photPt,"photPt[2]/F"); // photon transverse momentum
+   tree->Branch("photEta",diPhot->photEta,"photEta[2]/F"); // photon pseudorapidity
+   tree->Branch("photPhi",diPhot->photPhi,"photPhi[2]/F"); // photon azimuth
    tree->Branch("diphE",&(diPhot->E),"diphE/F"); // diphoton energy
-   tree->Branch("diphEphot",diPhot->Ephot,"diphEphot[2]/F"); // energy of each photon
    tree->Branch("diphZ",&(diPhot->Z),"diphZ/F"); // diphoton energy sharing
    tree->Branch("diphPt",&(diPhot->Pt),"diphPt/F"); // diphoton transverse momentum
    tree->Branch("diphM",&(diPhot->Mgg),"diphM/F"); // diphoton invariant mass
@@ -268,6 +285,7 @@ int main(int argc, char** argv) {
        hadEta[h] = -10000;
        hadPhi[h] = -10000;
      };
+     pairType = -10000;
 
 
 
@@ -350,9 +368,10 @@ int main(int argc, char** argv) {
              nanCnt[pIdx]++; // count instances of NaN particles
            };
          } else {
-           fprintf(stderr,"WARNING: more than maxTraj observables of type %s found\n",
-             PartName(pIdx).Data());
+           //fprintf(stderr,"WARNING: more than maxTraj observables of type %s found\n",
+             //PartName(pIdx).Data());
            //tr = new Trajectory(pIdx); // allocate more memory
+           gtMaxTrajCnt[pIdx]++;
          };
        };
      };
@@ -512,7 +531,7 @@ int main(int argc, char** argv) {
              // set 1st hadron to the highest energy one, and 2nd to the next highest
              if( trajCnt[i1] >=2 ) {
                for(int h=0; h<2; h++) {
-                 hadIdx[h] = i1;
+                 hadIdx[h] = i1; // -->tree
                  had[h] = (Trajectory*) trajArr[i1]->At(h);
                };
                foundObservablePair = true;
@@ -524,7 +543,7 @@ int main(int argc, char** argv) {
              // equal, higher mass comes first)
              if( trajCnt[i1] >= 1 && trajCnt[i2] >= 1 ) {
                for(int h=0; h<2; h++) {
-                 hadIdx[h] = dihHadIdx(i1,i2,h);
+                 hadIdx[h] = dihHadIdx(i1,i2,h); // -->tree
                  had[h] = (Trajectory*) trajArr[hadIdx[h]]->At(0);
                };
                foundObservablePair = true;
@@ -545,6 +564,7 @@ int main(int argc, char** argv) {
              if(debug) printf(">>> BEGIN DIHADRON EVENT %s\n",PairName(i1,i2).Data());
 
              // set hadron kinematics
+             pairType = Tools::EncodePairType(hadIdx[qA],hadIdx[qB]); // -->tree
              for(int h=0; h<2; h++) {
                hadE[h] = (had[h]->Vec).E(); // -->tree
                hadP[h] = (had[h]->Vec).P(); // -->tree
@@ -575,7 +595,7 @@ int main(int argc, char** argv) {
 
              // increment event counter
              evCount++;
-             if(evCount%1000==0) printf("[---] %d dihadron events found\n",evCount);
+             if(evCount%100000==0) printf("[---] %d dihadron events found\n",evCount);
 
            }; // eo if foundObservablePair
 
@@ -602,6 +622,14 @@ int main(int argc, char** argv) {
      if(nanCnt[p]>0) {
        fprintf(stderr,"WARNING: %d NaN %s 4-momenta were found (and ignored)\n",
          nanCnt[p],PartName(p).Data());
+     };
+   };
+
+   // print number of particles greater than maxTrajCnt
+   for(int p=0; p<nParticles; p++) {
+     if(gtMaxTrajCnt[p]>0) {
+       fprintf(stderr,"WARNING: %d instances of %s greater than maxTraj (ignored)\n",
+         gtMaxTrajCnt[p],PartName(p).Data());
      };
    };
 

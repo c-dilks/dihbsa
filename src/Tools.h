@@ -39,6 +39,15 @@ class Tools {
       return -10000;
     };
 
+    
+    // get angle between two vectors
+    static Float_t AngleSubtend(TVector3 vA, TVector3 vB) {
+      Float_t m = vA.Mag() * vB.Mag();
+      if(m>0) return TMath::ACos( vA.Dot(vB) / m );
+      return 0;
+    };
+
+
 
     // vector projection:
     // returns vA projected onto vB
@@ -72,12 +81,12 @@ class Tools {
     //    the particle index of the hadron
     // -- hex is used since each digit ranges 16 values (0-F), allowing space
     //    for 16 particles
-    static void DecodeWhichPair(Int_t w, Int_t & ha, Int_t & hb) {
+    static void DecodePairType(Int_t w, Int_t & ha, Int_t & hb) {
       ha = w & 0xF;
       hb = w>>4 & 0xF;
     };
     // convert hadron indices to whichPair
-    static Int_t EncodeWhichPair(Int_t ha, Int_t hb) {
+    static Int_t EncodePairType(Int_t ha, Int_t hb) {
       return (ha<<4) + hb;
     };
 

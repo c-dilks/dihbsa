@@ -38,10 +38,14 @@ class Diphoton : public TObject
     Trajectory * photon[2]; // photon trajectories
     Trajectory * Traj; // diphoton trajectory
 
+    // photon kinematics
+    Float_t photE[2];
+    Float_t photPt[2];
+    Float_t photEta[2];
+    Float_t photPhi[2];
 
     // diphoton variables
     Float_t E; // energy of the pair
-    Float_t Ephot[2]; // energy of each photon
     Float_t Z; // energy sharing (E1-E2)/E
     Float_t Pt; // transverse momentum
     Float_t Mgg; // invariant mass

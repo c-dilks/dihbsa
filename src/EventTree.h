@@ -55,6 +55,13 @@ class EventTree : public TObject
     Float_t hadEta[2];
     Float_t hadPhi[2];
 
+    // electron kinematics
+    Float_t eleE;
+    Float_t elePt;
+    Float_t eleEta;
+    Float_t elePhi;
+
+
     // dihadron kinematics
     Int_t particleCnt[nParticles];
     Int_t particleCntAll;
@@ -83,6 +90,10 @@ class EventTree : public TObject
     Float_t b_PhiRp_g;
 
     // diphotons
+    Float_t photE[2];
+    Float_t photPt[2];
+    Float_t photEta[2];
+    Float_t photPhi[2];
     Float_t diphE;
     Float_t diphEphot[2];
     Float_t diphZ;

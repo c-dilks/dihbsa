@@ -6,7 +6,7 @@ using namespace std;
 
 
 Dihadron::Dihadron() {
-  debug = true;
+  debug = false;
   useBreit = false;
 
   for(h=0; h<2; h++) vecHad[h] = TLorentzVector(0,0,0,0);
@@ -18,12 +18,12 @@ Dihadron::Dihadron() {
 
 
 void Dihadron::SetEvent(
-  Trajectory * trajPlus, 
-  Trajectory * trajMinus,
+  Trajectory * trajA, 
+  Trajectory * trajB,
   DIS * disEvent
 ) {
-  hadron[hP] = trajPlus;
-  hadron[hM] = trajMinus;
+  hadron[qA] = trajA;
+  hadron[qB] = trajB;
   disEv = disEvent;
 
 
@@ -47,8 +47,8 @@ void Dihadron::SetEvent(
     vecHad[h] = hadron[h]->Vec;
     if(useBreit) vecHad[h].Boost(disEv->BreitBoost);
   };
-  vecPh = vecHad[hP] + vecHad[hM];
-  vecR = 0.5 * ( vecHad[hP] - vecHad[hM] );
+  vecPh = vecHad[qA] + vecHad[qB];
+  vecR = 0.5 * ( vecHad[qA] - vecHad[qB] );
 
 
   // get 3-momenta from 4-momenta
@@ -74,9 +74,7 @@ void Dihadron::SetEvent(
   Mmiss = vecMmiss.M();
 
   // compute opening angle
-  alpha = TMath::ACos(
-    pHad[hM].Dot(pHad[hP]) / ( pHad[hM].Mag() * pHad[hP].Mag() ) 
-  );
+  alpha = Tools::AngleSubtend(pHad[qA],pHad[qB]);
 
   // compute xF
   vecPh_com = vecPh;
@@ -89,9 +87,32 @@ void Dihadron::SetEvent(
   // -- boost to CoM frame
   vecPh_com.Boost(disEv->ComBoost);
   disVecQ_com.Boost(disEv->ComBoost);
+
   pPh_com = vecPh_com.Vect();
   pQ_com = disVecQ_com.Vect();
+
   xF = pPh_com.Dot(pQ_com) / (disEv->W * pQ_com.Mag());
+
+
+  // compute theta
+  // -- boost hadron momenta to dihadron CoM frame
+  dihComBoost = -1*vecPh.BoostVector();
+  if(debug) printf("========== theta\n");
+  for(h=0; h<2; h++) {
+    vecHad_com[h] = vecHad[h];
+    //if(useBreit) vecHad_com[h].Boost(-1*(disEv->BreitBoost));
+    vecHad_com[h].Boost(dihComBoost);
+    pHad_com[h] = vecHad_com[h].Vect();
+    if(debug) vecHad_com[h].Print();
+  };
+  if(debug) (vecHad_com[qA]+vecHad_com[qB]).Print(); // should be zero
+
+  // -- in this frame, Ph=0, and the boost direction was along Ph
+  // -- calculate theta as the angle between boosted hadron momentum
+  //    and original Ph direction
+  theta = Tools::AngleSubtend(pHad_com[qA],pPh);
+  //theta2 = Tools::AngleSubtend(pHad_com[qB],pPh); // == PI - theta
+
 
 
   // compute angles
@@ -127,8 +148,8 @@ void Dihadron::ComputeAngles() {
   // compute transverse components of R in different frames
   // (and with different equations)
   // -- in T-frame, via kT relation (following 1707.04999)
-  pR_T_byKt = 1 / ( z[hP] + z[hM] ) *  
-              ( z[hM] * pHad_Perp[hP]  -  z[hP] * pHad_Perp[hM] );
+  pR_T_byKt = 1 / ( z[qA] + z[qB] ) *  
+              ( z[qB] * pHad_Perp[qA]  -  z[qA] * pHad_Perp[qB] );
 
   // -- in T-frame, via rejection
   pR_T_byRej = Tools::Reject(pR,pPh);
@@ -138,7 +159,7 @@ void Dihadron::ComputeAngles() {
 
   // -- by projection operator (eq. 9 in 1408.5721)
   xi = 2 * vecR.Dot(disVecTarget) / ( vecPh.Dot(disVecTarget) );
-  ratio = (xi*Mh*Mh - (hadM[hP]*hadM[hP]-hadM[hM]*hadM[hM])) / ( (disEv->Q2) * zpair );
+  ratio = (xi*Mh*Mh - (hadM[qA]*hadM[qA]-hadM[qB]*hadM[qB])) / ( (disEv->Q2) * zpair );
   vecR_T_byProj = vecR - (xi/2.0)*vecPh + (disEv->x) * ratio * disVecTarget;
   pR_T_byProj = vecR_T_byProj.Vect();
 
@@ -211,7 +232,7 @@ Float_t Dihadron::PlaneAngle(
 void Dihadron::ResetVars() {
   Mh = -10000;
   Mmiss = -10000;
-  for(int h=0; h<2; h++) z[h] = -10000;
+  for(h=0; h<2; h++) z[h] = -10000;
   zpair = -10000;
   xF = -10000;
   alpha = -10000;

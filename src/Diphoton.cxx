@@ -24,10 +24,13 @@ void Diphoton::SetEvent(Trajectory * traj1, Trajectory * traj2) {
   vecDiphoton = photon[0]->Vec + photon[1]->Vec;
 
 
-  // energy and momentum
+  // get photon kinematics
   for(int h=0; h<2; h++) {
-    Ephot[h] = (photon[h]->Vec).E();
     momPhoton[h] = (photon[h]->Vec).Vect();
+    photE[h] = (photon[h]->Vec).E();
+    photPt[h] = (photon[h]->Vec).Pt();
+    photEta[h] = (photon[h]->Vec).Eta();
+    photPhi[h] = (photon[h]->Vec).Phi();
   };
   E = vecDiphoton.E();
 
@@ -47,7 +50,7 @@ void Diphoton::SetEvent(Trajectory * traj1, Trajectory * traj2) {
   Phi = vecDiphoton.Phi();
 
   // energy sharing
-  Z = fabs(Ephot[0]-Ephot[1]) / E;
+  Z = fabs(photE[0]-photE[1]) / E;
 
   // invariant mass
   Mgg = vecDiphoton.M();
@@ -71,9 +74,13 @@ void Diphoton::SetEvent(Trajectory * traj1, Trajectory * traj2) {
 
 
 void Diphoton::ResetVars() {
+  for(int h=0; h<2; h++) {
+    photE[h] = -10000;
+    photPt[h] = -10000;
+    photEta[h] = -10000;
+    photPhi[h] = -10000;
+  };
   E = -10000;
-  Ephot[0] = -10000;
-  Ephot[1] = -10000;
   Z = -10000;
   Pt = -10000;
   Mgg = -10000;

@@ -35,14 +35,14 @@ int main(int argc, char** argv) {
 
    // ARGUMENTS
    inDir = "outroot";
-   whichPair = Tools::EncodeWhichPair(kPip,kPim);
+   whichPair = Tools::EncodePairType(kPip,kPim);
    if(argc>1) inDir = TString(argv[1]);
    if(argc>2) whichPair = (Int_t)strtof(argv[2],NULL);
    
    // get hadron pair from whichPair; note that in the print out, the 
    // order of hadron 0 and 1 is set by Constants::dihHadIdx
    printf("whichPair = 0x%x\n",whichPair);
-   Tools::DecodeWhichPair(whichPair,whichHad[qA],whichHad[qB]);
+   Tools::DecodePairType(whichPair,whichHad[qA],whichHad[qB]);
    for(int h=0; h<2; h++) {
      hadName[h] = PairHadName(whichHad[qA],whichHad[qB],h);
      hadTitle[h] = PairHadTitle(whichHad[qA],whichHad[qB],h);
@@ -60,13 +60,23 @@ int main(int argc, char** argv) {
    Float_t PhiHR;
 
 
+   // DIS kinematics
    TH1D * WDist = new TH1D("WDist","W distribution (w/o W cut);W",NBINS,0,6);
    TH1D * XDist = new TH1D("XDist","x distribution;x",NBINS,0,1);
    TH2D * Q2vsW = new TH2D("Q2vsW","Q^{2} vs. W (w/o W cut);W;Q^{2}",
                                    NBINS,0,6,NBINS,0,12);
    TH2D * Q2vsX = new TH2D("Q2vsX","Q^{2} vs. x;x;Q^{2}",NBINS,0,1,NBINS,0,12);
    TH1D * YDist = new TH1D("YDist","y distribution (w/o y cut);y",NBINS,0,1);
+   
+   // electron kinematics
+   TH1D * eleEDist = new TH1D("eleEDist","e^{-} E distribution",NBINS,0,12);
+   TH1D * elePtDist = new TH1D("elePtDist","e^{-} p_{T} distribution",NBINS,0,4);
+   TH1D * eleEtaDist = new TH1D("eleEtaDist","e^{-} #phi distribution",NBINS,-3,6);
+   TH1D * elePhiDist = new TH1D("elePhiDist","e^{-} #phi distribution",NBINS,-PIe,PIe);
+   TH2D * elePtVsPhi = new TH2D("elePtvsPhi","e^{-} p_{T} vs #phi;#phi;#p_{T}",
+     NBINS,-PIe,PIe,NBINS,0,4);
 
+   // dihadron's hadron kinematic correlations
    TH2D * hadECorr = new TH2D("hadECorr",corrTitle("E"),NBINS,0,10,NBINS,0,10);
    TH2D * hadPCorr = new TH2D("hadPCorr",corrTitle("p"),NBINS,0,10,NBINS,0,10);
    TH2D * hadPtCorr = new TH2D("hadPtCorr",corrTitle("p_{T}"),NBINS,0,4,NBINS,0,4);
@@ -75,6 +85,7 @@ int main(int argc, char** argv) {
                                              NBINS,-PIe,PIe,NBINS,-PIe,PIe);
    TH2D * hadZCorr = new TH2D("hadZCorr",corrTitle("z"),NBINS,0,1,NBINS,0,1);
    
+   // dihadron's hadron kinematics
    TH1D * hadEDist[2];
    TH1D * hadPDist[2];
    TH1D * hadPtDist[2];
@@ -97,6 +108,7 @@ int main(int argc, char** argv) {
    };
 
 
+   // dihadron kinematics
    TString plotTitle = "#Delta#phi = #phi(" + hadTitle[qA] + ")" +
                                  " - #phi(" + hadTitle[qB] + 
                                  ") distribution;#Delta#phi";
@@ -124,6 +136,7 @@ int main(int argc, char** argv) {
      NBINS,0,6);
 
 
+   // hadron type matrix
    TH2D * hadTypeMatrix = new TH2D("hadTypeMatrix",
      "Dihadron hadron types matrix;hadron 2;hadron 1",
      nObservables,0,nObservables,nObservables,0,nObservables);
@@ -133,6 +146,11 @@ int main(int argc, char** argv) {
        hadTypeMatrix->GetXaxis()->SetBinLabel(h2+1,ObsTitle(h2));
      };
    };
+
+
+   // fiducial phi mask
+   TH1D * fiducialPhiMask = new TH1D("fiducialPhiMask",
+     "#phi fiducial regions",NBINS,-PIe,PIe);
 
 
 
@@ -171,6 +189,15 @@ int main(int argc, char** argv) {
 
      // fill dihadron kinematics plots
      if(ev->cutDihadron && ev->cutQ2 && ev->cutW && ev->cutY) {
+
+       eleEDist->Fill(ev->eleE);
+       elePtDist->Fill(ev->elePt);
+       eleEtaDist->Fill(ev->eleEta);
+       elePhiDist->Fill(ev->elePhi);
+       elePtVsPhi->Fill(ev->elePhi,ev->elePt);
+
+       if(Tools::PhiFiducialCut(ev->elePhi)) fiducialPhiMask->Fill(ev->elePhi);
+
 
        Q2vsX->Fill(ev->x,ev->Q2);
        XDist->Fill(ev->x);
@@ -218,6 +245,15 @@ int main(int argc, char** argv) {
    Q2vsW->Write();
    Q2vsX->Write();
    YDist->Write();
+
+   eleEDist->Write();
+   elePtDist->Write();
+   eleEtaDist->Write();
+   elePhiDist->Write();
+   elePtVsPhi->Write();
+   fiducialPhiMask->Write();
+
+
 
    hadTypeMatrix->Write();
 
