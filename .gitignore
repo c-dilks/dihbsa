@@ -8,3 +8,4 @@
 logfiles/*
 src/DihBsaDict.*
 outz
+.nfs*

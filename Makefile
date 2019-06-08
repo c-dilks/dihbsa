@@ -58,6 +58,7 @@ clean:
 	@cd src; make clean
 	@echo 'Removing all build files'
 	@rm -rf *.exe
+	@rm -rf *.o
 
 %.o: %.cpp
 	$(CXX) -c $< $(ROOTCFLAGS) $(DIHBSACFLAGS) $(HIPOCFLAGS) $(LZ4INCLUDES)
