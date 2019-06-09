@@ -10,7 +10,7 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
 
   debug = true;
 
-  Tools::DecodePairType(whichPair_,whichHad[qA],whichHad[qB]);
+  DecodePairType(whichPair_,whichHad[qA],whichHad[qB]);
   printf("\n>>> DIHADRON SELECTION: %s\n\n",PairName(whichHad[qA],whichHad[qB]).Data());
 
 
@@ -80,7 +80,6 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("photEta",photEta);
   chain->SetBranchAddress("photPhi",photPhi);
   chain->SetBranchAddress("diphE",&diphE);
-  chain->SetBranchAddress("diphEphot",diphEphot);
   chain->SetBranchAddress("diphZ",&diphZ);
   chain->SetBranchAddress("diphPt",&diphPt);
   chain->SetBranchAddress("diphM",&diphM);

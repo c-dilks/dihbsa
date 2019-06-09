@@ -76,20 +76,6 @@ class Tools {
     };
 
 
-    // convert whichPair hex number to hadron indices
-    // -- whichPair is a 2-digit hex number, where each digit represents 
-    //    the particle index of the hadron
-    // -- hex is used since each digit ranges 16 values (0-F), allowing space
-    //    for 16 particles
-    static void DecodePairType(Int_t w, Int_t & ha, Int_t & hb) {
-      ha = w & 0xF;
-      hb = w>>4 & 0xF;
-    };
-    // convert hadron indices to whichPair
-    static Int_t EncodePairType(Int_t ha, Int_t hb) {
-      return (ha<<4) + hb;
-    };
-
 
     // compare integer pair (a1,a2) to (b1,b2), returns true if they're the same,
     // regardless of order

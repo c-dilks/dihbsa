@@ -564,7 +564,7 @@ int main(int argc, char** argv) {
              if(debug) printf(">>> BEGIN DIHADRON EVENT %s\n",PairName(i1,i2).Data());
 
              // set hadron kinematics
-             pairType = Tools::EncodePairType(hadIdx[qA],hadIdx[qB]); // -->tree
+             pairType = EncodePairType(hadIdx[qA],hadIdx[qB]); // -->tree
              for(int h=0; h<2; h++) {
                hadE[h] = (had[h]->Vec).E(); // -->tree
                hadP[h] = (had[h]->Vec).P(); // -->tree

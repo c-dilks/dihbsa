@@ -95,7 +95,6 @@ class EventTree : public TObject
     Float_t photEta[2];
     Float_t photPhi[2];
     Float_t diphE;
-    Float_t diphEphot[2];
     Float_t diphZ;
     Float_t diphPt;
     Float_t diphM;

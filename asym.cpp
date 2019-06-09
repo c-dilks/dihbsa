@@ -33,6 +33,13 @@ void DrawSimpleGraph(TGraphErrors * g_, Binning * B_, Int_t v, Bool_t setRange_=
 void DrawAsymGr(TGraphErrors * g_);
 void SetCloneName(TH1 * clone_);
 
+Int_t pairType;
+TString inDir;
+Int_t whichModulation;
+Int_t dimensions;
+Int_t ivType;
+Int_t whichPhiR;
+Bool_t batchMode;
 
 int main(int argc, char** argv) {
    
@@ -42,23 +49,21 @@ int main(int argc, char** argv) {
    Asymmetry * A; // Asymmetry pointer
 
    // ARGUMENTS
-   TString inDir = "outroot";
-   Int_t whichModulation = 0; // see src/Asymmetry.h
-   Int_t dimensions = 1; // number of dimensions 
-   Int_t ivType = 1; // which variables to bin in (see below)
-   Int_t whichPhiR = 3; // 1:phiRq  2:phiRp_r  3:phiRp // Alessandro prefers 3:phiRp
-   Bool_t batchMode = 0; // if true, renames output files and prints pngs
-
-
-   Int_t whichPair = pairPM; // LOCKED AT PM pair for now!!  // TODO
-
+   pairType = EncodePairType(kPip,kPim);
+   inDir = "outroot";
+   whichModulation = 0; // see src/Asymmetry.h
+   dimensions = 1; // number of dimensions 
+   ivType = 1; // which variables to bin in (see below)
+   whichPhiR = 3; // 1:phiRq  2:phiRp_r  3:phiRp // Alessandro prefers 3:phiRp
+   batchMode = 0; // if true, renames output files and prints pngs
 
    // help printout
    if(argc==1) {
      fprintf(stderr,
-       "\nUSAGE: %s [inDir] [whichModulation] [dimensions] [ivType] [whichPhiR] [batchMode]\n",
+       "\nUSAGE: %s [inDir] [pairType] [whichModulation] [dimensions] [ivType] [whichPhiR] [batchMode]\n",
        argv[0]);
      printf("\n- inDir: directory of ROOT files to analyse\n");
+     printf("\n- pairType: hadron pair type (run PrintEnumerators.C\n");
      printf("\n- whichModulation:\n");
      for(int m=0; m<Asymmetry::nMod; m++) {
        A = new Asymmetry(BS,m,-10000);
@@ -81,13 +86,15 @@ int main(int argc, char** argv) {
      return 0;
    };
 
-   if(argc>1) inDir = TString(argv[1]);
-   if(argc>2) whichModulation = (Int_t)strtof(argv[2],NULL);
-   if(argc>3) dimensions = (Int_t)strtof(argv[3],NULL);
-   if(argc>3) ivType = (Int_t)strtof(argv[4],NULL);
-   if(argc>5) whichPhiR = (Int_t)strtof(argv[5],NULL);
-   if(argc>6) batchMode = (Bool_t)strtof(argv[6],NULL);
+   if(argc>1) inDir =           TString(argv[1]);
+   if(argc>2) pairType =        (Int_t) strtof(argv[2],NULL);
+   if(argc>3) whichModulation = (Int_t) strtof(argv[3],NULL);
+   if(argc>4) dimensions =      (Int_t) strtof(argv[4],NULL);
+   if(argc>5) ivType =          (Int_t) strtof(argv[5],NULL);
+   if(argc>6) whichPhiR =       (Int_t) strtof(argv[6],NULL);
+   if(argc>7) batchMode =       (Bool_t) strtof(argv[7],NULL);
 
+   printf("pairType = 0x%x\n",pairType);
    printf("inDir = %s\n",inDir.Data());
    printf("whichModulation = %d\n",whichModulation);
    printf("dimensions = %d\n",dimensions);
@@ -164,7 +171,7 @@ int main(int argc, char** argv) {
    TFile * outfile = new TFile(outfileName,"RECREATE");
 
 
-   EventTree * ev = new EventTree(TString(inDir+"/*.root"),whichPair);
+   EventTree * ev = new EventTree(TString(inDir+"/*.root"),pairType);
 
 
    

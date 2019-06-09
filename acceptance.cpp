@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
 
    // ARGUMENTS
    TString inDir = "outroot";
-   Int_t whichPair = pairPM;
+   Int_t whichPair = EncodePairType(kPip,kPim);
    if(argc>1) inDir = TString(argv[1]);
    if(argc>2) whichPair = (Int_t)strtof(argv[2],NULL);
 
@@ -137,7 +137,7 @@ int main(int argc, char** argv) {
        PhiHR = Tools::AdjAngle(ev->PhiH - ev->PhiR);
        PhiHRDist->Fill(PhiHR);
 
-       deltaPhi = Tools::AdjAngle(ev->hadPhi[hP] - ev->hadPhi[hM]);
+       deltaPhi = Tools::AdjAngle(ev->hadPhi[qA] - ev->hadPhi[qB]);
        deltaPhiDist->Fill(deltaPhi);
 
        // set Asymmetry branches and fill modulation plots

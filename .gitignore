@@ -9,3 +9,4 @@ logfiles/*
 src/DihBsaDict.*
 outz
 .nfs*
+*.pcm

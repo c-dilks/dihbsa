@@ -16,11 +16,20 @@ void PrintEnumerators() {
   // print pair types
   printf("dihadron pair types\n");
   printf("-------------------\n");
-  for(int p=0; p<nPairType; p++) {
-    printf("%d = %s  (%s)\n",p,pairTitle(p).Data(),pairName(p).Data());
+  Int_t pa,pb;
+  TString outf = "pairs.list";
+  TString outft = outf+".tmp";
+  gSystem->RedirectOutput(outft,"w");
+  for(int o1=0; o1<nObservables; o1++) {
+    for(int o2=0; o2<nObservables; o2++) {
+      if(IterPair(o1,o2,pa,pb)) {
+        printf("0x%x %s\n", EncodePairType(pa,pb), PairName(pa,pb).Data() );
+      };
+    };
   };
-  printf("\n");
-
-
+  gSystem->RedirectOutput(0);
+  gROOT->ProcessLine(TString(".! sort " + outft + " | uniq > " + outf));
+  gROOT->ProcessLine(TString(".! rm " + outft));
+  gROOT->ProcessLine(TString(".! cat " + outf));
 };
 

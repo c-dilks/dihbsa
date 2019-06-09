@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
    // ARGUMENTS
    TString inDir = "outroot";
    Bool_t useBreit = false;
-   Int_t whichPair = pairPM;
+   Int_t whichPair = EncodePairType(kPip,kPim);
    if(argc>1) inDir = TString(argv[1]);
    if(argc>2) useBreit = (Bool_t)strtof(argv[2],NULL);
    if(argc>3) whichPair = (Int_t)strtof(argv[3],NULL);
@@ -313,8 +313,8 @@ int main(int argc, char** argv) {
 
        if(ev->Q2 > 2 && ev->Q2 < 3) sigmaDist->Fill(sigma);
 
-       deltaEta = ev->hadEta[hP] - ev->hadEta[hM];
-       deltaPhi = Tools::AdjAngle(ev->hadPhi[hP] - ev->hadPhi[hM]);
+       deltaEta = ev->hadEta[qA] - ev->hadEta[qB];
+       deltaPhi = Tools::AdjAngle(ev->hadPhi[qA] - ev->hadPhi[qB]);
        D = TMath::Sqrt(
          TMath::Power(deltaEta, 2) +
          TMath::Power(deltaPhi, 2) );

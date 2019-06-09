@@ -22,8 +22,10 @@
 #include "EventTree.h"
 
 void HadronCompareCanv(TCanvas * canv, TH1D * dist[2], TH2D * corr);
+void Hadron2dCanv(TCanvas * canv, TH2D * distA, TH2D * distB);
 TString corrTitle(TString var);
 TString distTitle(TString var);
+TString dist2Title(TString hadron, TString varX,TString varY);
 
 TString inDir;
 Int_t whichPair;
@@ -35,14 +37,14 @@ int main(int argc, char** argv) {
 
    // ARGUMENTS
    inDir = "outroot";
-   whichPair = Tools::EncodePairType(kPip,kPim);
+   whichPair = EncodePairType(kPip,kPim);
    if(argc>1) inDir = TString(argv[1]);
    if(argc>2) whichPair = (Int_t)strtof(argv[2],NULL);
    
    // get hadron pair from whichPair; note that in the print out, the 
    // order of hadron 0 and 1 is set by Constants::dihHadIdx
    printf("whichPair = 0x%x\n",whichPair);
-   Tools::DecodePairType(whichPair,whichHad[qA],whichHad[qB]);
+   DecodePairType(whichPair,whichHad[qA],whichHad[qB]);
    for(int h=0; h<2; h++) {
      hadName[h] = PairHadName(whichHad[qA],whichHad[qB],h);
      hadTitle[h] = PairHadTitle(whichHad[qA],whichHad[qB],h);
@@ -73,6 +75,10 @@ int main(int argc, char** argv) {
    TH1D * elePtDist = new TH1D("elePtDist","e^{-} p_{T} distribution",NBINS,0,4);
    TH1D * eleEtaDist = new TH1D("eleEtaDist","e^{-} #phi distribution",NBINS,-3,6);
    TH1D * elePhiDist = new TH1D("elePhiDist","e^{-} #phi distribution",NBINS,-PIe,PIe);
+   TH2D * eleEtaVsPhi = new TH2D("eleEtavsPhi","e^{-} #eta vs #phi;#phi;#eta",
+     NBINS,-PIe,PIe,NBINS,-3,6);
+   TH2D * eleEVsPhi = new TH2D("eleEvsPhi","e^{-} E vs #phi;#phi;E",
+     NBINS,-PIe,PIe,NBINS,0,12);
    TH2D * elePtVsPhi = new TH2D("elePtvsPhi","e^{-} p_{T} vs #phi;#phi;#p_{T}",
      NBINS,-PIe,PIe,NBINS,0,4);
 
@@ -92,6 +98,9 @@ int main(int argc, char** argv) {
    TH1D * hadEtaDist[2];
    TH1D * hadPhiDist[2];
    TH1D * hadZDist[2];
+   TH2D * hadEtaVsPhi[2];
+   TH2D * hadEVsPhi[2];
+   TH2D * hadPtVsPhi[2];
    for(int h=0; h<2; h++) {
      hadEDist[h] = new TH1D(TString(hadName[h]+"hadEDist"),distTitle("E"),
        NBINS,0,10);
@@ -105,6 +114,16 @@ int main(int argc, char** argv) {
        NBINS,-PIe,PIe);
      hadZDist[h] = new TH1D(TString(hadName[h]+"hadZDist"),distTitle("z"),
        NBINS,0,1);
+
+     hadEtaVsPhi[h] = new TH2D(
+       TString(hadName[h]+"hadEtaVsPhi"),dist2Title(hadTitle[h],"#phi","#eta"),
+       NBINS,-PIe,PIe,NBINS,0,5);
+     hadEVsPhi[h] = new TH2D(
+       TString(hadName[h]+"hadEVsPhi"),dist2Title(hadTitle[h],"#phi","E"),
+       NBINS,-PIe,PIe,NBINS,0,10);
+     hadPtVsPhi[h] = new TH2D(
+       TString(hadName[h]+"hadPtVsPhi"),dist2Title(hadTitle[h],"#phi","p_{T}"),
+       NBINS,-PIe,PIe,NBINS,0,4);
    };
 
 
@@ -176,6 +195,8 @@ int main(int argc, char** argv) {
      // fill DIS kinematic plots
      if(ev->cutDihadron) {
 
+       //ev->PrintEvent();
+
        if(ev->cutQ2 && ev->cutY) {
          WDist->Fill(ev->W);
          Q2vsW->Fill(ev->W,ev->Q2);
@@ -194,6 +215,8 @@ int main(int argc, char** argv) {
        elePtDist->Fill(ev->elePt);
        eleEtaDist->Fill(ev->eleEta);
        elePhiDist->Fill(ev->elePhi);
+       eleEtaVsPhi->Fill(ev->elePhi,ev->eleEta);
+       eleEVsPhi->Fill(ev->elePhi,ev->eleE);
        elePtVsPhi->Fill(ev->elePhi,ev->elePt);
 
        if(Tools::PhiFiducialCut(ev->elePhi)) fiducialPhiMask->Fill(ev->elePhi);
@@ -217,6 +240,10 @@ int main(int argc, char** argv) {
          hadEtaDist[h]->Fill(ev->hadEta[h]);
          hadPhiDist[h]->Fill(ev->hadPhi[h]);
          hadZDist[h]->Fill(ev->Z[h]);
+
+         hadEtaVsPhi[h]->Fill(ev->hadPhi[h],ev->hadEta[h]);
+         hadEVsPhi[h]->Fill(ev->hadPhi[h],ev->hadE[h]);
+         hadPtVsPhi[h]->Fill(ev->hadPhi[h],ev->hadPt[h]);
        };
 
        deltaPhi = Tools::AdjAngle(ev->hadPhi[qA] - ev->hadPhi[qB]);
@@ -250,6 +277,8 @@ int main(int argc, char** argv) {
    elePtDist->Write();
    eleEtaDist->Write();
    elePhiDist->Write();
+   eleEtaVsPhi->Write();
+   eleEVsPhi->Write();
    elePtVsPhi->Write();
    fiducialPhiMask->Write();
 
@@ -263,6 +292,9 @@ int main(int argc, char** argv) {
    TCanvas * hadEtaCanv = new TCanvas("hadEtaCanv","hadEtaCanv",1000,800);
    TCanvas * hadPhiCanv = new TCanvas("hadPhiCanv","hadPhiCanv",1000,800);
    TCanvas * hadZCanv = new TCanvas("hadZCanv","hadZCanv",1000,800);
+   TCanvas * hadEtaVsPhiCanv = new TCanvas("hadEtaVsPhiCanv","hadEtaVsPhiCanv",1000,800);
+   TCanvas * hadEVsPhiCanv = new TCanvas("hadEVsPhiCanv","hadEVsPhiCanv",1000,800);
+   TCanvas * hadPtVsPhiCanv = new TCanvas("hadPtVsPhiCanv","hadPtVsPhiCanv",1000,800);
 
    HadronCompareCanv(hadECanv, hadEDist, hadECorr);
    HadronCompareCanv(hadPCanv, hadPDist, hadPCorr);
@@ -270,6 +302,9 @@ int main(int argc, char** argv) {
    HadronCompareCanv(hadEtaCanv, hadEtaDist, hadEtaCorr);
    HadronCompareCanv(hadPhiCanv, hadPhiDist, hadPhiCorr);
    HadronCompareCanv(hadZCanv, hadZDist, hadZCorr);
+   Hadron2dCanv(hadEtaVsPhiCanv, hadEtaVsPhi[qA], hadEtaVsPhi[qB]);
+   Hadron2dCanv(hadEVsPhiCanv, hadEVsPhi[qA], hadEVsPhi[qB]);
+   Hadron2dCanv(hadPtVsPhiCanv, hadPtVsPhi[qA], hadPtVsPhi[qB]);
 
    hadECanv->Write();
    hadPCanv->Write();
@@ -277,6 +312,9 @@ int main(int argc, char** argv) {
    hadEtaCanv->Write();
    hadPhiCanv->Write();
    hadZCanv->Write();
+   hadEtaVsPhiCanv->Write();
+   hadEVsPhiCanv->Write();
+   hadPtVsPhiCanv->Write();
 
 
    deltaPhiDist->Write();
@@ -324,6 +362,11 @@ TString distTitle(TString var) {
 };
 
 
+TString dist2Title(TString hadron, TString varX,TString varY) {
+  return hadron + " " + varY + " vs. " + varX + ";" + varX + ";" + varY;
+};
+
+
 
 // make canvas for hadron correlation plots
 void HadronCompareCanv(TCanvas * canv, TH1D * dist[2], TH2D * corr) {
@@ -344,5 +387,14 @@ void HadronCompareCanv(TCanvas * canv, TH1D * dist[2], TH2D * corr) {
   canv->cd(2);
   corr->Draw("colz");
   canv->GetPad(2)->SetGrid(1,1);
+};
+
+// make canvas for 2d plots for each hadron 
+void Hadron2dCanv(TCanvas * canv, TH2D * distA, TH2D * distB) {
+  canv->Divide(2,1);
+  canv->cd(1);
+  distA->Draw("colz");
+  canv->cd(2);
+  distB->Draw("colz");
 };
 

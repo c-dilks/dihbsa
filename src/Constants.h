@@ -9,8 +9,11 @@
 static Double_t PI = TMath::Pi();
 static Double_t PIe = TMath::Pi() + 0.3;
 
+
 // particles constants
 // ---------------------------------------------------
+
+// local "particle index" used to address each particle
 enum particle_enum {
   kE,
   kP,
@@ -24,6 +27,7 @@ enum particle_enum {
   nParticles
 };
 
+// particle name
 static TString PartName(Int_t p) {
   switch(p) {
     case kE: return "electron";
@@ -40,7 +44,6 @@ static TString PartName(Int_t p) {
       return "unknown";
   };
 };
-
 static TString PartTitle(Int_t p) {
   switch(p) {
     case kE: return "e^{-}";
@@ -58,6 +61,7 @@ static TString PartTitle(Int_t p) {
   };
 };
 
+// particle PID
 static Int_t PartPID(Int_t p) {
   switch(p) {
     case kE: return 11;
@@ -74,12 +78,13 @@ static Int_t PartPID(Int_t p) {
       return -10000;
   };
 };
-
+// convert PID to particle index
 static Int_t PIDtoIdx(Int_t pid) {
   for(int i=0; i<nParticles; i++) { if(pid==PartPID(i)) return i; };
   return -10000;
 };
 
+// mass and charge
 static Float_t PartMass(Int_t p) {
   switch(p) {
     case kE: return 0.000511;
@@ -96,7 +101,6 @@ static Float_t PartMass(Int_t p) {
       return -10000;
   };
 };
-
 static Int_t PartCharge(Int_t p) {
   switch(p) {
     case kE: return -1;
@@ -114,6 +118,7 @@ static Int_t PartCharge(Int_t p) {
   };
 };
 
+// particle plotting colors
 static Int_t PartColor(Int_t p) {
   switch(p) {
     case kE: return kGray+2;
@@ -130,7 +135,6 @@ static Int_t PartColor(Int_t p) {
       return kBlack;
   };
 };
-
 static TString PartColorName(Int_t p) {
   switch(p) {
     case kE: return "grey";
@@ -149,16 +153,83 @@ static TString PartColorName(Int_t p) {
 };
 
 
-// NEW CODE--------------
 
-enum pair_enum { qA, qB };
-// return the hadron particleIndex within the dihadron pair, where "idx"
-// represents either the first or second hadron (idx==qA or qB, respectively); 
-// -- Convention: 
+// observables 
+// ---------------------------------------------------
+// - these are the particles that we observe for analysis, for example, for 
+//   making dihadron pairs (excludes DIS electron, which is already
+//   a default observable)
+
+// observable index
+enum observable_enum {
+  sPip,
+  sPim,
+  sPi0,
+  sKp,
+  sKm,
+  nObservables
+};
+
+// convert observable index -> particle index
+static Int_t OI(Int_t s) {
+  switch(s) {
+    case sPip: return kPip;
+    case sPim: return kPim;
+    case sPi0: return kPi0;
+    case sKp: return kKp;
+    case sKm: return kKm;
+    default: 
+      fprintf(stderr,"ERROR: bad OI request (see Constants.h)\n");
+      return -10000;
+  };
+};
+// convert particle index -> observable index
+static Int_t IO(Int_t s) {
+  switch(s) {
+    case kPip: return sPip;
+    case kPim: return sPim;
+    case kPi0: return sPi0;
+    case kKp: return sKp;
+    case kKm: return sKm;
+    default: 
+      fprintf(stderr,"ERROR: bad IO request (see Constants.h)\n");
+      return -10000;
+  };
+};
+
+// observable names
+static TString ObsName(Int_t s) { return PartName(OI(s)); };
+static TString ObsTitle(Int_t s) { return PartTitle(OI(s)); };
+
+
+// the pi0 observable is really a diphoton; thus we allow freedom to change
+// the name "pi0" to "background" when analysin background events
+static void TransformNameBG(TString & str) {
+  str.ReplaceAll(PartName(kPi0),"diphBG");
+};
+static void TransformTitleBG(TString & str) {
+  str.ReplaceAll(PartTitle(kPi0),"#gamma#gamma_{BG}");
+};
+
+
+
+
+// dihadrons
+// ---------------------------------------------------
+
+// hadron pair (A,B) is equivalent to (B,A); to give them a unique name, define
+// the following pair-ordering convention of hadron pairs with enumerators qA and qB:
 //    - if charges are different: qA has higher charge than qB
 //    - if charges are equal:
 //      - if particles are different: qA has higher mass than qB
 //      - if particles are same: indistinguishable and order doesn't matter
+// -- ordering is implemented in dihHadIdx below
+// -- pairs of numbers can be compared using Tools::PairSame, which enforces the
+//    equivalence (A,B)==(B,A)
+enum pair_enum { qA, qB };
+
+// return the ordered hadron particle index within the dihadron pair, where "idx"
+// represents either the first or second hadron (idx==qA or qB, respectively); 
 static Int_t dihHadIdx(Int_t p1, Int_t p2, Int_t idx) {
   if(p1==p2) {
     switch(idx) {
@@ -188,6 +259,8 @@ static Int_t dihHadIdx(Int_t p1, Int_t p2, Int_t idx) {
   return -10000;
 };
 
+
+// name of hadron within the pair
 static TString PairHadName(Int_t p1, Int_t p2, Int_t h) {
   TString ret = PartName(dihHadIdx(p1,p2,h));
   if(p1==p2) ret = Form("%s%d",ret.Data(),h+1);
@@ -199,6 +272,7 @@ static TString PairHadTitle(Int_t p1, Int_t p2, Int_t h) {
   return ret;
 };
 
+// name of pair
 static TString PairName(Int_t p1, Int_t p2) {
   return TString( PairHadName(p1,p2,qA) + "_" + PairHadName(p1,p2,qB) );
 };
@@ -209,123 +283,49 @@ static TString PairTitle(Int_t p1, Int_t p2) {
 };
 
 
-// enumerator for particles we consider in dihadron pairs (denoted "observable"); 
-// useful for looping over pairs we care about
-enum observable_enum {
-  sPip,
-  sPim,
-  sPi0,
-  sKp,
-  sKm,
-  nObservables
+// shorthand for referring to a pair is called "pairType", defined as a
+// 2-digit hex number, where each hex digit is the particle index
+// convert whichPair hex number to hadron indices
+// -- whichPair is a 2-digit hex number, where each digit represents 
+//    the particle index of the hadron
+// -- hex is used since each digit ranges 16 values (0-F), allowing space
+//    for 16 particles
+static void DecodePairType(Int_t w, Int_t & ha, Int_t & hb) {
+  ha = w & 0xF;
+  hb = w>>4 & 0xF;
 };
-
-// observable index to particle index
-static Int_t OI(Int_t s) {
-  switch(s) {
-    case sPip: return kPip;
-    case sPim: return kPim;
-    case sPi0: return kPi0;
-    case sKp: return kKp;
-    case sKm: return kKm;
-    default: 
-      fprintf(stderr,"ERROR: bad OI request\n");
-      return -10000;
-  };
-};
-
-static TString ObsName(Int_t s) { return PartName(OI(s)); };
-static TString ObsTitle(Int_t s) { return PartTitle(OI(s)); };
-
-
-// particle index to observable index
-static Int_t IO(Int_t s) {
-  switch(s) {
-    case kPip: return sPip;
-    case kPim: return sPim;
-    case kPi0: return sPi0;
-    case kKp: return sKp;
-    case kKm: return sKm;
-    default: 
-      fprintf(stderr,"ERROR: bad IO request\n");
-      return -10000;
-  };
-};
-  
-
-// use these methods to change any pi0 names/titles to BG titles, when looking at BG
-static void TransformNameBG(TString & str) {
-  str.ReplaceAll(PartName(kPi0),"diphBG");
-};
-
-static void TransformTitleBG(TString & str) {
-  str.ReplaceAll(PartTitle(kPi0),"#gamma#gamma_{BG}");
+// convert hadron indices to whichPair
+static Int_t EncodePairType(Int_t ha, Int_t hb) {
+  return (ha<<4) + hb;
 };
 
 
+// how to loop through unique pairs:
+// IterPair converts observable indices (a,b) to particle indices (p_a,p_b);
+// additionally, if the pair-ordering matches the unique ordering, return true
+   /*
+   for(a=0; a<nObservables; a++) {
+     for(b=0; b<nObservables; b++) {
+       if(IterPair(a,b,p_a,p_b)) {
+         // analyse pair with particle indices p_a, p_b
+       };
+     };
+   };
+   */
+static Bool_t IterPair(Int_t a, Int_t b, Int_t & p_a, Int_t & p_b) {
+  p_a = OI(a);
+  p_b = OI(b);
+  return p_a==dihHadIdx(p_a,p_b,qA) && p_b==dihHadIdx(p_a,p_b,qB);
+};
 
 
-// pair types
-// OLD CODE--------------
+// spin 
 // ---------------------------------------------------
-enum plusminus {hP,hM};
-enum pairTypeEnum { pairPM, pairP0, pairM0, nPairType };
 
-static TString pairName(Int_t pair) {
-  switch(pair) {
-    case pairPM: return "pairPM";
-    case pairP0: return "pairP0";
-    case pairM0: return "pairM0";
-    default:
-      fprintf(stderr,"ERROR: bad pairName request\n");
-      return "unknown";
-  };
-};
-
-static TString pairTitle(Int_t pair) {
-  switch(pair) {
-    case pairPM: return "pi+ pi-";
-    case pairP0: return "pi+ pi0";
-    case pairM0: return "pi0 pi-";
-    default:
-      fprintf(stderr,"ERROR: bad pairName request\n");
-      return "unknown";
-  };
-};
-
-
-static Int_t pmIdx(Int_t pair, Int_t h) {
-  if(pair == pairPM) {
-    if(h == hP)      return kPip;
-    else if(h == hM) return kPim;
-  } 
-  else if(pair == pairP0) {
-    if(h == hP)      return kPip; // higher charge
-    else if(h == hM) return kPi0; // lower charge
-  }
-  else if(pair == pairM0) {
-    if(h == hP)      return kPi0; // higher charge
-    else if(h == hM) return kPim; // lower charge
-  };
-  fprintf(stderr,"ERROR: bad pmIdx request\n");
-  return -1;
-};
-
-
-static TString pmName(Int_t pair, Int_t h) {
-  return PartName(pmIdx(pair,h));
-};
-
-
-static TString pmTitle(Int_t pair, Int_t h) {
-  return PartTitle(pmIdx(pair,h));
-};
-
-
-// spin constants
-// ---------------------------------------------------
+// spin index
 enum spinEnum { sP, sM, nSpin };
 
+// spin names
 static TString SpinName(Int_t s) {
   switch(s) {
     case sP: return "P";
@@ -335,7 +335,6 @@ static TString SpinName(Int_t s) {
       return "unknown";
   };
 };
-
 static TString SpinTitle(Int_t s) {
   switch(s) {
     case sP: return "spin +";
