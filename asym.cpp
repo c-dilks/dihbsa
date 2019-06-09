@@ -41,12 +41,12 @@ Int_t ivType;
 Int_t whichPhiR;
 Bool_t batchMode;
 
+TString dihTitle;
+
 int main(int argc, char** argv) {
    
    gStyle->SetOptFit(1);
 
-   Binning * BS = new Binning(); // instantiate binning scheme 
-   Asymmetry * A; // Asymmetry pointer
 
    // ARGUMENTS
    pairType = EncodePairType(kPip,kPim);
@@ -56,6 +56,29 @@ int main(int argc, char** argv) {
    ivType = 1; // which variables to bin in (see below)
    whichPhiR = 3; // 1:phiRq  2:phiRp_r  3:phiRp // Alessandro prefers 3:phiRp
    batchMode = 0; // if true, renames output files and prints pngs
+
+   if(argc>1) inDir =           TString(argv[1]);
+   if(argc>2) pairType =        (Int_t) strtof(argv[2],NULL);
+   if(argc>3) whichModulation = (Int_t) strtof(argv[3],NULL);
+   if(argc>4) dimensions =      (Int_t) strtof(argv[4],NULL);
+   if(argc>5) ivType =          (Int_t) strtof(argv[5],NULL);
+   if(argc>6) whichPhiR =       (Int_t) strtof(argv[6],NULL);
+   if(argc>7) batchMode =       (Bool_t) strtof(argv[7],NULL);
+
+   printf("pairType = 0x%x\n",pairType);
+   printf("inDir = %s\n",inDir.Data());
+   printf("whichModulation = %d\n",whichModulation);
+   printf("dimensions = %d\n",dimensions);
+   printf("ivType = %d\n",ivType);
+   printf("whichPhiR = %d\n",whichPhiR);
+   printf("batchMode = %d\n",(Int_t)batchMode);
+   printf("\n");
+
+   Binning * BS = new Binning(pairType); // instantiate binning scheme 
+   Asymmetry * A; // Asymmetry pointer
+   Int_t whichHad[2];
+   DecodePairType(pairType,whichHad[qA],whichHad[qB]);
+   dihTitle = PairTitle(whichHad[qA],whichHad[qB]);
 
    // help printout
    if(argc==1) {
@@ -86,22 +109,6 @@ int main(int argc, char** argv) {
      return 0;
    };
 
-   if(argc>1) inDir =           TString(argv[1]);
-   if(argc>2) pairType =        (Int_t) strtof(argv[2],NULL);
-   if(argc>3) whichModulation = (Int_t) strtof(argv[3],NULL);
-   if(argc>4) dimensions =      (Int_t) strtof(argv[4],NULL);
-   if(argc>5) ivType =          (Int_t) strtof(argv[5],NULL);
-   if(argc>6) whichPhiR =       (Int_t) strtof(argv[6],NULL);
-   if(argc>7) batchMode =       (Bool_t) strtof(argv[7],NULL);
-
-   printf("pairType = 0x%x\n",pairType);
-   printf("inDir = %s\n",inDir.Data());
-   printf("whichModulation = %d\n",whichModulation);
-   printf("dimensions = %d\n",dimensions);
-   printf("ivType = %d\n",ivType);
-   printf("whichPhiR = %d\n",whichPhiR);
-   printf("batchMode = %d\n",(Int_t)batchMode);
-   printf("\n");
 
 
    // ivType:
@@ -215,9 +222,9 @@ int main(int argc, char** argv) {
        binMap.insert(std::pair<int,int>(binNum,bcnt));
        asymMap.insert(std::pair<Int_t, Asymmetry*>(binNum,A));
        bcnt++;
-
        if(b==0) {
-         grTitle = Form("%s asymmetry vs. %s",
+         grTitle = Form("%s %s asymmetry vs. %s",
+           dihTitle.Data(),
            (A->ModulationTitle).Data(),(BS->IVtitle[ivVar[0]]).Data());
          grName = Form("kindep_%s",(BS->IVname[ivVar[0]]).Data());
          kindepGr = new TGraphErrors();
@@ -260,7 +267,8 @@ int main(int argc, char** argv) {
          bcnt++;
 
          if(b0==0) {
-           grTitle = Form("%s asymmetry vs. %s :: %s",
+           grTitle = Form("%s %s asymmetry vs. %s :: %s",
+             dihTitle.Data(),
              (A->ModulationTitle).Data(),(BS->IVtitle[ivVar[0]]).Data(),
              (BS->GetBoundStr(ivVar[1],b1)).Data());
            grName = Form("kindep_%s_bin_%s%d",(BS->IVname[ivVar[0]]).Data(),
@@ -309,7 +317,8 @@ int main(int argc, char** argv) {
            bcnt++;
 
            if(b0==0) {
-             grTitle = Form("%s asymmetry vs. %s :: %s, %s",
+             grTitle = Form("%s %s asymmetry vs. %s :: %s, %s",
+               dihTitle.Data(),
                (A->ModulationTitle).Data(),(BS->IVtitle[ivVar[0]]).Data(),
                (BS->GetBoundStr(ivVar[1],b1)).Data(),
                (BS->GetBoundStr(ivVar[2],b2)).Data());
@@ -831,6 +840,9 @@ void DrawSimpleGraph(TGraphErrors * g_, Binning * B_, Int_t v_, Bool_t setRange)
 
 
 void DrawAsymGr(TGraphErrors * g_) {
+  
+  TString titleTmp = g_->GetTitle();
+  g_->SetTitle(TString(dihTitle+" "+titleTmp));
 
   g_->Draw("APE"); // draw once, so we can then format it
 

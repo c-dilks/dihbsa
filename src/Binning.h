@@ -33,7 +33,7 @@
 class Binning : public TObject
 {
   public:
-    Binning();
+    Binning(Int_t pairType_);
     ~Binning();
     void AddBinBound(Int_t ivIdx, Float_t newBound);
     void PrintBinBounds();
@@ -65,6 +65,8 @@ class Binning : public TObject
 
     
   private:
+    Int_t whichHad[2];
+    Int_t numKaons;
 
 
   ClassDef(Binning,1);

@@ -277,9 +277,12 @@ static TString PairName(Int_t p1, Int_t p2) {
   return TString( PairHadName(p1,p2,qA) + "_" + PairHadName(p1,p2,qB) );
 };
 static TString PairTitle(Int_t p1, Int_t p2) {
+  return TString( PairHadTitle(p1,p2,qA) + PairHadTitle(p1,p2,qB) );
+  /*
   return TString(
     "(" + PairHadTitle(p1,p2,qA) + "," + PairHadTitle(p1,p2,qB) + ")"
   );
+  */
 };
 
 

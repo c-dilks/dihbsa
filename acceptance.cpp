@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
 
 
    // instantiate Asymmetry array, used for calculating azimuthal modulations
-   Binning * B = new Binning();
+   Binning * B = new Binning(whichPair);
    Asymmetry * A[Asymmetry::nMod];
    for(int m=0; m<Asymmetry::nMod; m++) {
      A[m] = new Asymmetry(B,m,-10000);

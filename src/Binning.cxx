@@ -5,8 +5,13 @@ ClassImp(Binning)
 using namespace std;
 
 
-Binning::Binning() {
+Binning::Binning(Int_t pairType_) {
   printf("Instantiating Binning...\n");
+
+  // get hadron indices (bin bounds depends on hadron type)
+  DecodePairType(pairType_,whichHad[qA],whichHad[qB]);
+  numKaons = 0;
+  for(int h=0; h<2; h++) { if(whichHad[h]==kKp || whichHad[h]==kKm) numKaons++; };
 
   // set up dnp2018 binning
   minIV[vM] = 0;   maxIV[vM] = 3;
@@ -16,21 +21,35 @@ Binning::Binning() {
   for(int v=0; v<nIV; v++) nBins[v]=-1;
   // -- mass
   AddBinBound(vM,minIV[vM]);
-  ///*
-  AddBinBound(vM,0.4);
-  AddBinBound(vM,0.8);
-  //*/
-  //AddBinBound(vM,0.9);
+  if(numKaons==0) {
+    AddBinBound(vM,0.4);
+    AddBinBound(vM,0.8);
+  } else if(numKaons==1) {
+    AddBinBound(vM,0.85);
+    AddBinBound(vM,1.1);
+  } else {
+    AddBinBound(vM,1.25);
+  };
   AddBinBound(vM,maxIV[vM]);
   // -- x
   AddBinBound(vX,minIV[vX]);
-  AddBinBound(vX,0.2);
-  AddBinBound(vX,0.4);
+  if(numKaons==0) {
+    AddBinBound(vX,0.2);
+    AddBinBound(vX,0.4);
+  } else {
+    AddBinBound(vX,0.2);
+    AddBinBound(vX,0.3);
+  };
   AddBinBound(vX,maxIV[vX]);
   // -- z
   AddBinBound(vZ,minIV[vZ]);
-  AddBinBound(vZ,0.4);
-  AddBinBound(vZ,0.6);
+  if(numKaons==0) {
+    AddBinBound(vZ,0.4);
+    AddBinBound(vZ,0.6);
+  } else {
+    AddBinBound(vZ,0.5);
+    AddBinBound(vZ,0.7);
+  };
   AddBinBound(vZ,maxIV[vZ]);
   // -- PhPerp
   AddBinBound(vPt,minIV[vPt]);
