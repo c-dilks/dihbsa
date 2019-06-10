@@ -128,7 +128,7 @@ int main(int argc, char** argv) {
 
      ev->GetEvent(i);
 
-     if(ev->cutDihadron && ev->cutQ2 && ev->cutW && ev->cutY) {
+     if(ev->Valid()) {
 
        PhiHDist->Fill(ev->PhiH);
        PhiRDist->Fill(ev->PhiR);

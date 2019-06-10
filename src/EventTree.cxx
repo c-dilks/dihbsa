@@ -10,12 +10,13 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
 
   debug = true;
 
+  useDiphBG = false;
+
   DecodePairType(whichPair_,whichHad[qA],whichHad[qB]);
   printf("\n>>> DIHADRON SELECTION: %s\n\n",PairName(whichHad[qA],whichHad[qB]).Data());
 
 
   printf("reading tree chain from %s\n",filelist.Data());
-
   chain = new TChain("tree");
   chain->Add(filelist);
 
@@ -99,54 +100,58 @@ void EventTree::GetEvent(Int_t i) {
   cutQ2 = Q2 > 1.0;
   cutW = W > 2.0;
   cutY = y < 0.8;
+  cutDIS == cutQ2 && cutW && cutY;
 
 
-  // pi0 cut
-  // -- if dihadron does not include pi0s, just
-  //    set this cut to true, since cutDihadron requires
-  //    cutPi0 to be true
-  cutDiphPhi = Tools::PhiFiducialCut(diphPhi);
-  if(whichHad[qA]==kPi0 || whichHad[qB]==kPi0) {
-    cutPi0 = diphAlpha > 0.07 && diphAlpha < 0.25 &&
-             diphPt > 0.15 &&
-             diphE > 1.3 &&
-             diphZ < 0.6 &&
-             cutDiphPhi &&
-             diphM >= 0.105 && diphM <= 0.16;
+
+  // diphoton and pi0/BG cuts
+  // -- if dihadron does not include pi0s, just set to true
+  if(hadIdx[qA]==kPi0 || hadIdx[qB]==kPi0) {
+
+    // dnp2018 cuts
+    cutDiphKinematics = photE[0]>0.5 && photE[1]>0.5 &&
+                        diphAlpha > 0.05 && diphAlpha < 0.2 &&
+                        diphPt > 0.15 &&
+                        diphZ > 0.1 && diphZ < 0.6 &&
+                        Tools::PhiFiducialCut(photPhi[0]) && 
+                        Tools::PhiFiducialCut(photPhi[1]);
+
+    // mass cut (depends on whether pi0 signal or BG is desired
+    if(useDiphBG) {
+      cutDiph = cutDiphKinematics && diphM < 0.1 || diphM > 0.16; // BG cut
+    } else {
+      cutDiph = cutDiphKinematics && diphM >= 0.1 && diphM <= 0.16; // pi0 cut
+    };
+
   } else {
-    cutPi0 = true;
+    cutDiphKinematics = true;
+    cutDiph = true;
   };
- 
-
-  // -- FOR 5038 SKIM FILE !!!!!!!!!!!!!!!!!!
-  /*
-  if(whichHad[qA]==kPi0 || whichHad[qB]==kPi0) {
-    cutPi0 = diphAlpha < 0.19 &&
-             diphE > 2.0 &&
-             diphZ < 0.6 &&
-             diphM >= 0.13 && diphM <= 0.16;
-  } else {
-    cutPi0 = true;
-  };
-  */
 
 
-  // Dihadron kinematics cuts
+
+  // dihadron kinematics cuts
   cutDihadronKinematics = 
-    cutPi0 &&
     Z[qA] > 0.1 && Z[qB] > 0.1 &&
     Zpair < 0.95 &&
     Mmiss > 1.05 &&
     xF > 0 &&
     hadP[qA] > 1.0 && hadP[qB] > 1.0;
 
-  // cutDihadron additionally makes sure the desired hadron pair is selected
-  cutDihadron = cutDihadronKinematics && 
-    Tools::PairSame(hadIdx[qA],hadIdx[qB],whichHad[qA],whichHad[qB]);
+  // cutDihadron is the full dihadron cut
+  cutDihadron = 
+    Tools::PairSame(hadIdx[qA],hadIdx[qB],whichHad[qA],whichHad[qB]) &&
+    cutDihadronKinematics && 
+    cutDiph;
     
 
   // set preferred PhiR definition
   PhiR = PhiRp;
+};
+
+
+Bool_t EventTree::Valid() {
+  return cutDIS && cutDihadron;
 };
 
 

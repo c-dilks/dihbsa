@@ -166,6 +166,10 @@ int main(int argc, char** argv) {
      };
    };
 
+   // multiplicities
+   TH1D * partMultiplicity
+   TH1D * obsMultiplicity
+
 
    // fiducial phi mask
    TH1D * fiducialPhiMask = new TH1D("fiducialPhiMask",
@@ -184,7 +188,7 @@ int main(int argc, char** argv) {
      // fill hadron types matrix (note cutDihadronKinematics does all dihadron
      // kinematic cuts, except for demanding the hadron Idx's are the requested ones)
      for(int h=0; h<2; h++) hadI[h] = IO(ev->hadIdx[h]);
-     if(ev->cutDihadronKinematics && ev->cutQ2 && ev->cutW && ev->cutY) {
+     if(ev->cutDihadronKinematics && ev->cutQ2 && ev->cutW && ev->cutY && ev->cutDiph) {
        hadTypeMatrix->Fill(hadI[qB],hadI[qA]);
        // fill transpose elements too (makes symmetric matrix), but don't double-fill
        // diagonal elements
@@ -209,7 +213,7 @@ int main(int argc, char** argv) {
 
 
      // fill dihadron kinematics plots
-     if(ev->cutDihadron && ev->cutQ2 && ev->cutW && ev->cutY) {
+     if(ev->Valid()) {
 
        eleEDist->Fill(ev->eleE);
        elePtDist->Fill(ev->elePt);

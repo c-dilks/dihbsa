@@ -245,7 +245,7 @@ int main(int argc, char** argv) {
 
      ev->GetEvent(i);
 
-     if(ev->cutDihadron && ev->cutQ2 && ev->cutW && ev->cutY) {
+     if(ev->Valid()) {
 
        // lab frame
        l_angPhiRq = ev->PhiRq;

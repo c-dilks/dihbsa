@@ -365,7 +365,7 @@ int main(int argc, char** argv) {
 
      ev->GetEvent(i);
 
-     if(ev->cutDihadron && ev->cutQ2 && ev->cutW && ev->cutY) {
+     if(ev->Valid()) {
        
        // fill asymmetry plots; Asymmetry::FillPlots() checks the bin,
        // and fills plots if it's the correct bin

@@ -43,7 +43,7 @@ Asymmetry::Asymmetry(
       aziMax = BS->GetAziMax(var0,bin0);
       break;
     case weightSinPhiHR:
-      ModulationTitle = "P_{h}^{perp}/M_{h}-weighted sin(#phi_{h}-#phi_{R})";
+      ModulationTitle = "weighted sin(#phi_{h}-#phi_{R})";
       ModulationName = "sinPhiHR_weight";
       modMax = modMaxDefault;
       aziMax = modMaxDefault;

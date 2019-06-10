@@ -35,6 +35,7 @@ class EventTree : public TObject
     ~EventTree();
 
     void GetEvent(Int_t i);
+    Bool_t Valid();
     void PrintEvent();
 
     Bool_t debug;
@@ -107,11 +108,13 @@ class EventTree : public TObject
     ///////////////////////////
     //   EventCuts
     ///////////////////////////
-   Bool_t cutQ2,cutW,cutY;
+   Bool_t cutQ2,cutW,cutY,cutDIS;
    Bool_t cutDihadronKinematics;
    Bool_t cutDihadron;
-   Bool_t cutPi0;
-   Bool_t cutDiphPhi;
+   Bool_t cutDiphKinematics;
+   Bool_t cutDiph;
+
+   Bool_t useDiphBG;
     
   private:
     TChain * chain;
