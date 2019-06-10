@@ -83,7 +83,7 @@ void LookForPi0s(TString dir="outroot") {
 
 
       // 0
-      cut = true;
+      //cut = true;
 
       // 1
       //cut = ev->photE[0]>0.5 && ev->photE[1]>0.5;
@@ -109,13 +109,13 @@ void LookForPi0s(TString dir="outroot") {
             ev->diphZ > 0.1 && ev->diphZ < 0.6;
             */
       // 5 -- tighten alpha cut and add phi fiducial cut on each photon
-      /*
+      ///*
       cut = ev->photE[0]>0.5 && ev->photE[1]>0.5 &&
             ev->diphAlpha > 0.05 && ev->diphAlpha < 0.2 &&
             ev->diphPt > 0.15 &&
             ev->diphZ > 0.1 && ev->diphZ < 0.6 &&
             phiCut;
-            */
+            //*/
 
       // OLD DNP2018 ATTEMPT
       // spans pi0 peak alpha range

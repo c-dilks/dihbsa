@@ -172,7 +172,7 @@ static TString PartColorName(Int_t p) {
 enum observable_enum {
   sPip,
   sPim,
-  sPi0,
+  sDiph,
   sKp,
   sKm,
   nObservables
@@ -183,7 +183,7 @@ static Int_t OI(Int_t s) {
   switch(s) {
     case sPip: return kPip;
     case sPim: return kPim;
-    case sPi0: return kDiph; // no pi0 in HIPO, so point to diphoton instead
+    case sDiph: return kDiph; // no pi0 in HIPO, so point to diphoton instead
     //case sPi0: return kPi0; // (for if pi0s are found in HIPO files)
     case sKp: return kKp;
     case sKm: return kKm;
@@ -197,7 +197,7 @@ static Int_t IO(Int_t s) {
   switch(s) {
     case kPip: return sPip;
     case kPim: return sPim;
-    case kDiph: return sPi0; 
+    case kDiph: return sDiph; 
     //case kPi0: return sPi0;
     case kKp: return sKp;
     case kKm: return sKm;

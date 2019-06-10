@@ -256,6 +256,7 @@ int main(int argc, char** argv) {
    Float_t phpE[phpCntMax]; // energy of photon pair (to be sorted)
    Int_t phpSortIdx[phpCntMax]; // sorted pair index
    Int_t phpSI[2]; // index of photon from the sorted pair list
+   Bool_t photonUsed[maxTraj];
 
    Diphoton * diPhotTmp[phpCntMax]; // used to compute kinematics for photon pairs
    for(int php=0; php<phpCntMax; php++) diPhotTmp[php] = new Diphoton();
@@ -428,6 +429,7 @@ int main(int argc, char** argv) {
        phpE[php] = -1;
        phpSortIdx[php] = -1;
      };
+     for(int pp=0; pp<maxTraj; pp++) photonUsed[pp] = false;
 
 
      // if there are at least 2 photons, we can look for pi0s
@@ -484,15 +486,21 @@ int main(int argc, char** argv) {
              phot[h] = (Trajectory*) trajArr[kPhoton]->At(phpSI[h]);
            };
 
-           // compute kinematics
-           diPhotTmp[php]->SetEvent(phot[0],phot[1]);
 
-           // if it satisfies basic requirements, add it to trajArr; if it's the first
-           // one added to trajArr (i.e., highest-E), set diphoton tree branches too
-           if(diPhotTmp[php]->validDiphoton) {
-             trajArr[kDiph]->AddLast(diPhotTmp[php]->Traj);
-             if(trajCnt[kDiph]==0) diPhot->SetEvent(phot[0],phot[1]); // -->tree
-             trajCnt[kDiph]++;
+           // check these photons have not already been added to diphoton pair array
+           if(!photonUsed[phpSI[0]] && !photonUsed[phpSI[1]]) {
+
+             // compute kinematics
+             diPhotTmp[php]->SetEvent(phot[0],phot[1]);
+
+             // if it satisfies basic requirements, add it to trajArr; if it's the first
+             // one added to trajArr (i.e., highest-E), set diphoton tree branches too
+             if(diPhotTmp[php]->validDiphoton) {
+               for(int h=0; h<2; h++) photonUsed[phpSI[h]] = true; // mark photons used
+               trajArr[kDiph]->AddLast(diPhotTmp[php]->Traj);
+               if(trajCnt[kDiph]==0) diPhot->SetEvent(phot[0],phot[1]); // -->tree
+               trajCnt[kDiph]++;
+             };
            };
 
          };
@@ -549,12 +557,6 @@ int main(int argc, char** argv) {
                foundObservablePair = true;
              };
            };
-
-
-           // TODO: (pi0,pi0) dihadrons not yet programmed correctly; the reason is
-           // because, for example, 3 photon events will automatically fall into this
-           // category; not yet sure how to fix this so I'm skipping them for now
-           if(i1==kDiph && i2==kDiph) foundObservablePair=false;
 
 
            // if a hadron pair was found, proceed with kinematics calculations
