@@ -8,7 +8,7 @@ using namespace std;
 Diphoton::Diphoton() {
   debug = true;
 
-  Traj = new Trajectory(kPi0);
+  Traj = new Trajectory(kDiph);
   vecDiphoton = TLorentzVector(0,0,0,0);
 
   printf("Diphoton instantiated\n");

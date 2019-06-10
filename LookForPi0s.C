@@ -4,11 +4,11 @@ R__LOAD_LIBRARY(DihBsa)
 #include "EventTree.h"
 #include "Tools.h"
 
-void LookForPi0s(TString dir="outroot.dnp2018.some") {
+void LookForPi0s(TString dir="outroot") {
 
   TString files = dir + "/*.root";
   TFile * outfile = new TFile("pi0.root","RECREATE");
-  Int_t whichPair = EncodePairType(kPip,kPi0); // must have a pi0 
+  Int_t whichPair = EncodePairType(kPip,kDiph); // must have a diphoton
   EventTree * ev = new EventTree(files,whichPair);
 
   Bool_t cut;
@@ -75,7 +75,7 @@ void LookForPi0s(TString dir="outroot.dnp2018.some") {
       in the distributions
     */
     if( /*ev->cutDihadronKinematics &&*/ ev->cutDIS && 
-        (ev->hadIdx[qA]==kPi0 || ev->hadIdx[qB]==kPi0) )
+        (ev->hadIdx[qA]==kDiph || ev->hadIdx[qB]==kDiph) )
     {
 
       phiCut = Tools::PhiFiducialCut(ev->photPhi[0]) && 
@@ -83,7 +83,7 @@ void LookForPi0s(TString dir="outroot.dnp2018.some") {
 
 
       // 0
-      //cut = true;
+      cut = true;
 
       // 1
       //cut = ev->photE[0]>0.5 && ev->photE[1]>0.5;

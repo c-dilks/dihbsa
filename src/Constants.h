@@ -24,6 +24,7 @@ enum particle_enum {
   kKp,
   kKm,
   kPhoton,
+  kDiph,
   nParticles
 };
 
@@ -39,6 +40,7 @@ static TString PartName(Int_t p) {
     case kKp: return "KPlus";
     case kKm: return "KMinus";
     case kPhoton: return "photon";
+    case kDiph: return "diphoton";
     default: 
       fprintf(stderr,"ERROR: bad PartName request\n");
       return "unknown";
@@ -55,6 +57,7 @@ static TString PartTitle(Int_t p) {
     case kKp: return "K^{+}";
     case kKm: return "K^{-}";
     case kPhoton: return "#gamma";
+    case kDiph: return "#gamma#gamma";
     default: 
       fprintf(stderr,"ERROR: bad PartTitle request\n");
       return "unknown";
@@ -73,6 +76,7 @@ static Int_t PartPID(Int_t p) {
     case kKp: return 321;
     case kKm: return -321;
     case kPhoton: return 22;
+    case kDiph: return -10000; // (no PID)
     default: 
       fprintf(stderr,"ERROR: bad PartPID request\n");
       return -10000;
@@ -96,6 +100,7 @@ static Float_t PartMass(Int_t p) {
     case kKp: return 0.493677;
     case kKm: return 0.493677;
     case kPhoton: return 0.0;
+    case kDiph: return -10000; // (use Diphoton class instead)
     default: 
       fprintf(stderr,"ERROR: bad PartMass request\n");
       return -10000;
@@ -112,6 +117,7 @@ static Int_t PartCharge(Int_t p) {
     case kKp: return 1;
     case kKm: return -1;
     case kPhoton: return 0;
+    case kDiph: return 0;
     default: 
       fprintf(stderr,"ERROR: bad PartCharge request\n");
       return -10000;
@@ -130,6 +136,7 @@ static Int_t PartColor(Int_t p) {
     case kKp: return kGreen+1;
     case kKm: return kGreen-1;
     case kPhoton: return kOrange;
+    case kDiph: return kMagenta;
     default: 
       fprintf(stderr,"ERROR: bad PartColor request\n");
       return kBlack;
@@ -146,6 +153,7 @@ static TString PartColorName(Int_t p) {
     case kKp: return "lightGreen";
     case kKm: return "darkGreen";
     case kPhoton: return "orange";
+    case kDiph: return "magenta";
     default: 
       fprintf(stderr,"ERROR: bad PartColor request\n");
       return "black";
@@ -175,7 +183,8 @@ static Int_t OI(Int_t s) {
   switch(s) {
     case sPip: return kPip;
     case sPim: return kPim;
-    case sPi0: return kPi0;
+    case sPi0: return kDiph; // no pi0 in HIPO, so point to diphoton instead
+    //case sPi0: return kPi0; // (for if pi0s are found in HIPO files)
     case sKp: return kKp;
     case sKm: return kKm;
     default: 
@@ -188,7 +197,8 @@ static Int_t IO(Int_t s) {
   switch(s) {
     case kPip: return sPip;
     case kPim: return sPim;
-    case kPi0: return sPi0;
+    case kDiph: return sPi0; 
+    //case kPi0: return sPi0;
     case kKp: return sKp;
     case kKm: return sKm;
     default: 

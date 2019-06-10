@@ -490,9 +490,9 @@ int main(int argc, char** argv) {
            // if it satisfies basic requirements, add it to trajArr; if it's the first
            // one added to trajArr (i.e., highest-E), set diphoton tree branches too
            if(diPhotTmp[php]->validDiphoton) {
-             trajArr[kPi0]->AddLast(diPhotTmp[php]->Traj);
-             if(trajCnt[kPi0]==0) diPhot->SetEvent(phot[0],phot[1]); // -->tree
-             trajCnt[kPi0]++;
+             trajArr[kDiph]->AddLast(diPhotTmp[php]->Traj);
+             if(trajCnt[kDiph]==0) diPhot->SetEvent(phot[0],phot[1]); // -->tree
+             trajCnt[kDiph]++;
            };
 
          };
@@ -554,7 +554,7 @@ int main(int argc, char** argv) {
            // TODO: (pi0,pi0) dihadrons not yet programmed correctly; the reason is
            // because, for example, 3 photon events will automatically fall into this
            // category; not yet sure how to fix this so I'm skipping them for now
-           if(i1==kPi0 && i2==kPi0) foundObservablePair=false;
+           if(i1==kDiph && i2==kDiph) foundObservablePair=false;
 
 
            // if a hadron pair was found, proceed with kinematics calculations

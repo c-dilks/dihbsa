@@ -13,7 +13,7 @@ Trajectory::Trajectory(Int_t particle_index) {
     0.0,
     0.0,
     0.0,
-    PartMass(Idx)
+    PartMass(Idx) > 0 ? PartMass(Idx) : 0.0
   );
   if(debug) printf("Trajectory instantiated\n");
 };
@@ -24,7 +24,7 @@ void Trajectory::SetMomentum(Float_t px, Float_t py, Float_t pz) {
     px,
     py,
     pz,
-    PartMass(Idx)
+    PartMass(Idx) > 0 ? PartMass(Idx) : 0.0
   );
 };
 

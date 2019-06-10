@@ -12,6 +12,7 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TCanvas.h"
+#include "TGraph.h"
 
 // DihBsa
 #include "Constants.h"
@@ -166,14 +167,33 @@ int main(int argc, char** argv) {
      };
    };
 
-   // multiplicities
-   TH1D * partMultiplicity
-   TH1D * obsMultiplicity
 
+   // multiplicities
+   TH1D * partMultiplicity = new TH1D("partMultiplicity",
+     "overall particle multiplicities (DIS cuts only)",nParticles,0,nParticles);
+   TH1D * obsMultiplicity = new TH1D("obsMultiplicity",
+     "dihadrons' particle multiplicities",nObservables,0,nObservables);
+   for(int p=0; p<nParticles; p++) 
+     partMultiplicity->GetXaxis()->SetBinLabel(p+1,PartTitle(p));
+   for(int p=0; p<nObservables; p++) 
+     obsMultiplicity->GetXaxis()->SetBinLabel(p+1,ObsTitle(p));
+   
 
    // fiducial phi mask
    TH1D * fiducialPhiMask = new TH1D("fiducialPhiMask",
      "#phi fiducial regions",NBINS,-PIe,PIe);
+
+
+   // event-level distributions
+   TH1D * helicityDist = new TH1D("helicityDist","helicity",5,-2,3);
+   TH1D * torusDist = new TH1D("torusDist","torus",5,-2,3);
+   TGraph * helicityVsEvnum = new TGraph();
+   helicityVsEvnum->SetName("helicityVsEvnum");
+   helicityVsEvnum->SetTitle("helicity vs runNum #times 10^{9} + eventNum");
+   Double_t helicityVsEvnumCnt = 0;
+   Double_t bigEvNum;
+  
+
 
 
 
@@ -185,18 +205,34 @@ int main(int argc, char** argv) {
 
      ev->GetEvent(i);
 
-     // fill hadron types matrix (note cutDihadronKinematics does all dihadron
-     // kinematic cuts, except for demanding the hadron Idx's are the requested ones)
-     for(int h=0; h<2; h++) hadI[h] = IO(ev->hadIdx[h]);
-     if(ev->cutDihadronKinematics && ev->cutQ2 && ev->cutW && ev->cutY && ev->cutDiph) {
+
+     // fill multiplicity plots
+     //------------------------
+     // fill overall particle multiplicity
+     if(ev->cutDIS) {
+       for(int p=0; p<nParticles; p++) {
+         if(ev->particleCnt[p]>0) partMultiplicity->Fill(p,ev->particleCnt[p]);
+       };
+     };
+     if(ev->cutDIS && ev->cutDihadronKinematics && ev->cutDiph) {
+
+       // fill observable multiplicity
+       for(int h=0; h<2; h++) {
+         hadI[h] = IO(ev->hadIdx[h]); // observable indices
+         obsMultiplicity->Fill(hadI[h]);
+       };
+       
+       // fill dihadron matrix
        hadTypeMatrix->Fill(hadI[qB],hadI[qA]);
        // fill transpose elements too (makes symmetric matrix), but don't double-fill
        // diagonal elements
        if(hadI[qA]!=hadI[qB]) hadTypeMatrix->Fill(hadI[qA],hadI[qB]);
+
      };
 
 
      // fill DIS kinematic plots
+     // ------------------------
      if(ev->cutDihadron) {
 
        //ev->PrintEvent();
@@ -213,6 +249,7 @@ int main(int argc, char** argv) {
 
 
      // fill dihadron kinematics plots
+     // ------------------------------
      if(ev->Valid()) {
 
        eleEDist->Fill(ev->eleE);
@@ -265,6 +302,14 @@ int main(int argc, char** argv) {
        PhiHR = Tools::AdjAngle(ev->PhiH - ev->PhiR);
        PhiHRDist->Fill(PhiHR);
        g1perpWeightVsMod->Fill(TMath::Sin(PhiHR),ev->PhPerp/ev->Mh);
+
+
+       helicityDist->Fill(ev->helicity);
+       torusDist->Fill(ev->torus);
+
+       // TODO - track helicity vs. time
+       bigEvNum = 10e9 * (ev->runnum) + ev->evnum;
+       //helicityVsEvnum->SetPoint(helicityVsEvnumCnt++,bigEvNum,ev->helicity);
      };
 
 
@@ -288,7 +333,10 @@ int main(int argc, char** argv) {
 
 
 
+   partMultiplicity->Write();
+   obsMultiplicity->Write();
    hadTypeMatrix->Write();
+
 
    TCanvas * hadECanv = new TCanvas("hadECanv","hadECanv",1000,800);
    TCanvas * hadPCanv = new TCanvas("hadPCanv","hadPCanv",1000,800);
@@ -334,6 +382,10 @@ int main(int argc, char** argv) {
 
    PhiHRDist->Write();
    g1perpWeightVsMod->Write();
+
+   torusDist->Write();
+   helicityDist->Write();
+   //helicityVsEvnum->Write();
 
    outfile->Close();
 
