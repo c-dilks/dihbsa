@@ -16,6 +16,7 @@ void LookForPi0s(TString dir="outroot") {
 
   const Int_t NBINS = 200;
   const Float_t mMax = 0.7;
+  const Float_t ptMax = 1.5;
   const Float_t alphaMax = 0.35;
   TH1D * hMass = new TH1D("hMass","diphoton mass;M",NBINS,0,mMax);
   TH1D * hAlpha = new TH1D("hAlpha","diphoton opening angle;#alpha",NBINS,0,alphaMax);
@@ -30,7 +31,7 @@ void LookForPi0s(TString dir="outroot") {
     NBINS,0,1,NBINS,0,mMax);
   TH2D * hMPt = new TH2D("hMPt",
     "diphoton mass vs. transverse momentum;p_{T};M",
-    NBINS,0,1,NBINS,0,mMax);
+    NBINS,0,ptMax,NBINS,0,mMax);
   TH2D * hMEta = new TH2D("hMEta",
     "diphoton mass vs. pseudorapidity;#eta;M",
     NBINS,0,7,NBINS,0,mMax);
@@ -41,24 +42,23 @@ void LookForPi0s(TString dir="outroot") {
   TH2D * photEcorr = new TH2D("photEcorr","photon E correlation",
     NBINS,0,7,NBINS,0,7);
   TH2D * photPtcorr = new TH2D("photPtcorr","photon p_{T} correlation",
-    NBINS,0,1,NBINS,0,1);
+    NBINS,0,ptMax,NBINS,0,ptMax);
   TH2D * photEtacorr = new TH2D("photEtacorr","photon #eta correlation",
     NBINS,0,7,NBINS,0,7);
   TH2D * photPhicorr = new TH2D("photPhicorr","photon #phi correlation",
     NBINS,-PIe,PIe,NBINS,-PIe,PIe);
 
   TH2D * hMphotE = new TH2D("hMphotE","M_{#gamma#gamma} vs. photon1 E",
-    NBINS,0,7,NBINS,0,1);
+    NBINS,0,7,NBINS,0,mMax);
   TH2D * hMphotPt = new TH2D("hMphotPt","M_{#gamma#gamma} vs. photon1 p_{T}",
-    NBINS,0,1,NBINS,0,1);
+    NBINS,0,ptMax,NBINS,0,mMax);
   TH2D * hMphotEta = new TH2D("hMphotEta","M_{#gamma#gamma} vs. photon1 #eta",
-    NBINS,0,7,NBINS,0,1);
+    NBINS,0,7,NBINS,0,mMax);
   TH2D * hMphotPhi = new TH2D("hMphotPhi","M_{#gamma#gamma} vs. photon1 #phi",
-    NBINS,-PIe,PIe,NBINS,0,1);
+    NBINS,-PIe,PIe,NBINS,0,mMax);
 
-  Float_t pxyMax = 0.5;
   TH2D * photPyPx = new TH2D("photPyPx","photon1 p_{y} vs. p_{x}",
-    NBINS,-pxyMax,pxyMax,NBINS,-pxyMax,pxyMax);
+    NBINS,-ptMax,ptMax,NBINS,-ptMax,ptMax);
 
 
   for(int i=0; i<ev->ENT; i++) {
@@ -75,7 +75,7 @@ void LookForPi0s(TString dir="outroot") {
       in the distributions
     */
     if( /*ev->cutDihadronKinematics &&*/ ev->cutDIS && 
-        (ev->hadIdx[qA]==kDiph || ev->hadIdx[qB]==kDiph) )
+        (ev->hadIdx[qA]==kPi0 || ev->hadIdx[qB]==kPi0) )
     {
 
       phiCut = Tools::PhiFiducialCut(ev->photPhi[0]) && 
