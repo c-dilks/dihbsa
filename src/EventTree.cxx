@@ -50,6 +50,8 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("Zpair",&Zpair);
   chain->SetBranchAddress("xF",&xF);
   chain->SetBranchAddress("alpha",&alpha);
+  chain->SetBranchAddress("theta",&theta);
+
   chain->SetBranchAddress("Ph",&Ph);
   chain->SetBranchAddress("PhPerp",&PhPerp);
   chain->SetBranchAddress("PhEta",&PhEta);

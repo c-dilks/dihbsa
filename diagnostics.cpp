@@ -138,6 +138,7 @@ int main(int argc, char** argv) {
    TH1D * ZpairDist = new TH1D("ZpairDist","z_{pair} distribution;z_{pair}",NBINS,0,1);
    TH1D * xFDist = new TH1D("xFDist","x_{F} distribution;x_{F}",NBINS,-2,2);
    TH1D * MmissDist = new TH1D("MmissDist","M_{X} distribution;M_{X}",NBINS,-2,6);
+   TH1D * thetaDist = new TH1D("thetaDist","#theta distribution;#theta",NBINS,0,PIe);
    
    TH1D * PhiHDist = new TH1D("PhiHDist","#phi_{h} distribution;#phi_{h}",
      NBINS,-PIe,PIe);
@@ -294,6 +295,7 @@ int main(int argc, char** argv) {
        ZpairDist->Fill(ev->Zpair);
        xFDist->Fill(ev->xF);
        MmissDist->Fill(ev->Mmiss);
+       thetaDist->Fill(ev->theta);
 
        PhiHDist->Fill(ev->PhiH);
        PhiRDist->Fill(ev->PhiR);
@@ -375,6 +377,7 @@ int main(int argc, char** argv) {
    ZpairDist->Write();
    xFDist->Write();
    MmissDist->Write();
+   thetaDist->Write();
 
    PhiHDist->Write();
    PhiRDist->Write();

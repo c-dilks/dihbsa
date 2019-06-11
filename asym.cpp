@@ -397,6 +397,7 @@ int main(int argc, char** argv) {
          A->pSpin = 0;
          A->PhiH = ev->PhiH;
          A->PhPerp = ev->PhPerp;
+         A->theta = ev->theta;
 
          filled = A->FillPlots(); 
 

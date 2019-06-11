@@ -87,6 +87,7 @@ class Asymmetry : public TObject
     Float_t PhiH;
     Float_t PhiR;
     Float_t PhPerp;
+    Float_t theta;
     Float_t pol;
 
 

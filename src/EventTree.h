@@ -68,6 +68,8 @@ class EventTree : public TObject
     Int_t particleCntAll;
     Float_t Mh,Zpair,PhiH,Mmiss,xF,alpha;
     Float_t Z[2];
+    Float_t theta;
+
     Float_t Ph,PhPerp;
     Float_t PhEta,PhPhi;
     Float_t R,RPerp,RT;

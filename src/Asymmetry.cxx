@@ -242,6 +242,7 @@ Bool_t Asymmetry::FillPlots() {
       case Binning::vX: iv[d] = x; break;
       case Binning::vZ: iv[d] = z; break;
       case Binning::vPt: iv[d] = PhPerp; break;
+      case Binning::vTh: iv[d] = TMath::Sin(theta); break;
       default: 
         fprintf(stderr,
           "ERROR: Asymmetry::FillPlots does not understand I[%d]=%d\n",d,I[d]);
@@ -432,6 +433,7 @@ void Asymmetry::ResetVars() {
   PhiH = -10000;
   PhiR = -10000;
   PhPerp = -10000;
+  theta = -10000;
   for(int d=0; d<3; d++) iv[d]=-10000;
 };
 
