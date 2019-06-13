@@ -75,7 +75,7 @@ void LookForPi0s(TString dir="outroot") {
       in the distributions
     */
     if( /*ev->cutDihadronKinematics &&*/ ev->cutDIS && 
-        (ev->hadIdx[qA]==kPi0 || ev->hadIdx[qB]==kPi0) )
+        (ev->hadIdx[qA]==kDiph || ev->hadIdx[qB]==kDiph) )
     {
 
       phiCut = Tools::PhiFiducialCut(ev->photPhi[0]) && 
