@@ -5,8 +5,8 @@ ROOTLIBS := $(shell root-config --libs)
 ROOTGLIBS := $(shell root-config --glibs)
 
 CLAS12TOOL  := ../../Clas12Tool
-HIPOCFLAGS  := -I$(CLAS12TOOL)/Hipo -I$(CLAS12TOOL)/Banks
-HIPOLIBS    := -L$(CLAS12TOOL)/lib -lhipo -lclas12banks
+HIPOCFLAGS  := -I$(CLAS12TOOL)/Hipo3 -I$(CLAS12TOOL)/Clas12Banks3
+HIPOLIBS    := -L$(CLAS12TOOL)/lib -lClas12Banks3 -lHipo3
 LZ4LIBS     := -L$(CLAS12TOOL)/Lz4/lib -llz4
 LZ4INCLUDES := -I$(CLAS12TOOL)/Lz4/lib
 
@@ -34,10 +34,12 @@ HEADERS = Constants.h Tools.h DIS.h Trajectory.h Dihadron.h Diphoton.h EventTree
 All: DihBsa.so
 
 DihBsa.so: LinkDef.h $(HEADERS) $(CXXFILES)
-	@echo "generating dictionary $@..."
-	@rootcint -f DihBsaDict.cxx -c $(HEADERS) LinkDef.h
+	@echo "--- generating dictionary $@..."
+	@rootcling -f DihBsaDict.cxx -c $(HEADERS) LinkDef.h
+	@echo "--- now compiling..."
 	$(CXX) $(CXXFILES) DihBsaDict.cxx -shared -o ../DihBsa.so $(CXXFLAGS) $(GLIBS)
+	@echo "--- done"
 
 clean:
-	@echo "removing DihBsa.so..."
+	@echo "--- removing DihBsa.so..."
 	@rm ../DihBsa.so

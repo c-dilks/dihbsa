@@ -5,8 +5,8 @@ ROOTLDFLAGS := $(shell root-config --ldflags)
 ROOTLIBS    := $(shell root-config --libs) -lEG
 ROOTGLIBS   := $(shell root-config --glibs)
 
-HIPOCFLAGS  := -I$(CLAS12TOOL)/Hipo -I$(CLAS12TOOL)/Banks -Isrc
-HIPOLIBS    := -L$(CLAS12TOOL)/lib -lhipo -lclas12banks -Lsrc
+HIPOCFLAGS  := -I$(CLAS12TOOL)/Hipo3 -I$(CLAS12TOOL)/Clas12Banks3
+HIPOLIBS    := -L$(CLAS12TOOL)/lib -lClas12Banks3 -lHipo3
 
 DIHBSACFLAGS  := -Isrc 
 DIHBSALIBS    := -Lsrc ./DihBsa.so

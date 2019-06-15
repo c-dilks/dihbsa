@@ -26,7 +26,6 @@
 #include "Diphoton.h"
 
 
-
 int main(int argc, char** argv) {
 
    // ARGUMENTS
@@ -204,28 +203,29 @@ int main(int argc, char** argv) {
    // define reader and particle list
    hipo::reader reader;
    reader.open(infileN.Data());
-   clas12::particle particleList("REC::Particle",reader);
-   //hipo::bank particleBank("REC::Particle",reader); // (only used for printout for debug)
+   clas12::particle particleBank("REC::Particle",reader);
 
 
-   // define additional banks
-   hipo::bank evBank("REC::Event",reader);
-   hipo::bank configBank("RUN::config",reader);
 
-   // Get node numbers of this bank
+   // some banks/entries are not in Clas12Tool, their data must be gotten another way.
    //
-   // NOTE: Clas12Tool Hipo/bank::getEntryOrder is protected,
-   // and as far as I know, this is how to access specific bank 
-   // nodes; my minimal workaround was to add the following *public* 
-   // method to Hipo/bank.h:
-   // 
-   // int getn(const char *e) { return getEntryOrder(e); };
-   // 
+   // In Hipo3, you need the entry order number within the bank, which can only be
+   // obtained by Clas12Tool/Hipo3/bank::getEntryOrder, which is protected. It's best to
+   // write a class that inherits from Hipo3/bank, but a simpler workaround is just
+   // adding the following public method to Hipo3/bank.h:
+   //   int getn(const char *e) { return getEntryOrder(e); };
+   //
+   // In Hipo4, bank entries are now accessible by name
+   //
+   // -- Hipo3:
+   hipo::bank configBank("RUN::config",reader);
+   hipo::bank evBank("REC::Event",reader);
+   Int_t o_torus = configBank.getn("torus"); // torus in/outbending
+   Int_t o_triggerBits = configBank.getn("trigger"); // trigger bits
    Int_t o_evnum = evBank.getn("NEVENT"); // event #
    Int_t o_runnum = evBank.getn("NRUN"); // run #
    Int_t o_helicity = evBank.getn("Helic"); // e- helicity
-   Int_t o_torus = configBank.getn("torus"); // torus in/outbending
-   Int_t o_triggerBits = configBank.getn("trigger"); // trigger bits
+
 
    Int_t evnum,runnum;
    Int_t helicity;
@@ -291,11 +291,21 @@ int main(int argc, char** argv) {
 
 
      // read event-level banks
+     // -- Hipo3
+     torus = configBank.getFloat(o_torus,0); // -->tree
+     triggerBits = configBank.getLong(o_triggerBits,0); // -->tree
      evnum = evBank.getInt(o_evnum,0); // -->tree
      runnum = evBank.getInt(o_runnum,0); // -->tree
      helicity = evBank.getInt(o_helicity,0); // -->tree
-     torus = configBank.getFloat(o_torus,0); // -->tree
-     triggerBits = configBank.getLong(o_triggerBits,0); // -->tree
+     // -- Hipo4
+     /*
+     torus = configBank.getFloat("torus",0); // -->tree
+     triggerBits = configBank.getLong("trigger",0); // -->tree
+     evnum = evBank.getInt("NEVENT",0); // -->tree
+     runnum = evBank.getInt("NRUN",0); // -->tree
+     helicity = evBank.getInt("Helic",0); // -->tree
+     */
+
 
      //if(debug) particleBank.show(); // causes segfault!
      if(debug) { for(int l=0; l<30; l++) printf("-"); printf("\n"); };
@@ -318,11 +328,11 @@ int main(int argc, char** argv) {
      // -- if it's particle that know about, add its trajectory
      //    to the unsorted trajectory array and its energy to list
      //    of energies for this particle
-     particleCntAll = particleList.getSize(); // -->tree
+     particleCntAll = particleBank.getSize(); // -->tree
      for(int i=0; i<particleCntAll; i++) {
 
        // get particle PID and convert it to particle index (in Constants.h)
-       pidCur = particleList.getPid(i);
+       pidCur = particleBank.getPid(i);
        pIdx = PIDtoIdx(pidCur);
 
        // skip particles we don't care about (so we don't waste time sorting them)
@@ -332,7 +342,7 @@ int main(int argc, char** argv) {
 
        if(pIdx>-10000) {
 
-         particleList.getVector4(i,vecObs,PartMass(pIdx));
+         particleBank.getVector4(i,vecObs,PartMass(pIdx));
 
          // set Trajectory pointer tr to proper allocated Trajectory instance;
          // if there are more instances of this observable than we allocated for,
