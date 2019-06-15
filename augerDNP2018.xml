@@ -10,6 +10,7 @@
 4014_4
 4015_4
 4016_4
+<!--
 4017_4
 4018_4
 4020_4
@@ -42,6 +43,7 @@
 4073_4
 4074_4
 4078_4
+-->
   </List>
 
   <Variable name="hipoDir" value="/mss/clas12/rg-a/production/trains/dnp2018/v0/skim4_inclusive" />
@@ -50,7 +52,7 @@
 
   <ForEach list="hipoFile">
     <Job>
-      <TimeLimit unit="minutes" time="40" />
+      <TimeLimit unit="minutes" time="80" />
       <DiskSpace space="4" unit="GB" />
       <Memory space="3" unit="GB" />
 

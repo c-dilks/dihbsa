@@ -1,0 +1,44 @@
+<Request>
+  <Project name="clas12"/>
+  <Track name="analysis"/>
+  <Name name="dihbsa"/>
+
+<!-- sample XML Files in /u/group/hps/production/ -->
+
+  <List name="hipoFile">
+skim4_5036.hipo
+skim4_5038.hipo
+  </List>
+
+
+  <Variable name="hipoDir" value="/work/clas12/rg-a/trains/v5/skim4_inclusive" />
+  <Variable name="workDir" value="/w/hallb-scifs17exp/clas12/dilks/dihbsa" />
+  <Variable name="homeDir" value="/u/home/dilks" />
+
+  <ForEach list="hipoFile">
+    <Job>
+      <TimeLimit unit="minutes" time="80" />
+      <DiskSpace space="4" unit="GB" />
+      <Memory space="3" unit="GB" />
+
+
+      <Input src="file:${homeDir}/environment.csh" dest="environment.csh"/>
+      <Input src="mss:${hipoDir}/${hipoFile}" dest="infile.hipo"/>
+      <Input src="file:${workDir}/analysis.exe" dest="analysis.exe" copyOption="link"/>
+      <Input src="file:${workDir}/DihBsa.so" dest="DihBsa.so" copyOption="link"/>
+      <Input src="file:${workDir}/DihBsaDict_rdict.pcm" dest="DihBsaDict_rdict.pcm" copyOption="link"/>
+
+      <Command><![CDATA[
+        ls -lh
+        analysis.exe infile.hipo 1
+        ls -lh
+      ]]></Command>
+
+      <Output dest="${workDir}/outroot/${hipoFile}.root" src="outroot.root"/>
+
+      <Stdout dest="${workDir}/logfiles/${hipoFile}.out"/>
+      <Stderr dest="${workDir}/logfiles/${hipoFile}.err"/>
+    </Job>
+  </ForEach>
+
+</Request>
