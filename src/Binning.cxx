@@ -18,7 +18,7 @@ Binning::Binning(Int_t pairType_) {
   minIV[vX] = 0;   maxIV[vX] = 1;
   minIV[vZ] = 0;   maxIV[vZ] = 1;
   minIV[vPt] = 0;  maxIV[vPt] = 3;
-  minIV[vTh] = 0;  maxIV[vTh] = 1.1;
+  //minIV[vTh] = 0;  maxIV[vTh] = 1.1;
   for(int v=0; v<nIV; v++) nBins[v]=-1;
   // -- mass
   AddBinBound(vM,minIV[vM]);
@@ -57,9 +57,11 @@ Binning::Binning(Int_t pairType_) {
   AddBinBound(vPt,0.5);
   AddBinBound(vPt,maxIV[vPt]);
   // -- sin(theta)
+  /*
   AddBinBound(vTh,minIV[vTh]);
   AddBinBound(vTh,0.99);
   AddBinBound(vTh,maxIV[vTh]);
+  */
 
   /*
   if(singleBinMode) {
@@ -77,13 +79,13 @@ Binning::Binning(Int_t pairType_) {
   IVname[vX] = "X";
   IVname[vZ] = "Z";
   IVname[vPt] = "Pt";
-  IVname[vTh] = "Th";
+  //IVname[vTh] = "Th";
 
   IVtitle[vM] = "M_{h}";
   IVtitle[vX] = "x";
   IVtitle[vZ] = "z";
   IVtitle[vPt] = "P_{h}^{perp}";
-  IVtitle[vTh] = "sin(#theta)";
+  //IVtitle[vTh] = "sin(#theta)";
 
 
   PrintBinBounds();
@@ -158,7 +160,7 @@ Int_t Binning::GetColor(Int_t v_) {
     case vX: return kGreen+1;
     case vZ: return kViolet+2;
     case vPt: return kAzure;
-    case vTh: return kMagenta;
+    //case vTh: return kMagenta;
     default: return kBlack;
   };
 };
@@ -189,9 +191,11 @@ Float_t Binning::GetAziMax(Int_t v_, Int_t b_) {
     if(b_==1) return 4.450000;
   };
 
+  /*
   if(v_==vTh) {
     return 1; // doesn't matter if this is wrong, this whole method is deprecated
   };
+  */
 
   fprintf(stderr,"ERROR: Binning::GetAziMax needs to be updated!\n");
   return 5;

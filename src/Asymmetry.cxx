@@ -242,7 +242,7 @@ Bool_t Asymmetry::FillPlots() {
       case Binning::vX: iv[d] = x; break;
       case Binning::vZ: iv[d] = z; break;
       case Binning::vPt: iv[d] = PhPerp; break;
-      case Binning::vTh: iv[d] = TMath::Sin(theta); break;
+      //case Binning::vTh: iv[d] = TMath::Sin(theta); break;
       default: 
         fprintf(stderr,
           "ERROR: Asymmetry::FillPlots does not understand I[%d]=%d\n",d,I[d]);
@@ -361,7 +361,7 @@ void Asymmetry::CalculateAsymmetries() {
   };
 
   // fit asymmetry
-  //fitFunc->FixParameter(0,0);
+  fitFunc->FixParameter(0,0);
   asymGr->Fit(fitFunc,"Q","",-aziMax,aziMax);
 };
 

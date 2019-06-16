@@ -8,7 +8,7 @@ void LookForPi0s(TString dir="outroot") {
 
   TString files = dir + "/*.root";
   TFile * outfile = new TFile("pi0.root","RECREATE");
-  Int_t whichPair = EncodePairType(kPip,kDiph); // must have a diphoton
+  Int_t whichPair = EncodePairType(kPip,kPi0); // must have a diphoton
   EventTree * ev = new EventTree(files,whichPair);
 
   Bool_t cut;
@@ -75,7 +75,7 @@ void LookForPi0s(TString dir="outroot") {
       in the distributions
     */
     if( /*ev->cutDihadronKinematics &&*/ ev->cutDIS && 
-        (ev->hadIdx[qA]==kDiph || ev->hadIdx[qB]==kDiph) )
+        (ev->hadIdx[qA]==kPi0 || ev->hadIdx[qB]==kPi0) )
     {
 
       phiCut = Tools::PhiFiducialCut(ev->photPhi[0]) && 

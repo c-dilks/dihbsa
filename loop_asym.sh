@@ -44,22 +44,22 @@ done
 
 
 # 3D
-for ((iv1=0; iv1<$nIV; iv1++)); do
-  if [ $allPermutations -eq 0 ]; then start1=$[$iv1+1];
-  else start1=0; fi
-  for ((iv2=$start1; iv2<$nIV; iv2++)); do
-    if [ $allPermutations -eq 0 ]; then start2=$[$iv2+1];
-    else start2=0; fi
-    for ((iv3=$start2; iv3<$nIV; iv3++)); do
-      if [ $iv1 -eq $iv2 ]; then continue; fi
-      if [ $iv1 -eq $iv3 ]; then continue; fi
-      if [ $iv2 -eq $iv3 ]; then continue; fi
-      iv=$[100*$iv1 + 10*$iv2 + $iv3]
-      echo $iv1 $iv2 $iv3 $iv
-      echo $dir $pairType $modulation 3 $iv $phiR 1 >> $argfile
-    done
-  done
-done
+#for ((iv1=0; iv1<$nIV; iv1++)); do
+  #if [ $allPermutations -eq 0 ]; then start1=$[$iv1+1];
+  #else start1=0; fi
+  #for ((iv2=$start1; iv2<$nIV; iv2++)); do
+    #if [ $allPermutations -eq 0 ]; then start2=$[$iv2+1];
+    #else start2=0; fi
+    #for ((iv3=$start2; iv3<$nIV; iv3++)); do
+      #if [ $iv1 -eq $iv2 ]; then continue; fi
+      #if [ $iv1 -eq $iv3 ]; then continue; fi
+      #if [ $iv2 -eq $iv3 ]; then continue; fi
+      #iv=$[100*$iv1 + 10*$iv2 + $iv3]
+      #echo $iv1 $iv2 $iv3 $iv
+      #echo $dir $pairType $modulation 3 $iv $phiR 1 >> $argfile
+    #done
+  #done
+#done
 
 
 cat $argfile

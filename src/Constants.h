@@ -183,8 +183,8 @@ static Int_t OI(Int_t s) {
   switch(s) {
     case sPip: return kPip;
     case sPim: return kPim;
-    case sDiph: return kDiph; // no pi0 in HIPO, so point to diphoton instead
-    //case sDiph: return kPi0; // (for if pi0s are found in HIPO files)
+    //case sDiph: return kDiph; // no pi0 in HIPO, so point to diphoton instead
+    case sDiph: return kPi0; // (for if pi0s are found in HIPO files)
     case sKp: return kKp;
     case sKm: return kKm;
     default: 
@@ -197,8 +197,8 @@ static Int_t IO(Int_t s) {
   switch(s) {
     case kPip: return sPip;
     case kPim: return sPim;
-    case kDiph: return sDiph; 
-    //case kPi0: return sDiph;
+    //case kDiph: return sDiph; 
+    case kPi0: return sDiph;
     case kKp: return sKp;
     case kKm: return sKm;
     default: 
