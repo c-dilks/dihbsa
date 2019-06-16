@@ -134,11 +134,11 @@ int main(int argc, char** argv) {
                                  ") distribution;#Delta#phi";
    TH1D * deltaPhiDist = new TH1D("deltaPhiDist",plotTitle,NBINS,-PIe,PIe);
 
-   TH1D * MhDist = new TH1D("MhDist","M_{h} distribution;M_{h}",NBINS,0,4);
+   TH1D * MhDist = new TH1D("MhDist","M_{h} distribution;M_{h}",2*NBINS,0,3);
    TH1D * ZpairDist = new TH1D("ZpairDist","z_{pair} distribution;z_{pair}",NBINS,0,1);
    TH1D * xFDist = new TH1D("xFDist","x_{F} distribution;x_{F}",NBINS,-2,2);
    TH1D * MmissDist = new TH1D("MmissDist","M_{X} distribution;M_{X}",NBINS,-2,6);
-   TH1D * thetaDist = new TH1D("thetaDist","#theta distribution;#theta",NBINS,0,PIe);
+   TH1D * thetaDist = new TH1D("thetaDist","#theta distribution;#theta",NBINS,0,PI);
    
    TH1D * PhiHDist = new TH1D("PhiHDist","#phi_{h} distribution;#phi_{h}",
      NBINS,-PIe,PIe);
