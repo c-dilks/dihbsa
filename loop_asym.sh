@@ -17,7 +17,7 @@ argfile="args.dat"
 > $argfile
 
 # total number of IVs
-nIV=5
+nIV=4
 
 
 mkdir -p $outdir
@@ -31,16 +31,16 @@ done
 
 
 # 2D
-for ((iv1=0; iv1<$nIV; iv1++)); do
-  if [ $allPermutations -eq 0 ]; then start=$[$iv1+1];
-  else start=0; fi
-  for ((iv2=$start; iv2<$nIV; iv2++)); do
-    if [ $iv1 -eq $iv2 ]; then continue; fi
-    iv=$[10*$iv1 + $iv2]
-    echo $iv1 $iv2 $iv
-    echo $dir $pairType $modulation 2 $iv $phiR 1 >> $argfile
-  done
-done
+#for ((iv1=0; iv1<$nIV; iv1++)); do
+  #if [ $allPermutations -eq 0 ]; then start=$[$iv1+1];
+  #else start=0; fi
+  #for ((iv2=$start; iv2<$nIV; iv2++)); do
+    #if [ $iv1 -eq $iv2 ]; then continue; fi
+    #iv=$[10*$iv1 + $iv2]
+    #echo $iv1 $iv2 $iv
+    #echo $dir $pairType $modulation 2 $iv $phiR 1 >> $argfile
+  #done
+#done
 
 
 # 3D

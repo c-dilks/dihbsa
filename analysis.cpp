@@ -562,9 +562,9 @@ int main(int argc, char** argv) {
              // one added to trajArr (i.e., highest-E), set diphoton tree branches too
              if(diPhotTmp[php]->validDiphoton) {
                for(int h=0; h<2; h++) photonUsed[phpSI[h]] = true; // mark photons used
-               trajArr[kDiph]->AddLast(diPhotTmp[php]->Traj);
-               if(trajCnt[kDiph]==0) diPhot->SetEvent(phot[0],phot[1]); // -->tree
-               trajCnt[kDiph]++;
+               trajArr[kPi0]->AddLast(diPhotTmp[php]->Traj);
+               if(trajCnt[kPi0]==0) diPhot->SetEvent(phot[0],phot[1]); // -->tree
+               trajCnt[kPi0]++;
              };
            };
 

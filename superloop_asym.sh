@@ -3,11 +3,11 @@
 root -b -q PrintEnumerators.C
 
 dir="outroot.dnp2018"
-#modulation=0
+modulation=4
 if [ $# -ge 1 ]; then dir=$1; fi
 #if [ $# -ge 2 ]; then modulation=$2; fi
 
-for modulation in 0 3; do
+#for modulation in 0 3; do
   while read line; do
     pairtype=`echo $line | awk '{print $1}'`
     pairname=`echo $line | awk '{print $2}'`
@@ -19,4 +19,4 @@ for modulation in 0 3; do
 
   mkdir -p spinweb${modulation}
   mv spinout.* spinweb${modulation}/
-done
+#done

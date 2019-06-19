@@ -11,7 +11,9 @@ void DiagMatrix() {
   //TString plotName = "XDist";
   //TString plotName = "MhDist";
   //TString plotName = "thetaDist";
-  TString plotName = "PhiHRDist";
+  TString plotName = "PhiHDist";
+  //TString plotName = "PhiRDist";
+  //TString plotName = "PhiHRDist";
   //Int_t dim = 2;
   //TString plotName = "PhiHvsPhiR";
 
@@ -23,6 +25,8 @@ void DiagMatrix() {
   TFile * infile[nObservables][nObservables];
   TH1D * dist1[nObservables][nObservables];
   TH2D * dist2[nObservables][nObservables];
+
+  Double_t maxim;
 
 
   TString pairN,pairT;
@@ -55,7 +59,11 @@ void DiagMatrix() {
           titleTmp = pairT + " " + titleTmp;
           dist1[o1][o2]->SetTitle(titleTmp);
           dist1[o1][o2]->SetLineWidth(3);
-          dist1[o1][o2]->GetXaxis()->SetRangeUser(-PI,PI);
+          maxim = 1.1 * dist1[o1][o2]->GetMaximum();
+          //dist1[o1][o2]->GetXaxis()->SetRangeUser(-PI,PI);
+          dist1[o1][o2]->GetYaxis()->SetRangeUser(0,maxim);
+          dist1[o1][o2]->GetXaxis()->SetLabelSize(0.08);
+          dist1[o1][o2]->GetYaxis()->SetLabelSize(0.08);
           dist1[o1][o2]->Draw();
           break;
         case 2:
@@ -66,6 +74,8 @@ void DiagMatrix() {
           dist2[o1][o2]->SetTitle(titleTmp);
           //dist2[o1][o2]->GetXaxis()->SetRangeUser(-PI,PI);
           //dist2[o1][o2]->GetYaxis()->SetRangeUser(-PI,PI);
+          dist2[o1][o2]->GetXaxis()->SetLabelSize(0.08);
+          dist2[o1][o2]->GetYaxis()->SetLabelSize(0.08);
           dist2[o1][o2]->Draw("colz");
           break;
       };
