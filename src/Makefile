@@ -3,6 +3,7 @@ include ../config.mk
 # rootcling dictionary
 NAME = DihBsa
 DICT := $(NAME)Dict.cxx
+PCM := $(NAME)Dict_rdict.pcm
 LINKDEF = LinkDef.h
 
 
@@ -12,7 +13,7 @@ HEADERS := $(filter-out $(LINKDEF), $(wildcard *.h)) $(LINKDEF)
 
 
 # shared object
-OBJ := $(NAME).so
+OBJ := lib$(NAME).so
 
 #-----------------------------------------------
 
@@ -26,4 +27,4 @@ $(DICT): $(HEADERS)
 	@rootcling -f $@ -c $^
 
 clean:
-	@rm $(DICT) $(OBJ)
+	$(RM) $(OBJ) $(DICT) $(PCM)

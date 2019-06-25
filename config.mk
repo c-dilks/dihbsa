@@ -9,7 +9,7 @@ CLAS12TOOLDIR = ../Clas12Tool
 
 # compiler and flags
 CXX = g++ -std=c++11
-FLAGS = -g -Wno-deprecated -fPIC -m32 -fno-inline -Wno-write-strings
+FLAGS = -g -Wno-deprecated -fPIC -m64 -fno-inline -Wno-write-strings
 
 
 # ROOT
