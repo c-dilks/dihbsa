@@ -60,8 +60,8 @@
       <Input src="file:${homeDir}/environment.csh" dest="environment.csh"/>
       <Input src="mss:${hipoDir}/${hipoFile}.hipo" dest="infile.hipo"/>
       <Input src="file:${workDir}/analysis.exe" dest="analysis.exe" copyOption="link"/>
-      <Input src="file:${workDir}/DihBsa.so" dest="DihBsa.so" copyOption="link"/>
-      <Input src="file:${workDir}/DihBsaDict_rdict.pcm" dest="DihBsaDict_rdict.pcm" copyOption="link"/>
+      <Input src="file:${workDir}/src/DihBsa.so" dest="DihBsa.so" copyOption="link"/>
+      <Input src="file:${workDir}/src//DihBsaDict_rdict.pcm" dest="DihBsaDict_rdict.pcm" copyOption="link"/>
 
       <Command><![CDATA[
         ls -lh
