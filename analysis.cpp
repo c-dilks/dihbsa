@@ -13,10 +13,8 @@
 
 // Clas12Tool
 #include "reader.h"
-#include "node.h"
 #include "bank.h"
 #include "particle.h"
-#include "detector.h"
 
 // DihBsa
 #include "Constants.h"
@@ -28,6 +26,14 @@
 
 int main(int argc, char** argv) {
 
+#ifdef HIPO_VERSION
+   printf("%s compiled with HIPO_VERSION = %d\n",argv[0],HIPO_VERSION);
+#else
+   fprintf(stderr,"ERROR: HIPO_VERSION preprocessor macro undefined\n");
+   exit(0);
+#endif
+
+   
    // ARGUMENTS
    TString infileN;
    Bool_t batchMode = false;
@@ -39,18 +45,12 @@ int main(int argc, char** argv) {
    if(argc>2) batchMode = true;
 
 
-   // set hipo version (3 or 4)
-   const Int_t hipoVersion = 3;
-   if(hipoVersion!=3 && hipoVersion!=4) {
-     fprintf(stderr,"ERROR: hipoVersion must be set to 3 or 4\n");
-     return 0;
-   };
-
-
-
-   // if true, print more to stdout
+   // debugging flags
    bool debug = 0; // general debugging statements
    bool debugPHPsort = 0; // sorting photon pairs by energy
+
+
+
 
    // set output file name
    TString outfileN;
@@ -209,44 +209,50 @@ int main(int argc, char** argv) {
    tree->Branch("diphPhi",&(diPhot->Phi),"diphPhi/F"); // diphoton pseudorapidity
 
 
-   // define reader and particle list
+   // define HIPO file reader
    hipo::reader reader;
    reader.open(infileN.Data());
-   // VVV hipoVersion 3 VVV
-   hipo::bank particleBank("REC::Particle",reader); // see log 15.6.19
+
+   // particle bank
+   // -- for HIPO3, need to use general bank rather than clas12::particle
+   //    (see log 14.6.19 for details; seems HIPO3's clas12::particle is a bit broken)
+#if HIPO_VERSION == 3
+   hipo::bank particleBank("REC::Particle",reader); 
    Int_t o_pid = particleBank.getn("pid");
    Int_t o_px = particleBank.getn("px");
    Int_t o_py = particleBank.getn("py");
    Int_t o_pz = particleBank.getn("pz");
-   // ^^^ hipoVersion 3 ^^^
-   // VVV hipoVersion 4 VVV
    /*
-   clas12::particle particleBank("REC::Particle",reader); // see log 15.6.19
-   particleBank.init("REC::Particle",reader); // bug fix from log 15.6.19 
+   clas12::particle particleBank("REC::Particle",reader); // see log 14.6.19
+   particleBank.init("REC::Particle",reader); // init needs to be called in HIPO3 version
    */
-   // ^^^ hipoVersion 4 ^^^
+#elif HIPO_VERSION == 4
+   clas12::particle particleBank("REC::Particle",reader);
+#endif
 
 
 
-   // some banks/entries are not in Clas12Tool, their data must be gotten another way.
+
+   // event and run config banks
+   // -- In Hipo3 Clas12Tool code, to access contents of bank entries, the entry order
+   //    number within the bank is needed, which can only be obtained by
+   //    Clas12Tool/Hipo3/bank::getEntryOrder, a protected method.
    //
-   // In Hipo3, you need the entry order number within the bank, which can only be
-   // obtained by Clas12Tool/Hipo3/bank::getEntryOrder, which is protected. It's best to
-   // write a class that inherits from Hipo3/bank, but a simpler workaround is just
-   // adding the following public method to Hipo3/bank.h:
+   // -- simple workaround: add the following public method to Hipo3/bank.h:
+   //
    //   int getn(const char *e) { return getEntryOrder(e); };
    //
-   // In Hipo4, bank entries are now accessible by name, no need to use getEntryOrder
+   // -- in Hipo4/bank.h, bank entries are now accessible by name
    //
-   // VVV hipoVersion 3 VVV
    hipo::bank configBank("RUN::config",reader);
    hipo::bank evBank("REC::Event",reader);
+#if HIPO_VERSION == 3
    Int_t o_torus = configBank.getn("torus"); // torus in/outbending
    Int_t o_triggerBits = configBank.getn("trigger"); // trigger bits
    Int_t o_evnum = evBank.getn("NEVENT"); // event #
    Int_t o_runnum = evBank.getn("NRUN"); // run #
    Int_t o_helicity = evBank.getn("Helic"); // e- helicity
-   // ^^^ hipoVersion 3 ^^^
+#endif
 
    
 
@@ -266,12 +272,13 @@ int main(int argc, char** argv) {
    // define observable variables
    clas12::vector4 clas12vecObs; // observable 4-momentum
    TLorentzVector vecObs; // observable 4-momentum
-   Float_t vecObsPx,vecObsPy,vecObsPz,vecObsM;
+   Float_t vecObsPx,vecObsPy,vecObsPz;
    Int_t pidCur,pIdx;
 
 
    Bool_t foundObservablePair;
    Int_t i1,i2;
+   Bool_t notNAN;
 
 
    // photon pair ("php") variables
@@ -316,22 +323,19 @@ int main(int argc, char** argv) {
 
 
      // read event-level banks
-     // VVV hipoVersion 3 VVV
+#if HIPO_VERSION == 3
      torus = configBank.getFloat(o_torus,0); // -->tree
      triggerBits = configBank.getLong(o_triggerBits,0); // -->tree
      evnum = evBank.getInt(o_evnum,0); // -->tree
      runnum = evBank.getInt(o_runnum,0); // -->tree
      helicity = evBank.getInt(o_helicity,0); // -->tree
-     // ^^^ hipoVersion 3 ^^^
-     // VVV hipoVersion 4 VVV
-     /*
+#elif HIPO_VERSION == 4
      torus = configBank.getFloat("torus",0); // -->tree
      triggerBits = configBank.getLong("trigger",0); // -->tree
      evnum = evBank.getInt("NEVENT",0); // -->tree
      runnum = evBank.getInt("NRUN",0); // -->tree
      helicity = evBank.getInt("Helic",0); // -->tree
-     */
-     // ^^^ hipoVersion 4 ^^^
+#endif
 
 
      if(debug) { for(int l=0; l<30; l++) printf("-"); printf("\n"); };
@@ -359,10 +363,21 @@ int main(int argc, char** argv) {
      if(debug) printf("particleBank.getSize() = %d\n",particleBank.getSize());
      for(int i=0; i<particleCntAll; i++) {
 
-       // get particle PID and convert it to particle index (in Constants.h)
-       pidCur = particleBank.getInt(o_pid,i); // hipoVersion 3
-       //pidCur = particleBank.getPid(i); // hipoVersion 4
 
+       // get particle PID and momentum components
+#if HIPO_VERSION == 3
+       pidCur = particleBank.getInt(o_pid,i);
+       vecObsPx = particleBank.getFloat(o_px,i);
+       vecObsPy = particleBank.getFloat(o_py,i);
+       vecObsPz = particleBank.getFloat(o_pz,i);
+#elif HIPO_VERSION == 4
+       pidCur = particleBank.getPid(i);
+       vecObsPx = particleBank.getPx(i);
+       vecObsPy = particleBank.getPy(i);
+       vecObsPz = particleBank.getPz(i);
+#endif
+
+       // convert PID to local particle index
        pIdx = PIDtoIdx(pidCur);
 
 
@@ -373,14 +388,6 @@ int main(int argc, char** argv) {
 
        if(pIdx>-10000) {
 
-         // VVV hipoVersion 3 VVV
-         vecObsPx = particleBank.getFloat(o_px,i);
-         vecObsPy = particleBank.getFloat(o_py,i);
-         vecObsPz = particleBank.getFloat(o_pz,i);
-         vecObsM = PartMass(pIdx);
-         vecObs.SetXYZM(vecObsPx,vecObsPy,vecObsPz,vecObsM);
-         // ^^^ hipoVersion 3 ^^^
-         //particleBank.getVector4(i,clas12vecObs,PartMass(pIdx)); // hipoVersion 4
 
          // set Trajectory pointer tr to proper allocated Trajectory instance;
          // if there are more instances of this observable than we allocated for,
@@ -389,39 +396,19 @@ int main(int argc, char** argv) {
          // or just ignore the extra particles and print a warning 
          if(trajCnt[pIdx]<maxTraj) {
            
-           // make sure particle has sensible momentum and energy 
+           // make sure particle has sensible momentum (!=NaN)
            // (sometimes photons in dnp2018 skim files don't...)
-           // VVV hipoVersion 4 VVV
-           /*
-           if( !isnan(clas12vecObs.vect().x()) && !isnan(clas12vecObs.vect().y()) && 
-               !isnan(clas12vecObs.vect().z()) && !isnan(clas12vecObs.e()) ) 
-           */
-           // ^^^ hipoVersion 4 ^^^
-           
-           // VVV hipoVersion 3 VVV
-           if( !isnan(vecObs.Px()) && !isnan(vecObs.Py()) && 
-               !isnan(vecObs.Pz()) && !isnan(vecObs.E()) ) 
-           // ^^^ hipoVersion 3 ^^^
-           {
+           if( !isnan(vecObsPx) && !isnan(vecObsPy) && !isnan(vecObsPz) ) {
+
 
              // set tr to allocated Trajectory instance and add it to the unsorted array
              tr = traj[pIdx][trajCnt[pIdx]]; 
-
-             tr->SetMomentum(vecObs.Px(),vecObs.Py(),vecObs.Pz()); // hipoVersion 3
-             // VVV hipoVersion 4 VVV
-             /*
-             tr->SetMomentum(
-               clas12vecObs.vect().x(),
-               clas12vecObs.vect().y(),
-               clas12vecObs.vect().z()
-             );
-             */
-             // ^^^ hipoVersion 4 ^^^
+             vecObs.SetXYZM(vecObsPx,vecObsPy,vecObsPz,PartMass(pIdx));
+             tr->SetVec(vecObs);
              trajArrUS[pIdx]->AddLast(tr);
 
              // add this trajectory's energy to the energy array
-             trajE[pIdx][trajCnt[pIdx]] = vecObs.E(); // hipoVersion 3
-             //trajE[pIdx][trajCnt[pIdx]] = clas12vecObs.e(); // hipoVersion 4
+             trajE[pIdx][trajCnt[pIdx]] = vecObs.E();
 
              // increment the trajectory counter
              trajCnt[pIdx]++; // -->tree

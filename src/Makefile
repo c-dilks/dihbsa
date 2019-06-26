@@ -19,11 +19,11 @@ OBJ := lib$(NAME).so
 
 
 $(OBJ): $(DICT)
-	@echo "--- build $@ ---"
+	@echo "----- build $@ -----"
 	$(CXX) $(SOURCES) -shared -o $@ $(FLAGS) $(DEPS) $(LIBS)
 
 $(DICT): $(HEADERS)
-	@echo "--- generate dictionary $@ ---"
+	@echo "----- generate dictionary $@ -----"
 	@rootcling -f $@ -c $^
 
 clean:
