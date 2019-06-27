@@ -15,6 +15,7 @@
 #include "reader.h"
 #include "bank.h"
 #include "particle.h"
+#include "clas12reader.h"
 
 // DihBsa
 #include "Constants.h"
@@ -208,15 +209,29 @@ int main(int argc, char** argv) {
    tree->Branch("diphEta",&(diPhot->Eta),"diphEta/F"); // diphoton pseudorapidity
    tree->Branch("diphPhi",&(diPhot->Phi),"diphPhi/F"); // diphoton pseudorapidity
 
+   // miscellaneous event-header branches
+   Int_t evnum,runnum;
+   Int_t helicity;
+   //Float_t torus;
+   Long64_t triggerBits;
+   tree->Branch("runnum",&runnum,"runnum/I");
+   tree->Branch("evnum",&evnum,"evnum/I");
+   tree->Branch("helicity",&helicity,"helicity/I");
+   //tree->Branch("torus",&torus,"torus/F");
+   tree->Branch("triggerBits",&triggerBits,"triggerBits/L");
 
-   // define HIPO file reader
+
+
+
+   // define HIPO file reader and banks
+#if HIPO_VERSION == 3
+   // reader
    hipo::reader reader;
    reader.open(infileN.Data());
 
    // particle bank
    // -- for HIPO3, need to use general bank rather than clas12::particle
    //    (see log 14.6.19 for details; seems HIPO3's clas12::particle is a bit broken)
-#if HIPO_VERSION == 3
    hipo::bank particleBank("REC::Particle",reader); 
    Int_t o_pid = particleBank.getn("pid");
    Int_t o_px = particleBank.getn("px");
@@ -226,12 +241,6 @@ int main(int argc, char** argv) {
    clas12::particle particleBank("REC::Particle",reader); // see log 14.6.19
    particleBank.init("REC::Particle",reader); // init needs to be called in HIPO3 version
    */
-#elif HIPO_VERSION == 4
-   clas12::particle particleBank("REC::Particle",reader);
-#endif
-
-
-
 
    // event and run config banks
    // -- In Hipo3 Clas12Tool code, to access contents of bank entries, the entry order
@@ -246,39 +255,26 @@ int main(int argc, char** argv) {
    //
    hipo::bank configBank("RUN::config",reader);
    hipo::bank evBank("REC::Event",reader);
-#if HIPO_VERSION == 3
-   Int_t o_torus = configBank.getn("torus"); // torus in/outbending
+   //Int_t o_torus = configBank.getn("torus"); // torus in/outbending
    Int_t o_triggerBits = configBank.getn("trigger"); // trigger bits
    Int_t o_evnum = evBank.getn("NEVENT"); // event #
    Int_t o_runnum = evBank.getn("NRUN"); // run #
    Int_t o_helicity = evBank.getn("Helic"); // e- helicity
+
+#elif HIPO_VERSION == 4
+   clas12::clas12reader reader(infileN.Data());
 #endif
 
    
 
-   Int_t evnum,runnum;
-   Int_t helicity;
-   Float_t torus;
-   Long64_t triggerBits;
-
-   tree->Branch("runnum",&runnum,"runnum/I");
-   tree->Branch("evnum",&evnum,"evnum/I");
-   tree->Branch("helicity",&helicity,"helicity/I");
-   tree->Branch("torus",&torus,"torus/F");
-   tree->Branch("triggerBits",&triggerBits,"triggerBits/L");
-
-
 
    // define observable variables
-   clas12::vector4 clas12vecObs; // observable 4-momentum
    TLorentzVector vecObs; // observable 4-momentum
    Float_t vecObsPx,vecObsPy,vecObsPz;
    Int_t pidCur,pIdx;
-
+   Int_t i1,i2;
 
    Bool_t foundObservablePair;
-   Int_t i1,i2;
-   Bool_t notNAN;
 
 
    // photon pair ("php") variables
@@ -301,7 +297,9 @@ int main(int argc, char** argv) {
 
    // EVENT LOOP ----------------------------------------------
    printf("begin event loop...\n");
+
    while(reader.next()==true) {
+     if(evCount>1e6) { fprintf(stderr,"BREAKING LOOP HERE!!!\n"); break; };
      bench.resume();
 
      // reset branches
@@ -322,19 +320,25 @@ int main(int argc, char** argv) {
 
 
 
-     // read event-level banks
+     // read event-header stuff
+     //    TODO: I'm guessing the same HIPO4 accessors now exist for the HIPO3 version
+     //    of Clas12Tool, so we may be able to get rid of this preprocessor conditional
 #if HIPO_VERSION == 3
-     torus = configBank.getFloat(o_torus,0); // -->tree
-     triggerBits = configBank.getLong(o_triggerBits,0); // -->tree
      evnum = evBank.getInt(o_evnum,0); // -->tree
      runnum = evBank.getInt(o_runnum,0); // -->tree
      helicity = evBank.getInt(o_helicity,0); // -->tree
+     triggerBits = configBank.getLong(o_triggerBits,0); // -->tree
+     //torus = configBank.getFloat(o_torus,0); // -->tree
 #elif HIPO_VERSION == 4
-     torus = configBank.getFloat("torus",0); // -->tree
-     triggerBits = configBank.getLong("trigger",0); // -->tree
-     evnum = evBank.getInt("NEVENT",0); // -->tree
-     runnum = evBank.getInt("NRUN",0); // -->tree
-     helicity = evBank.getInt("Helic",0); // -->tree
+     // TODO -- can't yet get evnum, runnum, or helicity
+     evnum = reader.head()->getEventNumber(); // -->tree
+     //runnum = reader.head()->getRunNumber(); // -->tree
+     //helicity = reader.head()->getHelicity(); // -->tree
+     //triggerBits = reader.head()->getTrigger(); // -->tree
+     //evnum = 0;
+     runnum = 0;
+     helicity = 0;
+     triggerBits = 0;
 #endif
 
 
@@ -342,10 +346,7 @@ int main(int argc, char** argv) {
      //if(debug) particleBank.show(); // causes segfault!
 
 
-     // SEARCH FOR OBSERVABLES, SORTING EACH KIND BY ENERGY
-     // ---------------------------------------------------
-     //
-     // -- reset trajectory-sorting data structures
+     // reset trajectory-sorting data structures "trajArr" and "trajE"
      for(int p=0; p<nParticles; p++) {
        trajCnt[p] = 0;
        trajArrUS[p]->Clear();
@@ -355,51 +356,58 @@ int main(int argc, char** argv) {
          trajE[p][t] = -1;
        };
      };
+
      
-     // -- if it's particle that know about, add its trajectory
-     //    to the unsorted trajectory array and its energy to list
-     //    of energies for this particle
+     // PARTICLE LOOP
+     // -------------
+     // -- read in each particle and put them into trajArr, which will be sorted
+     //    afterward
+     // -- the way we loop through particles differs between HIPO versions (for now...)
+     //    TODO: I'm guessing the same HIPO4 particle momentum accessors now exist for
+     //    the HIPO3 version of Clas12Tool, so we may be able to get rid of this
+     //    preprocessor conditional
+     
+#if HIPO_VERSION == 3
      particleCntAll = particleBank.getSize(); // -->tree
      if(debug) printf("particleBank.getSize() = %d\n",particleBank.getSize());
      for(int i=0; i<particleCntAll; i++) {
 
-
        // get particle PID and momentum components
-#if HIPO_VERSION == 3
        pidCur = particleBank.getInt(o_pid,i);
        vecObsPx = particleBank.getFloat(o_px,i);
        vecObsPy = particleBank.getFloat(o_py,i);
        vecObsPz = particleBank.getFloat(o_pz,i);
+
 #elif HIPO_VERSION == 4
-       pidCur = particleBank.getPid(i);
-       vecObsPx = particleBank.getPx(i);
-       vecObsPy = particleBank.getPy(i);
-       vecObsPz = particleBank.getPz(i);
+     particleCntAll = reader.getNParticles(); // -->tree
+     if(debug) printf("reader.getNParticles() = %d\n",particleCntAll);
+     for(auto & part : reader.getDetParticles()) {
+       // get particle PID and momentum components
+       pidCur = part->getPid();
+       vecObsPx = part->par()->getPx();
+       vecObsPy = part->par()->getPy();
+       vecObsPz = part->par()->getPz();
 #endif
 
-       // convert PID to local particle index
+
+       // convert PID to local particle index; if it's not defined in Constants.h, pIdx
+       // will be -10000 and this particle will be ignored
        pIdx = PIDtoIdx(pidCur);
-
-
-       // skip particles we don't care about (so we don't waste time sorting them)
-       if(pIdx==kP || pIdx==kN) pIdx=-10000;
-
+       if(pIdx==kP || pIdx==kN) pIdx=-10000; // also skip protons and neutrons
        if(debug) printf(" pid=%d  pIdx=%d\n",pidCur,pIdx);
+
 
        if(pIdx>-10000) {
 
-
-         // set Trajectory pointer tr to proper allocated Trajectory instance;
-         // if there are more instances of this observable than we allocated for,
-         // we could allocate more memory for the extra ones (which could cause
-         // a memory leak or eventual segfault if maxTraj is not high enough...),
-         // or just ignore the extra particles and print a warning 
+         // set Trajectory pointer tr to proper allocated Trajectory instance; if there
+         // are more instances of this observable than we allocated for, (this max
+         // number is "maxTraj"), just ignore the additional particles and print a
+         // warning to stderr
          if(trajCnt[pIdx]<maxTraj) {
            
            // make sure particle has sensible momentum (!=NaN)
            // (sometimes photons in dnp2018 skim files don't...)
            if( !isnan(vecObsPx) && !isnan(vecObsPy) && !isnan(vecObsPz) ) {
-
 
              // set tr to allocated Trajectory instance and add it to the unsorted array
              tr = traj[pIdx][trajCnt[pIdx]]; 
@@ -427,13 +435,15 @@ int main(int argc, char** argv) {
            gtMaxTrajCnt[pIdx]++;
          };
        };
-     };
-     if(debug) printf(">>\n");
+     }; // eo particle loop
+
+
 
 
      // -- sort each list of each type of observable by E; trajArr will 
      //    be the sorted trajectory array and the 0th entry will be the 
      //    highest energy trajectory 
+     if(debug) printf(">>\n");
      for(int p=0; p<nParticles; p++) { 
        if(trajCnt[p]>0) {
 
@@ -663,13 +673,19 @@ int main(int argc, char** argv) {
    };
 
    // print benchmark
-   reader.showBenchmark();
-   printf(" time spend on analysis = %8.5f (ms) events = %8d\n",
+   /*
+#if HIPO_VERSION == 3
+   reader.showBenchmark(); // not in hipo4 version
+#endif
+   */
+   printf(" time spend on analysis = %8.5f (s) events = %8d\n",
      bench.getTime()*1e-9,
      bench.getCounter());
 
    // write output tree
+   printf("writing tree...\n");
    tree->Write("tree");
+   printf("tree written\n");
 
    // print number of NaN particles (if nonzero)
    for(int p=0; p<nParticles; p++) {
