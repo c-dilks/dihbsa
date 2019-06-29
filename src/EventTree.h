@@ -49,6 +49,7 @@ class EventTree : public TObject
     Float_t W,Q2,Nu,x,y;
 
     // hadron kinematics
+    Int_t pairType;
     Int_t hadIdx[2];
     Float_t hadE[2];
     Float_t hadP[2];

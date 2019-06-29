@@ -34,6 +34,7 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("eleEta",&eleEta);
   chain->SetBranchAddress("elePhi",&elePhi);
 
+  chain->SetBranchAddress("pairType",&pairType);
   chain->SetBranchAddress("hadIdx",hadIdx);
   chain->SetBranchAddress("hadE",hadE);
   chain->SetBranchAddress("hadP",hadP);
@@ -162,6 +163,7 @@ void EventTree::PrintEvent() {
   printf("[---] Event Info\n");
   printf("  evnum=%d",evnum);
   printf("  runnum=%d",runnum);
+  printf("  pairType=0x%x",pairType);
   printf("\n");
   printf("  helicity=%d",helicity);
   printf("  torus=%.1f",torus);

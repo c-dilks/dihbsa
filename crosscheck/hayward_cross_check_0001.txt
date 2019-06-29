@@ -1,0 +1,213 @@
+Event: 319
+Q2: 1.45, W: 3.75, x: 0.10, y: 0.74 Found 4 particles:
+PID: 11 p: 2.79, 
+PID: 211 p: 1.09, 
+PID: 211 p: 2.49, 
+PID: -211 p: 1.78, 
+pair mass: 1.13, pT: 0.38, xF: 0.01, theta: 1.96, phiR: 5.70, phiH: 1.68, phiHR: -4.02
+
+
+Event: 319
+Q2: 1.45, W: 3.75, x: 0.10, y: 0.74 Found 4 particles:
+PID: 11 p: 2.79, 
+PID: 211 p: 1.09, 
+PID: 211 p: 2.49, 
+PID: -211 p: 1.78, 
+pair mass: 0.69, pT: 0.99, xF: 0.14, theta: 2.14, phiR: 5.61, phiH: 2.17, phiHR: -3.44
+
+
+Event: 423
+Q2: 2.30, W: 3.50, x: 0.17, y: 0.69 Found 3 particles:
+PID: 11 p: 3.31, 
+PID: -211 p: 1.17, 
+PID: 211 p: 2.80, 
+pair mass: 0.68, pT: 0.42, xF: 0.19, theta: 1.22, phiR: 6.05, phiH: 3.98, phiHR: -2.07
+
+
+Event: 442
+Q2: 1.58, W: 3.35, x: 0.13, y: 0.60 Found 3 particles:
+PID: 11 p: 4.23, 
+PID: -211 p: 1.28, 
+PID: 211 p: 1.12, 
+pair mass: 0.71, pT: 0.22, xF: 0.09, theta: 1.22, phiR: 0.19, phiH: 3.13, phiHR: 2.94
+
+
+Event: 842
+Q2: 2.58, W: 3.45, x: 0.19, y: 0.68 Found 3 particles:
+PID: 11 p: 3.35, 
+PID: 211 p: 3.65, 
+PID: -211 p: 1.04, 
+pair mass: 1.46, pT: 0.47, xF: 0.11, theta: 1.24, phiR: 1.13, phiH: 3.81, phiHR: 2.68
+
+
+Event: 904
+Q2: 4.43, W: 3.05, x: 0.34, y: 0.65 Found 3 particles:
+PID: 11 p: 3.75, 
+PID: -211 p: 1.41, 
+PID: 211 p: 1.02, 
+pair mass: 0.84, pT: 0.23, xF: 0.04, theta: 1.00, phiR: 0.58, phiH: 0.05, phiHR: -0.53
+
+
+Event: 1131
+Q2: 2.56, W: 2.63, x: 0.30, y: 0.43 Found 3 particles:
+PID: 11 p: 6.01, 
+PID: -211 p: 1.05, 
+PID: 211 p: 1.71, 
+pair mass: 0.90, pT: 0.37, xF: 0.09, theta: 1.26, phiR: 4.98, phiH: 3.02, phiHR: -1.96
+
+
+Event: 1182
+Q2: 3.39, W: 2.68, x: 0.35, y: 0.49 Found 3 particles:
+PID: 11 p: 5.44, 
+PID: -211 p: 1.28, 
+PID: 211 p: 2.95, 
+pair mass: 0.53, pT: 0.35, xF: 0.33, theta: 1.24, phiR: 4.67, phiH: 1.27, phiHR: -3.40
+
+
+Event: 1330
+Q2: 2.74, W: 3.13, x: 0.24, y: 0.59 Found 3 particles:
+PID: 11 p: 4.39, 
+PID: -211 p: 2.26, 
+PID: 211 p: 1.07, 
+pair mass: 0.62, pT: 0.75, xF: 0.12, theta: 1.97, phiR: 6.08, phiH: 4.28, phiHR: -1.81
+
+
+Event: 1405
+Q2: 4.51, W: 3.45, x: 0.29, y: 0.78 Found 4 particles:
+PID: 11 p: 2.31, 
+PID: 211 p: 1.34, 
+PID: 211 p: 1.00, 
+PID: -211 p: 3.38, 
+pair mass: 0.99, pT: 0.49, xF: 0.15, theta: 1.05, phiR: 1.40, phiH: 2.61, phiHR: 1.20
+
+
+Event: 1405
+Q2: 4.51, W: 3.45, x: 0.29, y: 0.78 Found 4 particles:
+PID: 11 p: 2.31, 
+PID: 211 p: 1.34, 
+PID: 211 p: 1.00, 
+PID: -211 p: 3.38, 
+pair mass: 0.75, pT: 0.32, xF: 0.18, theta: 1.19, phiR: 1.10, phiH: 3.08, phiHR: 1.98
+
+
+Event: 1450
+Q2: 3.05, W: 2.94, x: 0.28, y: 0.54 Found 3 particles:
+PID: 11 p: 4.84, 
+PID: -211 p: 1.65, 
+PID: 211 p: 1.51, 
+pair mass: 1.12, pT: 0.40, xF: 0.04, theta: 1.47, phiR: 0.89, phiH: 2.72, phiHR: 1.84
+
+
+Event: 1760
+Q2: 3.51, W: 2.66, x: 0.36, y: 0.49 Found 3 particles:
+PID: 11 p: 5.42, 
+PID: -211 p: 1.57, 
+PID: 211 p: 1.13, 
+pair mass: 0.79, pT: 0.51, xF: 0.10, theta: 1.92, phiR: 1.79, phiH: 5.14, phiHR: 3.34
+
+
+Event: 1924
+Q2: 1.82, W: 3.79, x: 0.12, y: 0.77 Found 3 particles:
+PID: 11 p: 2.45, 
+PID: 211 p: 1.70, 
+PID: -211 p: 1.11, 
+pair mass: 1.13, pT: 0.34, xF: 0.01, theta: 1.41, phiR: 6.22, phiH: 6.28, phiHR: 0.06
+
+
+Event: 1997
+Q2: 2.96, W: 3.04, x: 0.26, y: 0.57 Found 3 particles:
+PID: 11 p: 4.58, 
+PID: 211 p: 1.07, 
+PID: -211 p: 2.93, 
+pair mass: 0.66, pT: 0.28, xF: 0.25, theta: 1.31, phiR: 4.78, phiH: 1.85, phiHR: -2.93
+
+
+Event: 2032
+Q2: 4.74, W: 2.91, x: 0.38, y: 0.62 Found 3 particles:
+PID: 11 p: 4.04, 
+PID: -211 p: 2.78, 
+PID: 211 p: 1.67, 
+pair mass: 0.37, pT: 0.63, xF: 0.22, theta: 1.96, phiR: 3.55, phiH: 2.49, phiHR: -1.06
+
+
+Event: 2628
+Q2: 1.36, W: 3.41, x: 0.11, y: 0.61 Found 3 particles:
+PID: 11 p: 4.14, 
+PID: 321 p: 1.59, 
+PID: 211 p: 1.26, 
+PID: -211 p: 1.76, 
+pair mass: 0.52, pT: 0.59, xF: 0.13, theta: 1.90, phiR: 6.14, phiH: 3.71, phiHR: -2.43
+
+
+Event: 2943
+Q2: 3.99, W: 2.63, x: 0.40, y: 0.50 Found 3 particles:
+PID: 11 p: 5.26, 
+PID: 211 p: 1.39, 
+PID: -211 p: 2.00, 
+pair mass: 0.46, pT: 0.19, xF: 0.22, theta: 0.63, phiR: 4.00, phiH: 2.95, phiHR: -1.05
+
+
+Event: 3047
+Q2: 2.58, W: 2.69, x: 0.29, y: 0.45 Found 3 particles:
+PID: 11 p: 5.83, 
+PID: -211 p: 1.29, 
+PID: 211 p: 2.11, 
+pair mass: 0.83, pT: 0.64, xF: 0.13, theta: 1.31, phiR: 3.85, phiH: 2.90, phiHR: -0.95
+
+
+Event: 3776
+Q2: 2.93, W: 2.66, x: 0.32, y: 0.46 Found 3 particles:
+PID: 11 p: 5.73, 
+PID: 211 p: 1.60, 
+PID: -211 p: 2.35, 
+pair mass: 0.55, pT: 0.20, xF: 0.33, theta: 0.88, phiR: 0.92, phiH: 5.28, phiHR: 4.36
+
+
+Event: 3774
+Q2: 2.27, W: 3.51, x: 0.17, y: 0.69 Found 4 particles:
+PID: 11 p: 3.30, 
+PID: -211 p: 3.50, 
+PID: 211 p: 1.71, 
+PID: 211 p: 1.30, 
+pair mass: 1.62, pT: 0.67, xF: 0.14, theta: 0.90, phiR: 0.51, phiH: 1.29, phiHR: 0.78
+
+
+Event: 3774
+Q2: 2.27, W: 3.51, x: 0.17, y: 0.69 Found 4 particles:
+PID: 11 p: 3.30, 
+PID: -211 p: 3.50, 
+PID: 211 p: 1.71, 
+PID: 211 p: 1.30, 
+pair mass: 0.85, pT: 0.48, xF: 0.23, theta: 1.23, phiR: 5.40, phiH: 3.73, phiHR: -1.67
+
+
+Event: 3798
+Q2: 6.62, W: 2.63, x: 0.52, y: 0.64 Found 3 particles:
+PID: 11 p: 3.87, 
+PID: -211 p: 1.03, 
+PID: 211 p: 1.43, 
+pair mass: 0.59, pT: 0.48, xF: 0.00, theta: 2.00, phiR: 5.82, phiH: 3.86, phiHR: -1.96
+
+
+Event: 3910
+Q2: 4.84, W: 2.43, x: 0.49, y: 0.50 Found 3 particles:
+PID: 11 p: 5.34, 
+PID: 211 p: 1.05, 
+PID: -211 p: 2.04, 
+pair mass: 0.56, pT: 0.05, xF: 0.20, theta: 0.32, phiR: 4.88, phiH: 5.31, phiHR: 0.43
+
+
+Event: 4144
+Q2: 2.26, W: 3.68, x: 0.15, y: 0.75 Found 3 particles:
+PID: 11 p: 2.67, 
+PID: -211 p: 1.04, 
+PID: 211 p: 4.20, 
+pair mass: 0.89, pT: 0.27, xF: 0.25, theta: 0.73, phiR: 1.39, phiH: 3.92, phiHR: 2.53
+
+
+Event: 4881
+Q2: 1.81, W: 3.76, x: 0.12, y: 0.76 Found 3 particles:
+PID: 11 p: 2.55, 
+PID: -211 p: 1.15, 
+PID: 211 p: 1.84, 
+pair mass: 0.45, pT: 0.74, xF: 0.08, theta: 2.22, phiR: 0.04, phiH: 2.53, phiHR: 2.49

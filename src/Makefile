@@ -13,7 +13,7 @@ HEADERS := $(filter-out $(LINKDEF), $(wildcard *.h)) $(LINKDEF)
 
 
 # shared object
-OBJ := lib$(NAME).so
+OBJ := $(NAME).so
 
 #-----------------------------------------------
 

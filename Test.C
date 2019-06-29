@@ -1,4 +1,4 @@
-R__LOAD_LIBRARY(DihBsa)
+R__LOAD_LIBRARY(src/DihBsa)
 #include "Constants.h"
 #include "Tools.h"
 
