@@ -212,12 +212,13 @@ int main(int argc, char** argv) {
    // miscellaneous event-header branches
    Int_t evnum,runnum;
    Int_t helicity;
-   //Float_t torus;
+   Float_t torus,solenoid;
    Long64_t triggerBits;
    tree->Branch("runnum",&runnum,"runnum/I");
    tree->Branch("evnum",&evnum,"evnum/I");
    tree->Branch("helicity",&helicity,"helicity/I");
-   //tree->Branch("torus",&torus,"torus/F");
+   tree->Branch("torus",&torus,"torus/F");
+   tree->Branch("solenoid",&solenoid,"solenoid/F");
    tree->Branch("triggerBits",&triggerBits,"triggerBits/L");
 
 
@@ -226,13 +227,13 @@ int main(int argc, char** argv) {
    // define HIPO file reader and banks
 #if HIPO_VERSION == 3
    // reader
-   hipo::reader reader;
+   hipo::reader reader; // HIPO3
    reader.open(infileN.Data());
 
    // particle bank
    // -- for HIPO3, need to use general bank rather than clas12::particle
    //    (see log 14.6.19 for details; seems HIPO3's clas12::particle is a bit broken)
-   hipo::bank particleBank("REC::Particle",reader); 
+   hipo::bank particleBank("REC::Particle",reader);  // HIPO3
    Int_t o_pid = particleBank.getn("pid");
    Int_t o_px = particleBank.getn("px");
    Int_t o_py = particleBank.getn("py");
@@ -253,8 +254,8 @@ int main(int argc, char** argv) {
    //
    // -- in Hipo4/bank.h, bank entries are now accessible by name
    //
-   hipo::bank configBank("RUN::config",reader);
-   hipo::bank evBank("REC::Event",reader);
+   hipo::bank configBank("RUN::config",reader); // HIPO3
+   hipo::bank evBank("REC::Event",reader); // HIPO3
    //Int_t o_torus = configBank.getn("torus"); // torus in/outbending
    Int_t o_triggerBits = configBank.getn("trigger"); // trigger bits
    Int_t o_evnum = evBank.getn("NEVENT"); // event #
@@ -262,7 +263,7 @@ int main(int argc, char** argv) {
    Int_t o_helicity = evBank.getn("Helic"); // e- helicity
 
 #elif HIPO_VERSION == 4
-   clas12::clas12reader reader(infileN.Data());
+   clas12::clas12reader reader(infileN.Data()); // HIPO4
 #endif
 
    
@@ -329,16 +330,16 @@ int main(int argc, char** argv) {
      helicity = evBank.getInt(o_helicity,0); // -->tree
      triggerBits = configBank.getLong(o_triggerBits,0); // -->tree
      //torus = configBank.getFloat(o_torus,0); // -->tree
+     torus = -10000;
+     solenoid = -10000;
 #elif HIPO_VERSION == 4
-     // TODO -- can't yet get evnum, runnum, or helicity
-     evnum = reader.head()->getEventNumber(); // -->tree
-     //runnum = reader.head()->getRunNumber(); // -->tree
-     //helicity = reader.head()->getHelicity(); // -->tree
-     //triggerBits = reader.head()->getTrigger(); // -->tree
-     //evnum = 0;
-     runnum = 0;
-     helicity = 0;
-     triggerBits = 0;
+     evnum = reader.runconfig()->getEvent(); // -->tree
+     runnum = reader.runconfig()->getRun(); // -->tree
+     helicity = reader.event()->getHelicity(); // -->tree
+     triggerBits = reader.runconfig()->getTrigger(); // -->tree
+     torus = reader.runconfig()->getTorus(); // -->tree
+     solenoid = reader.runconfig()->getSolenoid(); // -->tree
+     //printf("schema name = %s\n",reader.head()->getSchema().getName().data());
 #endif
 
 

@@ -23,10 +23,10 @@ THISDIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 CLAS12TOOL := $(THISDIR)$(CLAS12TOOLDIR)
 ifeq ($(HIPO_VERSION),3)
   DEPS += -I$(CLAS12TOOL)/Hipo3 -I$(CLAS12TOOL)/Clas12Banks3
-  LIBS += -L$(CLAS12TOOL)/lib -lClas12Banks3 -lHipo3
+  LIBS += -L$(CLAS12TOOL)/lib -lClas12Banks3 -lHipo3 -llz4
 else ifeq ($(HIPO_VERSION),4)
   DEPS += -I$(CLAS12TOOL)/Hipo4 -I$(CLAS12TOOL)/Clas12Banks4
-  LIBS += -L$(CLAS12TOOL)/lib -lClas12Banks4 -lHipo4
+  LIBS += -L$(CLAS12TOOL)/lib -lClas12Banks4 -lHipo4 -llz4
 else
   $(error Bad HIPO version setting)
 endif
