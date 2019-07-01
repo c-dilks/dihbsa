@@ -15,6 +15,12 @@ class Tools {
       while(ang<-PI) ang+=2*PI;
       return ang;
     };
+    // shift angle to the range [0,2*PI]
+    static Float_t AdjAngleTwoPi(Float_t ang) {
+      while(ang>2*PI) ang-=2*PI;
+      while(ang<0) ang+=2*PI;
+      return ang;
+    };
 
 
     // get first filled bin of a histogram

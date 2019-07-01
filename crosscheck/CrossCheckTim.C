@@ -89,9 +89,9 @@ void CrossCheckTim(TString indir="../outroot.crosscheck") {
           gSystem->RedirectOutput(outdat,"a");
 
           printf("EVENT#  xtree: %d  tree: %d\n",evnum,ev->evnum);
-          printf("HASH  xtree: %f  tree: %f\n",hashIter->first,hashVal);
-          printf("%7s %7s %7s %7s\n","var","xtree","tree","diff");
-          printf("%7s %7s %7s %7s\n","---","-----","----","----");
+          //printf("HASH  xtree: %f  tree: %f\n",hashIter->first,hashVal);
+          printf("%7s %7s %7s %7s\n","var","xtree","tree","|diff|");
+          printf("%7s %7s %7s %7s\n","---","-----","----","------");
           PrintCompare("Q2",Q2,ev->Q2);
           PrintCompare("W",W,ev->W);
           PrintCompare("x",x,ev->x);
@@ -122,11 +122,11 @@ void CrossCheckTim(TString indir="../outroot.crosscheck") {
 void PrintCompare(TString name, Float_t val, Float_t xval) {
   Float_t diff;
   if(name=="PhiH" || name=="PhiR") {
-    val = Tools::AdjAngle(val);
-    xval = Tools::AdjAngle(xval);
-    diff = Tools::AdjAngle( val - xval );
+    val = Tools::AdjAngleTwoPi(val);
+    xval = Tools::AdjAngleTwoPi(xval);
+    diff = Tools::AdjAngleTwoPi( fabs(val - xval) );
   } else {
-    diff = val - xval;
+    diff = fabs(val - xval);
   };
 
   printf("%7s %7.2f %7.2f %7.2f\n",name.Data(),val,xval,diff);
