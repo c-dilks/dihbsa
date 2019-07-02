@@ -29,8 +29,8 @@ void PrintCompare(TString name, Float_t val, Float_t xval);
 void CrossChecker(TString indir="../outroot.crosscheck") {
 
   ///////////////////////////////
-  enum xenum { kTim, kHarut };
-  Int_t WHICH_XCHECK = kHarut;
+  enum xenum { kTim, kHarut, kSimple };
+  Int_t WHICH_XCHECK = kSimple;
   ///////////////////////////////
 
   Int_t whichPair = EncodePairType(kPip,kPim);
@@ -89,6 +89,13 @@ void CrossChecker(TString indir="../outroot.crosscheck") {
     xtree->SetBranchAddress("pimPhi",&hadPhi[kpim]);
 
     xtree->SetBranchAddress("PhPt",&PhPt);
+  }
+  else if(WHICH_XCHECK == kSimple) {
+    tree->ReadFile("../simple.dat","evnum/I:pipE/F:pipPt/F:pimE/F:pimPt/F");
+    xtree->SetBranchAddress("pipE",&hadE[kpip]);
+    xtree->SetBranchAddress("pipPt",&hadPt[kpip]);
+    xtree->SetBranchAddress("pimE",&hadE[kpim]);
+    xtree->SetBranchAddress("pimPt",&hadPt[kpim]);
   }
   else {
     fprintf(stderr,"ERROR: unknown WHICH_XCHECK\n");

@@ -7,8 +7,7 @@
 #include "TString.h"
 #include "TMath.h"
 #include "TSystem.h"
-#include "TRegexp.h"
-#include "TObjArray.h"
+#include "TLorentzVector.h"
 
 
 // Clas12Tool
@@ -17,12 +16,6 @@
 #include "particle.h"
 #include "clas12reader.h"
 
-// DihBsa
-#include "Constants.h"
-#include "DIS.h"
-#include "Trajectory.h"
-#include "Dihadron.h"
-#include "Diphoton.h"
 
 
 #if HIPO_VERSION == 4
@@ -57,6 +50,8 @@ int main(int argc, char** argv) {
    tree->Branch("py",&py,"py/F");
    tree->Branch("pz",&pz,"pz/F");
 
+   const Float_t PION_MASS = 0.139571;
+   const Int_t PION_PID = 211;
 
    // HIPO4 reader
    clas12::clas12reader reader(infileN.Data());
@@ -67,7 +62,6 @@ int main(int argc, char** argv) {
      gSystem->RedirectOutput("simple.dat","w");
      gSystem->RedirectOutput(0);
    };
-
 
 
 
@@ -93,15 +87,11 @@ int main(int argc, char** argv) {
        tree->Fill();
 
        if(dump) {
-         if(abs(pid)==PartPID(kPip)) {
-           pvec.SetXYZM(px,py,pz,PartMass(kPip));
+         if(abs(pid)==PION_PID) {
+           pvec.SetXYZM(px,py,pz,PION_MASS);
            gSystem->RedirectOutput("simple.dat","a");
-           printf("%d %d %.2f %.2f\n",
-             evnum,
-             pid,
-             pvec.E(),
-             pvec.Pt()
-           );
+           printf("%d %d %.2f %.2f\n", evnum, pid, pvec.E(), pvec.Pt() );
+           //printf("%d %d %.2f %.2f %.2f\n", evnum, pid, px, py, pz );
            gSystem->RedirectOutput(0);
          };
        };

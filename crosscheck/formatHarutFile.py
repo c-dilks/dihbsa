@@ -11,13 +11,19 @@ hadEtaBreit = [" "]*2
 
 outStrHad = [" "]*2
 
+#
+#
+# SEE harut_format_README.txt for columns information
+#
+#
+
 # three lines for each event: 
 # first is pi+ (use s=kP), second is pi- (use s=kM), third is for dihadron
 s = 0
 kP = 0
 kM = 1
 
-with open("dihad1000.dis.0000.nrad.dat.evio.hipo.txt") as iFile, open("xtree.dat", 'w') as oFile:
+with open("xfiles/dihad1000.dis.0000.nrad.dat.evio.hipo.txt") as iFile, open("xtree.dat", 'w') as oFile:
     for lineIn in iFile:
         line = lineIn.strip()
         lineCols = line.split()

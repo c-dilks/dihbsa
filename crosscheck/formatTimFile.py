@@ -1,7 +1,7 @@
 def getVal(col):
   return col.split(": ")[-1]
 
-with open("hayward_cross_check_0001.txt") as iFile, open("xtree.dat", 'w') as oFile:
+with open("xfiles/hayward_cross_check_0001.txt") as iFile, open("xtree.dat", 'w') as oFile:
   for lineIn in iFile:
     line = lineIn.strip()
     lineCols = line.split(",")
