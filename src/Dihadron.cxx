@@ -91,7 +91,7 @@ void Dihadron::SetEvent(
   pPh_com = vecPh_com.Vect();
   pQ_com = disVecQ_com.Vect();
 
-  xF = pPh_com.Dot(pQ_com) / (disEv->W * pQ_com.Mag());
+  xF = 2 * pPh_com.Dot(pQ_com) / (disEv->W * pQ_com.Mag());
 
 
   // compute theta

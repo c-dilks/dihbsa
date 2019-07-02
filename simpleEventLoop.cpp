@@ -31,11 +31,13 @@ int main(int argc, char** argv) {
 
    // ARGUMENTS
    TString infileN;
+   Bool_t dump = false;
    if(argc<=1) {
-     printf("USAGE: %s [hipo4 file]\n",argv[0]);
+     printf("USAGE: %s [hipo4 file] [dump text]\n",argv[0]);
      exit(0);
    };
    if(argc>1) infileN = TString(argv[1]);
+   if(argc>2) dump = true;
 
 
    // set output file name
@@ -59,6 +61,14 @@ int main(int argc, char** argv) {
    // HIPO4 reader
    clas12::clas12reader reader(infileN.Data());
 
+   TLorentzVector pvec;
+
+   if(dump) {
+     gSystem->RedirectOutput("simple.dat","w");
+     gSystem->RedirectOutput(0);
+   };
+
+
 
 
    // EVENT LOOP ----------------------------------------------
@@ -79,7 +89,23 @@ int main(int argc, char** argv) {
        py = part->par()->getPy();
        pz = part->par()->getPz();
 
+
        tree->Fill();
+
+       if(dump) {
+         if(abs(pid)==PartPID(kPip)) {
+           pvec.SetXYZM(px,py,pz,PartMass(kPip));
+           gSystem->RedirectOutput("simple.dat","a");
+           printf("%d %d %.2f %.2f\n",
+             evnum,
+             pid,
+             pvec.E(),
+             pvec.Pt()
+           );
+           gSystem->RedirectOutput(0);
+         };
+       };
+
 
      };
 
