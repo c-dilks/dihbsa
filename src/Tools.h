@@ -22,6 +22,12 @@ class Tools {
       return ang;
     };
 
+    // convert Eta to Theta
+    static Float_t EtaToTheta(Float_t eta) {
+      return 2 * TMath::ATan( TMath::Exp( -1*eta) );
+    };
+
+
 
     // get first filled bin of a histogram
     static Float_t GetFirstFilledX(TH1 * h) {
