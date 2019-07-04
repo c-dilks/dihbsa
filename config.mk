@@ -12,6 +12,9 @@ CXX = g++ -std=c++11
 FLAGS = -g -Wno-deprecated -fPIC -m64 -fno-inline -Wno-write-strings
 FLAGS += -DHIPO_VERSION=$(HIPO_VERSION)
 
+# extra flags for valgrind
+FLAGS += -O0
+
 
 # ROOT
 DEPS = $(shell root-config --cflags)

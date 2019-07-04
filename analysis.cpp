@@ -53,7 +53,8 @@ int main(int argc, char** argv) {
 
 
 
-   // set output file name
+
+   // set output file
    TString outfileN;
    if(batchMode) outfileN = "outroot.root";
    else {
@@ -62,6 +63,7 @@ int main(int argc, char** argv) {
      outfileN(TRegexp("hipo$")) = "root";
    };
    printf("outfileN = %s\n",outfileN.Data());
+   TFile outfile(outfileN,"RECREATE");
 
 
    // load libs
@@ -112,8 +114,7 @@ int main(int argc, char** argv) {
 
 
    // define tree
-   TFile * outfile = new TFile(outfileN,"RECREATE");
-   TTree * tree = new TTree();
+   TTree * tree = new TTree("tree","tree");
 
    // DIS kinematics branches
    tree->Branch("W",&(disEv->W),"W/F");
@@ -300,8 +301,9 @@ int main(int argc, char** argv) {
    printf("begin event loop...\n");
 
    while(reader.next()==true) {
-     if(evCount>1e6) { fprintf(stderr,"BREAKING LOOP HERE!!!\n"); break; };
+     //if(evCount>1e6) { fprintf(stderr,"BREAKING LOOP HERE!!!\n"); break; };
      bench.resume();
+
 
      // reset branches
      disEv->ResetVars();
@@ -662,6 +664,7 @@ int main(int argc, char** argv) {
              evCount++;
              if(evCount%100000==0) printf("[---] %d dihadron events found\n",evCount);
 
+
            }; // eo if foundObservablePair
 
 
@@ -685,6 +688,7 @@ int main(int argc, char** argv) {
 
    // write output tree
    printf("writing tree...\n");
+   outfile.cd();
    tree->Write("tree");
    printf("tree written\n");
 
@@ -709,5 +713,5 @@ int main(int argc, char** argv) {
 
 
    // close the output ROOT file
-   outfile->Close();
+   outfile.Close();
 };

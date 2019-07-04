@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
 
 
    // define tree
-   TTree * tree = new TTree();
+   TTree * tree = new TTree("tree","tree");
    Int_t evnum,pid,helicity;
    Float_t px,py,pz;
    tree->Branch("evnum",&evnum,"evnum/I");
@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
    // HIPO4 reader
    clas12::clas12reader reader(infileN.Data());
 
-   TLorentzVector pvec;
+   TLorentzVector * pvec = new TLorentzVector();
 
    if(dump) {
      gSystem->RedirectOutput("simple.dat","w");
@@ -88,9 +88,9 @@ int main(int argc, char** argv) {
 
        if(dump) {
          if(abs(pid)==PION_PID) {
-           pvec.SetXYZM(px,py,pz,PION_MASS);
+           pvec->SetXYZM(px,py,pz,PION_MASS);
            gSystem->RedirectOutput("simple.dat","a");
-           printf("%d %d %.2f %.2f\n", evnum, pid, pvec.E(), pvec.Pt() );
+           printf("%d %d %.2f %.2f\n", evnum, pid, pvec->E(), pvec->Pt() );
            //printf("%d %d %.2f %.2f %.2f\n", evnum, pid, px, py, pz );
            gSystem->RedirectOutput(0);
          };

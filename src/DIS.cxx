@@ -28,9 +28,6 @@ DIS::DIS() {
 };
 
 
-DIS::~DIS() {
-};
-
 void DIS::SetBeamEn(Float_t newBeamEn) {
   BeamEn = newBeamEn;
   vecBeam.SetPz(BeamEn);

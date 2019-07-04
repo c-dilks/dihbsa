@@ -26,7 +26,7 @@ class DIS : public TObject
 {
   public:
     DIS();
-    ~DIS();
+    ~DIS() {};
 
     void SetBeamEn(Float_t newBeamEn);
     void SetElectron(Trajectory * tr);
