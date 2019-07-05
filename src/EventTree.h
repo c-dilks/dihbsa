@@ -15,7 +15,6 @@
 #include "TTree.h"
 #include "TChain.h"
 #include "TFile.h"
-#include "TLorentzVector.h"
 #include "TString.h"
 #include "TMath.h"
 
@@ -116,6 +115,7 @@ class EventTree : public TObject
    Bool_t cutDihadron;
    Bool_t cutDiphKinematics;
    Bool_t cutDiph;
+   Bool_t cutCrossCheck;
 
    Bool_t useDiphBG;
     

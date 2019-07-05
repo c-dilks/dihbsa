@@ -9,7 +9,7 @@ Diphoton::Diphoton() {
   debug = true;
 
   Traj = new Trajectory(kDiph);
-  vecDiphoton = TLorentzVector(0,0,0,0);
+  vecDiphoton.SetXYZM(0,0,0,0);
 
   printf("Diphoton instantiated\n");
 };

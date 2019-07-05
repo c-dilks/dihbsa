@@ -7,7 +7,7 @@
 #include "TString.h"
 #include "TMath.h"
 #include "TSystem.h"
-#include "TLorentzVector.h"
+#include "Math/Vector4D.h"
 
 
 // Clas12Tool
@@ -43,20 +43,28 @@ int main(int argc, char** argv) {
    TTree * tree = new TTree("tree","tree");
    Int_t evnum,pid,helicity;
    Float_t px,py,pz;
+   Float_t hadE[2],hadPt[2];
    tree->Branch("evnum",&evnum,"evnum/I");
    tree->Branch("helicity",&helicity,"helicity/I");
+   /*
    tree->Branch("pid",&pid,"pid/I");
    tree->Branch("px",&px,"px/F");
    tree->Branch("py",&py,"py/F");
    tree->Branch("pz",&pz,"pz/F");
+   */
+   tree->Branch("hadE",hadE,"hadE[2]/F"); // [0=pi+, 1=pi-]
+   tree->Branch("hadPt",hadPt,"hadPt[2]/F");
 
    const Float_t PION_MASS = 0.139571;
    const Int_t PION_PID = 211;
+   Int_t hadPid[2] = { PION_PID, -PION_PID };
 
    // HIPO4 reader
    clas12::clas12reader reader(infileN.Data());
 
-   TLorentzVector * pvec = new TLorentzVector();
+   ROOT::Math::PxPyPzMVector pvec;
+   ROOT::Math::PxPyPzMVector pionVec[2];
+   int h;
 
    if(dump) {
      gSystem->RedirectOutput("simple.dat","w");
@@ -68,6 +76,7 @@ int main(int argc, char** argv) {
    // EVENT LOOP ----------------------------------------------
    printf("begin event loop...\n");
    Int_t evCount=0;
+   Float_t Emax[2];
    Int_t lim = (Int_t) 1e6;
    while(reader.next()==true) {
      if(evCount>lim) { fprintf(stderr,"--- stopping loop at %d events\n",lim); break; };
@@ -76,7 +85,8 @@ int main(int argc, char** argv) {
      helicity = reader.event()->getHelicity();
 
 
-     // particle loop
+     // simple particle loop
+     /*
      for(auto & part : reader.getDetParticles()) {
        pid = part->getPid();
        px = part->par()->getPx();
@@ -88,15 +98,38 @@ int main(int argc, char** argv) {
 
        if(dump) {
          if(abs(pid)==PION_PID) {
-           pvec->SetXYZM(px,py,pz,PION_MASS);
+           pvec.SetCoordinates(px,py,pz,PION_MASS);
            gSystem->RedirectOutput("simple.dat","a");
-           printf("%d %d %.2f %.2f\n", evnum, pid, pvec->E(), pvec->Pt() );
+           printf("%d %d %.2f %.2f\n", evnum, pid, pvec.E(), pvec.Pt() );
            //printf("%d %d %.2f %.2f %.2f\n", evnum, pid, px, py, pz );
            gSystem->RedirectOutput(0);
          };
        };
+     };
+     */
 
 
+     // look for pi+pi-
+     for(h=0; h<2; h++) {
+       Emax[h]=-1;
+       for(auto & part : reader.getByID(hadPid[h])) {
+         px = part->par()->getPx();
+         py = part->par()->getPy();
+         pz = part->par()->getPz();
+         pvec.SetCoordinates(px,py,pz,PION_MASS);
+         if(pvec.E() > Emax[h]) {
+           pionVec[h].SetCoordinates(px,py,pz,PION_MASS);
+           Emax[h] = pionVec[h].E();
+         };
+       };
+     };
+
+     if(Emax[0]>0 && Emax[1]>0) {
+       for(h=0; h<2; h++) {
+         hadE[h] = pionVec[h].E();
+         hadPt[h] = pionVec[h].Pt();
+       };
+       tree->Fill();
      };
 
      evCount++;

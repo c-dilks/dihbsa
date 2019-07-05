@@ -26,10 +26,10 @@ Int_t HashHarut(Float_t pipE_, Float_t pimE_) {
 void PrintCompare(TString name, Float_t val, Float_t xval);
 
 
-void CrossChecker(TString indir="../outroot.crosscheck") {
+void CrossChecker(TString indir="../outroot") {
 
   ///////////////////////////////
-  enum xenum { kTim, kHarut };
+  enum xenum { kTim, kHarut, kSimple };
   Int_t WHICH_XCHECK = kHarut;
   ///////////////////////////////
 
@@ -37,6 +37,7 @@ void CrossChecker(TString indir="../outroot.crosscheck") {
   EventTree * ev = new EventTree(TString(indir+"/*.root"),whichPair); 
 
 
+  TFile * xfile;
   TTree * xtree = new TTree();
   TString xstr;
 
@@ -90,6 +91,13 @@ void CrossChecker(TString indir="../outroot.crosscheck") {
 
     xtree->SetBranchAddress("PhPt",&PhPt);
   }
+  else if(WHICH_XCHECK == kSimple) {
+    xfile = new TFile("../simpleTree.root","READ");
+    xtree = (TTree*) xfile->Get("tree");
+    xtree->SetBranchAddress("evnum",&evnum);
+    xtree->SetBranchAddress("hadE",hadE);
+    xtree->SetBranchAddress("hadPt",hadPt);
+  }
   else {
     fprintf(stderr,"ERROR: unknown WHICH_XCHECK\n");
     exit(0);
@@ -108,8 +116,9 @@ void CrossChecker(TString indir="../outroot.crosscheck") {
 
     switch(WHICH_XCHECK) {
       case kTim: hashVal = HashTim(Q2,W); break;
-      case kHarut: hashVal = HashHarut(hadE[kpip],hadE[kpim]); break;
-      //case kHarut: hashVal = evnum; break;
+      //case kHarut: hashVal = HashHarut(hadE[kpip],hadE[kpim]); break;
+      case kHarut: hashVal = evnum; break;
+      case kSimple: hashVal = evnum; break;
     };
 
     hashMap.insert(std::pair<Int_t,Int_t>(hashVal,xi));
@@ -127,13 +136,14 @@ void CrossChecker(TString indir="../outroot.crosscheck") {
 
     ev->GetEvent(i);
 
-    if(ev->pairType == whichPair) {
+    if(ev->cutCrossCheck) {
 
       // hash tree's event
       switch(WHICH_XCHECK) {
         case kTim: hashVal = HashTim(ev->Q2,ev->W); break;
-        case kHarut: hashVal = HashHarut(ev->hadE[kpip],ev->hadE[kpim]); break;
-        //case kHarut: hashVal = ev->evnum; break;
+        //case kHarut: hashVal = HashHarut(ev->hadE[kpip],ev->hadE[kpim]); break;
+        case kHarut: hashVal = ev->evnum; break;
+        case kSimple: hashVal = ev->evnum; break;
       };
 
       // see if xtree has a matching hash value
@@ -149,9 +159,11 @@ void CrossChecker(TString indir="../outroot.crosscheck") {
             extraCut = fabs(Q2 - ev->Q2) < 0.01;
             break;
           case kHarut: 
-            extraCut = 
-              fabs( hadTheta[kpip] - Tools::EtaToTheta(ev->hadEta[kpip]) ) < 0.005;
+            //extraCut = 
+              //fabs( hadTheta[kpip] - Tools::EtaToTheta(ev->hadEta[kpip]) ) < 0.005;
+            extraCut = true;
             break;
+          default: extraCut = true;
         };
         if(extraCut) {
 
@@ -178,13 +190,22 @@ void CrossChecker(TString indir="../outroot.crosscheck") {
 
               PrintCompare("pipE",hadE[kpip],ev->hadE[kpip]);
               PrintCompare("pipPt",hadPt[kpip],ev->hadPt[kpip]);
-              PrintCompare("pipPhi",hadPhi[kpip],ev->hadPhi[kpip]);
-              PrintCompare("pipTh",hadTheta[kpip],Tools::EtaToTheta(ev->hadEta[kpip]));
+              //PrintCompare("pipPhi",hadPhi[kpip],ev->hadPhi[kpip]);
+              //PrintCompare("pipTh",hadTheta[kpip],Tools::EtaToTheta(ev->hadEta[kpip]));
 
               PrintCompare("pimE",hadE[kpim],ev->hadE[kpim]);
               PrintCompare("pimPt",hadPt[kpim],ev->hadPt[kpim]);
-              PrintCompare("pimPhi",hadPhi[kpim],ev->hadPhi[kpim]);
-              PrintCompare("pimTh",hadTheta[kpim],Tools::EtaToTheta(ev->hadEta[kpim]));
+              //PrintCompare("pimPhi",hadPhi[kpim],ev->hadPhi[kpim]);
+              //PrintCompare("pimTh",hadTheta[kpim],Tools::EtaToTheta(ev->hadEta[kpim]));
+
+              break;
+            case kSimple:
+
+              PrintCompare("pipE",hadE[kpip],ev->hadE[kpip]);
+              PrintCompare("pipPt",hadPt[kpip],ev->hadPt[kpip]);
+
+              PrintCompare("pimE",hadE[kpim],ev->hadE[kpim]);
+              PrintCompare("pimPt",hadPt[kpim],ev->hadPt[kpim]);
 
               break;
           };

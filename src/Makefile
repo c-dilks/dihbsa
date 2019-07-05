@@ -18,7 +18,7 @@ OBJ := $(NAME).so
 #-----------------------------------------------
 
 
-$(OBJ): $(DICT)
+$(OBJ): $(DICT) $(HEADERS) $(SOURCES)
 	@echo "----- build $@ -----"
 	$(CXX) $(SOURCES) -shared -o $@ $(FLAGS) $(DEPS) $(LIBS)
 

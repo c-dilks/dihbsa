@@ -147,6 +147,19 @@ void EventTree::GetEvent(Int_t i) {
     Tools::PairSame(hadIdx[qA],hadIdx[qB],whichHad[qA],whichHad[qB]) &&
     cutDihadronKinematics && 
     cutDiph;
+
+  
+  // cut for doing cross-checks
+  // -- tim's cuts
+  cutCrossCheck = 
+    Tools::PairSame(hadIdx[qA],hadIdx[qB],kPip,kPim) &&
+    /*
+    particleCnt[kPip]==1 && particleCnt[kPim]==1 &&
+    Tools::EMtoP(hadE[qA],PartMass(kPip)) > 1.0 &&
+    Tools::EMtoP(hadE[qB],PartMass(kPim)) > 1.0 &&
+    Tools::EMtoP(eleE,PartMass(kE)) > 2.0 &&
+    */
+    Q2>1 && W>2;
     
 
   // set preferred PhiR definition

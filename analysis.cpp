@@ -9,6 +9,7 @@
 #include "TSystem.h"
 #include "TRegexp.h"
 #include "TObjArray.h"
+#include "TLorentzVector.h"
 
 
 // Clas12Tool

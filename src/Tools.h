@@ -26,6 +26,10 @@ class Tools {
     static Float_t EtaToTheta(Float_t eta) {
       return 2 * TMath::ATan( TMath::Exp( -1*eta) );
     };
+    // convert Energy and Mass to |Momentum|
+    static Float_t EMtoP(Float_t energy, Float_t mass) {
+      return TMath::Sqrt( TMath::Power(energy,2) - TMath::Power(mass,2) );
+    };
 
 
 
