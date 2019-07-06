@@ -26,6 +26,7 @@ public class simpleAnalyze{
 
     Event ev = new Event();
     Bank particleBank = new Bank(reader.getSchemaFactory().getSchema("REC::Particle"));
+    Bank runconfigBank = new Bank(reader.getSchemaFactory().getSchema("RUN::config"));
 
     double En[] = new double[N];
     double EnTmp[] = new double[N];
@@ -38,6 +39,7 @@ public class simpleAnalyze{
     int npart;
     int pid;
     int idx;
+    int evnum;
 
     double Mass[] = new double[N];
     Mass[kE] = 0.000511;
@@ -46,7 +48,7 @@ public class simpleAnalyze{
 
     String outstr;
 
-    String outfileName = "out.dat";
+    String outfileName = "javaOut.dat";
 
 
     try {
@@ -56,6 +58,10 @@ public class simpleAnalyze{
       while(reader.hasNext()==true) {
 
         reader.nextEvent(ev);
+
+        ev.read(runconfigBank);
+        evnum = runconfigBank.getInt("event",0);
+
         ev.read(particleBank);
         npart = particleBank.getRows();
 
@@ -94,7 +100,7 @@ public class simpleAnalyze{
           };
 
           if( found[kE] && found[kP] && found[kM] ) {
-            outstr = ""; // ev num aqui
+            outstr = Integer.toString(evnum);
             for(int h=0; h<N; h++) 
               outstr += String.format(" %.2f %.2f",En[h],Pt[h]);
             outstr += "\n";
