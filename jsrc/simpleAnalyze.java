@@ -28,23 +28,29 @@ public class simpleAnalyze{
     Bank particleBank = new Bank(reader.getSchemaFactory().getSchema("REC::Particle"));
     Bank runconfigBank = new Bank(reader.getSchemaFactory().getSchema("RUN::config"));
 
+    int hadrons[] = {kP,kM};
     double En[] = new double[N];
-    double EnTmp[] = new double[N];
-    double Pt[] = new double[N];
     double Px[] = new double[N];
     double Py[] = new double[N];
     double Pz[] = new double[N];
-    double EnMax[] = new double[N];
+    double EnTmp[] = new double[N];
+    double PxTmp[] = new double[N];
+    double PyTmp[] = new double[N];
+    double PzTmp[] = new double[N];
+    double Pt[] = new double[N];
     boolean found[] = new boolean[N];
-    int npart;
-    int pid;
-    int idx;
-    int evnum;
+    int pid,idx,evnum,npart;
+    int h,i;
 
-    double Mass[] = new double[N];
-    Mass[kE] = 0.000511;
-    Mass[kP] = 0.139571;
-    Mass[kM] = 0.139571;
+    double PartMass[] = new double[N];
+    PartMass[kE] = 0.000511;
+    PartMass[kP] = 0.139571;
+    PartMass[kM] = 0.139571;
+
+    int PartPid[] = new int[N];
+    PartPid[kE] = 11;
+    PartPid[kP] = 211;
+    PartPid[kM] = -211;
 
     String outstr;
 
@@ -67,33 +73,37 @@ public class simpleAnalyze{
 
         if(npart>0) {
 
-          for(int h=0; h<N; h++) {
+          for(h=0; h<N; h++) {
             En[h] = -1;
-            Pt[h] = -1;
             found[h] = false;
           };
-          idx = -1;
 
-          for(int i=0; i<npart; i++) {
+          for(i=0; i<npart; i++) {
 
             pid = particleBank.getInt("pid",i);
-            if(pid == 11) idx = kE;
-            else if(pid==211) idx = kP;
-            else if(pid==-211) idx = kM;
+            for(h=0; h<N; h++) {
+              if(pid == PartPid[h]) {
+                idx = h;
 
-            if(idx>=0) {
-              Px[idx] = particleBank.getFloat("px",i);
-              Py[idx] = particleBank.getFloat("py",i);
-              Pz[idx] = particleBank.getFloat("pz",i);
+                PxTmp[idx] = particleBank.getFloat("px",i);
+                PyTmp[idx] = particleBank.getFloat("py",i);
+                PzTmp[idx] = particleBank.getFloat("pz",i);
 
-              EnTmp[idx] = Math.sqrt(
-                Math.pow(Px[idx],2) + Math.pow(Py[idx],2) + Math.pow(Pz[idx],2)
-                - Math.pow(Mass[idx],2));
+                EnTmp[idx] = Math.sqrt( Math.pow(PxTmp[idx],2)
+                                      + Math.pow(PyTmp[idx],2)
+                                      + Math.pow(PzTmp[idx],2)
+                                      - Math.pow(PartMass[idx],2)
+                                      );
 
-              if(EnTmp[idx] > En[idx]) {
-                En[idx] = EnTmp[idx];
-                Pt[idx] = Math.sqrt( Math.pow(Px[idx],2) + Math.pow(Py[idx],2) );
-                found[idx] = true;
+                if(EnTmp[idx] > En[idx]) {
+                  En[idx] = EnTmp[idx];
+                  Px[idx] = PxTmp[idx];
+                  Py[idx] = PyTmp[idx];
+                  Pz[idx] = PzTmp[idx];
+                  Pt[idx] = Math.sqrt( Math.pow(Px[idx],2) + Math.pow(Py[idx],2) );
+                  found[idx] = true;
+                };
+
               };
 
             };
@@ -101,11 +111,14 @@ public class simpleAnalyze{
 
           if( found[kE] && found[kP] && found[kM] ) {
             outstr = Integer.toString(evnum);
-            for(int h=0; h<N; h++) 
-              outstr += String.format(" %.2f %.2f",En[h],Pt[h]);
+            for(int j : hadrons) {
+              //outstr += String.format(" %.2f %.2f",En[j],Pt[j]);
+              outstr += String.format(" %.2f %.2f %.2f",Px[j],Py[j],Pz[j]);
+              System.out.println(Integer.toString(j));
+            };
             outstr += "\n";
             outfile.write(outstr);
-            //System.out.println(outstr);
+            System.out.println(outstr);
           };
         };
       };
