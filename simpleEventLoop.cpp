@@ -7,7 +7,7 @@
 #include "TString.h"
 #include "TMath.h"
 #include "TSystem.h"
-#include "Math/Vector4D.h"
+#include "TLorentzVector.h"
 
 
 // Clas12Tool
@@ -33,103 +33,102 @@ int main(int argc, char** argv) {
    if(argc>2) dump = true;
 
 
-   // set output file name
    TString outfileN = "simpleTree.root";
    printf("outfileN = %s\n",outfileN.Data());
    TFile * outfile = new TFile(outfileN,"RECREATE");
 
 
+   // define observables
+   enum part_enum { kE, kP, kM, N };
+   TString partName[N]; partName[kE] = "ele"; partName[kP] = "pip"; partName[kM] = "pim";
+   Int_t partPid[N];    partPid[kE] = 11;     partPid[kP] = 211;    partPid[kM] = -211;
+   Float_t partMass[N];
+   partMass[kE] = 0.000511;
+   partMass[kP] = 0.139571;
+   partMass[kM] = 0.139571;
+   int h;
+   int hadrons[2] = {kP,kM};
+
+
    // define tree
    TTree * tree = new TTree("tree","tree");
-   Int_t evnum,pid,helicity;
-   Float_t px,py,pz;
-   Float_t hadE[2],hadPt[2];
+   Int_t evnum,helicity;
+   Float_t En[N],Pt[N],Px[N],Py[N],Pz[N];
    tree->Branch("evnum",&evnum,"evnum/I");
    tree->Branch("helicity",&helicity,"helicity/I");
-   /*
-   tree->Branch("pid",&pid,"pid/I");
-   tree->Branch("px",&px,"px/F");
-   tree->Branch("py",&py,"py/F");
-   tree->Branch("pz",&pz,"pz/F");
-   */
-   tree->Branch("hadE",hadE,"hadE[2]/F"); // [0=pi+, 1=pi-]
-   tree->Branch("hadPt",hadPt,"hadPt[2]/F");
+   for(h=0; h<N; h++) {
+     tree->Branch(TString(partName[h]+"E"),&En[h],TString(partName[h]+"E/F"));
+     tree->Branch(TString(partName[h]+"Pt"),&Pt[h],TString(partName[h]+"Pt/F"));
+     tree->Branch(TString(partName[h]+"Px"),&Px[h],TString(partName[h]+"Px/F"));
+     tree->Branch(TString(partName[h]+"Py"),&Py[h],TString(partName[h]+"Py/F"));
+     tree->Branch(TString(partName[h]+"Pz"),&Pz[h],TString(partName[h]+"Pz/F"));
+   };
 
-   const Float_t PION_MASS = 0.139571;
-   const Int_t PION_PID = 211;
-   Int_t hadPid[2] = { PION_PID, -PION_PID };
 
-   // HIPO4 reader
-   clas12::clas12reader reader(infileN.Data());
+   TLorentzVector pv; // 4-momentum
+   Bool_t found[N];
 
-   ROOT::Math::PxPyPzMVector pvec;
-   ROOT::Math::PxPyPzMVector pionVec[2];
-   int h;
 
+   // define text file
+   TString dumpFile = "simple.dat";
    if(dump) {
-     gSystem->RedirectOutput("simple.dat","w");
+     gSystem->RedirectOutput(dumpFile,"w");
      gSystem->RedirectOutput(0);
    };
 
 
 
    // EVENT LOOP ----------------------------------------------
+   clas12::clas12reader reader(infileN.Data());
    printf("begin event loop...\n");
    Int_t evCount=0;
-   Float_t Emax[2];
    Int_t lim = (Int_t) 1e6;
    while(reader.next()==true) {
      if(evCount>lim) { fprintf(stderr,"--- stopping loop at %d events\n",lim); break; };
 
+     for(h=0; h<N; h++) {
+       En[h] = -1;
+       found[h] = false;
+     };
+
+
      evnum = reader.runconfig()->getEvent();
      helicity = reader.event()->getHelicity();
 
+     for(h=0; h<N; h++) {
+       for(auto & part : reader.getByID(partPid[h])) {
+         pv.SetXYZM(
+           part->par()->getPx(),
+           part->par()->getPy(),
+           part->par()->getPz(),
+           partMass[h]
+         );
+         if(pv.E() > En[h]) {
+           En[h] = pv.E();
+           Pt[h] = pv.Pt();
+           Px[h] = pv.Px();
+           Py[h] = pv.Py();
+           Pz[h] = pv.Pz();
+           found[h] = true;
+         };
+       };
+     };
 
-     // simple particle loop
-     /*
-     for(auto & part : reader.getDetParticles()) {
-       pid = part->getPid();
-       px = part->par()->getPx();
-       py = part->par()->getPy();
-       pz = part->par()->getPz();
 
+     if(found[kE] && found[kP] && found[kM]) {
 
        tree->Fill();
 
        if(dump) {
-         if(abs(pid)==PION_PID) {
-           pvec.SetCoordinates(px,py,pz,PION_MASS);
-           gSystem->RedirectOutput("simple.dat","a");
-           printf("%d %d %.2f %.2f\n", evnum, pid, pvec.E(), pvec.Pt() );
-           //printf("%d %d %.2f %.2f %.2f\n", evnum, pid, px, py, pz );
-           gSystem->RedirectOutput(0);
+         gSystem->RedirectOutput(dumpFile,"a");
+         printf("%d",evnum);
+         for(int j : hadrons) {
+           //printf(" %.2f %.2f",En[j],Pt[j]);
+           printf(" %.2f %.2f %.2f",Px[j],Py[j],Pz[j]);
          };
+         printf("\n");
+         gSystem->RedirectOutput(0);
        };
-     };
-     */
-
-
-     // look for pi+pi-
-     for(h=0; h<2; h++) {
-       Emax[h]=-1;
-       for(auto & part : reader.getByID(hadPid[h])) {
-         px = part->par()->getPx();
-         py = part->par()->getPy();
-         pz = part->par()->getPz();
-         pvec.SetCoordinates(px,py,pz,PION_MASS);
-         if(pvec.E() > Emax[h]) {
-           pionVec[h].SetCoordinates(px,py,pz,PION_MASS);
-           Emax[h] = pionVec[h].E();
-         };
-       };
-     };
-
-     if(Emax[0]>0 && Emax[1]>0) {
-       for(h=0; h<2; h++) {
-         hadE[h] = pionVec[h].E();
-         hadPt[h] = pionVec[h].Pt();
-       };
-       tree->Fill();
      };
 
      evCount++;
