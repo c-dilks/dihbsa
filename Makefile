@@ -4,6 +4,7 @@ include config.mk
 # dihbsa/src dependencies
 SRCDIR = ./src
 DEPS += -I$(SRCDIR)
+#LIBS += -L$(SRCDIR) -l$(DIHBSA)
 SOBJ := $(SRCDIR)/$(DIHBSAOBJ)
 
 
