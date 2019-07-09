@@ -92,7 +92,7 @@ public class simpleAnalyze{
                 EnTmp[idx] = Math.sqrt( Math.pow(PxTmp[idx],2)
                                       + Math.pow(PyTmp[idx],2)
                                       + Math.pow(PzTmp[idx],2)
-                                      - Math.pow(PartMass[idx],2)
+                                      + Math.pow(PartMass[idx],2)
                                       );
 
                 if(EnTmp[idx] > En[idx]) {
@@ -112,9 +112,8 @@ public class simpleAnalyze{
           if( found[kE] && found[kP] && found[kM] ) {
             outstr = Integer.toString(evnum);
             for(int j : hadrons) {
-              //outstr += String.format(" %.2f %.2f",En[j],Pt[j]);
               outstr += String.format(" %.2f %.2f %.2f",Px[j],Py[j],Pz[j]);
-              System.out.println(Integer.toString(j));
+              outstr += String.format(" %.2f %.2f",En[j],Pt[j]);
             };
             outstr += "\n";
             outfile.write(outstr);

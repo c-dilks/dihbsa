@@ -33,7 +33,7 @@ void CrossChecker(TString indir="../outroot") {
 
   ///////////////////////////////
   enum xenum { kTim, kHarut, kSimpleC, kSimpleJava, kAnalysis };
-  Int_t xcheck[NF] = { kSimple, kSimpleJava };
+  Int_t xcheck[NF] = { kSimpleC, kHarut };
   ///////////////////////////////
 
 
@@ -62,6 +62,9 @@ void CrossChecker(TString indir="../outroot") {
   Float_t hadPt[NF][nHad];
   Float_t hadTheta[NF][nHad];
   Float_t hadPhi[NF][nHad];
+  Float_t hadPx[NF][nHad];
+  Float_t hadPy[NF][nHad];
+  Float_t hadPz[NF][nHad];
   ////////////////////////////
 
   Float_t valTheta;
@@ -85,7 +88,7 @@ void CrossChecker(TString indir="../outroot") {
 
       gROOT->ProcessLine(".! python formatTimFile.py");
       xstr = "evnum/I:Q2/F:W/F:x/F:y/F:Mh/F:pT/F:xF/F:theta/F:PhiR/F:PhiH/F";
-      printf("xtree[%d] branches: %s\n",xstr);
+      printf("xtree[%d] branches: %s\n",f,xstr.Data());
 
       xtree[f]->ReadFile("xtree.dat",xstr);
       xtree[f]->SetBranchAddress("evnum",&evnum[f]);
@@ -112,7 +115,7 @@ void CrossChecker(TString indir="../outroot") {
         xstr += ":"+hadN[h]+"Pt/F";
       };
       xstr += ":PhPt/F";
-      printf("xtree[%d] branches: %s\n",xstr);
+      printf("xtree[%d] branches: %s\n",f,xstr.Data());
       xtree[f]->ReadFile("xtree.dat",xstr);
 
       xtree[f]->SetBranchAddress("evnum",&evnum[f]);
@@ -129,12 +132,15 @@ void CrossChecker(TString indir="../outroot") {
     case kSimpleC:
 
       xfile[f] = new TFile("../simpleTree.root","READ");
-      xtree[f] = (TTree*) xfile->Get("tree");
+      xtree[f] = (TTree*) xfile[f]->Get("tree");
 
       xtree[f]->SetBranchAddress("evnum",&evnum[f]);
       for(h=0; h<nHad; h++) {
         xtree[f]->SetBranchAddress( TString(hadN[h]+"E"), &hadE[f][h] );
         xtree[f]->SetBranchAddress( TString(hadN[h]+"Pt"), &hadPt[f][h] );
+        xtree[f]->SetBranchAddress( TString(hadN[h]+"Px"), &hadPx[f][h] );
+        xtree[f]->SetBranchAddress( TString(hadN[h]+"Py"), &hadPy[f][h] );
+        xtree[f]->SetBranchAddress( TString(hadN[h]+"Pz"), &hadPz[f][h] );
       };
 
       break;
@@ -143,16 +149,22 @@ void CrossChecker(TString indir="../outroot") {
       
       xstr = "evnum/I";
       for(h=0; h<nHad; h++) {
+        xstr += ":"+hadN[h]+"Px/F";
+        xstr += ":"+hadN[h]+"Py/F";
+        xstr += ":"+hadN[h]+"Pz/F";
         xstr += ":"+hadN[h]+"E/F";
         xstr += ":"+hadN[h]+"Pt/F";
       };
-      printf("xtree[%d] branches: %s\n",xstr);
+      printf("xtree[%d] branches: %s\n",f,xstr.Data());
       xtree[f]->ReadFile("../jsrc/javaOut.dat",xstr);
 
       xtree[f]->SetBranchAddress("evnum",&evnum[f]);
       for(h=0; h<nHad; h++) {
         xtree[f]->SetBranchAddress( TString(hadN[h]+"E"), &hadE[f][h] );
         xtree[f]->SetBranchAddress( TString(hadN[h]+"Pt"), &hadPt[f][h] );
+        xtree[f]->SetBranchAddress( TString(hadN[h]+"Px"), &hadPx[f][h] );
+        xtree[f]->SetBranchAddress( TString(hadN[h]+"Py"), &hadPy[f][h] );
+        xtree[f]->SetBranchAddress( TString(hadN[h]+"Pz"), &hadPz[f][h] );
       };
 
       break;
@@ -170,8 +182,8 @@ void CrossChecker(TString indir="../outroot") {
   // -- later we will loop through xtree[0], searching for each event's hash value to
   //    this hash table in order to find a matching event in xtree[1]
   Int_t hashVal;
-  std::map<Float_t,Int_t> hashMap; // event hash -> xtree[1] index
-  std::map<Float_t,Int_t>::iterator hashIter;
+  std::map<Int_t,Int_t> hashMap; // event hash -> xtree[1] index
+  std::map<Int_t,Int_t>::iterator hashIter;
 
   for(int xi=0; xi<xtree[1]->GetEntries(); xi++) {
     xtree[1]->GetEntry(xi);
@@ -179,7 +191,7 @@ void CrossChecker(TString indir="../outroot") {
     switch(xcheck[1]) {
       case kTim: hashVal = HashTim(Q2[1],W[1]); break;
       //case kHarut: hashVal = HashHarut(hadE[1][iP],hadE[1][iM]); break;
-      default: hashVal = evnum;
+      default: hashVal = evnum[1];
     };
 
     hashMap.insert(std::pair<Int_t,Int_t>(hashVal,xi));
@@ -196,7 +208,7 @@ void CrossChecker(TString indir="../outroot") {
   
 
   // loop through xtree[0]
-  for(int i=0; i<xtree[0]; i++) {
+  for(int i=0; i<xtree[0]->GetEntries(); i++) {
 
     // reset variables so that it's easy to filter out which
     // aren't associated to any branch
@@ -217,6 +229,9 @@ void CrossChecker(TString indir="../outroot") {
         hadPt[f][h] = -10000;
         hadTheta[f][h] = -10000;
         hadPhi[f][h] = -10000;
+        hadPx[f][h] = -10000;
+        hadPy[f][h] = -10000;
+        hadPz[f][h] = -10000;
       };
     };
 
@@ -234,7 +249,7 @@ void CrossChecker(TString indir="../outroot") {
       switch(xcheck[0]) {
         case kTim: hashVal = HashTim(Q2[0],W[0]); break;
         //case kHarut: hashVal = HashHarut(hadE[0][iP],hadE[0][iM]); break;
-        default: hashVal = evnum;
+        default: hashVal = evnum[0];
       };
 
 
@@ -277,6 +292,9 @@ void CrossChecker(TString indir="../outroot") {
           for(h=0; h<nHad; h++) {
             PrintCompare( TString(hadN[h]+"E"), hadE[0][h], hadE[1][h] );
             PrintCompare( TString(hadN[h]+"Pt"), hadPt[0][h], hadPt[1][h] );
+            PrintCompare( TString(hadN[h]+"Px"), hadPx[0][h], hadPx[1][h] );
+            PrintCompare( TString(hadN[h]+"Py"), hadPy[0][h], hadPy[1][h] );
+            PrintCompare( TString(hadN[h]+"Pz"), hadPz[0][h], hadPz[1][h] );
             PrintCompare( TString(hadN[h]+"Theta"), hadTheta[0][h], hadTheta[1][h] );
             PrintCompare( TString(hadN[h]+"Phi"), hadPhi[0][h], hadPhi[1][h] );
           };

@@ -57,11 +57,11 @@ int main(int argc, char** argv) {
    tree->Branch("evnum",&evnum,"evnum/I");
    tree->Branch("helicity",&helicity,"helicity/I");
    for(h=0; h<N; h++) {
-     tree->Branch(TString(partName[h]+"E"),&En[h],TString(partName[h]+"E/F"));
-     tree->Branch(TString(partName[h]+"Pt"),&Pt[h],TString(partName[h]+"Pt/F"));
      tree->Branch(TString(partName[h]+"Px"),&Px[h],TString(partName[h]+"Px/F"));
      tree->Branch(TString(partName[h]+"Py"),&Py[h],TString(partName[h]+"Py/F"));
      tree->Branch(TString(partName[h]+"Pz"),&Pz[h],TString(partName[h]+"Pz/F"));
+     tree->Branch(TString(partName[h]+"E"),&En[h],TString(partName[h]+"E/F"));
+     tree->Branch(TString(partName[h]+"Pt"),&Pt[h],TString(partName[h]+"Pt/F"));
    };
 
 
@@ -123,8 +123,8 @@ int main(int argc, char** argv) {
          gSystem->RedirectOutput(dumpFile,"a");
          printf("%d",evnum);
          for(int j : hadrons) {
-           //printf(" %.2f %.2f",En[j],Pt[j]);
            printf(" %.2f %.2f %.2f",Px[j],Py[j],Pz[j]);
+           printf(" %.2f %.2f",En[j],Pt[j]);
          };
          printf("\n");
          gSystem->RedirectOutput(0);

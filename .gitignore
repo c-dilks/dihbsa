@@ -13,6 +13,4 @@ outz
 .nfs*
 *.pcm
 spinweb*/
-simple.dat
-crosscheck/compare.dat
-jsrc/out.dat
+*.dat
