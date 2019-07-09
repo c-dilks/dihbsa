@@ -2,10 +2,9 @@ include config.mk
 
 
 # dihbsa/src dependencies
-DIHBSA = src
-DEPS += -I$(DIHBSA)
-LIBS += -L$(DIHBSA)
-OBJS := $(wildcard $(DIHBSA)/*.so)
+SRCDIR = ./src
+DEPS += -I$(SRCDIR)
+SOBJ := $(SRCDIR)/$(DIHBSAOBJ)
 
 
 # assume each .cpp file has main and build corresponding .exe executable
@@ -24,11 +23,11 @@ exe: $(EXES)
 
 %.exe: %.o
 	@echo "--- make executable $@"
-	$(CXX) -o $@ $< $(OBJS) $(LIBS)
+	$(CXX) -o $@ $< $(SOBJ) $(LIBS)
 
 %.o: %.cpp
 	@echo "----- build $@ -----"
-	$(CXX) -c $< -o $@ $(FLAGS) $(DEPS) $(LIBS)
+	$(CXX) -c $^ -o $@ $(FLAGS) $(DEPS)
 
 clean:
 	@cd src; make clean

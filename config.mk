@@ -6,7 +6,6 @@ CLAS12TOOLDIR = ../Clas12Tool
 
 ####################################
 
-
 # compiler and flags
 CXX = g++ -std=c++11
 FLAGS = -g -Wno-deprecated -fPIC -m64 -fno-inline -Wno-write-strings
@@ -33,4 +32,9 @@ else ifeq ($(HIPO_VERSION),4)
 else
   $(error Bad HIPO version setting)
 endif
+
+
+# DihBsa shared object name and source directory
+DIHBSA = DihBsa
+DIHBSAOBJ := lib$(DIHBSA).so
 
