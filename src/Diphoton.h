@@ -48,7 +48,7 @@ class Diphoton : public TObject
     Float_t E; // energy of the pair
     Float_t Z; // energy sharing (E1-E2)/E
     Float_t Pt; // transverse momentum
-    Float_t Mgg; // invariant mass
+    Float_t M; // invariant mass
     Float_t Alpha; // diphoton opening angle
     Float_t Eta; // pseudorapidity
     Float_t Phi; // azimuth

@@ -1,4 +1,4 @@
-R__LOAD_LIBRARY(src/DihBsa)
+R__LOAD_LIBRARY(DihBsa)
 
 #include "Constants.h"
 #include "EventTree.h"

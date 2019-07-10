@@ -22,7 +22,7 @@ exe: $(EXES)
 
 %.exe: %.o
 	@echo "--- make executable $@"
-	$(CXX) -o $@ $< $(DIHBSAOBJ) $(LIBS)
+	$(CXX) -o $@ $< ./$(DIHBSAOBJ) $(LIBS)
 
 %.o: %.cpp
 	@echo "----- build $@ -----"

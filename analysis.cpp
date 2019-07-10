@@ -71,7 +71,8 @@ int main(int argc, char** argv) {
    DIS * disEv = new DIS();
    Dihadron * dih = new Dihadron(); dih->useBreit = false;
    Dihadron * dihBr = new Dihadron(); dihBr->useBreit = true;
-   Diphoton * diPhot = new Diphoton();
+   Diphoton * diPhot[2];
+   for(int h=0; h<2; h++) diPhot[h] = new Diphoton();
 
    // define trajectories
    Trajectory * had[2]; // for dihadron pair; points to traj instances
@@ -199,17 +200,25 @@ int main(int argc, char** argv) {
    tree->Branch("b_PhiRp_g",&(dihBr->PhiRp_g),"b_PhiRp_g/F"); // via eq. 9 in 1408.5721
 
    // pi0 (diphoton) branches
-   tree->Branch("photE",diPhot->photE,"photE[2]/F"); // photon energy
-   tree->Branch("photPt",diPhot->photPt,"photPt[2]/F"); // photon transverse momentum
-   tree->Branch("photEta",diPhot->photEta,"photEta[2]/F"); // photon pseudorapidity
-   tree->Branch("photPhi",diPhot->photPhi,"photPhi[2]/F"); // photon azimuth
-   tree->Branch("diphE",&(diPhot->E),"diphE/F"); // diphoton energy
-   tree->Branch("diphZ",&(diPhot->Z),"diphZ/F"); // diphoton energy sharing
-   tree->Branch("diphPt",&(diPhot->Pt),"diphPt/F"); // diphoton transverse momentum
-   tree->Branch("diphM",&(diPhot->Mgg),"diphM/F"); // diphoton invariant mass
-   tree->Branch("diphAlpha",&(diPhot->Alpha),"diphAlpha/F"); // diphoton opening angle
-   tree->Branch("diphEta",&(diPhot->Eta),"diphEta/F"); // diphoton pseudorapidity
-   tree->Branch("diphPhi",&(diPhot->Phi),"diphPhi/F"); // diphoton pseudorapidity
+   // -- they are arrays of length diphCnt; there are three cases:
+   //    - diphCnt=0: no diphotons in the dihadron
+   //    - diphCnt=1: one dihadron hadrons is a diphoton (pi0 or BG)
+   //    - diphCnt=2: both dihadron hadrons are diphotons (pi0-pi0, pi0-BG, or BG-BG)
+   Int_t diphCnt;
+   Float_t diphPhotE[2][2], diphPhotPt[2][2], diphPhotEta[2][2], diphPhotPhi[2][2];
+   Float_t diphE[2], diphZ[2], diphPt[2], diphM[2], diphAlpha[2], diphEta[2], diphPhi[2];
+   tree->Branch("diphCnt",&diphCnt,"diphCnt/I"); // number of diphotons
+   tree->Branch("diphPhotE",   diphPhotE,   "diphPhotE[diphCnt][2]/F"); // photon energy
+   tree->Branch("diphPhotPt",  diphPhotPt,  "diphPhotPt[diphCnt][2]/F"); // photon pT
+   tree->Branch("diphPhotEta", diphPhotEta, "diphPhotEta[diphCnt][2]/F"); // photon eta
+   tree->Branch("diphPhotPhi", diphPhotPhi, "diphPhotPhi[diphCnt][2]/F"); // photon phi
+   tree->Branch("diphE",     diphE,     "diphE[diphCnt]/F"); // energy
+   tree->Branch("diphZ",     diphZ,     "diphZ[diphCnt]/F"); // energy imbalance
+   tree->Branch("diphPt",    diphPt,    "diphPt[diphCnt]/F"); // pT
+   tree->Branch("diphM",     diphM,     "diphM[diphCnt]/F"); // invariant mass
+   tree->Branch("diphAlpha", diphAlpha, "diphAlpha[diphCnt]/F"); // opening angle
+   tree->Branch("diphEta",   diphEta,   "diphEta[diphCnt]/F"); // eta
+   tree->Branch("diphPhi",   diphPhi,   "diphPhi[diphCnt]/F"); // pT
 
    // miscellaneous event-header branches
    Int_t evnum,runnum;
@@ -258,7 +267,7 @@ int main(int argc, char** argv) {
    //
    hipo::bank configBank("RUN::config",reader); // HIPO3
    hipo::bank evBank("REC::Event",reader); // HIPO3
-   //Int_t o_torus = configBank.getn("torus"); // torus in/outbending
+   Int_t o_torus = configBank.getn("torus"); // torus in/outbending
    Int_t o_triggerBits = configBank.getn("trigger"); // trigger bits
    Int_t o_evnum = evBank.getn("NEVENT"); // event #
    Int_t o_runnum = evBank.getn("NRUN"); // run #
@@ -298,7 +307,9 @@ int main(int argc, char** argv) {
 
 
 
-   // EVENT LOOP ----------------------------------------------
+   // ----------------------------------------------------
+   // EVENT LOOP
+   // ----------------------------------------------------
    printf("begin event loop...\n");
 
    while(reader.next()==true) {
@@ -310,9 +321,7 @@ int main(int argc, char** argv) {
      disEv->ResetVars();
      dih->ResetVars();
      dihBr->ResetVars();
-     diPhot->ResetVars();
-     for(int php=0; php<phpCntMax; php++) diPhotTmp[php]->ResetVars();
-     for(int h=0; h<0; h++) {
+     for(int h=0; h<2; h++) {
        hadIdx[h] = -10000;
        hadE[h] = -10000;
        hadP[h] = -10000;
@@ -321,6 +330,9 @@ int main(int argc, char** argv) {
        hadPhi[h] = -10000;
      };
      pairType = -10000;
+     for(int h=0; h<2; h++) diPhot[h]->ResetVars();
+     for(int php=0; php<phpCntMax; php++) diPhotTmp[php]->ResetVars();
+     diphCnt = 0;
 
 
 
@@ -332,7 +344,7 @@ int main(int argc, char** argv) {
      runnum = evBank.getInt(o_runnum,0); // -->tree
      helicity = evBank.getInt(o_helicity,0); // -->tree
      triggerBits = configBank.getLong(o_triggerBits,0); // -->tree
-     //torus = configBank.getFloat(o_torus,0); // -->tree
+     torus = configBank.getFloat(o_torus,0); // -->tree
      torus = -10000;
      solenoid = -10000;
 #elif HIPO_VERSION == 4
@@ -362,8 +374,9 @@ int main(int argc, char** argv) {
      };
 
      
+     // ---------------------------------------------------
      // PARTICLE LOOP
-     // -------------
+     // ---------------------------------------------------
      // -- read in each particle and put them into trajArr, which will be sorted
      //    afterward
      // -- the way we loop through particles differs between HIPO versions (for now...)
@@ -468,11 +481,11 @@ int main(int argc, char** argv) {
        };
 
      };
-     //
-     // ---------------------------------------------------
 
      
+     // ---------------------------------------------------
      // PHOTON PAIRING, for pi0s
+     // ---------------------------------------------------
      // -- this is done by sorting all photon pairs by energy, and picking the
      //    highest-E pair that satisfies basic requirements set in Diphoton class
      //    booleans (e.g., an opening angle cut)
@@ -483,11 +496,11 @@ int main(int argc, char** argv) {
      if(trajCnt[kPi0] > 0) {
        fprintf(stderr,
          "WARNING WARNING WARNING WARNING WARNING: found pi0 in paricle bank!!!\n");
-       // note that EventTree is not yet programmed to accept these pions... TODO
+       // note that EventTree is not yet programmed to accept these pions...
      };
 
 
-     // -- reset data structures for photon pair sorting
+     // reset data structures for photon pair sorting
      phpCnt = 0;
      for(int php=0; php<phpCntMax; php++) {
        phpIdx[php][0] = -1;
@@ -498,23 +511,19 @@ int main(int argc, char** argv) {
      for(int pp=0; pp<maxTraj; pp++) photonUsed[pp] = false;
 
 
-     // if there are at least 2 photons, we can look for pi0s
+     // only do pairing if there are at least 2 photons
      if( trajCnt[kPhoton] >= 2 ) {
        
        if(debugPHPsort) printf(">>>>>>\n");
 
-       // -- loop through pairs of photons
+       // loop through pairs of photons; allows for a maximum of phpCntMax pairs
        for(int p0=0; p0<trajCnt[kPhoton]; p0++) {
          for(int p1=p0+1; p1<trajCnt[kPhoton]; p1++) {
-
-           // if there are more than phpCntMax pairs, additional ones are simply ignored
            if(phpCnt < phpCntMax) {
 
-             // fill php index arrays
+             // fill php index and energy arrays
              phpIdx[phpCnt][0] = p0;
              phpIdx[phpCnt][1] = p1;
-
-             // fill php energy array
              phot[0] = (Trajectory*) trajArr[kPhoton]->At(p0);
              phot[1] = (Trajectory*) trajArr[kPhoton]->At(p1);
              phpE[phpCnt] = (phot[0]->Vec).E() + (phot[1]->Vec).E();
@@ -530,10 +539,10 @@ int main(int argc, char** argv) {
          };
        };
 
-       // -- sort photon pairs by E
+
+       // sort photon pairs by E
        TMath::Sort(phpCnt,phpE,phpSortIdx);
 
-       // -- test sorting output
        if(debugPHPsort) {
          printf("-----  sorted:  -----\n");
          for(int php=0; php<phpCnt; php++) {
@@ -541,6 +550,7 @@ int main(int argc, char** argv) {
            printf("(%d,%d)  E=%.4f\n",phpSI[0],phpSI[1],phpE[phpSortIdx[php]]);
          };
        };
+
 
        // loop through sorted pair list, adding satisfactory diphotons to trajArr
        if(phpCnt>0) { 
@@ -552,20 +562,24 @@ int main(int argc, char** argv) {
              phot[h] = (Trajectory*) trajArr[kPhoton]->At(phpSI[h]);
            };
 
-
            // check these photons have not already been added to diphoton pair array
            if(!photonUsed[phpSI[0]] && !photonUsed[phpSI[1]]) {
 
-             // compute kinematics
-             diPhotTmp[php]->SetEvent(phot[0],phot[1]);
-
-             // if it satisfies basic requirements, add it to trajArr; if it's the first
-             // one added to trajArr (i.e., highest-E), set diphoton tree branches too
+             // if the pair satisfies basic requirements, add it to trajArr; 
+             diPhotTmp[php]->SetEvent(phot[0],phot[1]); // compute kinematics
              if(diPhotTmp[php]->validDiphoton) {
                for(int h=0; h<2; h++) photonUsed[phpSI[h]] = true; // mark photons used
-               trajArr[kPi0]->AddLast(diPhotTmp[php]->Traj);
-               if(trajCnt[kPi0]==0) diPhot->SetEvent(phot[0],phot[1]); // -->tree
-               trajCnt[kPi0]++;
+               trajArr[kDiph]->AddLast(diPhotTmp[php]->Traj);
+
+               // if it's the highest-E one in a dihadron with 1 or 2 diphotons, or the
+               // second highest-E one in a dihadron with 2 diphotons, set diPhot
+               // to this pair and increment diphCnt
+               if(trajCnt[kDiph]==0 || trajCnt[kDiph]==1) {
+                 diPhot[trajCnt[kDiph]]->SetEvent(phot[0],phot[1]);
+                 diphCnt++;
+               };
+
+               trajCnt[kDiph]++;
              };
            };
 
@@ -574,10 +588,35 @@ int main(int argc, char** argv) {
      };
 
 
+     // fill diphoton tree branches if we have diphotons
+     if(diphCnt>2) {
+       fprintf(stderr,"ERROR: diphCnt somehow greater than 2; setting to 2...\n");
+       diphCnt = 2;
+     };
+     if(diphCnt>0) {
+       for(int dp=0; dp<diphCnt; dp++) {
+         for(int h=0; h<2; h++) {
+           diphPhotE[dp][h] = diPhot[dp]->photE[h]; // -->tree
+           diphPhotPt[dp][h] = diPhot[dp]->photPt[h]; // -->tree
+           diphPhotEta[dp][h] = diPhot[dp]->photEta[h]; // -->tree
+           diphPhotPhi[dp][h] = diPhot[dp]->photPhi[h]; // -->tree
+         };
+         diphE[dp] = diPhot[dp]->E; // -->tree
+         diphZ[dp] = diPhot[dp]->Z; // -->tree
+         diphPt[dp] = diPhot[dp]->Pt; // -->tree
+         diphM[dp] = diPhot[dp]->M; // -->tree
+         diphAlpha[dp] = diPhot[dp]->Alpha; // -->tree
+         diphEta[dp] = diPhot[dp]->Eta; // -->tree
+         diphPhi[dp] = diPhot[dp]->Phi; // -->tree
+       };
+     };
+
+
      
 
-     // analyze hadrons and fill tree
-     // ---------------------------------
+     // ---------------------------------------------------
+     // HADRON PAIRING, and fill the tree
+     // ---------------------------------------------------
      
      // first make sure there's an electron
      if(trajCnt[kE] > 0) {
@@ -657,6 +696,15 @@ int main(int argc, char** argv) {
              dih->SetEvent(had[qA],had[qB],disEv); // -->tree
              dihBr->SetEvent(had[qA],had[qB],disEv); // -->tree
 
+             // adjust diphCnt 
+             // -- this solves a subtle case: assume we have a pi+ and two diphotons;
+             // this will resolve to two dihadrons: A=(pi+,diphoton) and
+             // B=(diphoton,diphoton), but diphCnt=2 for this event. We thus need to
+             // force diphCnt to 1 for dihadron A, and to 2 for dihadron B
+             //
+             // aqui: implement this fix
+
+
 
              // fill tree
              tree->Fill();
@@ -675,14 +723,11 @@ int main(int argc, char** argv) {
 
 
      bench.pause();
-   };
+   }; // eo event loop
+   //---------------------------------------- END EVENT LOOP
+   
 
    // print benchmark
-   /*
-#if HIPO_VERSION == 3
-   reader.showBenchmark(); // not in hipo4 version
-#endif
-   */
    printf(" time spend on analysis = %8.5f (s) events = %8d\n",
      bench.getTime()*1e-9,
      bench.getCounter());

@@ -1,4 +1,4 @@
-R__LOAD_LIBRARY(src/DihBsa)
+R__LOAD_LIBRARY(DihBsa)
 
 void checkChiSq(TString dir="spinout.free") {
   TString fname = dir+"/all.root";

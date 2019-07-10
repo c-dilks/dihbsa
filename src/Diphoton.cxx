@@ -53,7 +53,7 @@ void Diphoton::SetEvent(Trajectory * traj1, Trajectory * traj2) {
   Z = fabs(photE[0]-photE[1]) / E;
 
   // invariant mass
-  Mgg = vecDiphoton.M();
+  M = vecDiphoton.M();
 
   // opening angle
   Alpha = TMath::ACos(
@@ -83,7 +83,7 @@ void Diphoton::ResetVars() {
   E = -10000;
   Z = -10000;
   Pt = -10000;
-  Mgg = -10000;
+  M = -10000;
   Alpha = -10000;
   Eta = -10000;
   Phi = -10000;

@@ -109,8 +109,7 @@ void EventTree::GetEvent(Int_t i) {
 
   // diphoton and pi0/BG cuts
   // -- if dihadron does not include pi0s, just set to true
-  if(hadIdx[qA]==kPi0 || hadIdx[qB]==kPi0) { // FOR OLD DNP208 files without kDiph
-  //if(hadIdx[qA]==kDiph || hadIdx[qB]==kDiph) {
+  if(hadIdx[qA]==kDiph || hadIdx[qB]==kDiph) {
 
     // dnp2018 cuts
     cutDiphKinematics = photE[0]>0.5 && photE[1]>0.5 &&
