@@ -16,11 +16,11 @@ HEADERS := $(filter-out $(LINKDEF), $(wildcard *.h)) $(LINKDEF)
 
 $(DIHBSAOBJ): $(DICT) $(HEADERS) $(SOURCES)
 	@echo "----- build $@ -----"
-	$(CXX) $(SOURCES) -shared -o $@ $(FLAGS) $(DEPS) $(LIBS)
+	$(CXX) $(SOURCES) -shared -o ../$@ $(FLAGS) $(DEPS) $(LIBS)
 
 $(DICT): $(HEADERS)
 	@echo "----- generate dictionary $@ -----"
 	@rootcling -f $@ -c $^
 
 clean:
-	$(RM) $(DIHBSAOBJ) $(DICT) $(PCM)
+	$(RM) ../$(DIHBSAOBJ) $(DICT) $(PCM)

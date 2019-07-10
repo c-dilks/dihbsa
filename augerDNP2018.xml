@@ -1,6 +1,6 @@
 <Request>
   <Project name="clas12"/>
-  <Track name="analysis"/>
+  <Track name="debug"/>
   <Name name="dihbsa"/>
 
 <!-- sample XML Files in /u/group/hps/production/ -->
@@ -46,9 +46,11 @@
 -->
   </List>
 
-  <Variable name="hipoDir" value="/mss/clas12/rg-a/production/trains/dnp2018/v0/skim4_inclusive" />
   <Variable name="workDir" value="/w/hallb-scifs17exp/clas12/dilks/dihbsa" />
+  <Variable name="volDir" value="/volatile/clas12/dilks" />
   <Variable name="homeDir" value="/u/home/dilks" />
+
+  <Variable name="hipoDir" value="/mss/clas12/rg-a/production/trains/dnp2018/v0/skim4_inclusive" />
 
   <ForEach list="hipoFile">
     <Job>
@@ -60,8 +62,8 @@
       <Input src="file:${homeDir}/environment.csh" dest="environment.csh"/>
       <Input src="mss:${hipoDir}/${hipoFile}.hipo" dest="infile.hipo"/>
       <Input src="file:${workDir}/analysis.exe" dest="analysis.exe" copyOption="link"/>
-      <Input src="file:${workDir}/src/DihBsa.so" dest="DihBsa.so" copyOption="link"/>
-      <Input src="file:${workDir}/src//DihBsaDict_rdict.pcm" dest="DihBsaDict_rdict.pcm" copyOption="link"/>
+      <Input src="file:${workDir}/libDihBsa.so" dest="libDihBsa.so" copyOption="link"/>
+      <Input src="file:${workDir}/src/DihBsaDict_rdict.pcm" dest="DihBsaDict_rdict.pcm" copyOption="link"/>
 
       <Command><![CDATA[
         ls -lh
@@ -69,7 +71,7 @@
         ls -lh
       ]]></Command>
 
-      <Output dest="${workDir}/outroot/${hipoFile}.root" src="outroot.root"/>
+      <Output dest="${volDir}/outroot/${hipoFile}.root" src="outroot.root"/>
 
       <Stdout dest="${workDir}/logfiles/${hipoFile}.out"/>
       <Stderr dest="${workDir}/logfiles/${hipoFile}.err"/>
