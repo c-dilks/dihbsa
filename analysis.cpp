@@ -204,10 +204,10 @@ int main(int argc, char** argv) {
    //    - diphCnt=0: no diphotons in the dihadron
    //    - diphCnt=1: one dihadron hadrons is a diphoton (pi0 or BG)
    //    - diphCnt=2: both dihadron hadrons are diphotons (pi0-pi0, pi0-BG, or BG-BG)
-   Int_t diphCnt;
+   Int_t diphCnt,diphCnt_tr;
    Float_t diphPhotE[2][2], diphPhotPt[2][2], diphPhotEta[2][2], diphPhotPhi[2][2];
    Float_t diphE[2], diphZ[2], diphPt[2], diphM[2], diphAlpha[2], diphEta[2], diphPhi[2];
-   tree->Branch("diphCnt",&diphCnt,"diphCnt/I"); // number of diphotons
+   tree->Branch("diphCnt",&diphCnt_tr,"diphCnt/I"); // number of diphotons
    tree->Branch("diphPhotE",   diphPhotE,   "diphPhotE[diphCnt][2]/F"); // photon energy
    tree->Branch("diphPhotPt",  diphPhotPt,  "diphPhotPt[diphCnt][2]/F"); // photon pT
    tree->Branch("diphPhotEta", diphPhotEta, "diphPhotEta[diphCnt][2]/F"); // photon eta
@@ -696,13 +696,16 @@ int main(int argc, char** argv) {
              dih->SetEvent(had[qA],had[qB],disEv); // -->tree
              dihBr->SetEvent(had[qA],had[qB],disEv); // -->tree
 
-             // adjust diphCnt 
+             // set diphCnt_tr to corrected diphCnt, for filling diphoton branches
              // -- this solves a subtle case: assume we have a pi+ and two diphotons;
              // this will resolve to two dihadrons: A=(pi+,diphoton) and
              // B=(diphoton,diphoton), but diphCnt=2 for this event. We thus need to
              // force diphCnt to 1 for dihadron A, and to 2 for dihadron B
-             //
-             // aqui: implement this fix
+             diphCnt_tr = 0; // -->tree
+             if(diphCnt>0) {
+               if(hadIdx[qA]==kDiph || hadIdx[qB]==kDiph) diphCnt_tr = 1; // -->tree
+               if(hadIdx[qA]==kDiph && hadIdx[qB]==kDiph) diphCnt_tr = 2; // -->tree
+             };
 
 
 

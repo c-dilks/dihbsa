@@ -93,17 +93,18 @@ class EventTree : public TObject
     Float_t b_PhiRp_g;
 
     // diphotons
-    Float_t photE[2];
-    Float_t photPt[2];
-    Float_t photEta[2];
-    Float_t photPhi[2];
-    Float_t diphE;
-    Float_t diphZ;
-    Float_t diphPt;
-    Float_t diphM;
-    Float_t diphAlpha;
-    Float_t diphEta;
-    Float_t diphPhi;
+    Int_t diphCnt;
+    Float_t diphPhotE[2][2];
+    Float_t diphPhotPt[2][2];
+    Float_t diphPhotEta[2][2];
+    Float_t diphPhotPhi[2][2];
+    Float_t diphE[2];
+    Float_t diphZ[2];
+    Float_t diphPt[2];
+    Float_t diphM[2];
+    Float_t diphAlpha[2];
+    Float_t diphEta[2];
+    Float_t diphPhi[2];
     ///////////////////////////
 
 
@@ -113,8 +114,8 @@ class EventTree : public TObject
    Bool_t cutQ2,cutW,cutY,cutDIS;
    Bool_t cutDihadronKinematics;
    Bool_t cutDihadron;
-   Bool_t cutDiphKinematics;
-   Bool_t cutDiph;
+   Bool_t cutDiphKinematics[2];
+   Bool_t cutDiph[2];
    Bool_t cutCrossCheck;
 
    Bool_t useDiphBG;

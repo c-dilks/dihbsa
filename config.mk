@@ -1,5 +1,5 @@
 # HIPO version
-HIPO_VERSION = 3
+HIPO_VERSION = 4
 
 # Clas12Tool directory, relative to this config file's `pwd`
 CLAS12TOOLDIR = ../Clas12Tool

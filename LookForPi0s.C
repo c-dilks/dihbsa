@@ -78,39 +78,39 @@ void LookForPi0s(TString dir="outroot.dnp2018.some") {
         (ev->hadIdx[qA]==kDiph || ev->hadIdx[qB]==kDiph) )
     {
 
-      phiCut = Tools::PhiFiducialCut(ev->photPhi[0]) && 
-               Tools::PhiFiducialCut(ev->photPhi[1]);
+      phiCut = Tools::PhiFiducialCut(ev->diphPhotPhi[0]) && 
+               Tools::PhiFiducialCut(ev->diphPhotPhi[1]);
 
 
       // 0
       cut = true;
 
       // 1
-      //cut = ev->photE[0]>0.5 && ev->photE[1]>0.5;
+      //cut = ev->diphPhotE[0]>0.5 && ev->diphPhotE[1]>0.5;
 
       // 2
       /*
-      cut = ev->photE[0]>0.5 && ev->photE[1]>0.5 &&
+      cut = ev->diphPhotE[0]>0.5 && ev->diphPhotE[1]>0.5 &&
             ev->diphAlpha > 0.05 && ev->diphAlpha < 0.2;
             */
 
       // 3
       /*
-      cut = ev->photE[0]>0.5 && ev->photE[1]>0.5 &&
+      cut = ev->diphPhotE[0]>0.5 && ev->diphPhotE[1]>0.5 &&
             ev->diphAlpha > 0.05 && ev->diphAlpha < 0.2 &&
             ev->diphPt > 0.15;
             */
 
       // 4
       /*
-      cut = ev->photE[0]>0.5 && ev->photE[1]>0.5 &&
+      cut = ev->diphPhotE[0]>0.5 && ev->diphPhotE[1]>0.5 &&
             ev->diphAlpha > 0.05 && ev->diphAlpha < 0.2 &&
             ev->diphPt > 0.15 &&
             ev->diphZ > 0.1 && ev->diphZ < 0.6;
             */
       // 5 -- tighten alpha cut and add phi fiducial cut on each photon
       /*
-      cut = ev->photE[0]>0.5 && ev->photE[1]>0.5 &&
+      cut = ev->diphPhotE[0]>0.5 && ev->diphPhotE[1]>0.5 &&
             ev->diphAlpha > 0.05 && ev->diphAlpha < 0.2 &&
             ev->diphPt > 0.15 &&
             ev->diphZ > 0.1 && ev->diphZ < 0.6 &&
@@ -143,10 +143,10 @@ void LookForPi0s(TString dir="outroot.dnp2018.some") {
       // 0
       //cut = true;
       // 1
-      //cut = ev->photE[0]>0.5 && ev->photE[1]>0.5;
+      //cut = ev->diphPhotE[0]>0.5 && ev->diphPhotE[1]>0.5;
       // 2
       /*
-      cut = ev->photE[0]>0.5 && ev->photE[1]>0.5 &&
+      cut = ev->diphPhotE[0]>0.5 && ev->diphPhotE[1]>0.5 &&
             ev->diphAlpha > 0.04 && ev->diphAlpha < 0.15;
             */
 
@@ -160,17 +160,17 @@ void LookForPi0s(TString dir="outroot.dnp2018.some") {
         hMEta->Fill(ev->diphEta,ev->diphM);
         hMPhi->Fill(ev->diphPhi,ev->diphM);
         
-        photEcorr->Fill(ev->photE[1],ev->photE[0]);
-        photPtcorr->Fill(ev->photPt[1],ev->photPt[0]);
-        photEtacorr->Fill(ev->photEta[1],ev->photEta[0]);
-        photPhicorr->Fill(ev->photPhi[1],ev->photPhi[0]);
+        photEcorr->Fill(ev->diphPhotE[1],ev->diphPhotE[0]);
+        photPtcorr->Fill(ev->diphPhotPt[1],ev->diphPhotPt[0]);
+        photEtacorr->Fill(ev->diphPhotEta[1],ev->diphPhotEta[0]);
+        photPhicorr->Fill(ev->diphPhotPhi[1],ev->diphPhotPhi[0]);
 
-        hMphotE->Fill(ev->photE[0],ev->diphM);
-        hMphotPt->Fill(ev->photPt[0],ev->diphM);
-        hMphotEta->Fill(ev->photEta[0],ev->diphM);
-        hMphotPhi->Fill(ev->photPhi[0],ev->diphM);
-        photPyPx->Fill(TMath::Cos(ev->photPhi[0])*ev->photPt[0],
-                       TMath::Sin(ev->photPhi[0])*ev->photPt[0]);
+        hMphotE->Fill(ev->diphPhotE[0],ev->diphM);
+        hMphotPt->Fill(ev->diphPhotPt[0],ev->diphM);
+        hMphotEta->Fill(ev->diphPhotEta[0],ev->diphM);
+        hMphotPhi->Fill(ev->diphPhotPhi[0],ev->diphM);
+        photPyPx->Fill(TMath::Cos(ev->diphPhotPhi[0])*ev->diphPhotPt[0],
+                       TMath::Sin(ev->diphPhotPhi[0])*ev->diphPhotPt[0]);
       };
 
 

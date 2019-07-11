@@ -79,17 +79,18 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("torus",&torus);
   chain->SetBranchAddress("triggerBits",&triggerBits);
 
-  chain->SetBranchAddress("photE",photE);
-  chain->SetBranchAddress("photPt",photPt);
-  chain->SetBranchAddress("photEta",photEta);
-  chain->SetBranchAddress("photPhi",photPhi);
-  chain->SetBranchAddress("diphE",&diphE);
-  chain->SetBranchAddress("diphZ",&diphZ);
-  chain->SetBranchAddress("diphPt",&diphPt);
-  chain->SetBranchAddress("diphM",&diphM);
-  chain->SetBranchAddress("diphAlpha",&diphAlpha);
-  chain->SetBranchAddress("diphEta",&diphEta);
-  chain->SetBranchAddress("diphPhi",&diphPhi);
+  chain->SetBranchAddress("diphCnt",&diphCnt);
+  chain->SetBranchAddress("diphPhotE",diphPhotE);
+  chain->SetBranchAddress("diphPhotPt",diphPhotPt);
+  chain->SetBranchAddress("diphPhotEta",diphPhotEta);
+  chain->SetBranchAddress("diphPhotPhi",diphPhotPhi);
+  chain->SetBranchAddress("diphE",diphE);
+  chain->SetBranchAddress("diphZ",diphZ);
+  chain->SetBranchAddress("diphPt",diphPt);
+  chain->SetBranchAddress("diphM",diphM);
+  chain->SetBranchAddress("diphAlpha",diphAlpha);
+  chain->SetBranchAddress("diphEta",diphEta);
+  chain->SetBranchAddress("diphPhi",diphPhi);
 };
 
 
@@ -109,26 +110,37 @@ void EventTree::GetEvent(Int_t i) {
 
   // diphoton and pi0/BG cuts
   // -- if dihadron does not include pi0s, just set to true
-  if(hadIdx[qA]==kDiph || hadIdx[qB]==kDiph) {
+  for(int h=0; h<2; h++) {
+    if(hadIdx[h]==kDiph) {
 
-    // dnp2018 cuts
-    cutDiphKinematics = photE[0]>0.5 && photE[1]>0.5 &&
-                        diphAlpha > 0.05 && diphAlpha < 0.2 &&
-                        diphPt > 0.15 &&
-                        diphZ > 0.1 && diphZ < 0.6 &&
-                        Tools::PhiFiducialCut(photPhi[0]) && 
-                        Tools::PhiFiducialCut(photPhi[1]);
+      
+      if(runnum < 4500) { // spring 2018 and before (dnp2018 cuts)
+        cutDiphKinematics[h] = diphPhotE[h][0]>0.5 && diphPhotE[h][1]>0.5 &&
+                               diphAlpha[h] > 0.05 && diphAlpha[h] < 0.2 &&
+                               diphPt[h] > 0.15 &&
+                               diphZ[h] > 0.1 && diphZ[h] < 0.6 &&
+                               Tools::PhiFiducialCut(diphPhotPhi[h][0]) && 
+                               Tools::PhiFiducialCut(diphPhotPhi[h][1]);
+      } else { // fall 2018 and after
+        cutDiphKinematics[h] = diphPhotE[h][0]>0.5 && diphPhotE[h][1]>0.5;
+                               //Tools::PhiFiducialCut(diphPhotPhi[h][0]) && 
+                               //Tools::PhiFiducialCut(diphPhotPhi[h][1]);
+      };
 
-    // mass cut (depends on whether pi0 signal or BG is desired
-    if(useDiphBG) {
-      cutDiph = cutDiphKinematics && diphM < 0.1 || diphM > 0.16; // BG cut
+      // mass cut (depends on whether pi0 signal or BG is desired
+      if(useDiphBG) {
+        // BG cut
+        cutDiph[h] = cutDiphKinematics[h] && diphM[h] < 0.1 || diphM[h] > 0.16;
+      } else {
+        // pi0 cut
+        cutDiph[h] = cutDiphKinematics[h] && diphM[h] >= 0.1 && diphM[h] <= 0.16;
+      };
     } else {
-      cutDiph = cutDiphKinematics && diphM >= 0.1 && diphM <= 0.16; // pi0 cut
+      // if this hadron is not a diphoton, then we set cutDiphKinematics and cutDiph
+      // to true, since cutDiph is required to be true in cutDihadron
+      cutDiphKinematics[h] = true;
+      cutDiph[h] = true;
     };
-
-  } else {
-    cutDiphKinematics = true;
-    cutDiph = true;
   };
 
 
@@ -145,7 +157,7 @@ void EventTree::GetEvent(Int_t i) {
   cutDihadron = 
     Tools::PairSame(hadIdx[qA],hadIdx[qB],whichHad[qA],whichHad[qB]) &&
     cutDihadronKinematics && 
-    cutDiph;
+    cutDiph[qA] && cutDiph[qB];
 
   
   // cut for doing cross-checks

@@ -1,12 +1,49 @@
 // for printing kinematics to cross check with others
 
-R__LOAD_LIBRARY(../src/DihBsa)
+R__LOAD_LIBRARY(../libDihBsa)
 
 #include "Constants.h"
 #include "Tools.h"
 #include "EventTree.h"
 #include <map>
 #include <math.h>
+
+const Int_t NF = 2; // number of files
+
+
+///////////////////////////////
+//
+enum xenum { kTim, kHarut, kSimpleC, kSimpleJava, kAnalysis };
+Int_t xcheck[NF] = { kSimpleC, kAnalysis };
+//
+///////////////////////////////
+
+
+EventTree * ev;
+TFile * xfile[NF];
+TTree * xtree[NF];
+Int_t ENT[NF];
+enum hadron_enum { iP, iM, nHad };
+TString hadN[nHad] = { "pip", "pim" };
+
+
+////////////////////////////
+// standard set of variables for comparison
+// -- IMPORTANT: make sure these are all reset in every iteration of the event loop !
+Int_t evnum[NF];
+Float_t Q2[NF], W[NF], x[NF], y[NF];
+Float_t Mh[NF], xF[NF], theta[NF], PhiH[NF], PhiR[NF];
+Float_t PhPt[NF];
+
+Float_t hadE[NF][nHad];
+Float_t hadPt[NF][nHad];
+Float_t hadTheta[NF][nHad];
+Float_t hadPhi[NF][nHad];
+Float_t hadPx[NF][nHad];
+Float_t hadPy[NF][nHad];
+Float_t hadPz[NF][nHad];
+////////////////////////////
+
 
 
 // hash function
@@ -22,58 +59,26 @@ Int_t HashHarut(Float_t pipE_, Float_t pimE_) {
 };
 
 
-const Int_t NF = 2;
 
-
-// printing methods
+// other methods (implemented at the bottom)
 void PrintCompare(TString name, Float_t val, Float_t xval);
+void GetTreeVars(Int_t ff, Int_t ii);
+void GetEventTreeVars(Int_t ff, Int_t ii);
 
 
 void CrossChecker(TString indir="../outroot") {
 
-  ///////////////////////////////
-  enum xenum { kTim, kHarut, kSimpleC, kSimpleJava, kAnalysis };
-  Int_t xcheck[NF] = { kSimpleC, kHarut };
-  ///////////////////////////////
 
 
   // instantiate EventTree if using dihbsa analysis code (kAnalysis)
-  EventTree * ev;
   if( xcheck[0]==kAnalysis || xcheck[1]==kAnalysis ) {
     ev = new EventTree( TString(indir+"/*.root"), EncodePairType(kPip,kPim) ); 
   };
 
 
-  enum hadron_enum { iP, iM, nHad };
-  TString hadN[nHad] = { "pip", "pim" };
-  int h;
-
-
-
-  ////////////////////////////
-  // standard set of variables for comparison
-  // -- IMPORTANT: make sure these are all reset in every iteration of the event loop !
-  Int_t evnum[NF];
-  Float_t Q2[NF], W[NF], x[NF], y[NF];
-  Float_t Mh[NF], xF[NF], theta[NF], PhiH[NF], PhiR[NF];
-  Float_t PhPt[NF];
-
-  Float_t hadE[NF][nHad];
-  Float_t hadPt[NF][nHad];
-  Float_t hadTheta[NF][nHad];
-  Float_t hadPhi[NF][nHad];
-  Float_t hadPx[NF][nHad];
-  Float_t hadPy[NF][nHad];
-  Float_t hadPz[NF][nHad];
-  ////////////////////////////
-
-  Float_t valTheta;
-
-  TFile * xfile[NF];
-  TTree * xtree[NF];
   TString xstr;
   TString xtreeN[NF];
-  int f;
+  int h,f;
 
   for(f=0; f<NF; f++) {
 
@@ -84,97 +89,107 @@ void CrossChecker(TString indir="../outroot") {
 
     switch(xcheck[f]) {
 
-    case kTim:
+      case kTim:
 
-      gROOT->ProcessLine(".! python formatTimFile.py");
-      xstr = "evnum/I:Q2/F:W/F:x/F:y/F:Mh/F:pT/F:xF/F:theta/F:PhiR/F:PhiH/F";
-      printf("xtree[%d] branches: %s\n",f,xstr.Data());
+        gROOT->ProcessLine(".! python formatTimFile.py");
+        xstr = "evnum/I:Q2/F:W/F:x/F:y/F:Mh/F:pT/F:xF/F:theta/F:PhiR/F:PhiH/F";
+        printf("xtree[%d] branches: %s\n",f,xstr.Data());
 
-      xtree[f]->ReadFile("xtree.dat",xstr);
-      xtree[f]->SetBranchAddress("evnum",&evnum[f]);
-      xtree[f]->SetBranchAddress("Q2",&Q2[f]);
-      xtree[f]->SetBranchAddress("W",&W[f]);
-      xtree[f]->SetBranchAddress("x",&x[f]);
-      xtree[f]->SetBranchAddress("y",&y[f]);
-      xtree[f]->SetBranchAddress("Mh",&Mh[f]);
-      xtree[f]->SetBranchAddress("xF",&xF[f]);
-      xtree[f]->SetBranchAddress("theta",&theta[f]);
-      xtree[f]->SetBranchAddress("PhiH",&PhiH[f]);
-      xtree[f]->SetBranchAddress("PhiR",&PhiR[f]);
+        xtree[f]->ReadFile("xtree.dat",xstr);
+        xtree[f]->SetBranchAddress("evnum",&evnum[f]);
+        xtree[f]->SetBranchAddress("Q2",&Q2[f]);
+        xtree[f]->SetBranchAddress("W",&W[f]);
+        xtree[f]->SetBranchAddress("x",&x[f]);
+        xtree[f]->SetBranchAddress("y",&y[f]);
+        xtree[f]->SetBranchAddress("Mh",&Mh[f]);
+        xtree[f]->SetBranchAddress("xF",&xF[f]);
+        xtree[f]->SetBranchAddress("theta",&theta[f]);
+        xtree[f]->SetBranchAddress("PhiH",&PhiH[f]);
+        xtree[f]->SetBranchAddress("PhiR",&PhiR[f]);
 
-      break;
+        break;
 
-    case kHarut:
+      case kHarut:
 
-      gROOT->ProcessLine(".! python formatHarutFile.py");
-      xstr = "evnum/I";
-      for(h=0; h<nHad; h++) {
-        xstr += ":"+hadN[h]+"E/F";
-        xstr += ":"+hadN[h]+"Theta/F";
-        xstr += ":"+hadN[h]+"Phi/F";
-        xstr += ":"+hadN[h]+"Pt/F";
-      };
-      xstr += ":PhPt/F";
-      printf("xtree[%d] branches: %s\n",f,xstr.Data());
-      xtree[f]->ReadFile("xtree.dat",xstr);
+        gROOT->ProcessLine(".! python formatHarutFile.py");
+        xstr = "evnum/I";
+        for(h=0; h<nHad; h++) {
+          xstr += ":"+hadN[h]+"E/F";
+          xstr += ":"+hadN[h]+"Theta/F";
+          xstr += ":"+hadN[h]+"Phi/F";
+          xstr += ":"+hadN[h]+"Pt/F";
+        };
+        xstr += ":PhPt/F";
+        printf("xtree[%d] branches: %s\n",f,xstr.Data());
+        xtree[f]->ReadFile("xtree.dat",xstr);
 
-      xtree[f]->SetBranchAddress("evnum",&evnum[f]);
-      xtree[f]->SetBranchAddress("PhPt",&PhPt[f]);
-      for(h=0; h<nHad; h++) {
-        xtree[f]->SetBranchAddress( TString(hadN[h]+"E"), &hadE[f][h] );
-        xtree[f]->SetBranchAddress( TString(hadN[h]+"Pt"), &hadPt[f][h] );
-        xtree[f]->SetBranchAddress( TString(hadN[h]+"Theta"), &hadTheta[f][h] );
-        xtree[f]->SetBranchAddress( TString(hadN[h]+"Phi"), &hadPhi[f][h] );
-      };
+        xtree[f]->SetBranchAddress("evnum",&evnum[f]);
+        xtree[f]->SetBranchAddress("PhPt",&PhPt[f]);
+        for(h=0; h<nHad; h++) {
+          xtree[f]->SetBranchAddress( TString(hadN[h]+"E"), &hadE[f][h] );
+          xtree[f]->SetBranchAddress( TString(hadN[h]+"Pt"), &hadPt[f][h] );
+          xtree[f]->SetBranchAddress( TString(hadN[h]+"Theta"), &hadTheta[f][h] );
+          xtree[f]->SetBranchAddress( TString(hadN[h]+"Phi"), &hadPhi[f][h] );
+        };
 
-      break;
+        break;
 
-    case kSimpleC:
+      case kSimpleC:
 
-      xfile[f] = new TFile("../simpleTree.root","READ");
-      xtree[f] = (TTree*) xfile[f]->Get("tree");
+        xfile[f] = new TFile("../simpleTree.root","READ");
+        xtree[f] = (TTree*) xfile[f]->Get("tree");
 
-      xtree[f]->SetBranchAddress("evnum",&evnum[f]);
-      for(h=0; h<nHad; h++) {
-        xtree[f]->SetBranchAddress( TString(hadN[h]+"E"), &hadE[f][h] );
-        xtree[f]->SetBranchAddress( TString(hadN[h]+"Pt"), &hadPt[f][h] );
-        xtree[f]->SetBranchAddress( TString(hadN[h]+"Px"), &hadPx[f][h] );
-        xtree[f]->SetBranchAddress( TString(hadN[h]+"Py"), &hadPy[f][h] );
-        xtree[f]->SetBranchAddress( TString(hadN[h]+"Pz"), &hadPz[f][h] );
-      };
+        xtree[f]->SetBranchAddress("evnum",&evnum[f]);
+        for(h=0; h<nHad; h++) {
+          xtree[f]->SetBranchAddress( TString(hadN[h]+"E"), &hadE[f][h] );
+          xtree[f]->SetBranchAddress( TString(hadN[h]+"Pt"), &hadPt[f][h] );
+          xtree[f]->SetBranchAddress( TString(hadN[h]+"Px"), &hadPx[f][h] );
+          xtree[f]->SetBranchAddress( TString(hadN[h]+"Py"), &hadPy[f][h] );
+          xtree[f]->SetBranchAddress( TString(hadN[h]+"Pz"), &hadPz[f][h] );
+        };
 
-      break;
+        break;
 
-    case kSimpleJava:
+      case kSimpleJava:
+        
+        xstr = "evnum/I";
+        for(h=0; h<nHad; h++) {
+          xstr += ":"+hadN[h]+"Px/F";
+          xstr += ":"+hadN[h]+"Py/F";
+          xstr += ":"+hadN[h]+"Pz/F";
+          xstr += ":"+hadN[h]+"E/F";
+          xstr += ":"+hadN[h]+"Pt/F";
+        };
+        printf("xtree[%d] branches: %s\n",f,xstr.Data());
+        xtree[f]->ReadFile("../jsrc/javaOut.dat",xstr);
+
+        xtree[f]->SetBranchAddress("evnum",&evnum[f]);
+        for(h=0; h<nHad; h++) {
+          xtree[f]->SetBranchAddress( TString(hadN[h]+"E"), &hadE[f][h] );
+          xtree[f]->SetBranchAddress( TString(hadN[h]+"Pt"), &hadPt[f][h] );
+          xtree[f]->SetBranchAddress( TString(hadN[h]+"Px"), &hadPx[f][h] );
+          xtree[f]->SetBranchAddress( TString(hadN[h]+"Py"), &hadPy[f][h] );
+          xtree[f]->SetBranchAddress( TString(hadN[h]+"Pz"), &hadPz[f][h] );
+        };
+
+        break;
       
-      xstr = "evnum/I";
-      for(h=0; h<nHad; h++) {
-        xstr += ":"+hadN[h]+"Px/F";
-        xstr += ":"+hadN[h]+"Py/F";
-        xstr += ":"+hadN[h]+"Pz/F";
-        xstr += ":"+hadN[h]+"E/F";
-        xstr += ":"+hadN[h]+"Pt/F";
-      };
-      printf("xtree[%d] branches: %s\n",f,xstr.Data());
-      xtree[f]->ReadFile("../jsrc/javaOut.dat",xstr);
+      case kAnalysis:
+        // using EventTree `ev` for kAnalysis; no need to set branch addresses
+        break;
 
-      xtree[f]->SetBranchAddress("evnum",&evnum[f]);
-      for(h=0; h<nHad; h++) {
-        xtree[f]->SetBranchAddress( TString(hadN[h]+"E"), &hadE[f][h] );
-        xtree[f]->SetBranchAddress( TString(hadN[h]+"Pt"), &hadPt[f][h] );
-        xtree[f]->SetBranchAddress( TString(hadN[h]+"Px"), &hadPx[f][h] );
-        xtree[f]->SetBranchAddress( TString(hadN[h]+"Py"), &hadPy[f][h] );
-        xtree[f]->SetBranchAddress( TString(hadN[h]+"Pz"), &hadPz[f][h] );
-      };
-
-      break;
-
-    default: 
-      fprintf(stderr,"ERROR: unknown xcheck[%d]=%d\n",f,xcheck[f]);
-      exit(0);
+      default: 
+        fprintf(stderr,"ERROR: unknown xcheck[%d]=%d\n",f,xcheck[f]);
+        exit(0);
 
     };
   };
+
+  for(f=0; f<NF; f++) {
+    if(xcheck[f]==kAnalysis) ENT[f] = ev->ENT;
+    else ENT[f] = xtree[f]->GetEntries();
+  };
+
 
 
 
@@ -185,8 +200,9 @@ void CrossChecker(TString indir="../outroot") {
   std::map<Int_t,Int_t> hashMap; // event hash -> xtree[1] index
   std::map<Int_t,Int_t>::iterator hashIter;
 
-  for(int xi=0; xi<xtree[1]->GetEntries(); xi++) {
-    xtree[1]->GetEntry(xi);
+  for(int xi=0; xi<ENT[1]; xi++) {
+
+    GetTreeVars(1,xi);
 
     switch(xcheck[1]) {
       case kTim: hashVal = HashTim(Q2[1],W[1]); break;
@@ -208,7 +224,7 @@ void CrossChecker(TString indir="../outroot") {
   
 
   // loop through xtree[0]
-  for(int i=0; i<xtree[0]->GetEntries(); i++) {
+  for(int i=0; i<ENT[0]; i++) {
 
     // reset variables so that it's easy to filter out which
     // aren't associated to any branch
@@ -236,13 +252,14 @@ void CrossChecker(TString indir="../outroot") {
     };
 
     // fill xtree[0] variables
-    xtree[0]->GetEntry(i);
+    GetTreeVars(0,i);
 
     //ev->GetEvent(i); // evtr loop
-    //if(ev->cutCrossCheck) 
 
 
     evCut = true; // TODO
+    //if(xcheck[0]==kAnalysis) evCut = ev->cutCrossCheck;
+    //else... 
     if(evCut) {
 
       // hash xtree[0]'s event
@@ -258,7 +275,7 @@ void CrossChecker(TString indir="../outroot") {
       if(hashIter!=hashMap.end()) {
 
         // set xtree[1] variables to the matching event's
-        xtree[1]->GetEntry(hashIter->second);
+        GetTreeVars(1,hashIter->second);
 
         // extra requirement to improve event matching
         /*
@@ -305,7 +322,7 @@ void CrossChecker(TString indir="../outroot") {
           PrintCompare( "y", y[0], y[1] );
           PrintCompare( "Mh", Mh[0], Mh[1] );
           PrintCompare( "xF", xF[0], xF[1] );
-          PrintCompare( "theta", TMath::Sin(theta[0]), TMath::Sin(theta[1]) );
+          PrintCompare( "theta", theta[0], theta[1] ); // note: sin(theta) is compared
           PrintCompare( "PhiH", PhiH[0], PhiH[1] );
           PrintCompare( "PhiR", PhiR[0], PhiR[1] );
 
@@ -329,11 +346,16 @@ void PrintCompare(TString name, Float_t val0, Float_t val1) {
 
   Float_t diff;
 
-  // if it's an angle, ensure it's in proper range
   if(name.Contains("Phi")) {
+    // if it's an angle, ensure it's in proper range
     val0 = Tools::AdjAngleTwoPi(val0);
     val1 = Tools::AdjAngleTwoPi(val1);
     diff = Tools::AdjAngleTwoPi( fabs(val0 - val1) );
+  } else if(name=="theta") {
+    // if it's theta (dihadron CoM frame angle for partial wave expansion), compare sin
+    val0 = TMath::Sin(val0);
+    val1 = TMath::Sin(val1);
+    diff = fabs(val0 - val1);
   } else {
     diff = fabs(val0 - val1);
   };
@@ -341,4 +363,34 @@ void PrintCompare(TString name, Float_t val0, Float_t val1) {
   // print comparison
   printf("%8s %8.2f %8.2f %8.2f\n",name.Data(),val0,val1,diff);
 
+};
+
+
+// set local variables to xtree (or EventTree) variables
+void GetTreeVars(Int_t ff, Int_t ii) {
+  if(xcheck[ff] == kAnalysis) GetEventTreeVars(ff,ii);
+  else xtree[ff]->GetEntry(ii);
+};
+
+// set local variables to EventTree variables
+void GetEventTreeVars(Int_t ff, Int_t ii) {
+  ev->GetEvent(ii);
+  if(ev->pairType == EncodePairType(kPip,kPim)) {
+    evnum[ff] = ev->evnum;
+    Q2[ff] = ev->Q2;
+    W[ff] = ev->W;
+    x[ff] = ev->x;
+    y[ff] = ev->y;
+    Mh[ff] = ev->Mh;
+    xF[ff] = ev->xF;
+    theta[ff] = ev->theta;
+    PhiH[ff] = ev->PhiH;
+    PhiR[ff] = ev->PhiR;
+    for(int hh=0; hh<nHad; hh++) {
+      hadE[ff][hh] = ev->hadE[hh];
+      hadPt[ff][hh] = ev->hadPt[hh];
+      hadTheta[ff][hh] = Tools::EtaToTheta(ev->hadEta[hh]);
+      hadPhi[ff][hh] = ev->hadPhi[hh];
+    };
+  };
 };

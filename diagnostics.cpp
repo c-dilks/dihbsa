@@ -215,7 +215,7 @@ int main(int argc, char** argv) {
          if(ev->particleCnt[p]>0) partMultiplicity->Fill(p,ev->particleCnt[p]);
        };
      };
-     if(ev->cutDIS && ev->cutDihadronKinematics && ev->cutDiph) {
+     if(ev->cutDIS && ev->cutDihadronKinematics && ev->cutDiph[qA] && ev->cutDiph[qB]) {
 
        // fill observable multiplicity
        for(int h=0; h<2; h++) {
