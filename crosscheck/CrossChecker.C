@@ -14,7 +14,7 @@ const Int_t NF = 2; // number of files
 ///////////////////////////////
 //
 enum xenum { kTim, kHarut, kSimpleC, kSimpleJava, kAnalysis };
-Int_t xcheck[NF] = { kSimpleC, kAnalysis };
+Int_t xcheck[NF] = { kAnalysis, kHarut };
 //
 ///////////////////////////////
 
@@ -92,7 +92,8 @@ void CrossChecker(TString indir="../outroot") {
       case kTim:
 
         gROOT->ProcessLine(".! python formatTimFile.py");
-        xstr = "evnum/I:Q2/F:W/F:x/F:y/F:Mh/F:pT/F:xF/F:theta/F:PhiR/F:PhiH/F";
+        xstr = "evnum/I:eleE/F:pipE/F:pimE/F";
+        xstr += ":Q2/F:W/F:x/F:y/F:Mh/F:pT/F:xF/F:theta/F:PhiR/F:PhiH/F";
         printf("xtree[%d] branches: %s\n",f,xstr.Data());
 
         xtree[f]->ReadFile("xtree.dat",xstr);
@@ -106,6 +107,9 @@ void CrossChecker(TString indir="../outroot") {
         xtree[f]->SetBranchAddress("theta",&theta[f]);
         xtree[f]->SetBranchAddress("PhiH",&PhiH[f]);
         xtree[f]->SetBranchAddress("PhiR",&PhiR[f]);
+        for(h=0; h<nHad; h++) {
+          xtree[f]->SetBranchAddress( TString(hadN[h]+"E"), &hadE[f][h] );
+        };
 
         break;
 
@@ -205,7 +209,7 @@ void CrossChecker(TString indir="../outroot") {
     GetTreeVars(1,xi);
 
     switch(xcheck[1]) {
-      case kTim: hashVal = HashTim(Q2[1],W[1]); break;
+      //case kTim: hashVal = HashTim(Q2[1],W[1]); break;
       //case kHarut: hashVal = HashHarut(hadE[1][iP],hadE[1][iM]); break;
       default: hashVal = evnum[1];
     };
@@ -264,7 +268,7 @@ void CrossChecker(TString indir="../outroot") {
 
       // hash xtree[0]'s event
       switch(xcheck[0]) {
-        case kTim: hashVal = HashTim(Q2[0],W[0]); break;
+        //case kTim: hashVal = HashTim(Q2[0],W[0]); break;
         //case kHarut: hashVal = HashHarut(hadE[0][iP],hadE[0][iM]); break;
         default: hashVal = evnum[0];
       };
@@ -350,14 +354,14 @@ void PrintCompare(TString name, Float_t val0, Float_t val1) {
     // if it's an angle, ensure it's in proper range
     val0 = Tools::AdjAngleTwoPi(val0);
     val1 = Tools::AdjAngleTwoPi(val1);
-    diff = Tools::AdjAngleTwoPi( fabs(val0 - val1) );
+    diff = Tools::AdjAngleTwoPi( val0 - val1 );
   } else if(name=="theta") {
     // if it's theta (dihadron CoM frame angle for partial wave expansion), compare sin
     val0 = TMath::Sin(val0);
     val1 = TMath::Sin(val1);
-    diff = fabs(val0 - val1);
+    diff = val0 - val1;
   } else {
-    diff = fabs(val0 - val1);
+    diff = val0 - val1;
   };
 
   // print comparison
