@@ -14,7 +14,7 @@ const Int_t NF = 2; // number of files
 ///////////////////////////////
 //
 enum xenum { kTim, kHarut, kSimpleC, kSimpleJava, kAnalysis };
-Int_t xcheck[NF] = { kAnalysis, kHarut };
+Int_t xcheck[NF] = { kAnalysis, kTim };
 //
 ///////////////////////////////
 
@@ -33,9 +33,11 @@ TString hadN[nHad] = { "pip", "pim" };
 Int_t evnum[NF];
 Float_t Q2[NF], W[NF], x[NF], y[NF];
 Float_t Mh[NF], xF[NF], theta[NF], PhiH[NF], PhiR[NF];
-Float_t PhPt[NF];
+Float_t PhPerp[NF];
+Float_t eleP[NF];
 
 Float_t hadE[NF][nHad];
+Float_t hadP[NF][nHad];
 Float_t hadPt[NF][nHad];
 Float_t hadTheta[NF][nHad];
 Float_t hadPhi[NF][nHad];
@@ -78,7 +80,9 @@ void CrossChecker(TString indir="../outroot") {
 
   TString xstr;
   TString xtreeN[NF];
+
   int h,f;
+  char sep[20]; strcpy(sep,"-------");
 
   for(f=0; f<NF; f++) {
 
@@ -90,25 +94,37 @@ void CrossChecker(TString indir="../outroot") {
     switch(xcheck[f]) {
 
       case kTim:
+        gROOT->ProcessLine(
+          ".! tail -n +2 xfiles/hayward_cross_check_os_format.txt > xtree.dat"
+        ); // (strip header)
+        xstr = "evnum/I:Q2/F:x/F:W/F:y/F:eleP/F";
+        xstr += ":Mh/F:xF/F:PhPerp/F:theta/F";
+        xstr += ":PhiR/F:PhiH/F:pipP/F:pimP/F";
 
+        /*
+        // old file
         gROOT->ProcessLine(".! python formatTimFile.py");
         xstr = "evnum/I:eleE/F:pipE/F:pimE/F";
         xstr += ":Q2/F:W/F:x/F:y/F:Mh/F:pT/F:xF/F:theta/F:PhiR/F:PhiH/F";
-        printf("xtree[%d] branches: %s\n",f,xstr.Data());
+        */
 
+        printf("xtree[%d] branches: %s\n",f,xstr.Data());
         xtree[f]->ReadFile("xtree.dat",xstr);
+
         xtree[f]->SetBranchAddress("evnum",&evnum[f]);
         xtree[f]->SetBranchAddress("Q2",&Q2[f]);
-        xtree[f]->SetBranchAddress("W",&W[f]);
         xtree[f]->SetBranchAddress("x",&x[f]);
+        xtree[f]->SetBranchAddress("W",&W[f]);
         xtree[f]->SetBranchAddress("y",&y[f]);
+        xtree[f]->SetBranchAddress("eleP",&eleP[f]);
         xtree[f]->SetBranchAddress("Mh",&Mh[f]);
         xtree[f]->SetBranchAddress("xF",&xF[f]);
+        xtree[f]->SetBranchAddress("PhPerp",&PhPerp[f]);
         xtree[f]->SetBranchAddress("theta",&theta[f]);
         xtree[f]->SetBranchAddress("PhiH",&PhiH[f]);
         xtree[f]->SetBranchAddress("PhiR",&PhiR[f]);
         for(h=0; h<nHad; h++) {
-          xtree[f]->SetBranchAddress( TString(hadN[h]+"E"), &hadE[f][h] );
+          xtree[f]->SetBranchAddress( TString(hadN[h]+"P"), &hadP[f][h] );
         };
 
         break;
@@ -123,12 +139,12 @@ void CrossChecker(TString indir="../outroot") {
           xstr += ":"+hadN[h]+"Phi/F";
           xstr += ":"+hadN[h]+"Pt/F";
         };
-        xstr += ":PhPt/F";
+        xstr += ":PhPerp/F";
         printf("xtree[%d] branches: %s\n",f,xstr.Data());
         xtree[f]->ReadFile("xtree.dat",xstr);
 
         xtree[f]->SetBranchAddress("evnum",&evnum[f]);
-        xtree[f]->SetBranchAddress("PhPt",&PhPt[f]);
+        xtree[f]->SetBranchAddress("PhPerp",&PhPerp[f]);
         for(h=0; h<nHad; h++) {
           xtree[f]->SetBranchAddress( TString(hadN[h]+"E"), &hadE[f][h] );
           xtree[f]->SetBranchAddress( TString(hadN[h]+"Pt"), &hadPt[f][h] );
@@ -243,9 +259,11 @@ void CrossChecker(TString indir="../outroot") {
       theta[f] = -10000;
       PhiH[f] = -10000;
       PhiR[f] = -10000;
-      PhPt[f] = -10000;
+      PhPerp[f] = -10000;
+      eleP[f] = -10000;
       for(h=0; h<nHad; h++) {
         hadE[f][h] = -10000;
+        hadP[f][h] = -10000;
         hadPt[f][h] = -10000;
         hadTheta[f][h] = -10000;
         hadPhi[f][h] = -10000;
@@ -305,13 +323,14 @@ void CrossChecker(TString indir="../outroot") {
 
           printf("EVENT#");
           for(f=0; f<NF; f++) printf("  xtree%d: %d",f,evnum[f]); printf("\n");
-          printf("HASH  xtree0: %d  xtree1: %d\n",hashVal,hashIter->first);
-          printf("%8s %8s %8s %8s\n","var","xtree0","xtree1","|diff|");
-          printf("%8s %8s %8s %8s\n","---","------","------","------");
+          //printf("HASH  xtree0: %d  xtree1: %d\n",hashVal,hashIter->first);
+          printf("%12s %12s %12s %12s\n","var","xtree0","xtree1","diff");
+          printf("%12s %12s %12s %12s\n",sep,sep,sep,sep);
 
 
           for(h=0; h<nHad; h++) {
             PrintCompare( TString(hadN[h]+"E"), hadE[0][h], hadE[1][h] );
+            PrintCompare( TString(hadN[h]+"P"), hadP[0][h], hadP[1][h] );
             PrintCompare( TString(hadN[h]+"Pt"), hadPt[0][h], hadPt[1][h] );
             PrintCompare( TString(hadN[h]+"Px"), hadPx[0][h], hadPx[1][h] );
             PrintCompare( TString(hadN[h]+"Py"), hadPy[0][h], hadPy[1][h] );
@@ -320,12 +339,14 @@ void CrossChecker(TString indir="../outroot") {
             PrintCompare( TString(hadN[h]+"Phi"), hadPhi[0][h], hadPhi[1][h] );
           };
 
+          PrintCompare( "eleP", eleP[0], eleP[1] );
           PrintCompare( "Q2", Q2[0], Q2[1] );
           PrintCompare( "W", W[0], W[1] );
           PrintCompare( "x", x[0], x[1] );
           PrintCompare( "y", y[0], y[1] );
           PrintCompare( "Mh", Mh[0], Mh[1] );
           PrintCompare( "xF", xF[0], xF[1] );
+          PrintCompare( "PhPerp", PhPerp[0], PhPerp[1] );
           PrintCompare( "theta", theta[0], theta[1] ); // note: sin(theta) is compared
           PrintCompare( "PhiH", PhiH[0], PhiH[1] );
           PrintCompare( "PhiR", PhiR[0], PhiR[1] );
@@ -357,6 +378,7 @@ void PrintCompare(TString name, Float_t val0, Float_t val1) {
     diff = Tools::AdjAngleTwoPi( val0 - val1 );
   } else if(name=="theta") {
     // if it's theta (dihadron CoM frame angle for partial wave expansion), compare sin
+    name = "sin(theta)";
     val0 = TMath::Sin(val0);
     val1 = TMath::Sin(val1);
     diff = val0 - val1;
@@ -365,7 +387,7 @@ void PrintCompare(TString name, Float_t val0, Float_t val1) {
   };
 
   // print comparison
-  printf("%8s %8.2f %8.2f %8.2f\n",name.Data(),val0,val1,diff);
+  printf("%12s %12.5f %12.5f %12.5f\n",name.Data(),val0,val1,diff);
 
 };
 
@@ -387,11 +409,14 @@ void GetEventTreeVars(Int_t ff, Int_t ii) {
     y[ff] = ev->y;
     Mh[ff] = ev->Mh;
     xF[ff] = ev->xF;
+    PhPerp[ff] = ev->PhPerp;
     theta[ff] = ev->theta;
     PhiH[ff] = ev->PhiH;
     PhiR[ff] = ev->PhiR;
+    eleP[ff] = ev->eleP;
     for(int hh=0; hh<nHad; hh++) {
       hadE[ff][hh] = ev->hadE[hh];
+      hadP[ff][hh] = ev->hadP[hh];
       hadPt[ff][hh] = ev->hadPt[hh];
       hadTheta[ff][hh] = Tools::EtaToTheta(ev->hadEta[hh]);
       hadPhi[ff][hh] = ev->hadPhi[hh];

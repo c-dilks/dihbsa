@@ -58,6 +58,7 @@ class EventTree : public TObject
 
     // electron kinematics
     Float_t eleE;
+    Float_t eleP;
     Float_t elePt;
     Float_t eleEta;
     Float_t elePhi;

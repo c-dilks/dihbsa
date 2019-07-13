@@ -44,7 +44,7 @@ class DIS : public TObject
 
     Float_t BeamEn;
     Float_t W,Q2,Nu,x,y;
-    Float_t eleE,elePt,eleEta,elePhi;
+    Float_t eleE,eleP,elePt,eleEta,elePhi;
 
 
     TVector3 BreitBoost;

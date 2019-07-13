@@ -127,6 +127,7 @@ int main(int argc, char** argv) {
    
    // electron kinematics branches
    tree->Branch("eleE",&(disEv->eleE),"eleE/F");
+   tree->Branch("eleP",&(disEv->eleP),"eleP/F");
    tree->Branch("elePt",&(disEv->elePt),"elePt/F");
    tree->Branch("eleEta",&(disEv->eleEta),"eleEta/F");
    tree->Branch("elePhi",&(disEv->elePhi),"elePhi/F");

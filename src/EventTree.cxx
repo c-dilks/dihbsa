@@ -30,6 +30,7 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("y",&y);
 
   chain->SetBranchAddress("eleE",&eleE);
+  chain->SetBranchAddress("eleP",&eleP);
   chain->SetBranchAddress("elePt",&elePt);
   chain->SetBranchAddress("eleEta",&eleEta);
   chain->SetBranchAddress("elePhi",&elePhi);

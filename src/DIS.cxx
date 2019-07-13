@@ -39,6 +39,7 @@ void DIS::SetBeamEn(Float_t newBeamEn) {
 void DIS::SetElectron(Trajectory * tr) {
   vecElectron = tr->Vec;
   eleE = vecElectron.E();
+  eleP = vecElectron.P();
   elePt = vecElectron.Pt();
   eleEta = vecElectron.Eta();
   elePhi = vecElectron.Phi();
