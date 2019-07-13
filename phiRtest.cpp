@@ -118,6 +118,7 @@ int main(int argc, char** argv) {
 
 
 
+   /*
    TH2F * breitVsLabPhiRp = new TH2F("breitVsLabPhiRp",
      "sin[ #phi_{R}(T,k_{T}) ] via Breit Frame vs. via Lab Frame",
      NBINS,-distMax,distMax,
@@ -130,6 +131,7 @@ int main(int argc, char** argv) {
      "sin[ #phi_{R}(#perp  ,rej) ] via Breit Frame vs. via Lab Frame",
      NBINS,-distMax,distMax,
      NBINS,-distMax,distMax);
+   */
 
 
    TString plotTitle;
@@ -232,9 +234,11 @@ int main(int argc, char** argv) {
    Float_t l_angPhiRp_r;
    Float_t l_angPhiRq;
 
+   /*
    Float_t b_angPhiRp;
    Float_t b_angPhiRp_r;
    Float_t b_angPhiRq;
+   */
 
    Float_t angDiff;
    Float_t sigma;
@@ -254,15 +258,21 @@ int main(int argc, char** argv) {
        //l_angPhiRp_r = ev->PhiRp_g; // test eq. 9 from 1408.5721 (agrees with PhiRp)
 
        // breit frame
+       /*
        b_angPhiRq = ev->b_PhiRq;
        b_angPhiRp = ev->b_PhiRp;
        b_angPhiRp_r = ev->b_PhiRp_r;
        //b_angPhiRp_r = ev->b_PhiRp_g; // test eq. 9 from 1408.5721 (agrees with PhiRp)
+       */
 
        if(useBreit) {
+         fprintf(stderr,"ERROR: useBreit disabled\n");
+         return 0;
+         /*
          angPhiRp = b_angPhiRp;
          angPhiRp_r = b_angPhiRp_r;
          angPhiRq = b_angPhiRq;
+         */
        } else {
          angPhiRp = l_angPhiRp;
          angPhiRp_r = l_angPhiRp_r;
@@ -291,9 +301,11 @@ int main(int argc, char** argv) {
        diff_PhiRp_r_PhiRq->Fill(TMath::Sin(angDiff));
 
 
+       /*
        breitVsLabPhiRp->Fill(TMath::Sin(l_angPhiRp),TMath::Sin(b_angPhiRp));
        breitVsLabPhiRp_r->Fill(TMath::Sin(l_angPhiRp_r),TMath::Sin(b_angPhiRp_r));
        breitVsLabPhiRq->Fill(TMath::Sin(l_angPhiRq),TMath::Sin(b_angPhiRq));
+       */
 
        sigmaVsQ2->Fill(ev->Q2,sigma);
        sigmaVsX->Fill(ev->x,sigma);
@@ -342,9 +354,11 @@ int main(int argc, char** argv) {
    diff_PhiRp_PhiRq->Write();
    diff_PhiRp_r_PhiRq->Write();
 
+   /*
    breitVsLabPhiRp->Write();
    breitVsLabPhiRp_r->Write();
    breitVsLabPhiRq->Write();
+   */
 
    sigmaVsQ2->Write();
 

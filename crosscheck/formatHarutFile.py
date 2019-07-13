@@ -23,7 +23,7 @@ s = 0
 kP = 0
 kM = 1
 
-with open("xfiles/dihad1000.dis.0000.nrad.dat.evio.hipo.txt") as iFile, open("xtree.dat", 'w') as oFile:
+with open("xfiles/dihad1000.dis.0000.nrad.dat.evio.hipo2.txt") as iFile, open("xtree.dat", 'w') as oFile:
     for lineIn in iFile:
         line = lineIn.strip()
         lineCols = line.split()
@@ -46,7 +46,7 @@ with open("xfiles/dihad1000.dis.0000.nrad.dat.evio.hipo.txt") as iFile, open("xt
             print(line)
         
         #lines with 5 columns are for dihadron kinematics etc.
-        if len(lineCols) == 5:
+        if len(lineCols) == 7:
             s = 0 # reset s
 
             evnum = lineCols[0]
@@ -54,6 +54,7 @@ with open("xfiles/dihad1000.dis.0000.nrad.dat.evio.hipo.txt") as iFile, open("xt
             PhPt = lineCols[2]
             phiRT1 = lineCols[3]
             phiRT2 = lineCols[4] # (preferred phiR def)
+            # (not sure what lineCols[5] and lineCols[6] are...
 
             print(line)
 

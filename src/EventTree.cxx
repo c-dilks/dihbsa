@@ -69,10 +69,12 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("PhiRp_r",&PhiRp_r);
   chain->SetBranchAddress("PhiRp_g",&PhiRp_g);
 
+  /*
   chain->SetBranchAddress("b_PhiRq",&b_PhiRq);
   chain->SetBranchAddress("b_PhiRp",&b_PhiRp);
   chain->SetBranchAddress("b_PhiRp_r",&b_PhiRp_r);
   chain->SetBranchAddress("b_PhiRp_g",&b_PhiRp_g);
+  */
 
   chain->SetBranchAddress("runnum",&runnum);
   chain->SetBranchAddress("evnum",&evnum);

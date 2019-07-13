@@ -185,6 +185,7 @@ int main(int argc, char** argv) {
    tree->Branch("PhiRp_g",&(dih->PhiRp_g),"PhiRp_g/F"); // via eq. 9 in 1408.5721
 
    // breit frame dihadron branches
+   /*
    tree->Branch("b_alpha",&(dihBr->alpha),"b_alpha/F");
    tree->Branch("b_Ph",&(dihBr->PhMag),"b_Ph/F");
    tree->Branch("b_PhPerp",&(dihBr->PhPerpMag),"b_PhPerp/F");
@@ -199,6 +200,7 @@ int main(int argc, char** argv) {
    tree->Branch("b_PhiRp",&(dihBr->PhiRp),"b_PhiRp/F"); // via R_T
    tree->Branch("b_PhiRp_r",&(dihBr->PhiRp_r),"b_PhiRp_r/F"); // via R_T (frame-dependent)
    tree->Branch("b_PhiRp_g",&(dihBr->PhiRp_g),"b_PhiRp_g/F"); // via eq. 9 in 1408.5721
+   */
 
    // pi0 (diphoton) branches
    // -- they are arrays of length diphCnt; there are three cases:

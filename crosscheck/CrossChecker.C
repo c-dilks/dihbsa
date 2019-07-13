@@ -13,8 +13,8 @@ const Int_t NF = 2; // number of files
 
 ///////////////////////////////
 //
-enum xenum { kTim, kHarut, kSimpleC, kSimpleJava, kAnalysis };
-Int_t xcheck[NF] = { kAnalysis, kTim };
+enum xenum { kTim, kHarut, kHarutOS, kSimpleC, kSimpleJava, kAnalysis };
+Int_t xcheck[NF] = { kAnalysis, kHarut };
 //
 ///////////////////////////////
 
@@ -44,25 +44,11 @@ Float_t hadPhi[NF][nHad];
 Float_t hadPx[NF][nHad];
 Float_t hadPy[NF][nHad];
 Float_t hadPz[NF][nHad];
+Float_t hadZ[NF][nHad];
 ////////////////////////////
 
 
 
-// hash function
-Float_t Digitize(Float_t val) { 
-  Int_t digits = 1; // number of decimal digits to keep
-  return roundf(val*pow(10,digits));
-};
-Int_t HashTim(Float_t Q2_, Float_t W_) { 
-  return 1000 * Digitize(Q2_) + Digitize(W_);
-};
-Int_t HashHarut(Float_t pipE_, Float_t pimE_) {
-  return 1000 * Digitize(pipE_) + Digitize(pimE_);
-};
-
-
-
-// other methods (implemented at the bottom)
 void PrintCompare(TString name, Float_t val, Float_t xval);
 void GetTreeVars(Int_t ff, Int_t ii);
 void GetEventTreeVars(Int_t ff, Int_t ii);
@@ -154,6 +140,38 @@ void CrossChecker(TString indir="../outroot") {
 
         break;
 
+      case kHarutOS:
+        // Harut's data, re-formatted by Orlando
+        gROOT->ProcessLine(
+          ".! tail -n +2 xfiles/dataOS_HA_mc.txt > xtree.dat"
+        ); // (strip header)
+        xstr = "evnum/I";
+        xstr += ":pipE/F:pipTheta/F:pipPhi/F:pipPhiH/F:pipPt/F";
+        xstr += ":pipZ/F:pipMx/F:pipXF/F:pipEtaCM/F:pipEtaBreit/F";
+        xstr += ":pimE/F:pimTheta/F:pimPhi/F:pimPhiH/F:pimPt/F";
+        xstr += ":pimZ/F:pimMx/F:pimXF/F:pimEtaCM/F:pimEtaBreit/F";
+        xstr += ":PhiH/F:PhPerp/F:PhiR1/F:PhiR2/F";
+
+        printf("xtree[%d] branches: %s\n",f,xstr.Data());
+        xtree[f]->ReadFile("xtree.dat",xstr);
+
+        xtree[f]->SetBranchAddress("evnum",&evnum[f]);
+        for(h=0; h<nHad; h++) {
+          xtree[f]->SetBranchAddress( TString(hadN[h]+"E"), &hadE[f][h] );
+          xtree[f]->SetBranchAddress( TString(hadN[h]+"Theta"), &hadTheta[f][h] );
+          xtree[f]->SetBranchAddress( TString(hadN[h]+"Phi"), &hadPhi[f][h] );
+          xtree[f]->SetBranchAddress( TString(hadN[h]+"Pt"), &hadPt[f][h] );
+          xtree[f]->SetBranchAddress( TString(hadN[h]+"Z"), &hadZ[f][h] );
+        };
+        xtree[f]->SetBranchAddress("PhPerp",&PhPerp[f]);
+        xtree[f]->SetBranchAddress("PhiH",&PhiH[f]);
+        //xtree[f]->SetBranchAddress("PhiR1",&PhiR[f]);
+        xtree[f]->SetBranchAddress("PhiR2",&PhiR[f]); // preferred?
+        
+        break;
+
+
+
       case kSimpleC:
 
         xfile[f] = new TFile("../simpleTree.root","READ");
@@ -214,8 +232,11 @@ void CrossChecker(TString indir="../outroot") {
 
 
   // build hash table for xtree[1]
-  // -- later we will loop through xtree[0], searching for each event's hash value to
+  // -- later we will loop through xtree[0], searching for each event's hash value in
   //    this hash table in order to find a matching event in xtree[1]
+  // -- this hash function now just returns the event number; before when our event
+  //    numbers were not matching, I was instead using a hash function to search for
+  //    matching events
   Int_t hashVal;
   std::map<Int_t,Int_t> hashMap; // event hash -> xtree[1] index
   std::map<Int_t,Int_t>::iterator hashIter;
@@ -224,9 +245,8 @@ void CrossChecker(TString indir="../outroot") {
 
     GetTreeVars(1,xi);
 
+    // hash function
     switch(xcheck[1]) {
-      //case kTim: hashVal = HashTim(Q2[1],W[1]); break;
-      //case kHarut: hashVal = HashHarut(hadE[1][iP],hadE[1][iM]); break;
       default: hashVal = evnum[1];
     };
 
@@ -270,6 +290,7 @@ void CrossChecker(TString indir="../outroot") {
         hadPx[f][h] = -10000;
         hadPy[f][h] = -10000;
         hadPz[f][h] = -10000;
+        hadZ[f][h] = -10000;
       };
     };
 
@@ -286,8 +307,6 @@ void CrossChecker(TString indir="../outroot") {
 
       // hash xtree[0]'s event
       switch(xcheck[0]) {
-        //case kTim: hashVal = HashTim(Q2[0],W[0]); break;
-        //case kHarut: hashVal = HashHarut(hadE[0][iP],hadE[0][iM]); break;
         default: hashVal = evnum[0];
       };
 
@@ -300,20 +319,15 @@ void CrossChecker(TString indir="../outroot") {
         GetTreeVars(1,hashIter->second);
 
         // extra requirement to improve event matching
-        /*
-        switch(WHICH_XCHECK) {
-          case kTim: 
-            extraCut = fabs(Q2 - ev->Q2) < 0.01;
-            break;
-          case kHarut: 
-            //extraCut = 
-              //fabs( hadTheta[iP] - Tools::EtaToTheta(ev->hadEta[iP]) ) < 0.005;
-            extraCut = true;
-            break;
-          default: extraCut = true;
-        };
-        */
-        extraCut = true;
+        if( xcheck[0]==kHarutOS || xcheck[1]==kHarutOS || 
+            xcheck[0]==kHarut || xcheck[1]==kHarut
+        ) {
+          extraCut = fabs(hadE[0][iP]-hadE[1][iP]) < 0.1 &&
+                     fabs(hadE[0][iM]-hadE[1][iM]) < 0.1; //////////////////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        }
+        else extraCut = true;
+
+
         if(extraCut) {
 
           // print comparisons
@@ -337,6 +351,7 @@ void CrossChecker(TString indir="../outroot") {
             PrintCompare( TString(hadN[h]+"Pz"), hadPz[0][h], hadPz[1][h] );
             PrintCompare( TString(hadN[h]+"Theta"), hadTheta[0][h], hadTheta[1][h] );
             PrintCompare( TString(hadN[h]+"Phi"), hadPhi[0][h], hadPhi[1][h] );
+            PrintCompare( TString(hadN[h]+"Z"), hadZ[0][h], hadZ[1][h] );
           };
 
           PrintCompare( "eleP", eleP[0], eleP[1] );
@@ -420,6 +435,7 @@ void GetEventTreeVars(Int_t ff, Int_t ii) {
       hadPt[ff][hh] = ev->hadPt[hh];
       hadTheta[ff][hh] = Tools::EtaToTheta(ev->hadEta[hh]);
       hadPhi[ff][hh] = ev->hadPhi[hh];
+      hadZ[ff][hh] = ev->Z[hh];
     };
   };
 };

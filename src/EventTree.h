@@ -88,10 +88,12 @@ class EventTree : public TObject
     Float_t PhiRp_r;
     Float_t PhiRp_g;
 
+    /*
     Float_t b_PhiRq;
     Float_t b_PhiRp;
     Float_t b_PhiRp_r;
     Float_t b_PhiRp_g;
+    */
 
     // diphotons
     Int_t diphCnt;
