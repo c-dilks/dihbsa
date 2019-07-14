@@ -23,6 +23,7 @@ Asymmetry::Asymmetry(
   // set up azimuthal modulation
   whichMod = phiModulation;
   modMaxDefault = 1.1;
+  asym2d = false;
   switch(whichMod) {
     case modSinPhiR:
       ModulationTitle = "sin(#phi_{R})";
@@ -53,6 +54,13 @@ Asymmetry::Asymmetry(
       ModulationName = "sinPhiH";
       modMax = modMaxDefault;
       aziMax = modMaxDefault;
+      break;
+    case mod2d:
+      asym2d = true;
+      ModulationTitle = "2D (#phi_{h},#phi_{R})";
+      ModulationName = "PhiHvsPhiR";
+      modMax = PI + 0.2;
+      aziMax = PI + 0.2;
       break;
     default:
       fprintf(stderr,"ERROR: bad phiModulation\n");
@@ -96,22 +104,22 @@ Asymmetry::Asymmetry(
 
   // set relevant variables for the given IV mode
   for(Int_t d=0; d<3; d++) {
-    ivN[d] = "(unknown)";
-    ivT[d] = "(unknown)";
-    ivMin[d] = 0;
-    ivMax[d] = 0;
+    if(d<whichDim) {
+      ivN[d] = BS->IVname[I[d]];
+      ivT[d] = BS->IVtitle[I[d]];
+      ivMin[d] = BS->minIV[I[d]];
+      ivMax[d] = BS->maxIV[I[d]];
+    } else {
+      ivN[d] = "(unknown)";
+      ivT[d] = "(unknown)";
+      ivMin[d] = 0;
+      ivMax[d] = 0;
+    };
   };
-  for(Int_t d=0; d<whichDim; d++) {
-    ivN[d] = BS->IVname[I[d]];
-    ivT[d] = BS->IVtitle[I[d]];
-    ivMin[d] = BS->minIV[I[d]];
-    ivMax[d] = BS->maxIV[I[d]];
-  };
 
 
 
-
-  // fix polarization (for now...)
+  // fixed polarization (for now...)
   pol = 0.86;
 
 
@@ -119,7 +127,7 @@ Asymmetry::Asymmetry(
   binT = "::";
   binN = "";
   for(int d=0; d<whichDim; d++) {
-    binT = binT + "  " + BS->GetBoundStr(I[d],B[d]);
+    binT += "  " + BS->GetBoundStr(I[d],B[d]);
     binN = Form("%s_%s%d",binN.Data(),ivN[d].Data(),B[d]);
   };
   if(debug) printf("binT = %s\nbinN = %s\n",binT.Data(),binN.Data());
@@ -162,23 +170,40 @@ Asymmetry::Asymmetry(
 
   // modDist and modBinDist
   modName = Form("modDist%s",binN.Data());
-  modTitle = Form("%s distribution %s;%s",
-    ModulationTitle.Data(),binT.Data(),ModulationTitle.Data()
-  );
-  modDist = new TH1D(modName,modTitle,iv1Bins,-modMax,modMax);
+  modTitle = Form("%s distribution %s",ModulationTitle.Data(),binT.Data());
+  if(!asym2d) {
+    modTitle += ";" + ModulationTitle;
+    modDist = new TH1D(modName,modTitle,iv1Bins,-modMax,modMax);
+  } else {
+    modTitle += ";#phi_{R};#phi_{h}";
+    modDist2 = new TH2D(modName,modTitle,iv2Bins,-modMax,modMax,iv2Bins,-modMax,modMax);
+  };
   //if(debug) printf("built %s\n\t%s\n",modName.Data(),modTitle.Data());
 
-  for(int m=0; m<nModBins; m++) {
-    modBinName[m] = Form("%s_bin%d",modName.Data(),m);
-    modBinTitle[m] = Form("bin %d %s",m,modTitle.Data());
-    modBinDist[m] = new TH1D(
-      modBinName[m].Data(),modBinTitle[m].Data(),iv1Bins,-modMax,modMax);
-    //if(debug) printf("built %s\n\t%s\n",modBinName[m].Data(),modBinTitle[m].Data());
+  if(!asym2d) {
+    for(int m=0; m<nModBins; m++) {
+      modBinName = Form("%s_bin_%d",modName.Data(),m);
+      modBinTitle = Form("bin %d %s",m,modTitle.Data());
+      modBinTitle += ";" + modTitle;
+      modBinDist[m] = new TH1D(
+        modBinName.Data(),modBinTitle.Data(),iv1Bins,-modMax,modMax);
+    };
+  } else {
+    for(int mmH=0; mmH<nModBins2; mmH++) {
+      for(int mmR=0; mmR<nModBins2; mmR++) {
+        modBinName = Form("%s_bin_H%d_R%d",modName.Data(),mmH,mmR);
+        modBinTitle = Form("bin (H%d,R%d) %s",mmH,mmR,modTitle.Data());
+        modBinTitle += ";#phi_{R};#phi_{h}";
+        modBinDist2[mmH][mmR] = new TH2D(
+          modBinName.Data(),modBinTitle.Data(),
+          iv2Bins,-modMax,modMax,iv2Bins,-modMax,modMax);
+      };
+    };
   };
 
 
-  // IVvsModDist (only for 1D!)
-  if(whichDim == 1) {
+  // IVvsModDist (only for 1D binning and 1D modulation)
+  if(whichDim==1 && !asym2d) {
     IVvsModName = Form("IVvsModDist%s",binN.Data());
     IVvsModTitle = Form("%s vs. %s %s;%s;%s",
       ivT[0].Data(),ModulationTitle.Data(),binT.Data(),
@@ -195,27 +220,51 @@ Asymmetry::Asymmetry(
   // aziDist
   for(int s=0; s<nSpin; s++) {
     aziName[s] = Form("aziDist_%s%s",SpinName(s).Data(),binN.Data());
-    aziTitle[s] = Form("%s binned distribution :: %s %s;%s",
-      ModulationTitle.Data(),SpinTitle(s).Data(),binT.Data(),ModulationTitle.Data()
+    aziTitle[s] = Form("%s binned distribution :: %s %s",
+      ModulationTitle.Data(),SpinTitle(s).Data(),binT.Data()
     );
-    aziDist[s] = new TH1D(aziName[s],aziTitle[s],nModBins,-aziMax,aziMax);
+    if(!asym2d) {
+      aziTitle[s] += ";" + ModulationTitle;
+      aziDist[s] = new TH1D(aziName[s],aziTitle[s],nModBins,-aziMax,aziMax);
+    } else {
+      aziTitle[s] += ";#phi_{R};#phi_{h}"; // PhiR is horizontal, PhiH is vertical
+      aziDist2[s] = new TH2D(aziName[s],aziTitle[s],
+        nModBins2,-aziMax,aziMax,nModBins2,-aziMax,aziMax);
+    };
   };
 
 
   // asymGr
   asymName = Form("asym%s",binN.Data());
-  asymTitle = Form("%s asymmetry %s;%s;asymmetry",
-    ModulationTitle.Data(), binT.Data(),  ModulationTitle.Data()
-  );
-  asymGr = new TGraphErrors();
-  asymGr->SetName(asymName);
-  asymGr->SetTitle(asymTitle);
+  if(!asym2d) {
+    asymTitle = Form("%s asymmetry %s;%s;asymmetry",
+      ModulationTitle.Data(), binT.Data(),  ModulationTitle.Data()
+    );
+    asymGr = new TGraphErrors();
+    asymGr->SetName(asymName);
+    asymGr->SetTitle(asymTitle);
+  } else {
+    asymTitle = Form("%s asymmetry %s;#phi_{R};#phi_{h};asymmetry",
+      ModulationTitle.Data(), binT.Data()
+    );
+    asymGr2 = new TGraph2DErrors();
+    asymGr2->SetName(asymName);
+    asymGr2->SetTitle(asymTitle);
+    asymGr2hist = new TH2D(TString("hist"+asymName),asymTitle,
+      nModBins2,-aziMax,aziMax,nModBins2,-aziMax,aziMax);
+  };
+
 
   // fit function
-  fitFuncName = "fit_"+asymName;
-  fitFunc = new TF1(fitFuncName,"[0]+[1]*x",-aziMax,aziMax);
-  fitFunc->SetParName(0,"B");
-  fitFunc->SetParName(1,"A_{LU}");
+    fitFuncName = "fit_"+asymName;
+  if(!asym2d) {
+    fitFunc = new TF1(fitFuncName,"[0]+[1]*x",-aziMax,aziMax);
+    fitFunc->SetParName(0,"B");
+    fitFunc->SetParName(1,"A_{LU}");
+  } else {
+    fitFunc2 = new TF2(fitFuncName,"[0]*TMath::Sin(y-x)",-aziMax,aziMax);
+    fitFunc2->SetParName(0,"A_{LU}");
+  };
 
 
   // initialize kinematic variables
@@ -258,7 +307,7 @@ Bool_t Asymmetry::FillPlots() {
 
 
   // evaluate modulation 
-  modulation = EvalModulation();
+  modulation = EvalModulation(); // (if asym2d==true, modulation=-10000, i.e., not used)
 
 
   // get spin state number
@@ -271,16 +320,32 @@ Bool_t Asymmetry::FillPlots() {
 
 
   // fill plots
+  // ----------
 
-  modbin = aziDist[sP]->FindBin(modulation);
-  if(modbin>=1 && modbin<=nModBins) 
-    modBinDist[modbin-1]->Fill(modulation,weight);
+  if(!asym2d) {
+    aziDist[spinn]->Fill(modulation,weight);
+    modbin = aziDist[sP]->FindBin(modulation);
+    if(modbin>=1 && modbin<=nModBins) {
+      modBinDist[modbin-1]->Fill(modulation,weight);
+    } else {
+      fprintf(stderr,"ERROR: modulation bin not found for modulation=%f\n",modulation);
+      return false;
+    };
+    modDist->Fill(modulation,weight);
+  } 
   else {
-    fprintf(stderr,"ERROR: modulation bin not found for modulation=%f\n",modulation);
-    return false;
+    aziDist2[spinn]->Fill(PhiR,PhiH,weight);
+    modbinR = aziDist2[sP]->GetXaxis()->FindBin(PhiR);
+    modbinH = aziDist2[sP]->GetYaxis()->FindBin(PhiH);
+    if(modbinR>=1 && modbinR<=nModBins2 && modbinH>=1 && modbinH<=nModBins2) {
+      modBinDist2[modbinH-1][modbinR-1]->Fill(PhiR,PhiH,weight);
+    } else {
+      fprintf(stderr,"ERROR: 2d modulation bin not found (phiH=%f phiR=%f)\n",PhiH,PhiR);
+      return false;
+    };
+    modDist2->Fill(PhiR,PhiH,weight);
   };
 
-  modDist->Fill(modulation,weight);
 
   switch(whichDim) {
     case 1: ivDist1->Fill(iv[0]); break;
@@ -288,9 +353,8 @@ Bool_t Asymmetry::FillPlots() {
     case 3: ivDist3->Fill(iv[0],iv[1],iv[2]); break;
   };
 
-  aziDist[spinn]->Fill(modulation,weight);
 
-  if(whichDim==1) IVvsModDist->Fill(modulation,iv[0],weight);
+  if(whichDim==1 && !asym2d) IVvsModDist->Fill(modulation,iv[0],weight);
 
 
   
@@ -316,12 +380,12 @@ void Asymmetry::CalculateAsymmetries() {
   if(rDenom>0) {
     // -- relative luminosity
     rellum = rNumer / rDenom;
-    // -- relative luminosity statistical uncertainty (assume poison yields)
+    // -- relative luminosity statistical uncertainty (assume poissonian yields)
     rellumErr = sqrt( rNumer * (rNumer+rDenom) / pow(rDenom,3) );
   } else {
     rellum = 0;
     rellumErr = 0;
-    fprintf(stderr,"WARNING: mdistR has 0 yield, abort asym calculation for this bin\n");
+    fprintf(stderr,"WARNING: rellum denominator==0, abort asym calculation for this bin\n");
     return;
   };
   printf("rellum = %f / %f =  %.3f  +-  %f\n",rNumer,rDenom,rellum,rellumErr);
@@ -329,45 +393,81 @@ void Asymmetry::CalculateAsymmetries() {
    
   // compute asymmetry for each modulation bin
   pointCnt = 0;
-  for(int m=1; m<=nModBins; m++) {
-
-    yL = aziDist[sP]->GetBinContent(m);
-    yR = aziDist[sM]->GetBinContent(m);
-
-    asymNumer = yL - (rellum * yR);
-    asymDenom = yL + (rellum * yR);
-
-    if(asymDenom>0) {
-      // compute asymmetry value
-      asymVal = (1.0/pol) * (asymNumer/asymDenom);
-
-      // compute asymmetry statistical error
-      // -- full formula
-      asymErr = ( 2 * rellum * sqrt( yL*pow(yR,2) + yR*pow(yL,2) ) ) / 
-                ( pol * pow(yL+rellum*yR,2) );
-      // -- compare to simple formula (assumes asym*pol<<1 and R~1)
-      //printf("difference = %f\n",asymErr - 1.0 / ( pol * sqrt(yL+yR) ));
-
-      // compute azimuthal modulation value
-      modVal = modBinDist[m-1]->GetMean(); // use modulation bin's mean
-      
-      // compute azimuthal modulation error
-      modErr = 0; // azimuthal modulation error
-
-      asymGr->SetPoint(pointCnt,modVal,asymVal);
-      asymGr->SetPointError(pointCnt,modErr,asymErr);
-      pointCnt++;
+  if(!asym2d) {
+    for(int m=1; m<=nModBins; m++) {
+      yL = aziDist[sP]->GetBinContent(m);
+      yR = aziDist[sM]->GetBinContent(m);
+      SetAsymGrPoint(m);
+    };
+  } else {
+    for(int mmH=1; mmH<=nModBins2; mmH++) {
+      for(int mmR=1; mmR<=nModBins2; mmR++) {
+        yL = aziDist2[sP]->GetBinContent(mmR,mmH);
+        yR = aziDist2[sM]->GetBinContent(mmR,mmH);
+        SetAsymGrPoint(mmH,mmR);
+      };
     };
   };
 
+
   // fit asymmetry
-  fitFunc->FixParameter(0,0);
-  asymGr->Fit(fitFunc,"Q","",-aziMax,aziMax);
+  if(!asym2d) {
+    fitFunc->FixParameter(0,0); // fix fit offset to 0
+    asymGr->Fit(fitFunc,"Q","",-aziMax,aziMax);
+  } else {
+    asymGr2->Fit(fitFunc2,"Q","");
+  };
+
 };
 
 
-  
+// set new asymGr point and error
+// -- called by CalculateAsymmetries() for each modulation bin
+// -- need to have yL, yR, and rellum set before calling
+// -- modBin_ and modBin2_ are used to address modDistBin for getting mean modulation
+//    for this modulation bin
+void Asymmetry::SetAsymGrPoint(Int_t modBin_, Int_t modBin2_) {
+
+  asymNumer = yL - (rellum * yR);
+  asymDenom = yL + (rellum * yR);
+
+  if(asymDenom>0) {
+    // compute asymmetry value
+    asymVal = (1.0/pol) * (asymNumer/asymDenom);
+
+    // compute asymmetry statistical error
+    // -- full formula
+    asymErr = ( 2 * rellum * sqrt( yL*pow(yR,2) + yR*pow(yL,2) ) ) / 
+              ( pol * pow(yL+rellum*yR,2) );
+    // -- compare to simple formula (assumes asym*pol<<1 and R~1)
+    //printf("difference = %f\n",asymErr - 1.0 / ( pol * sqrt(yL+yR) ));
+
+    // compute azimuthal modulation value and error
+    if(!asym2d) {
+      modVal = modBinDist[modBin_-1]->GetMean(); // use modulation bin's mean
+      modErr = 0; // for now (TODO)
+    } else {
+      // using modBinDist2[mmH-1][mmR-1]; x-axis is PhiR; y-axis is PhiH
+      modValR = modBinDist2[modBin_-1][modBin2_-1]->GetMean(1);
+      modValH = modBinDist2[modBin_-1][modBin2_-1]->GetMean(2);
+      modErrR = 0; // for now (TODO)
+      modErrH = 0; // for now (TODO)
+    };
     
+
+    if(!asym2d) {
+      asymGr->SetPoint(pointCnt,modVal,asymVal);
+      asymGr->SetPointError(pointCnt,modErr,asymErr);
+    } else {
+      asymGr2->SetPoint(pointCnt,modValR,modValH,asymVal);
+      asymGr2->SetPointError(pointCnt,modErrR,modErrH,asymErr);
+      asymGr2hist->SetBinContent(modBin2_,modBin_,asymVal);
+    };
+    pointCnt++;
+  };
+};
+
+  
 Float_t Asymmetry::EvalModulation() {
 
   switch(whichMod) {
@@ -386,6 +486,9 @@ Float_t Asymmetry::EvalModulation() {
     case modSinPhiH:
       return TMath::Sin(PhiH);
       break;
+    case mod2d:
+      return -10000; // (not used if asym2d==true)
+      break;
     default:
       fprintf(stderr,"ERROR: bad phiModulation\n");
       return -10000;
@@ -395,7 +498,9 @@ Float_t Asymmetry::EvalModulation() {
 
 
 Float_t Asymmetry::EvalWeight() {
-  if(whichMod == weightSinPhiHR) {
+  if( whichMod == weightSinPhiHR ||
+      whichMod == mod2d
+  ) {
     return Mh>0 ? PhPerp/Mh : 0;
   };
   return 1;

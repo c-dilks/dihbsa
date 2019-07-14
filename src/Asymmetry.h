@@ -25,7 +25,9 @@
 #include "TH2.h"
 #include "TH3.h"
 #include "TF1.h"
+#include "TF2.h"
 #include "TGraphErrors.h"
+#include "TGraph2DErrors.h"
 #include "TLine.h"
 
 // dihbsa
@@ -49,6 +51,7 @@ class Asymmetry : public TObject
     ~Asymmetry();
 
     void CalculateAsymmetries();
+    void SetAsymGrPoint(Int_t modBin_, Int_t modBin2_=-1);
 
 
     Bool_t FillPlots();
@@ -70,11 +73,14 @@ class Asymmetry : public TObject
       scaleSinPhiHR,
       weightSinPhiHR,
       modSinPhiH,
+      mod2d,
       nMod
     };
     Int_t whichMod;
     Int_t whichDim;
+    Bool_t asym2d;
     Binning * BS;
+
 
 
     // event-level variables -- these must be set for each event,
@@ -96,6 +102,7 @@ class Asymmetry : public TObject
     static const Int_t iv2Bins = 50; // number of bins for ivDist2 plots
     static const Int_t iv3Bins = 30; // number of bins for ivDist3 plots
     static const Int_t nModBins = 7; // number of bins in azimuthal modulation
+    static const Int_t nModBins2 = 5; // number of bins in 2d azimuthal modulation
 
     Float_t modMaxDefault;
     Float_t modMax,aziMax;
@@ -111,6 +118,7 @@ class Asymmetry : public TObject
     // "azimuthal modulation dist" filled with, e.g., Sin(phiR) for each spin, binned
     // for the asymmetry plots
     TH1D * aziDist[nSpin];
+    TH2D * aziDist2[nSpin]; // for 2d modulations
     TString aziName[nSpin];
     TString aziTitle[nSpin];
 
@@ -120,15 +128,22 @@ class Asymmetry : public TObject
     TH1D * modDist; // for all modulation bins
     TH2D * IVvsModDist;
     TString modName,modTitle;
-    TString modBinName[nModBins];
-    TString modBinTitle[nModBins];
+    TString modBinName;
+    TString modBinTitle;
     TString IVvsModName,IVvsModTitle;
+    // for 2d modulations:
+    TH2D * modBinDist2[nModBins2][nModBins2];
+    TH2D * modDist2;
 
     // asymmetry vs. azimuthal modulation bin
     TGraphErrors * asymGr;
     TString asymName,asymTitle;
     TF1 * fitFunc;
     TString fitFuncName;
+    // for 2d modulations:
+    TGraph2DErrors * asymGr2;
+    TH2D * asymGr2hist;
+    TF2 * fitFunc2;
 
     // bin lines
     TLine * boundLine;
@@ -154,15 +169,15 @@ class Asymmetry : public TObject
   private:
 
     Float_t modulation;
-    Int_t modbin;
+    Int_t modbin,modbinH,modbinR;
     Int_t spinn;
     Int_t pointCnt;
 
 
     Double_t yL,yR;
     Double_t asymNumer,asymDenom;
-    Double_t asymVal,modVal;
-    Double_t asymErr,modErr;
+    Double_t asymVal,modVal,modValH,modValR;
+    Double_t asymErr,modErr,modErrH,modErrR;
 
     Double_t bMax;
 

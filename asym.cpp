@@ -31,6 +31,7 @@ Int_t GetBinNum(Int_t bin0, Int_t bin1=-1, Int_t bin2=-1);
 void DrawKinDepGraph(TGraphErrors * g_, Binning * B_, Int_t v_);
 void DrawSimpleGraph(TGraphErrors * g_, Binning * B_, Int_t v, Bool_t setRange_=true);
 void DrawAsymGr(TGraphErrors * g_);
+void DrawAsymGr2(TGraph2DErrors * g_);
 void SetCloneName(TH1 * clone_);
 
 Int_t pairType;
@@ -86,7 +87,7 @@ int main(int argc, char** argv) {
        "\nUSAGE: %s [inDir] [pairType] [whichModulation] [dimensions] [ivType] [whichPhiR] [batchMode]\n",
        argv[0]);
      printf("\n- inDir: directory of ROOT files to analyse\n");
-     printf("\n- pairType: hadron pair type (run PrintEnumerators.C\n");
+     printf("\n- pairType: hadron pair type (run PrintEnumerators.C)\n");
      printf("\n- whichModulation:\n");
      for(int m=0; m<Asymmetry::nMod; m++) {
        A = new Asymmetry(BS,m,-10000);
@@ -223,9 +224,9 @@ int main(int argc, char** argv) {
        asymMap.insert(std::pair<Int_t, Asymmetry*>(binNum,A));
        bcnt++;
        if(b==0) {
-         grTitle = Form("%s %s asymmetry vs. %s",
-           dihTitle.Data(),
-           (A->ModulationTitle).Data(),(BS->IVtitle[ivVar[0]]).Data());
+         grTitle = Form("%s %s asymmetry vs. %s;%s",
+           dihTitle.Data(),(A->ModulationTitle).Data(),
+           (BS->IVtitle[ivVar[0]]).Data(),(BS->IVtitle[ivVar[0]]).Data());
          grName = Form("kindep_%s",(BS->IVname[ivVar[0]]).Data());
          kindepGr = new TGraphErrors();
          kindepGr->SetName(grName);
@@ -237,8 +238,8 @@ int main(int argc, char** argv) {
          chindfGr->SetName(grName);
          chindfGr->SetTitle(grTitle);
 
-         grTitle = Form("relative luminosity vs. %s",
-           (BS->IVtitle[ivVar[0]]).Data());
+         grTitle = Form("relative luminosity vs. %s;%s",
+           (BS->IVtitle[ivVar[0]]).Data(),(BS->IVtitle[ivVar[0]]).Data());
          grName.ReplaceAll("chindf","rellum");
          rellumGr = new TGraphErrors();
          rellumGr->SetName(grName);
@@ -267,10 +268,11 @@ int main(int argc, char** argv) {
          bcnt++;
 
          if(b0==0) {
-           grTitle = Form("%s %s asymmetry vs. %s :: %s",
+           grTitle = Form("%s %s asymmetry vs. %s :: %s;%s",
              dihTitle.Data(),
              (A->ModulationTitle).Data(),(BS->IVtitle[ivVar[0]]).Data(),
-             (BS->GetBoundStr(ivVar[1],b1)).Data());
+             (BS->GetBoundStr(ivVar[1],b1)).Data(),
+             (BS->IVtitle[ivVar[0]]).Data());
            grName = Form("kindep_%s_bin_%s%d",(BS->IVname[ivVar[0]]).Data(),
              (BS->IVname[ivVar[1]]).Data(),b1);
            kindepGr = new TGraphErrors();
@@ -283,9 +285,9 @@ int main(int argc, char** argv) {
            chindfGr->SetName(grName);
            chindfGr->SetTitle(grTitle);
 
-           grTitle = Form("relative luminosity vs. %s :: %s",
+           grTitle = Form("relative luminosity vs. %s :: %s;%s",
              (BS->IVtitle[ivVar[0]]).Data(),
-             (BS->GetBoundStr(ivVar[1],b1)).Data());
+             (BS->GetBoundStr(ivVar[1],b1)).Data(),(BS->IVtitle[ivVar[0]]).Data());
            grName.ReplaceAll("chindf","rellum");
            rellumGr = new TGraphErrors();
            rellumGr->SetName(grName);
@@ -317,11 +319,12 @@ int main(int argc, char** argv) {
            bcnt++;
 
            if(b0==0) {
-             grTitle = Form("%s %s asymmetry vs. %s :: %s, %s",
+             grTitle = Form("%s %s asymmetry vs. %s :: %s, %s;%s",
                dihTitle.Data(),
                (A->ModulationTitle).Data(),(BS->IVtitle[ivVar[0]]).Data(),
                (BS->GetBoundStr(ivVar[1],b1)).Data(),
-               (BS->GetBoundStr(ivVar[2],b2)).Data());
+               (BS->GetBoundStr(ivVar[2],b2)).Data(),
+               (BS->IVtitle[ivVar[0]]).Data());
              grName = Form("kindep_%s_bin_%s%d_%s%d",(BS->IVname[ivVar[0]]).Data(),
                (BS->IVname[ivVar[1]]).Data(),b1,(BS->IVname[ivVar[2]]).Data(),b2);
              kindepGr = new TGraphErrors();
@@ -334,10 +337,11 @@ int main(int argc, char** argv) {
              chindfGr->SetName(grName);
              chindfGr->SetTitle(grTitle);
 
-             grTitle = Form("relative luminosity vs. %s :: %s, %s",
+             grTitle = Form("relative luminosity vs. %s :: %s, %s;%s",
                (BS->IVtitle[ivVar[0]]).Data(),
                (BS->GetBoundStr(ivVar[1],b1)).Data(),
-               (BS->GetBoundStr(ivVar[2],b2)).Data());
+               (BS->GetBoundStr(ivVar[2],b2)).Data(),
+               (BS->IVtitle[ivVar[0]]).Data());
              grName.ReplaceAll("chindf","rellum");
              rellumGr = new TGraphErrors();
              rellumGr->SetName(grName);
@@ -422,13 +426,18 @@ int main(int argc, char** argv) {
      A = *it;
      A->CalculateAsymmetries();
 
-     if(A->fitFunc!=NULL) {
+     if( ( A->asym2d==false && A->fitFunc!=NULL) || 
+         ( A->asym2d==true && A->fitFunc2!=NULL) ) {
        
-       // asymmetry value
-       asymValue = A->fitFunc->GetParameter(1);
+       // asymmetry value and statistical uncertainty
+       if(!(A->asym2d)) {
+         asymValue = A->fitFunc->GetParameter(1);
+         asymError = A->fitFunc->GetParError(1);
+       } else {
+         asymValue = A->fitFunc2->GetParameter(0);
+         asymError = A->fitFunc2->GetParError(0);
+       };
 
-       // asymmetry statistical uncertainty
-       asymError = A->fitFunc->GetParError(1);
 
        // IV value and uncertainty
        switch(dimensions) {
@@ -447,8 +456,13 @@ int main(int argc, char** argv) {
        };
 
        // chi2 and ndf
-       chisq = A->fitFunc->GetChisquare();
-       ndf = A->fitFunc->GetNDF();
+       if(!(A->asym2d)) {
+         chisq = A->fitFunc->GetChisquare();
+         ndf = A->fitFunc->GetNDF();
+       } else {
+         chisq = A->fitFunc2->GetChisquare();
+         ndf = A->fitFunc2->GetNDF();
+       };
        chisqDist->Fill(chisq);
 
        // set points
@@ -473,10 +487,11 @@ int main(int argc, char** argv) {
    //gStyle->SetOptFit(1); // (better to put this in your ~/.rootlogon.C file)
 
    // -- instantiate canvases
-   TString canvName = "kindepCanv_" + modN;
+   TString canvNameSuffix = "Canv_" + modN;
+   TString canvName;
    for(int d=0; d<dimensions; d++) {
-     if(d==1) canvName = Form("%s_bins_%s",canvName.Data(),(BS->IVname[ivVar[d]]).Data());
-     else canvName = Form("%s_%s",canvName.Data(),(BS->IVname[ivVar[d]]).Data());
+     if(d==1) canvNameSuffix += "_bins_" + BS->IVname[ivVar[d]];
+     else canvNameSuffix += "_" + BS->IVname[ivVar[d]];
    };
    Int_t canvX,canvY,divX,divY;
    Int_t canvModX,canvModY,divModX,divModY;
@@ -502,20 +517,30 @@ int main(int argc, char** argv) {
        break;
    };
 
+   canvName = "kindep" + canvNameSuffix;
    TCanvas * kindepCanv = new TCanvas(canvName,canvName,canvX,canvY);
    kindepCanv->Divide(divX,divY);
 
-   canvName.ReplaceAll("kindep","chindf");
+   canvName = "chindf" + canvNameSuffix;
    TCanvas * chindfCanv = new TCanvas(canvName,canvName,canvX,canvY);
    chindfCanv->Divide(divX,divY);
    
-   canvName.ReplaceAll("chindf","rellum");
+   canvName = "rellum" + canvNameSuffix;
    TCanvas * rellumCanv = new TCanvas(canvName,canvName,canvX,canvY);
    rellumCanv->Divide(divX,divY);
 
-   canvName.ReplaceAll("rellum","asymMod");
+   canvName = "asymMod" + canvNameSuffix;
    TCanvas * asymModCanv = new TCanvas(canvName,canvName,canvModX,canvModY); 
    asymModCanv->Divide(divModX,divModY);
+
+   canvName = "asymModHist2" + canvNameSuffix;
+   TCanvas * asymModHist2Canv = new TCanvas(canvName,canvName,canvModX,canvModY); 
+   asymModHist2Canv->Divide(divModX,divModY);
+
+   canvName = "modDist" + canvNameSuffix;
+   TCanvas * modDistCanv = new TCanvas(canvName,canvName,canvModX,canvModY); 
+   modDistCanv->Divide(divModX,divModY);
+
 
 
 
@@ -539,7 +564,15 @@ int main(int argc, char** argv) {
        binNum = GetBinNum(b0);
        A = asymMap.at(binNum);
        asymModCanv->cd(b0+1);
-       DrawAsymGr(A->asymGr);
+       if(!(A->asym2d)) DrawAsymGr(A->asymGr);
+       else DrawAsymGr2(A->asymGr2);
+       modDistCanv->cd(b0+1);
+       if(!(A->asym2d)) A->modDist->Draw();
+       else A->modDist2->Draw("colz");
+       if(A->asym2d) {
+         asymModHist2Canv->cd(b0+1);
+         A->asymGr2hist->Draw("colz");
+       };
      };
    }
    else if(dimensions==2) {
@@ -562,7 +595,15 @@ int main(int argc, char** argv) {
          binNum = GetBinNum(b0,b1);
          A = asymMap.at(binNum);
          asymModCanv->cd(b0*NB[1]+b1+1);
-         DrawAsymGr(A->asymGr);
+         if(!(A->asym2d)) DrawAsymGr(A->asymGr);
+         else DrawAsymGr2(A->asymGr2);
+         modDistCanv->cd(b0*NB[1]+b1+1);
+         if(!(A->asym2d)) A->modDist->Draw();
+         else A->modDist2->Draw();
+         if(A->asym2d) {
+           asymModHist2Canv->cd(b0*NB[1]+b1+1);
+           A->asymGr2hist->Draw("colz");
+         };
        };
      };
    }
@@ -592,6 +633,7 @@ int main(int argc, char** argv) {
    TH2D * ivFullDist2;
    TH3D * ivFullDist3;
    TH1D * modFullDist;
+   TH2D * modFullDist2; // for 2d modulation
    TH2D * IVvsModFullDist;
 
    if(dimensions==1) {
@@ -600,15 +642,24 @@ int main(int argc, char** argv) {
        A = asymMap.at(binNum);
        if(b0==0) {
          ivFullDist1 = (TH1D*)(A->ivDist1)->Clone();
-         IVvsModFullDist = (TH2D*)(A->IVvsModDist)->Clone();
-         modFullDist = (TH1D*)(A->modDist)->Clone();
          SetCloneName(ivFullDist1);
-         SetCloneName(IVvsModFullDist);
-         SetCloneName(modFullDist);
+         if(!(A->asym2d)) {
+           IVvsModFullDist = (TH2D*)(A->IVvsModDist)->Clone();
+           SetCloneName(IVvsModFullDist);
+           modFullDist = (TH1D*)(A->modDist)->Clone();
+           SetCloneName(modFullDist);
+         } else {
+           modFullDist2 = (TH2D*)(A->modDist2)->Clone();
+           SetCloneName(modFullDist2);
+         };
        } else {
          ivFullDist1->Add(A->ivDist1);
-         IVvsModFullDist->Add(A->IVvsModDist);
-         modFullDist->Add(A->modDist);
+         if(!(A->asym2d)) {
+           IVvsModFullDist->Add(A->IVvsModDist);
+           modFullDist->Add(A->modDist);
+         } else {
+           modFullDist2->Add(A->modDist2);
+         };
        };
      };
    }
@@ -619,12 +670,18 @@ int main(int argc, char** argv) {
          A = asymMap.at(binNum);
          if(b0==0 && b1==0) {
            ivFullDist2 = (TH2D*)(A->ivDist2)->Clone();
-           modFullDist = (TH1D*)(A->modDist)->Clone();
            SetCloneName(ivFullDist2);
-           SetCloneName(modFullDist);
+           if(!(A->asym2d)) {
+             modFullDist = (TH1D*)(A->modDist)->Clone();
+             SetCloneName(modFullDist);
+           } else {
+             modFullDist2 = (TH2D*)(A->modDist2)->Clone();
+             SetCloneName(modFullDist2);
+           };
          } else {
            ivFullDist2->Add(A->ivDist2);
-           modFullDist->Add(A->modDist);
+           if(!(A->asym2d)) modFullDist->Add(A->modDist);
+           else modFullDist2->Add(A->modDist2);
          };
        };
      };
@@ -637,12 +694,18 @@ int main(int argc, char** argv) {
            A = asymMap.at(binNum);
            if(b0==0 && b1==0 && b2==0) {
              ivFullDist3 = (TH3D*)(A->ivDist3)->Clone();
-             modFullDist = (TH1D*)(A->modDist)->Clone();
              SetCloneName(ivFullDist3);
-             SetCloneName(modFullDist);
+             if(!(A->asym2d)) {
+               modFullDist = (TH1D*)(A->modDist)->Clone();
+               SetCloneName(modFullDist);
+             } else {
+               modFullDist2 = (TH2D*)(A->modDist2)->Clone();
+               SetCloneName(modFullDist2);
+             };
            } else {
              ivFullDist3->Add(A->ivDist3);
-             modFullDist->Add(A->modDist);
+             if(!(A->asym2d)) modFullDist->Add(A->modDist);
+             else modFullDist2->Add(A->modDist2);
            };
          };
        };
@@ -670,21 +733,32 @@ int main(int argc, char** argv) {
        case 3: A->ivDist3->Write(); break;
      };
 
-     A->modDist->Write();
-     for(Int_t m=0; m<Asymmetry::nModBins; m++) A->modBinDist[m]->Write();
-     if(dimensions==1) A->IVvsModDist->Write();
-     for(Int_t s=0; s<nSpin; s++) A->aziDist[s]->Write();
+     if(!(A->asym2d)) {
+       A->modDist->Write();
+       for(Int_t m=0; m<Asymmetry::nModBins; m++) A->modBinDist[m]->Write();
+       if(dimensions==1) A->IVvsModDist->Write();
+       for(Int_t s=0; s<nSpin; s++) A->aziDist[s]->Write();
+     } else {
+       A->modDist2->Write();
+       for(Int_t mmH=0; mmH<Asymmetry::nModBins2; mmH++) {
+         for(Int_t mmR=0; mmR<Asymmetry::nModBins2; mmR++) {
+           A->modBinDist2[mmH][mmR]->Write();
+         };
+       };
+       for(Int_t s=0; s<nSpin; s++) A->aziDist2[s]->Write();
+     };
    };
 
    if(dimensions==1) {
      ivFullDist1->Write();
-     IVvsModFullDist->Write();
+     if(!(A->asym2d)) IVvsModFullDist->Write();
    } else if(dimensions==2) {
      ivFullDist2->Write();
    } else if(dimensions==3) {
      ivFullDist3->Write();
    };
-   modFullDist->Write();
+   if(!(A->asym2d)) modFullDist->Write();
+   else modFullDist2->Write();
 
 
    // -- asymmetries and kindep graphs
@@ -696,7 +770,8 @@ int main(int argc, char** argv) {
      A->PrintSettings();
 
      // first write out the asymmetry vs. modulation graphs
-     A->asymGr->Write();
+     if(!(A->asym2d)) A->asymGr->Write();
+     else A->asymGr2->Write();
 
      // then write out the kindepGr *after* writing out all the
      // relevant asymmetry vs. modulation graphs
@@ -711,7 +786,11 @@ int main(int argc, char** argv) {
    chindfCanv->Write();
    chisqDist->Write();
    rellumCanv->Write();
-   if(dimensions==1 || dimensions==2) asymModCanv->Write();
+   if(dimensions==1 || dimensions==2) {
+     asymModCanv->Write();
+     if(A->asym2d) asymModHist2Canv->Write();
+     modDistCanv->Write();
+   };
 
 
 
@@ -748,6 +827,8 @@ int main(int argc, char** argv) {
      if(dimensions==1 || dimensions==2) {
        pngName = Form("%s.png",asymModCanv->GetName());
        asymModCanv->Print(pngName,"png"); 
+       pngName = Form("%s.png",modDistCanv->GetName());
+       modDistCanv->Print(pngName,"png"); 
      };
    };
 
@@ -863,6 +944,35 @@ void DrawAsymGr(TGraphErrors * g_) {
   g_->GetYaxis()->SetRangeUser(yMin,yMax);
 
   g_->Draw("APE"); // draw again to apply the formatting
+
+};
+
+
+void DrawAsymGr2(TGraph2DErrors * g_) {
+  
+  TString titleTmp = g_->GetTitle();
+  g_->SetTitle(TString(dihTitle+" "+titleTmp));
+
+  g_->Draw("ERR P"); // draw once, so we can then format it
+
+  g_->SetLineColor(kBlack);
+  g_->SetLineWidth(2);
+
+  g_->SetMarkerStyle(kFullCircle);
+  g_->SetMarkerColor(kBlack);
+  g_->SetMarkerSize(1.3);
+
+  // set vertical axis range (it is overridden if the plot's vertical range
+  // is larger than the desired range)
+  /*
+  Float_t yMin = -0.2;
+  Float_t yMax = 0.2;
+  if(g_->GetYaxis()->GetXmin() < yMin) yMin = g_->GetYaxis()->GetXmin() - 0.05;
+  if(g_->GetYaxis()->GetXmax() > yMax) yMax = g_->GetYaxis()->GetXmax() + 0.05;
+  g_->GetYaxis()->SetRangeUser(yMin,yMax);
+  */
+
+  g_->Draw("ERR P"); // draw again to apply the formatting
 
 };
 
