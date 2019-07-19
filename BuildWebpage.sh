@@ -75,6 +75,8 @@ while read s; do
   ai asymModCanv $s h
   a "<br />"
   ai chindfCanv $s h
+  ai modDistCanv $s h
+  a "<br />"
   ai rellumCanv $s h
   a "<hr />"
 done < suffixList1
@@ -84,6 +86,8 @@ a "<br /><br /><h1>2D:</h1><hr />"
 while read s; do
   ai kindepCanv $s h
   ai asymModCanv $s h
+  a "<br />"
+  ai modDistCanv $s h
   a "<br />"
   ai chindfCanv $s h
   a "<br />"

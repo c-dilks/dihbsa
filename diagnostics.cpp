@@ -157,6 +157,23 @@ int main(int argc, char** argv) {
      NBINS,0,6);
 
 
+   // PhiH and PhiR vs. other variables
+   TH2D * PhiHvsMh = new TH2D("PhiHvsMh","#phi_{h} vs. M_{h};M_{h};#phi_{h}",
+     NBINS,0,3,NBINS,-PIe,PIe);
+   TH2D * PhiHvsZ = new TH2D("PhiHvsZ","#phi_{h} vs. z;z;#phi_{h}",
+     NBINS,0,1,NBINS,-PIe,PIe);
+   TH2D * PhiHvsX = new TH2D("PhiHvsX","#phi_{h} vs. x;x;#phi_{h}",
+     NBINS,0,1,NBINS,-PIe,PIe);
+
+   TH2D * PhiRvsMh = new TH2D("PhiRvsMh","#phi_{R} vs. M_{h};M_{h};#phi_{R}",
+     NBINS,0,3,NBINS,-PIe,PIe);
+   TH2D * PhiRvsZ = new TH2D("PhiRvsZ","#phi_{R} vs. z;z;#phi_{R}",
+     NBINS,0,1,NBINS,-PIe,PIe);
+   TH2D * PhiRvsX = new TH2D("PhiRvsX","#phi_{R} vs. x;x;#phi_{R}",
+     NBINS,0,1,NBINS,-PIe,PIe);
+     
+
+
    // hadron type matrix
    TH2D * hadTypeMatrix = new TH2D("hadTypeMatrix",
      "Dihadron hadron types matrix;hadron 2;hadron 1",
@@ -305,6 +322,13 @@ int main(int argc, char** argv) {
        PhiHRDist->Fill(PhiHR);
        g1perpWeightVsMod->Fill(TMath::Sin(PhiHR),ev->PhPerp/ev->Mh);
 
+       PhiHvsMh->Fill(ev->Mh,ev->PhiH);
+       PhiHvsX->Fill(ev->x,ev->PhiH);
+       PhiHvsZ->Fill(ev->Zpair,ev->PhiH);
+
+       PhiRvsMh->Fill(ev->Mh,ev->PhiR);
+       PhiRvsX->Fill(ev->x,ev->PhiR);
+       PhiRvsZ->Fill(ev->Zpair,ev->PhiR);
 
        helicityDist->Fill(ev->helicity);
        torusDist->Fill(ev->torus);
@@ -385,6 +409,15 @@ int main(int argc, char** argv) {
 
    PhiHRDist->Write();
    g1perpWeightVsMod->Write();
+
+   PhiHvsMh->Write();
+   PhiHvsX->Write();
+   PhiHvsZ->Write();
+
+   PhiRvsMh->Write();
+   PhiRvsX->Write();
+   PhiRvsZ->Write();
+
 
    torusDist->Write();
    helicityDist->Write();

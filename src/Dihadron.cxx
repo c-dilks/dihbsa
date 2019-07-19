@@ -105,7 +105,10 @@ void Dihadron::SetEvent(
     pHad_com[h] = vecHad_com[h].Vect();
     if(debug) vecHad_com[h].Print();
   };
-  if(debug) (vecHad_com[qA]+vecHad_com[qB]).Print(); // should be zero
+  if(debug) {
+    (vecHad_com[qA]+vecHad_com[qB]).Print(); // momenta should be zero
+    printf("Mh = %f\n",Mh); // should equal energy component of 4-momenta sum
+  };
 
   // -- in this frame, Ph=0, and the boost direction was along Ph
   // -- calculate theta as the angle between boosted hadron momentum

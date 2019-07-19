@@ -60,7 +60,7 @@ class Tools {
     static Float_t AngleSubtend(TVector3 vA, TVector3 vB) {
       Float_t m = vA.Mag() * vB.Mag();
       if(m>0) return TMath::ACos( vA.Dot(vB) / m );
-      return 0;
+      return -10000;
     };
 
 

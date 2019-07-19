@@ -3,7 +3,7 @@
 root -b -q PrintEnumerators.C
 
 dir="outroot.dnp2018"
-modulation=4
+modulation=5
 if [ $# -ge 1 ]; then dir=$1; fi
 #if [ $# -ge 2 ]; then modulation=$2; fi
 

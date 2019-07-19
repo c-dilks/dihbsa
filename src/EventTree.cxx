@@ -112,10 +112,15 @@ void EventTree::GetEvent(Int_t i) {
 
 
   // diphoton and pi0/BG cuts
-  // -- if dihadron does not include pi0s, just set to true
+  // -- if dihadron does not include pi0s, just set to true; first we set
+  //    the booleans' default values to true
   for(int h=0; h<2; h++) {
-    if(hadIdx[h]==kDiph) {
-
+    cutDiphKinematics[h] = true;
+    cutDiph[h] = true;
+  };
+  // -- then if there are diphotons in this dihadron we evaluate their cuts
+  if(diphCnt>0) {
+    for(int h=0; h<diphCnt; h++) {
       
       if(runnum < 4500) { // spring 2018 and before (dnp2018 cuts)
         cutDiphKinematics[h] = diphPhotE[h][0]>0.5 && diphPhotE[h][1]>0.5 &&
@@ -138,11 +143,6 @@ void EventTree::GetEvent(Int_t i) {
         // pi0 cut
         cutDiph[h] = cutDiphKinematics[h] && diphM[h] >= 0.1 && diphM[h] <= 0.16;
       };
-    } else {
-      // if this hadron is not a diphoton, then we set cutDiphKinematics and cutDiph
-      // to true, since cutDiph is required to be true in cutDihadron
-      cutDiphKinematics[h] = true;
-      cutDiph[h] = true;
     };
   };
 

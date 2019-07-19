@@ -13,8 +13,8 @@ const Int_t NF = 2; // number of files
 
 ///////////////////////////////
 //
-enum xenum { kTim, kHarut, kHarutOS, kSimpleC, kSimpleJava, kAnalysis };
-Int_t xcheck[NF] = { kAnalysis, kHarut };
+enum xenum { kTim, kHarut, kHarutOS, kOrlando, kSimpleC, kSimpleJava, kAnalysis };
+Int_t xcheck[NF] = { kHarutOS, kOrlando };
 //
 ///////////////////////////////
 
@@ -22,6 +22,7 @@ Int_t xcheck[NF] = { kAnalysis, kHarut };
 EventTree * ev;
 TFile * xfile[NF];
 TTree * xtree[NF];
+TString xstr;
 Int_t ENT[NF];
 enum hadron_enum { iP, iM, nHad };
 TString hadN[nHad] = { "pip", "pim" };
@@ -52,6 +53,7 @@ Float_t hadZ[NF][nHad];
 void PrintCompare(TString name, Float_t val, Float_t xval);
 void GetTreeVars(Int_t ff, Int_t ii);
 void GetEventTreeVars(Int_t ff, Int_t ii);
+void ReadOrlandoFormat(TString datname, Int_t ff);
 
 
 void CrossChecker(TString indir="../outroot") {
@@ -64,7 +66,6 @@ void CrossChecker(TString indir="../outroot") {
   };
 
 
-  TString xstr;
   TString xtreeN[NF];
 
   int h,f;
@@ -81,7 +82,7 @@ void CrossChecker(TString indir="../outroot") {
 
       case kTim:
         gROOT->ProcessLine(
-          ".! tail -n +2 xfiles/hayward_cross_check_os_format.txt > xtree.dat"
+          ".! tail -n +2 xfiles/hayward_cross_check_os_format.txt > xtreeTim.dat"
         ); // (strip header)
         xstr = "evnum/I:Q2/F:x/F:W/F:y/F:eleP/F";
         xstr += ":Mh/F:xF/F:PhPerp/F:theta/F";
@@ -95,7 +96,7 @@ void CrossChecker(TString indir="../outroot") {
         */
 
         printf("xtree[%d] branches: %s\n",f,xstr.Data());
-        xtree[f]->ReadFile("xtree.dat",xstr);
+        xtree[f]->ReadFile("xtreeTim.dat",xstr);
 
         xtree[f]->SetBranchAddress("evnum",&evnum[f]);
         xtree[f]->SetBranchAddress("Q2",&Q2[f]);
@@ -127,7 +128,7 @@ void CrossChecker(TString indir="../outroot") {
         };
         xstr += ":PhPerp/F";
         printf("xtree[%d] branches: %s\n",f,xstr.Data());
-        xtree[f]->ReadFile("xtree.dat",xstr);
+        xtree[f]->ReadFile("xtreeHarut.dat",xstr);
 
         xtree[f]->SetBranchAddress("evnum",&evnum[f]);
         xtree[f]->SetBranchAddress("PhPerp",&PhPerp[f]);
@@ -138,38 +139,17 @@ void CrossChecker(TString indir="../outroot") {
           xtree[f]->SetBranchAddress( TString(hadN[h]+"Phi"), &hadPhi[f][h] );
         };
 
+        break;
+
+      case kOrlando:
+        // Orlando's data
+        ReadOrlandoFormat("xfiles/dataOS_HA_mc.txt",f);
         break;
 
       case kHarutOS:
-        // Harut's data, re-formatted by Orlando
-        gROOT->ProcessLine(
-          ".! tail -n +2 xfiles/dataOS_HA_mc.txt > xtree.dat"
-        ); // (strip header)
-        xstr = "evnum/I";
-        xstr += ":pipE/F:pipTheta/F:pipPhi/F:pipPhiH/F:pipPt/F";
-        xstr += ":pipZ/F:pipMx/F:pipXF/F:pipEtaCM/F:pipEtaBreit/F";
-        xstr += ":pimE/F:pimTheta/F:pimPhi/F:pimPhiH/F:pimPt/F";
-        xstr += ":pimZ/F:pimMx/F:pimXF/F:pimEtaCM/F:pimEtaBreit/F";
-        xstr += ":PhiH/F:PhPerp/F:PhiR1/F:PhiR2/F";
-
-        printf("xtree[%d] branches: %s\n",f,xstr.Data());
-        xtree[f]->ReadFile("xtree.dat",xstr);
-
-        xtree[f]->SetBranchAddress("evnum",&evnum[f]);
-        for(h=0; h<nHad; h++) {
-          xtree[f]->SetBranchAddress( TString(hadN[h]+"E"), &hadE[f][h] );
-          xtree[f]->SetBranchAddress( TString(hadN[h]+"Theta"), &hadTheta[f][h] );
-          xtree[f]->SetBranchAddress( TString(hadN[h]+"Phi"), &hadPhi[f][h] );
-          xtree[f]->SetBranchAddress( TString(hadN[h]+"Pt"), &hadPt[f][h] );
-          xtree[f]->SetBranchAddress( TString(hadN[h]+"Z"), &hadZ[f][h] );
-        };
-        xtree[f]->SetBranchAddress("PhPerp",&PhPerp[f]);
-        xtree[f]->SetBranchAddress("PhiH",&PhiH[f]);
-        //xtree[f]->SetBranchAddress("PhiR1",&PhiR[f]);
-        xtree[f]->SetBranchAddress("PhiR2",&PhiR[f]); // preferred?
-        
+        // Harut's data, reformatted by Orlando
+        ReadOrlandoFormat("xfiles/dataHA.txt",f);
         break;
-
 
 
       case kSimpleC:
@@ -320,7 +300,8 @@ void CrossChecker(TString indir="../outroot") {
 
         // extra requirement to improve event matching
         if( xcheck[0]==kHarutOS || xcheck[1]==kHarutOS || 
-            xcheck[0]==kHarut || xcheck[1]==kHarut
+            xcheck[0]==kHarut || xcheck[1]==kHarut ||
+            xcheck[0]==kOrlando || xcheck[1]==kOrlando
         ) {
           extraCut = fabs(hadE[0][iP]-hadE[1][iP]) < 0.1 &&
                      fabs(hadE[0][iM]-hadE[1][iM]) < 0.1; //////////////////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -438,4 +419,42 @@ void GetEventTreeVars(Int_t ff, Int_t ii) {
       hadZ[ff][hh] = ev->Z[hh];
     };
   };
+};
+
+
+// read Orlando's format table 
+// (Orlando formatted Harut's data into a table, which has the same
+// format as Orlando's table, so here's a method that can read either one
+// of them, so that we don't have 2 copies of the same code
+void ReadOrlandoFormat(TString datname, Int_t ff) {
+
+  // strip header row (easier/lazier than editting header and using TTree::ReadFile)
+  TString datoutname = datname;
+  datoutname.ReplaceAll("xfiles/","xtree");
+  datoutname.ReplaceAll(".txt",".dat");
+  gROOT->ProcessLine(TString(".! tail -n +2 " + datname + " > " + datoutname));
+
+  // set branch names
+  xstr = "evnum/I";
+  xstr += ":pipE/F:pipTheta/F:pipPhi/F:pipPhiH/F:pipPt/F";
+  xstr += ":pipZ/F:pipMx/F:pipXF/F:pipEtaCM/F:pipEtaBreit/F";
+  xstr += ":pimE/F:pimTheta/F:pimPhi/F:pimPhiH/F:pimPt/F";
+  xstr += ":pimZ/F:pimMx/F:pimXF/F:pimEtaCM/F:pimEtaBreit/F";
+  xstr += ":PhiH/F:PhPerp/F:PhiR1/F:PhiR2/F";
+
+  printf("xtree[%d] branches: %s\n",ff,xstr.Data());
+  xtree[ff]->ReadFile(datoutname,xstr);
+
+  xtree[ff]->SetBranchAddress("evnum",&evnum[ff]);
+  for(int hh=0; hh<nHad; hh++) {
+    xtree[ff]->SetBranchAddress( TString(hadN[hh]+"E"), &hadE[ff][hh] );
+    xtree[ff]->SetBranchAddress( TString(hadN[hh]+"Theta"), &hadTheta[ff][hh] );
+    xtree[ff]->SetBranchAddress( TString(hadN[hh]+"Phi"), &hadPhi[ff][hh] );
+    xtree[ff]->SetBranchAddress( TString(hadN[hh]+"Pt"), &hadPt[ff][hh] );
+    xtree[ff]->SetBranchAddress( TString(hadN[hh]+"Z"), &hadZ[ff][hh] );
+  };
+  xtree[ff]->SetBranchAddress("PhPerp",&PhPerp[ff]);
+  xtree[ff]->SetBranchAddress("PhiH",&PhiH[ff]);
+  //xtree[ff]->SetBranchAddress("PhiR1",&PhiR[ff]);
+  xtree[ff]->SetBranchAddress("PhiR2",&PhiR[ff]); // preferred?
 };

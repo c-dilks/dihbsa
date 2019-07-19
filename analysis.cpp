@@ -210,7 +210,7 @@ int main(int argc, char** argv) {
    Int_t diphCnt,diphCnt_tr;
    Float_t diphPhotE[2][2], diphPhotPt[2][2], diphPhotEta[2][2], diphPhotPhi[2][2];
    Float_t diphE[2], diphZ[2], diphPt[2], diphM[2], diphAlpha[2], diphEta[2], diphPhi[2];
-   tree->Branch("diphCnt",&diphCnt_tr,"diphCnt/I"); // number of diphotons
+   tree->Branch("diphCnt",&diphCnt_tr,"diphCnt/I"); // number of diphotons {0,1,2}
    tree->Branch("diphPhotE",   diphPhotE,   "diphPhotE[diphCnt][2]/F"); // photon energy
    tree->Branch("diphPhotPt",  diphPhotPt,  "diphPhotPt[diphCnt][2]/F"); // photon pT
    tree->Branch("diphPhotEta", diphPhotEta, "diphPhotEta[diphCnt][2]/F"); // photon eta

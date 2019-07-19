@@ -23,7 +23,7 @@ s = 0
 kP = 0
 kM = 1
 
-with open("xfiles/dihad1000.dis.0000.nrad.dat.evio.hipo2.txt") as iFile, open("xtree.dat", 'w') as oFile:
+with open("xfiles/dihad1000.dis.0000.nrad.dat.evio.hipo2.txt") as iFile, open("xtreeHarut.dat", 'w') as oFile:
     for lineIn in iFile:
         line = lineIn.strip()
         lineCols = line.split()
