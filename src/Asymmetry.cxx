@@ -13,9 +13,13 @@ Asymmetry::Asymmetry(
   Int_t var2, Int_t bin2
 ) {
 
-  success = false;
+  // OPTIONS ////////////
   debug = true;
+  roofitter = true;
+  ///////////////////////
 
+
+  success = false; // will be true if instance is fully constructed
 
   // set binning scheme pointer
   BS = binScheme;
@@ -267,6 +271,21 @@ Asymmetry::Asymmetry(
   };
 
 
+  // initialise RooFit
+  if(roofitter) {
+    rfPhiH = new RooRealVar("rfPhiH","#phi_{h}",-PIe,PIe);
+    rfPhiR = new RooRealVar("rfPhiR","#phi_{R}",-PIe,PIe);
+    for(int s=0; s<nSpin; s++) {
+      rfData[s] = new RooDataSet(
+        TString("rfData"+SpinName(s)),
+        TString("rfData"+SpinName(s)),
+        RooArgSet(*rfPhiH,*rfPhiR)
+      );
+    };
+  };
+
+
+
   // initialize kinematic variables
   ResetVars();
   nEvents = 0;
@@ -280,8 +299,9 @@ Asymmetry::Asymmetry(
 
 
 
-// fill all the plots; returns true if filled successfully, or false
-// if not (which usually happens if it's the wrong bin)
+// fill all the plots; to be called in event loop
+// -- returns true if filled successfully, or false
+//    if not (which usually happens if it's the wrong bin)
 Bool_t Asymmetry::FillPlots() {
 
   // set iv variable
@@ -299,20 +319,30 @@ Bool_t Asymmetry::FillPlots() {
     };
   };
 
-
   // check if we're in the proper bin; if not, simply return
   for(int d=0; d<whichDim; d++) {
     if(B[d] != BS->GetBin(I[d],iv[d])) return false;
   };
 
 
+  // get spin state number
+  spinn = SpinState(eSpin);
+  if(spinn<0 || spinn>=nSpin) return false;
+
+
+  // set RooFit vars
+  if(roofitter) {
+    *rfPhiH = PhiH;
+    *rfPhiR = PhiR;
+    rfData[spinn]->add(RooArgSet(*rfPhiH,*rfPhiR));
+  };
+
+
+
   // evaluate modulation 
   modulation = EvalModulation(); // (if asym2d==true, modulation=-10000, i.e., not used)
 
 
-  // get spin state number
-  spinn = SpinState(eSpin);
-  if(spinn<0) return false;
 
 
   // set weight (it's just 1, unless whichMod is set to do a weighted analysis)
@@ -366,11 +396,16 @@ Bool_t Asymmetry::FillPlots() {
   
 
 
+// calculate the asymmetries; to be called at end of event loop
 void Asymmetry::CalculateAsymmetries() {
+
+  
   if(debug) {
     printf("calculate asymmetries for:\n");
     PrintSettings(); 
   };
+
+  if(roofitter) this->CalculateRooAsymmetries();
 
   // compute relative luminosity
   //
@@ -419,6 +454,73 @@ void Asymmetry::CalculateAsymmetries() {
   };
 
 };
+
+
+// calculate the asymmetries with RooFit; to be called at end of event loop
+// -- called by CalculateAsymmetries() if roofitter==true
+//
+void Asymmetry::CalculateRooAsymmetries() {
+
+  rfAR = new RooRealVar("rfAR","A_{R}",-1,1);
+
+  // build PDFs for each spin state
+  rfPdfFormu[sP] = "rfAR*TMath::Sin(rfPhiR)+1";
+  rfPdfFormu[sM] = "-rfAR*TMath::Sin(rfPhiR)+1";
+
+  for(int s=0; s<nSpin; s++) {
+    rfPdf[s] = new RooGenericPdf(
+      TString("rfPdf"+SpinName(s)),
+      TString("rfPdf "+SpinTitle(s)),
+      rfPdfFormu[s],
+      RooArgSet(*rfAR,*rfPhiH,*rfPhiR)
+    );
+  };
+
+
+  // build category and combine data sets from each spin
+  rfCateg = new RooCategory("rfCateg","rfCateg");
+  for(int s=0; s<nSpin; s++) {
+    rfTypeName[s] = "rfType" + SpinName(s);
+    rfCateg->defineType(rfTypeName[s]);
+  };
+  rfCombData = new RooDataSet(
+    "rfCombData","rfCombData",
+    RooArgSet(*rfPhiH,*rfPhiR),
+    RooFit::Index(*rfCateg),
+    RooFit::Import(rfTypeName[sP],*rfData[sP]),
+    RooFit::Import(rfTypeName[sM],*rfData[sM])
+  );
+
+
+  // build simultanous PDF 
+  rfSimPdf = new RooSimultaneous("rfSimPdf","rfSimPdf",*rfCateg);
+  for(int s=0; s<nSpin; s++) rfSimPdf->addPdf(*rfPdf[s],rfTypeName[s]);
+
+
+  // fit simultaneous PDF to combined data
+  rfSimPdf->fitTo(*rfCombData);
+  //rfSimPdf->fitTo(*rfCombData,RooFit::PrintLevel(-1));
+  
+
+  // make plot
+  for(int s=0; s<nSpin; s++) {
+    rfPhiRplot[s] = rfPhiR->frame(
+      RooFit::Bins(11),
+      RooFit::Title(TString("rfPhiR "+SpinTitle(s)+" Plot"))
+    );
+    rfCombData->plotOn(
+      rfPhiRplot[s],
+      RooFit::Cut(TString("rfCateg==rfCateg::"+rfTypeName[s]))
+    );
+    rfSimPdf->plotOn(
+      rfPhiRplot[s],
+      RooFit::Slice(*rfCateg,rfTypeName[s]),
+      RooFit::ProjWData(*rfCateg,*rfCombData)
+    );
+  };
+
+};
+
 
 
 // set new asymGr point and error

@@ -206,6 +206,7 @@ int main(int argc, char** argv) {
    std::map<int,TGraphErrors*> rellumMap; // kindepMap for rellumGr
 
    TGraphErrors * kindepGr;
+   TGraphErrors * RFkindepGr;
    TGraphErrors * chindfGr;
    TGraphErrors * rellumGr;
    TString grTitle,grName;
@@ -231,6 +232,11 @@ int main(int argc, char** argv) {
          kindepGr = new TGraphErrors();
          kindepGr->SetName(grName);
          kindepGr->SetTitle(grTitle);
+
+         RFkindepGr = new TGraphErrors();
+         RFkindepGr->SetName(TString("RF"+grName));
+         RFkindepGr->SetTitle(grTitle);
+         // aqui
 
          grTitle = "#chi^{2}/NDF of " + grTitle;
          grName.ReplaceAll("kindep","chindf");
@@ -791,6 +797,41 @@ int main(int argc, char** argv) {
      if(A->asym2d) asymModHist2Canv->Write();
      modDistCanv->Write();
    };
+
+
+   // TCanvas for RooFit result
+   TCanvas * rfCanv[nSpin];
+   TGraphErrors * rfAsymGr = new TGraphErrors();
+   rfAsymGr->SetName("roofitResult");
+   rfAsymGr->SetTitle("roofitResult");
+   rfAsymGr->SetMarkerStyle(kFullCircle);
+   rfAsymGr->SetLineColor(kBlue);
+   Int_t rfAsymGrCnt = 0;
+   TString rfCanvName[nSpin];
+   for(std::vector<Asymmetry*>::iterator it = asymVec.begin(); 
+     it!=asymVec.end(); ++it
+   ) {
+     A = *it;
+     if(A->roofitter) {
+       
+       for(int ss=0; ss<nSpin; ss++) {
+         rfCanvName[ss] = "RF_spin" + SpinName(ss) + "_" + A->asymGr->GetName();
+         rfCanv[ss] = new TCanvas(rfCanvName[ss],rfCanvName[ss],800,800);
+         A->rfPhiRplot[ss]->Draw();
+         rfCanv[ss]->Write();
+       };
+
+       A->PrintSettings();
+       printf("rfAR = %f +- %f\n",A->rfAR->getVal(),A->rfAR->getError());
+
+       rfAsymGr->SetPoint(rfAsymGrCnt,rfAsymGrCnt+1,A->rfAR->getVal());
+       rfAsymGr->SetPointError(rfAsymGrCnt,0,A->rfAR->getError());
+       rfAsymGrCnt++;
+
+     };
+   };
+   rfAsymGr->Write();
+
 
 
 

@@ -30,6 +30,21 @@
 #include "TGraph2DErrors.h"
 #include "TLine.h"
 
+// RooFit
+#include <RooGlobalFunc.h>
+#include <RooGenericPdf.h>
+#include <RooFitResult.h>
+#include <RooExtendPdf.h>
+#include <RooAbsReal.h>
+#include <RooArgSet.h>
+#include <RooDataSet.h>
+#include <RooRealVar.h>
+#include <RooCategory.h>
+#include <RooDataHist.h>
+#include <RooSimultaneous.h>
+#include <RooPlot.h>
+
+
 // dihbsa
 #include "Constants.h"
 #include "Tools.h"
@@ -51,6 +66,7 @@ class Asymmetry : public TObject
     ~Asymmetry();
 
     void CalculateAsymmetries();
+    void CalculateRooAsymmetries();
     void SetAsymGrPoint(Int_t modBin_, Int_t modBin2_=-1);
 
 
@@ -64,6 +80,10 @@ class Asymmetry : public TObject
 
     Double_t nEvents;
     Double_t yield[nSpin];
+
+    Bool_t success;
+    Bool_t successIVmode;
+    Bool_t debug;
 
 
     // modulations
@@ -150,9 +170,8 @@ class Asymmetry : public TObject
 
     TString ModulationTitle,ModulationName;
 
-    Bool_t debug;
-    Bool_t success;
-    Bool_t successIVmode;
+
+
     
     // variables for each dimension
     Int_t I[3]; // IV index number
@@ -165,6 +184,22 @@ class Asymmetry : public TObject
     TString binT,binN; // bin title/name suffixes
 
     Double_t rNumer,rDenom,rellum,rellumErr;
+
+
+
+    // RooFit variables
+    Bool_t roofitter;
+    RooDataSet * rfData[2];
+    RooDataSet * rfCombData;
+    RooRealVar *rfPhiH, *rfPhiR;
+    RooRealVar *rfAR; 
+    RooGenericPdf * rfPdf[2];
+    RooSimultaneous * rfSimPdf;
+    RooCategory * rfCateg;
+    RooPlot * rfPhiRplot[2];
+    TString rfPdfFormu[2];
+    TString rfTypeName[2];
+
 
   private:
 

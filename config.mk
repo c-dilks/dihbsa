@@ -18,6 +18,7 @@ FLAGS += -O0
 # ROOT
 DEPS = $(shell root-config --cflags)
 LIBS = $(shell root-config --glibs)
+LIBS += -lMinuit -lRooFitCore -lRooFit
 
 
 # Clas12Tool

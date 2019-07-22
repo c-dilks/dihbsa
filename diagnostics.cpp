@@ -171,6 +171,13 @@ int main(int argc, char** argv) {
      NBINS,0,1,NBINS,-PIe,PIe);
    TH2D * PhiRvsX = new TH2D("PhiRvsX","#phi_{R} vs. x;x;#phi_{R}",
      NBINS,0,1,NBINS,-PIe,PIe);
+
+   TH2D * PhiRvsAlpha = new TH2D("PhiRvsAlpha",
+     "#phi_{R} vs. #alpha;#alpha;#phi_{R}",
+     NBINS,0,1.3,NBINS,-PIe,PIe);
+   TH2D * PhiHRvsAlpha = new TH2D("PhiHRvsAlpha",
+     "#phi_{h}-#phi_{R} vs. #alpha;#alpha;#phi_{h}-#phi_{R}",
+     NBINS,0,1.3,NBINS,-PIe,PIe);
      
 
 
@@ -329,6 +336,8 @@ int main(int argc, char** argv) {
        PhiRvsMh->Fill(ev->Mh,ev->PhiR);
        PhiRvsX->Fill(ev->x,ev->PhiR);
        PhiRvsZ->Fill(ev->Zpair,ev->PhiR);
+       PhiRvsAlpha->Fill(ev->alpha,ev->PhiR);
+       PhiHRvsAlpha->Fill(ev->alpha,PhiHR);
 
        helicityDist->Fill(ev->helicity);
        torusDist->Fill(ev->torus);
@@ -417,7 +426,8 @@ int main(int argc, char** argv) {
    PhiRvsMh->Write();
    PhiRvsX->Write();
    PhiRvsZ->Write();
-
+   PhiRvsAlpha->Write();
+   PhiHRvsAlpha->Write();
 
    torusDist->Write();
    helicityDist->Write();
