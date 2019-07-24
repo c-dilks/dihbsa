@@ -90,7 +90,6 @@ class Asymmetry : public TObject
     enum modEnum {
       modSinPhiR,
       modSinPhiHR,
-      scaleSinPhiHR,
       weightSinPhiHR,
       modSinPhiH,
       mod2d,
@@ -191,15 +190,18 @@ class Asymmetry : public TObject
     Bool_t roofitter;
     RooDataSet * rfData[2];
     RooDataSet * rfCombData;
-    RooRealVar *rfPhiH, *rfPhiR;
-    RooRealVar *rfAR; 
     RooGenericPdf * rfPdf[2];
     RooSimultaneous * rfSimPdf;
     RooCategory * rfCateg;
     RooPlot * rfPhiRplot[2];
+    RooFitResult * rfResult;
+    RooArgSet * rfParams;
     TString rfPdfFormu[2];
     TString rfTypeName[2];
 
+
+    RooRealVar *rfPhiH, *rfPhiR, *rfWeight;
+    RooRealVar *rfAR;
 
   private:
 

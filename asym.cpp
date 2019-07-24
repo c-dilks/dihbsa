@@ -821,9 +821,6 @@ int main(int argc, char** argv) {
          rfCanv[ss]->Write();
        };
 
-       A->PrintSettings();
-       printf("rfAR = %f +- %f\n",A->rfAR->getVal(),A->rfAR->getError());
-
        rfAsymGr->SetPoint(rfAsymGrCnt,rfAsymGrCnt+1,A->rfAR->getVal());
        rfAsymGr->SetPointError(rfAsymGrCnt,0,A->rfAR->getError());
        rfAsymGrCnt++;
@@ -835,8 +832,10 @@ int main(int argc, char** argv) {
 
 
 
+   // DEPRECATED
    // print modDist boundaries (used for determining modDist boundaries
    // which depend on kinematics, for g1perp modulation PhPerp/Mh-scaling test)
+   /*
    Float_t mbound;
    if(dimensions==1 && whichModulation==Asymmetry::scaleSinPhiHR) {
      printf("MBOUND\n");
@@ -853,6 +852,7 @@ int main(int argc, char** argv) {
      };
      printf("};\n");
    };
+   */
 
 
 

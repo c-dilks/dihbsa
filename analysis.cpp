@@ -361,7 +361,7 @@ int main(int argc, char** argv) {
 #endif
 
 
-     if(debug) { for(int l=0; l<30; l++) printf("-"); printf("\n"); };
+     if(debug) Tools::PrintSeparator(30);
      //if(debug) particleBank.show(); // causes segfault!
 
 

@@ -9,6 +9,22 @@
 class Tools {
   public:
 
+    // print a separator
+    static void PrintSeparator(Int_t nchar, TString sepchar="-") {
+      TString outprint = "";
+      for(int ss=0; ss<nchar; ss++) outprint += sepchar;
+      printf("%s\n",outprint.Data());
+    };
+
+    // print a title box
+    static void PrintTitleBox(TString outprint) {
+      printf("\n");
+      PrintSeparator(outprint.Length()+4);
+      printf("| %s |\n",outprint.Data());
+      PrintSeparator(outprint.Length()+4);
+    };
+
+
     // shift angle to the range [-PI,+PI]
     static Float_t AdjAngle(Float_t ang) {
       while(ang>PI) ang-=2*PI;

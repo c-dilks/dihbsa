@@ -41,12 +41,6 @@ Asymmetry::Asymmetry(
       modMax = modMaxDefault;
       aziMax = modMaxDefault;
       break;
-    case scaleSinPhiHR:
-      ModulationTitle = "(P_{h}^{perp}/M_{h})sin(#phi_{h}-#phi_{R})";
-      ModulationName = "sinPhiHR_scale";
-      modMax = 5;
-      aziMax = BS->GetAziMax(var0,bin0);
-      break;
     case weightSinPhiHR:
       ModulationTitle = "weighted sin(#phi_{h}-#phi_{R})";
       ModulationName = "sinPhiHR_weight";
@@ -273,13 +267,19 @@ Asymmetry::Asymmetry(
 
   // initialise RooFit
   if(roofitter) {
+    // event vars
     rfPhiH = new RooRealVar("rfPhiH","#phi_{h}",-PIe,PIe);
     rfPhiR = new RooRealVar("rfPhiR","#phi_{R}",-PIe,PIe);
+    rfWeight = new RooRealVar("rfWeight","P_{h}^{T}/M_{h}",0,4);
+
+    // fit params
+    rfAR = new RooRealVar("rfAR","A_{R}",-1,1);
+
     for(int s=0; s<nSpin; s++) {
       rfData[s] = new RooDataSet(
         TString("rfData"+SpinName(s)),
         TString("rfData"+SpinName(s)),
-        RooArgSet(*rfPhiH,*rfPhiR)
+        RooArgSet(*rfPhiH,*rfPhiR,*rfWeight)
       );
     };
   };
@@ -334,7 +334,8 @@ Bool_t Asymmetry::FillPlots() {
   if(roofitter) {
     *rfPhiH = PhiH;
     *rfPhiR = PhiR;
-    rfData[spinn]->add(RooArgSet(*rfPhiH,*rfPhiR));
+    *rfWeight = Mh>0 ? PhPerp/Mh : 0;
+    rfData[spinn]->add(RooArgSet(*rfPhiH,*rfPhiR,*rfWeight));
   };
 
 
@@ -405,8 +406,6 @@ void Asymmetry::CalculateAsymmetries() {
     PrintSettings(); 
   };
 
-  if(roofitter) this->CalculateRooAsymmetries();
-
   // compute relative luminosity
   //
   rNumer = yield[sP];
@@ -424,6 +423,11 @@ void Asymmetry::CalculateAsymmetries() {
     return;
   };
   printf("rellum = %f / %f =  %.3f  +-  %f\n",rNumer,rDenom,rellum,rellumErr);
+
+
+  // fit asymmetry with RooFit (needs rellum !)
+  if(roofitter) this->CalculateRooAsymmetries();
+
 
    
   // compute asymmetry for each modulation bin
@@ -461,18 +465,45 @@ void Asymmetry::CalculateAsymmetries() {
 //
 void Asymmetry::CalculateRooAsymmetries() {
 
-  rfAR = new RooRealVar("rfAR","A_{R}",-1,1);
 
   // build PDFs for each spin state
-  rfPdfFormu[sP] = "rfAR*TMath::Sin(rfPhiR)+1";
-  rfPdfFormu[sM] = "-rfAR*TMath::Sin(rfPhiR)+1";
+
+  TString rfModulation;
+  switch(whichMod) {
+    case modSinPhiR:
+      rfModulation = "TMath::Sin(rfPhiR)";
+      break;
+    case modSinPhiHR:
+      rfModulation = "TMath::Sin(rfPhiH-rfPhiR)";
+      break;
+    case weightSinPhiHR:
+      rfModulation = "rfWeight*TMath::Sin(rfPhiH-rfPhiR)";
+      break;
+    case modSinPhiH:
+      rfModulation = "TMath::Sin(rfPhiH)";
+      break;
+    case mod2d:
+      // TODO (set to g1perp mod)
+      rfModulation = "rfWeight*TMath::Sin(rfPhiH-rfPhiR)";
+      break;
+    default:
+      fprintf(stderr,"ERROR: bad phiModulation\n");
+      return;
+  };
+
+  rfPdfFormu[sP] = Form("%f*rfAR*%s+1", pol, rfModulation.Data());
+  rfPdfFormu[sM] = Form("-(%f/%f)*rfAR*%s+1", pol, rellum, rfModulation.Data());
+
+
+  rfParams = new RooArgSet(*rfAR,*rfPhiH,*rfPhiR,*rfWeight);
+
 
   for(int s=0; s<nSpin; s++) {
     rfPdf[s] = new RooGenericPdf(
       TString("rfPdf"+SpinName(s)),
       TString("rfPdf "+SpinTitle(s)),
       rfPdfFormu[s],
-      RooArgSet(*rfAR,*rfPhiH,*rfPhiR)
+      *rfParams
     );
   };
 
@@ -485,7 +516,7 @@ void Asymmetry::CalculateRooAsymmetries() {
   };
   rfCombData = new RooDataSet(
     "rfCombData","rfCombData",
-    RooArgSet(*rfPhiH,*rfPhiR),
+    RooArgSet(*rfPhiH,*rfPhiR,*rfWeight),
     RooFit::Index(*rfCateg),
     RooFit::Import(rfTypeName[sP],*rfData[sP]),
     RooFit::Import(rfTypeName[sM],*rfData[sM])
@@ -499,7 +530,10 @@ void Asymmetry::CalculateRooAsymmetries() {
 
   // fit simultaneous PDF to combined data
   rfSimPdf->fitTo(*rfCombData);
-  //rfSimPdf->fitTo(*rfCombData,RooFit::PrintLevel(-1));
+  /*
+  rfResult = rfSimPdf->fitTo(*rfCombData,RooFit::Save());
+  //rfResult = rfSimPdf->fitTo(*rfCombData,RooFit::PrintLevel(-1),RooFit::Save());
+  */
   
 
   // make plot
@@ -518,6 +552,16 @@ void Asymmetry::CalculateRooAsymmetries() {
       RooFit::ProjWData(*rfCateg,*rfCombData)
     );
   };
+
+
+  // print fit results
+  /*
+  Tools::PrintTitleBox("ROOFIT RESULTS");
+  this->PrintSettings();
+  rfResult->Print();
+  //rfResult->Print("v"); // verbose printout
+  Tools::PrintSeparator(30);
+  */
 
 };
 
@@ -578,9 +622,6 @@ Float_t Asymmetry::EvalModulation() {
       break;
     case modSinPhiHR:
       return TMath::Sin(PhiH-PhiR);
-      break;
-    case scaleSinPhiHR:
-      return (PhPerp/Mh) * TMath::Sin(PhiH-PhiR);
       break;
     case weightSinPhiHR:
       return TMath::Sin(PhiH-PhiR);
