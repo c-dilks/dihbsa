@@ -271,15 +271,19 @@ Asymmetry::Asymmetry(
     rfPhiH = new RooRealVar("rfPhiH","#phi_{h}",-PIe,PIe);
     rfPhiR = new RooRealVar("rfPhiR","#phi_{R}",-PIe,PIe);
     rfWeight = new RooRealVar("rfWeight","P_{h}^{T}/M_{h}",0,4);
+    rfTheta = new RooRealVar("rfTheta","#theta",-PIe,PIe);
 
-    // fit params
-    rfAR = new RooRealVar("rfAR","A_{R}",-1,1);
+    // fit params (amplitudes)
+    for(int aa=0; aa<nAmp; aa++) {
+      rfAname[aa] = Form("A%d",aa);
+      rfA[aa] = new RooRealVar(rfAname[aa],rfAname[aa],-1,1);
+    };
 
     for(int s=0; s<nSpin; s++) {
       rfData[s] = new RooDataSet(
         TString("rfData"+SpinName(s)),
         TString("rfData"+SpinName(s)),
-        RooArgSet(*rfPhiH,*rfPhiR,*rfWeight)
+        RooArgSet(*rfPhiH,*rfPhiR,*rfWeight,*rfTheta)
       );
     };
   };
@@ -335,7 +339,8 @@ Bool_t Asymmetry::FillPlots() {
     *rfPhiH = PhiH;
     *rfPhiR = PhiR;
     *rfWeight = Mh>0 ? PhPerp/Mh : 0;
-    rfData[spinn]->add(RooArgSet(*rfPhiH,*rfPhiR,*rfWeight));
+    *rfTheta = theta;
+    rfData[spinn]->add(RooArgSet(*rfPhiH,*rfPhiR,*rfWeight,*rfTheta));
   };
 
 
@@ -467,41 +472,70 @@ void Asymmetry::CalculateRooAsymmetries() {
 
 
   // build PDFs for each spin state
+  // -------------------------------
 
-  TString rfModulation;
-  switch(whichMod) {
-    case modSinPhiR:
-      rfModulation = "TMath::Sin(rfPhiR)";
+  rfParams = new RooArgSet(*rfPhiH,*rfPhiR,*rfWeight,*rfTheta);
+
+  // -- modulations
+  rfModulation[modSinPhiR] = "TMath::Sin(rfPhiR)";
+  rfModulation[modSinPhiHR] = "TMath::Sin(rfPhiH-rfPhiR)";
+  rfModulation[weightSinPhiHR] = "rfWeight*TMath::Sin(rfPhiH-rfPhiR)";
+  rfModulation[modSinPhiH] = "TMath::Sin(rfPhiH)";
+  rfModulation[mod2d] = "rfWeight*TMath::Sin(rfPhiH-rfPhiR)";
+
+  // -- partial wave expansion factors
+  pwFactorSS = "TMath::Sin(rfTheta)";
+  pwFactorSP = "TMath::Sin(rfTheta)*TMath::Cos(rfTheta)";
+
+  // -- build formula with modulation and PW amplitudes
+  Int_t whichFormu = 3; //  <-- <-- <-- <-- <-- <-- <-- <-- <-- <-- <--
+  switch(whichFormu) {
+    case 0: // test whichMod modulation
+      paramFormu = 
+        "A0*" + rfModulation[whichMod];
+      rfParams->add(*rfA[0]);
       break;
-    case modSinPhiHR:
-      rfModulation = "TMath::Sin(rfPhiH-rfPhiR)";
+    case 1: // test linear combination of e(x) and g1perp modulations
+      paramFormu = 
+        "A0*" + rfModulation[modSinPhiR] + "+A1*" + rfModulation[weightSinPhiHR];
+      rfParams->add(*rfA[0]);
+      rfParams->add(*rfA[1]);
       break;
-    case weightSinPhiHR:
-      rfModulation = "rfWeight*TMath::Sin(rfPhiH-rfPhiR)";
+    case 2: // test single partial wave
+      paramFormu = 
+        "A0*" + pwFactorSS + "*" + rfModulation[whichMod];
+      rfParams->add(*rfA[0]);
       break;
-    case modSinPhiH:
-      rfModulation = "TMath::Sin(rfPhiH)";
+    case 3: // test 2 partial waves
+      paramFormu = 
+        "(A0*" + pwFactorSS + "+A1*" + pwFactorSP + ")*" + rfModulation[whichMod];
+      rfParams->add(*rfA[0]);
+      rfParams->add(*rfA[1]);
       break;
-    case mod2d:
-      // TODO (set to g1perp mod)
-      rfModulation = "rfWeight*TMath::Sin(rfPhiH-rfPhiR)";
+    case 4: // test 2 partial waves and full linear combination of e(x) & g1perp
+      paramFormu = 
+        "(A0*" + pwFactorSS + "+A1*" + pwFactorSP + ")*(" +
+        "A2*" + rfModulation[modSinPhiR] + "+A3*" + rfModulation[weightSinPhiHR] + ")";
+      rfParams->add(*rfA[0]);
+      rfParams->add(*rfA[1]);
+      rfParams->add(*rfA[2]);
+      rfParams->add(*rfA[3]);
       break;
     default:
-      fprintf(stderr,"ERROR: bad phiModulation\n");
+      fprintf(stderr,"ERROR: bad whichFormu\n");
       return;
   };
+      
+  // -- prefactors for each spin (relative luminosity & polarization)
+  preFactor[sP] = Form("%f", pol);
+  preFactor[sM] = Form("-1*(%f/%f)", pol, rellum);
 
-  rfPdfFormu[sP] = Form("%f*rfAR*%s+1", pol, rfModulation.Data());
-  rfPdfFormu[sM] = Form("-(%f/%f)*rfAR*%s+1", pol, rellum, rfModulation.Data());
-
-
-  rfParams = new RooArgSet(*rfAR,*rfPhiH,*rfPhiR,*rfWeight);
-
-
+  // -- build full PDF ( = prefactor * paramFormu ) for each spin
   for(int s=0; s<nSpin; s++) {
+    rfPdfFormu[s] = preFactor[s] + "*(" + paramFormu + ")+1";
     rfPdf[s] = new RooGenericPdf(
-      TString("rfPdf"+SpinName(s)),
-      TString("rfPdf "+SpinTitle(s)),
+      TString("rfPdf" + SpinName(s)),
+      TString("rfPdf " + SpinTitle(s)),
       rfPdfFormu[s],
       *rfParams
     );
@@ -516,7 +550,7 @@ void Asymmetry::CalculateRooAsymmetries() {
   };
   rfCombData = new RooDataSet(
     "rfCombData","rfCombData",
-    RooArgSet(*rfPhiH,*rfPhiR,*rfWeight),
+    RooArgSet(*rfPhiH,*rfPhiR,*rfWeight,*rfTheta),
     RooFit::Index(*rfCateg),
     RooFit::Import(rfTypeName[sP],*rfData[sP]),
     RooFit::Import(rfTypeName[sM],*rfData[sM])

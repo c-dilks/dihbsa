@@ -799,15 +799,23 @@ int main(int argc, char** argv) {
    };
 
 
-   // TCanvas for RooFit result
+   // RooFit results
    TCanvas * rfCanv[nSpin];
-   TGraphErrors * rfAsymGr = new TGraphErrors();
-   rfAsymGr->SetName("roofitResult");
-   rfAsymGr->SetTitle("roofitResult");
-   rfAsymGr->SetMarkerStyle(kFullCircle);
-   rfAsymGr->SetLineColor(kBlue);
-   Int_t rfAsymGrCnt = 0;
    TString rfCanvName[nSpin];
+
+   TGraphErrors * rfAsymGr[Asymmetry::nAmp];
+   TString rfAsymGrN,rfAsymGrT;
+   for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+     rfAsymGrN = Form("roofitResultA%d",aa);
+     rfAsymGrT = Form("roofit result A%d",aa);
+     rfAsymGr[aa] = new TGraphErrors();
+     rfAsymGr[aa]->SetName(rfAsymGrN);
+     rfAsymGr[aa]->SetTitle(rfAsymGrT);
+     rfAsymGr[aa]->SetMarkerStyle(kFullCircle);
+     rfAsymGr[aa]->SetLineColor(kBlue);
+   };
+   Int_t rfAsymGrCnt = 0;
+
    for(std::vector<Asymmetry*>::iterator it = asymVec.begin(); 
      it!=asymVec.end(); ++it
    ) {
@@ -821,15 +829,26 @@ int main(int argc, char** argv) {
          rfCanv[ss]->Write();
        };
 
-       rfAsymGr->SetPoint(rfAsymGrCnt,rfAsymGrCnt+1,A->rfAR->getVal());
-       rfAsymGr->SetPointError(rfAsymGrCnt,0,A->rfAR->getError());
+       Tools::PrintTitleBox("roofit function");
+       A->PrintSettings();
+       printf("\n");
+       for(int ss=0; ss<nSpin; ss++) {
+         printf("%s: %s\n",SpinTitle(ss).Data(),A->rfPdfFormu[ss].Data());
+       };
+       printf("\n");
+
+       for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+         rfAsymGr[aa]->SetPoint(rfAsymGrCnt,rfAsymGrCnt+1,A->rfA[aa]->getVal());
+         rfAsymGr[aa]->SetPointError(rfAsymGrCnt,0,A->rfA[aa]->getError());
+         printf(" >> A%d = %.3f +/- %.3f\n",
+           aa, A->rfA[aa]->getVal(), A->rfA[aa]->getError() );
+       };
        rfAsymGrCnt++;
+       printf("\n");
 
      };
    };
-   rfAsymGr->Write();
-
-
+   for(int aa=0; aa<Asymmetry::nAmp; aa++) rfAsymGr[aa]->Write();
 
 
    // DEPRECATED

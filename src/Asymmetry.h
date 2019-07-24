@@ -199,9 +199,16 @@ class Asymmetry : public TObject
     TString rfPdfFormu[2];
     TString rfTypeName[2];
 
+    TString rfModulation[nMod];
+    TString pwFactorSS,pwFactorSP;
+    TString paramFormu;
+    TString preFactor[2];
 
-    RooRealVar *rfPhiH, *rfPhiR, *rfWeight;
-    RooRealVar *rfAR;
+
+    RooRealVar *rfPhiH, *rfPhiR, *rfWeight, *rfTheta;
+    static const Int_t nAmp = 4;
+    TString rfAname[nAmp];
+    RooRealVar *rfA[nAmp];
 
   private:
 
