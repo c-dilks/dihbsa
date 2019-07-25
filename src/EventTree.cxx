@@ -178,6 +178,8 @@ void EventTree::GetEvent(Int_t i) {
 
   // set preferred PhiR definition
   PhiR = PhiRp;
+
+  PhiHR = Tools::AdjAngle( PhiH - PhiR );
 };
 
 

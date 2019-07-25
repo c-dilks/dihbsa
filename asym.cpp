@@ -42,7 +42,7 @@ Int_t ivType;
 Int_t whichPhiR;
 Bool_t batchMode;
 
-TString dihTitle;
+TString dihTitle, dihName;
 
 int main(int argc, char** argv) {
    
@@ -80,6 +80,7 @@ int main(int argc, char** argv) {
    Int_t whichHad[2];
    DecodePairType(pairType,whichHad[qA],whichHad[qB]);
    dihTitle = PairTitle(whichHad[qA],whichHad[qB]);
+   dihName = PairName(whichHad[qA],whichHad[qB]);
 
    // help printout
    if(argc==1) {
@@ -170,9 +171,10 @@ int main(int argc, char** argv) {
    // set output file
    TString outfileName = "spin";
    if(batchMode) {
+     outfileName += "__" + dihName + "_";
      for(int d=0; d<dimensions; d++) 
-       outfileName = outfileName + "_" + BS->IVname[ivVar[d]];
-     outfileName = outfileName + "_" + modN;
+       outfileName += "_" + BS->IVname[ivVar[d]];
+     outfileName += "__" + modN;
    };
    outfileName = outfileName + ".root";
    printf("outfileName = %s\n",outfileName.Data());
@@ -204,12 +206,15 @@ int main(int argc, char** argv) {
                                           // graph
    std::map<int,TGraphErrors*> chindfMap; // kindepMap for chindfGr
    std::map<int,TGraphErrors*> rellumMap; // kindepMap for rellumGr
+   std::map<int,TGraphErrors*> RFkindepMap[Asymmetry::nAmp]; // follows kindepMap,
+                                          // but for RooFit results (array index
+                                          // for each fit parameter result (amplitude))
 
    TGraphErrors * kindepGr;
-   TGraphErrors * RFkindepGr;
+   TGraphErrors * RFkindepGr[Asymmetry::nAmp];
    TGraphErrors * chindfGr;
    TGraphErrors * rellumGr;
-   TString grTitle,grName;
+   TString grTitle,grTitleSuffix,grName,grNameSuffix;
 
    Int_t binNum;
    Int_t bcnt = 0;
@@ -225,28 +230,43 @@ int main(int argc, char** argv) {
        asymMap.insert(std::pair<Int_t, Asymmetry*>(binNum,A));
        bcnt++;
        if(b==0) {
-         grTitle = Form("%s %s asymmetry vs. %s;%s",
-           dihTitle.Data(),(A->ModulationTitle).Data(),
-           (BS->IVtitle[ivVar[0]]).Data(),(BS->IVtitle[ivVar[0]]).Data());
-         grName = Form("kindep_%s",(BS->IVname[ivVar[0]]).Data());
+         // TODO -- this scope should be it's own function, since it's
+         // basically repeated for each number of dimensions case
+
+         grTitleSuffix =
+           BS->IVtitle[ivVar[0]] + ";" + BS->IVtitle[ivVar[0]];
+         grNameSuffix = BS->IVname[ivVar[0]];
+
+         grTitle =
+           dihTitle + " " + (A->ModulationTitle).Data() + " vs. " +
+           grTitleSuffix;
+         grName = "kindep_" + grNameSuffix;
          kindepGr = new TGraphErrors();
          kindepGr->SetName(grName);
          kindepGr->SetTitle(grTitle);
 
-         RFkindepGr = new TGraphErrors();
-         RFkindepGr->SetName(TString("RF"+grName));
-         RFkindepGr->SetTitle(grTitle);
-         // aqui
+         for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+           grTitle = 
+             "[RooFit A" + TString::Itoa(aa,10) + "] " +
+             dihTitle + " " + (A->ModulationTitle).Data() + " vs. " +
+             grTitleSuffix;
+           grName = "RF_A" + TString::Itoa(aa,10) + "_kindep_" + grNameSuffix;
+           RFkindepGr[aa] = new TGraphErrors();
+           RFkindepGr[aa]->SetName(grName);
+           RFkindepGr[aa]->SetTitle(grTitle);
+         };
 
-         grTitle = "#chi^{2}/NDF of " + grTitle;
-         grName.ReplaceAll("kindep","chindf");
+         grTitle = 
+           "#chi^{2}/NDF of " +
+           dihTitle + " " + (A->ModulationTitle).Data() + " vs. " +
+           grTitleSuffix;
+         grName = "chindf_" + grNameSuffix;
          chindfGr = new TGraphErrors();
          chindfGr->SetName(grName);
          chindfGr->SetTitle(grTitle);
 
-         grTitle = Form("relative luminosity vs. %s;%s",
-           (BS->IVtitle[ivVar[0]]).Data(),(BS->IVtitle[ivVar[0]]).Data());
-         grName.ReplaceAll("chindf","rellum");
+         grTitle = "relative luminosity vs. " + grTitleSuffix;
+         grName = "rellum_" + grNameSuffix;
          rellumGr = new TGraphErrors();
          rellumGr->SetName(grName);
          rellumGr->SetTitle(grTitle);
@@ -255,6 +275,10 @@ int main(int argc, char** argv) {
        kindepMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,kindepGr));
        chindfMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,chindfGr));
        rellumMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,rellumGr));
+       for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+         RFkindepMap[aa].insert(
+           std::pair<Int_t,TGraphErrors*>(binNum,RFkindepGr[aa]) );
+       };
 
      };
    }
@@ -274,35 +298,57 @@ int main(int argc, char** argv) {
          bcnt++;
 
          if(b0==0) {
-           grTitle = Form("%s %s asymmetry vs. %s :: %s;%s",
-             dihTitle.Data(),
-             (A->ModulationTitle).Data(),(BS->IVtitle[ivVar[0]]).Data(),
-             (BS->GetBoundStr(ivVar[1],b1)).Data(),
-             (BS->IVtitle[ivVar[0]]).Data());
-           grName = Form("kindep_%s_bin_%s%d",(BS->IVname[ivVar[0]]).Data(),
-             (BS->IVname[ivVar[1]]).Data(),b1);
+           grTitleSuffix = BS->IVtitle[ivVar[0]] + " :: " +
+                           BS->GetBoundStr(ivVar[1],b1) + ";" +
+                           BS->IVtitle[ivVar[0]];
+           grNameSuffix = Form("%s_bin_%s%d",
+             (BS->IVname[ivVar[0]]).Data(), (BS->IVname[ivVar[1]]).Data(), b1
+           );
+
+             
+           grTitle = 
+             dihTitle + " " + (A->ModulationTitle).Data() + " vs. " +
+             grTitleSuffix;
+           grName = "kindep_" + grNameSuffix;
            kindepGr = new TGraphErrors();
            kindepGr->SetName(grName);
            kindepGr->SetTitle(grTitle);
 
-           grTitle = "#chi^{2}/NDF of " + grTitle;
-           grName.ReplaceAll("kindep","chindf");
+           for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+             grTitle = 
+               "[RooFit A" + TString::Itoa(aa,10) + "] " +
+               dihTitle + " " + (A->ModulationTitle).Data() + " vs. " +
+               grTitleSuffix;
+             grName = "RF_A" + TString::Itoa(aa,10) + "_kindep_" + grNameSuffix;
+             RFkindepGr[aa] = new TGraphErrors();
+             RFkindepGr[aa]->SetName(grName);
+             RFkindepGr[aa]->SetTitle(grTitle);
+           };
+
+           grTitle = 
+             "#chi^{2}/NDF of " +
+             dihTitle + " " + (A->ModulationTitle).Data() + " vs. " +
+             grTitleSuffix;
+           grName = "chindf_" + grNameSuffix;
            chindfGr = new TGraphErrors();
            chindfGr->SetName(grName);
            chindfGr->SetTitle(grTitle);
 
-           grTitle = Form("relative luminosity vs. %s :: %s;%s",
-             (BS->IVtitle[ivVar[0]]).Data(),
-             (BS->GetBoundStr(ivVar[1],b1)).Data(),(BS->IVtitle[ivVar[0]]).Data());
-           grName.ReplaceAll("chindf","rellum");
+           grTitle = "relative luminosity vs. " + grTitleSuffix;
+           grName = "rellum_" + grNameSuffix;
            rellumGr = new TGraphErrors();
            rellumGr->SetName(grName);
            rellumGr->SetTitle(grTitle);
+
          };
 
          kindepMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,kindepGr));
          chindfMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,chindfGr));
          rellumMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,rellumGr));
+         for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+           RFkindepMap[aa].insert(
+             std::pair<Int_t,TGraphErrors*>(binNum,RFkindepGr[aa]) );
+         };
 
        };
      };
@@ -325,38 +371,58 @@ int main(int argc, char** argv) {
            bcnt++;
 
            if(b0==0) {
-             grTitle = Form("%s %s asymmetry vs. %s :: %s, %s;%s",
-               dihTitle.Data(),
-               (A->ModulationTitle).Data(),(BS->IVtitle[ivVar[0]]).Data(),
-               (BS->GetBoundStr(ivVar[1],b1)).Data(),
-               (BS->GetBoundStr(ivVar[2],b2)).Data(),
-               (BS->IVtitle[ivVar[0]]).Data());
-             grName = Form("kindep_%s_bin_%s%d_%s%d",(BS->IVname[ivVar[0]]).Data(),
-               (BS->IVname[ivVar[1]]).Data(),b1,(BS->IVname[ivVar[2]]).Data(),b2);
+             grTitleSuffix = BS->IVtitle[ivVar[0]] + " :: " +
+               BS->GetBoundStr(ivVar[1],b1) + ", " +
+               BS->GetBoundStr(ivVar[2],b2) + ";" +
+               BS->IVtitle[ivVar[0]];
+             grName = Form("bin_%s%d_%s%d",
+               (BS->IVname[ivVar[1]]).Data(), b1,
+               (BS->IVname[ivVar[2]]).Data(), b2
+             );
+
+             grTitle =
+               dihTitle + " " + (A->ModulationTitle).Data() + " vs. " +
+               grTitleSuffix;
+             grName = "kindep_" + grNameSuffix;
              kindepGr = new TGraphErrors();
              kindepGr->SetName(grName);
              kindepGr->SetTitle(grTitle);
 
-             grTitle = "#chi^{2}/NDF of " + grTitle;
-             grName.ReplaceAll("kindep","chindf");
+             for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+               grTitle = 
+                 "[RooFit A" + TString::Itoa(aa,10) + "] " +
+                 dihTitle + " " + (A->ModulationTitle).Data() + " vs. " +
+                 grTitleSuffix;
+               grName = "RF_A" + TString::Itoa(aa,10) + "_kindep_" + grNameSuffix;
+               RFkindepGr[aa] = new TGraphErrors();
+               RFkindepGr[aa]->SetName(grName);
+               RFkindepGr[aa]->SetTitle(grTitle);
+             };
+
+             grTitle = 
+               "#chi^{2}/NDF of " +
+               dihTitle + " " + (A->ModulationTitle).Data() + " vs. " +
+               grTitleSuffix;
+             grName = "chindf_" + grNameSuffix;
              chindfGr = new TGraphErrors();
              chindfGr->SetName(grName);
              chindfGr->SetTitle(grTitle);
 
-             grTitle = Form("relative luminosity vs. %s :: %s, %s;%s",
-               (BS->IVtitle[ivVar[0]]).Data(),
-               (BS->GetBoundStr(ivVar[1],b1)).Data(),
-               (BS->GetBoundStr(ivVar[2],b2)).Data(),
-               (BS->IVtitle[ivVar[0]]).Data());
-             grName.ReplaceAll("chindf","rellum");
+             grTitle = "relative luminosity vs. " + grTitleSuffix;
+             grName = "rellum_" + grNameSuffix;
              rellumGr = new TGraphErrors();
              rellumGr->SetName(grName);
              rellumGr->SetTitle(grTitle);
+
            };
 
            kindepMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,kindepGr));
            chindfMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,chindfGr));
            rellumMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,rellumGr));
+           for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+             RFkindepMap[aa].insert(
+               std::pair<Int_t,TGraphErrors*>(binNum,RFkindepGr[aa]) );
+           };
 
          };
        };
@@ -478,6 +544,12 @@ int main(int argc, char** argv) {
        kindepGr->SetPoint(A->B[0],kinValue,asymValue);
        kindepGr->SetPointError(A->B[0],kinError,asymError);
 
+       for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+         RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
+         RFkindepGr[aa]->SetPoint(A->B[0],kinValue,A->rfA[aa]->getVal());
+         RFkindepGr[aa]->SetPointError(A->B[0],kinError,A->rfA[aa]->getError());
+       };
+
        chindfGr = chindfMap.at(binNum);
        chindfGr->SetPoint(A->B[0],kinValue,chisq/ndf);
 
@@ -527,6 +599,13 @@ int main(int argc, char** argv) {
    TCanvas * kindepCanv = new TCanvas(canvName,canvName,canvX,canvY);
    kindepCanv->Divide(divX,divY);
 
+   TCanvas * RFkindepCanv[Asymmetry::nAmp];
+   for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+     canvName = "RF_A"+TString::Itoa(aa,10)+"_kindep" + canvNameSuffix;
+     RFkindepCanv[aa] = new TCanvas(canvName,canvName,canvX,canvY);
+     RFkindepCanv[aa]->Divide(divX,divY);
+   };
+
    canvName = "chindf" + canvNameSuffix;
    TCanvas * chindfCanv = new TCanvas(canvName,canvName,canvX,canvY);
    chindfCanv->Divide(divX,divY);
@@ -554,9 +633,16 @@ int main(int argc, char** argv) {
    Int_t pad;
    if(dimensions==1) {
      binNum = GetBinNum(0);
+
      kindepGr = kindepMap.at(binNum);
      kindepCanv->cd();
      DrawKinDepGraph(kindepGr,BS,ivVar[0]);
+
+     for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+       RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
+       RFkindepCanv[aa]->cd();
+       DrawKinDepGraph(RFkindepGr[aa],BS,ivVar[0]);
+     };
 
      chindfGr = chindfMap.at(binNum);
      chindfCanv->cd();
@@ -585,9 +671,16 @@ int main(int argc, char** argv) {
      for(int b1=0; b1<NB[1]; b1++) {
        pad = b1+1;
        binNum = GetBinNum(0,b1);
+
        kindepGr = kindepMap.at(binNum);
        kindepCanv->cd(pad);
        DrawKinDepGraph(kindepGr,BS,ivVar[0]);
+
+       for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+         RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
+         RFkindepCanv[aa]->cd(pad);
+         DrawKinDepGraph(RFkindepGr[aa],BS,ivVar[0]);
+       };
        
        chindfGr = chindfMap.at(binNum);
        chindfCanv->cd(pad);
@@ -618,9 +711,16 @@ int main(int argc, char** argv) {
        for(int b2=0; b2<NB[2]; b2++) {
          pad = b1*NB[2]+b2+1;
          binNum = GetBinNum(0,b1,b2);
+
          kindepGr = kindepMap.at(binNum);
          kindepCanv->cd(pad);
          DrawKinDepGraph(kindepGr,BS,ivVar[0]);
+
+         for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+           RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
+           RFkindepCanv[aa]->cd(pad);
+           DrawKinDepGraph(RFkindepGr[aa],BS,ivVar[0]);
+         };
 
          chindfGr = chindfMap.at(binNum);
          chindfCanv->cd(pad);
@@ -789,6 +889,7 @@ int main(int argc, char** argv) {
    };
 
    kindepCanv->Write();
+   for(int aa=0; aa<Asymmetry::nAmp; aa++) RFkindepCanv[aa]->Write();
    chindfCanv->Write();
    chisqDist->Write();
    rellumCanv->Write();
@@ -800,21 +901,8 @@ int main(int argc, char** argv) {
 
 
    // RooFit results
-   TCanvas * rfCanv[nSpin];
-   TString rfCanvName[nSpin];
-
-   TGraphErrors * rfAsymGr[Asymmetry::nAmp];
-   TString rfAsymGrN,rfAsymGrT;
-   for(int aa=0; aa<Asymmetry::nAmp; aa++) {
-     rfAsymGrN = Form("roofitResultA%d",aa);
-     rfAsymGrT = Form("roofit result A%d",aa);
-     rfAsymGr[aa] = new TGraphErrors();
-     rfAsymGr[aa]->SetName(rfAsymGrN);
-     rfAsymGr[aa]->SetTitle(rfAsymGrT);
-     rfAsymGr[aa]->SetMarkerStyle(kFullCircle);
-     rfAsymGr[aa]->SetLineColor(kBlue);
-   };
-   Int_t rfAsymGrCnt = 0;
+   TCanvas * rfCanv[Asymmetry::nAmp];
+   TString rfCanvName[Asymmetry::nAmp];
 
    for(std::vector<Asymmetry*>::iterator it = asymVec.begin(); 
      it!=asymVec.end(); ++it
@@ -822,11 +910,11 @@ int main(int argc, char** argv) {
      A = *it;
      if(A->roofitter) {
        
-       for(int ss=0; ss<nSpin; ss++) {
-         rfCanvName[ss] = "RF_spin" + SpinName(ss) + "_" + A->asymGr->GetName();
-         rfCanv[ss] = new TCanvas(rfCanvName[ss],rfCanvName[ss],800,800);
-         A->rfPhiRplot[ss]->Draw();
-         rfCanv[ss]->Write();
+       for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+         rfCanvName[aa] = "RF_A" + TString::Itoa(aa,10) + "_NLL_" + A->binN;
+         rfCanv[aa] = new TCanvas(rfCanvName[aa],rfCanvName[aa],800,800);
+         A->rfNLLplot[aa]->Draw();
+         rfCanv[aa]->Write();
        };
 
        Tools::PrintTitleBox("roofit function");
@@ -838,17 +926,13 @@ int main(int argc, char** argv) {
        printf("\n");
 
        for(int aa=0; aa<Asymmetry::nAmp; aa++) {
-         rfAsymGr[aa]->SetPoint(rfAsymGrCnt,rfAsymGrCnt+1,A->rfA[aa]->getVal());
-         rfAsymGr[aa]->SetPointError(rfAsymGrCnt,0,A->rfA[aa]->getError());
          printf(" >> A%d = %.3f +/- %.3f\n",
            aa, A->rfA[aa]->getVal(), A->rfA[aa]->getError() );
        };
-       rfAsymGrCnt++;
        printf("\n");
 
      };
    };
-   for(int aa=0; aa<Asymmetry::nAmp; aa++) rfAsymGr[aa]->Write();
 
 
    // DEPRECATED
@@ -878,16 +962,20 @@ int main(int argc, char** argv) {
    // print images
    TString pngName;
    if(batchMode) {
-     pngName = Form("%s.png",kindepCanv->GetName());
+     pngName = Form("%s.%s.png",kindepCanv->GetName(),dihName.Data());
      kindepCanv->Print(pngName,"png");
-     pngName = Form("%s.png",chindfCanv->GetName());
+     for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+       pngName = Form("%s.%s.png",RFkindepCanv[aa]->GetName(),dihName.Data());
+       RFkindepCanv[aa]->Print(pngName,"png");
+     };
+     pngName = Form("%s.%s.png",chindfCanv->GetName(),dihName.Data());
      chindfCanv->Print(pngName,"png");
-     pngName = Form("%s.png",rellumCanv->GetName());
+     pngName = Form("%s.%s.png",rellumCanv->GetName(),dihName.Data());
      rellumCanv->Print(pngName,"png");
      if(dimensions==1 || dimensions==2) {
-       pngName = Form("%s.png",asymModCanv->GetName());
+       pngName = Form("%s.%s.png",asymModCanv->GetName(),dihName.Data());
        asymModCanv->Print(pngName,"png"); 
-       pngName = Form("%s.png",modDistCanv->GetName());
+       pngName = Form("%s.%s.png",modDistCanv->GetName(),dihName.Data());
        modDistCanv->Print(pngName,"png"); 
      };
    };
@@ -920,8 +1008,8 @@ void DrawKinDepGraph(TGraphErrors * g_, Binning * B_, Int_t v_) {
 
   // set vertical axis range (it is overridden if the plot's vertical range
   // is larger than the desired range)
-  Float_t yMin = -0.07;
-  Float_t yMax = 0.1;
+  Float_t yMin = -0.12;
+  Float_t yMax = 0.12;
   if(g_->GetYaxis()->GetXmin() < yMin) yMin = g_->GetYaxis()->GetXmin();
   if(g_->GetYaxis()->GetXmax() > yMax) yMax = g_->GetYaxis()->GetXmax();
   g_->GetYaxis()->SetRangeUser(yMin,yMax);

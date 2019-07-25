@@ -88,6 +88,8 @@ class EventTree : public TObject
     Float_t PhiRp_r;
     Float_t PhiRp_g;
 
+    Float_t PhiHR; // PhiH-PhiR
+
     /*
     Float_t b_PhiRq;
     Float_t b_PhiRp;

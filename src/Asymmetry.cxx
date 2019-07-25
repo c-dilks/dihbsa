@@ -274,9 +274,10 @@ Asymmetry::Asymmetry(
     rfTheta = new RooRealVar("rfTheta","#theta",-PIe,PIe);
 
     // fit params (amplitudes)
+    rfParamRange = 0.5;
     for(int aa=0; aa<nAmp; aa++) {
       rfAname[aa] = Form("A%d",aa);
-      rfA[aa] = new RooRealVar(rfAname[aa],rfAname[aa],-1,1);
+      rfA[aa] = new RooRealVar(rfAname[aa],rfAname[aa],-rfParamRange,rfParamRange);
     };
 
     for(int s=0; s<nSpin; s++) {
@@ -564,27 +565,20 @@ void Asymmetry::CalculateRooAsymmetries() {
 
   // fit simultaneous PDF to combined data
   rfSimPdf->fitTo(*rfCombData);
+  //rfSimPdf->fitTo(*rfCombData,RooFit::PrintLevel(-1));
   /*
   rfResult = rfSimPdf->fitTo(*rfCombData,RooFit::Save());
   //rfResult = rfSimPdf->fitTo(*rfCombData,RooFit::PrintLevel(-1),RooFit::Save());
   */
-  
 
-  // make plot
-  for(int s=0; s<nSpin; s++) {
-    rfPhiRplot[s] = rfPhiR->frame(
-      RooFit::Bins(11),
-      RooFit::Title(TString("rfPhiR "+SpinTitle(s)+" Plot"))
+  // get -log likelihood
+  rfNLL = new RooNLLVar("rfNLL","rfNLL",*rfSimPdf,*rfCombData);
+  for(int aa=0; aa<nAmp; aa++) {
+    rfNLLplot[aa] = rfA[aa]->frame(
+      RooFit::Range(-rfParamRange,rfParamRange),
+      RooFit::Title(TString("-log(L) scan vs. A"+TString::Itoa(aa,10)))
     );
-    rfCombData->plotOn(
-      rfPhiRplot[s],
-      RooFit::Cut(TString("rfCateg==rfCateg::"+rfTypeName[s]))
-    );
-    rfSimPdf->plotOn(
-      rfPhiRplot[s],
-      RooFit::Slice(*rfCateg,rfTypeName[s]),
-      RooFit::ProjWData(*rfCateg,*rfCombData)
-    );
+    rfNLL->plotOn(rfNLLplot[aa]);
   };
 
 

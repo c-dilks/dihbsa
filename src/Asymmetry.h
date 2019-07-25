@@ -43,6 +43,7 @@
 #include <RooDataHist.h>
 #include <RooSimultaneous.h>
 #include <RooPlot.h>
+#include <RooNLLVar.h>
 
 
 // dihbsa
@@ -193,7 +194,6 @@ class Asymmetry : public TObject
     RooGenericPdf * rfPdf[2];
     RooSimultaneous * rfSimPdf;
     RooCategory * rfCateg;
-    RooPlot * rfPhiRplot[2];
     RooFitResult * rfResult;
     RooArgSet * rfParams;
     TString rfPdfFormu[2];
@@ -203,12 +203,16 @@ class Asymmetry : public TObject
     TString pwFactorSS,pwFactorSP;
     TString paramFormu;
     TString preFactor[2];
+    Float_t rfParamRange;
 
 
     RooRealVar *rfPhiH, *rfPhiR, *rfWeight, *rfTheta;
     static const Int_t nAmp = 4;
     TString rfAname[nAmp];
     RooRealVar *rfA[nAmp];
+
+    RooNLLVar * rfNLL;
+    RooPlot * rfNLLplot[nAmp];
 
   private:
 

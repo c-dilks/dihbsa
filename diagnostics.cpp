@@ -60,7 +60,6 @@ int main(int argc, char** argv) {
 
    const Int_t NBINS = 100;
    Float_t deltaPhi;
-   Float_t PhiHR;
 
 
    // DIS kinematics
@@ -138,7 +137,6 @@ int main(int argc, char** argv) {
    TH1D * ZpairDist = new TH1D("ZpairDist","z_{pair} distribution;z_{pair}",NBINS,0,1);
    TH1D * xFDist = new TH1D("xFDist","x_{F} distribution;x_{F}",NBINS,-2,2);
    TH1D * MmissDist = new TH1D("MmissDist","M_{X} distribution;M_{X}",NBINS,-2,6);
-   TH1D * thetaDist = new TH1D("thetaDist","#theta distribution;#theta",NBINS,0,PI);
    
    TH1D * PhiHDist = new TH1D("PhiHDist","#phi_{h} distribution;#phi_{h}",
      NBINS,-PIe,PIe);
@@ -155,6 +153,26 @@ int main(int argc, char** argv) {
    TH2D * g1perpWeightVsMod = new TH2D("g1perpWeightVsMod",plotTitle,
      NBINS,-1.1,1.1,
      NBINS,0,6);
+
+   TH1D * thetaDist = new TH1D("thetaDist","#theta distribution;#theta",NBINS,0,PI);
+   TH2D * thetaVsPhiH = new TH2D("thetaVsPhiH",
+     "#theta vs #phi_{h};#phi_{h};#theta",
+     NBINS,-PIe,PIe,NBINS,-PIe,PIe);
+   TH2D * thetaVsPhiR = new TH2D("thetaVsPhiR",
+     "#theta vs #phi_{R};#phi_{R};#theta",
+     NBINS,-PIe,PIe,NBINS,-PIe,PIe);
+   TH2D * thetaVsPhiHR = new TH2D("thetaVsPhiHR",
+     "#theta vs #phi_{h}-#phi_{R};#phi_{h}-#phi_{R};#theta",
+     NBINS,-PIe,PIe,NBINS,-PIe,PIe);
+   
+   // distributions for partial wave analysis
+   TH1D * pwaSS = new TH1D("pwaSS",
+     "sin(#theta) distribution;sin(#theta)",NBINS,-1.1,1.1);
+   TH1D * pwaSP = new TH1D("pwaSP",
+     "sin(#theta)cos(#theta) distribution;sin(#theta)cos(#theta)",NBINS,-1.1,1.1);
+   TH2D * pwaCorr = new TH2D("pwaCorr",
+     "sin(#theta) vs. sin(#theta)cos(#theta);sin(#theta)cos(#theta);sin(#theta)",
+     NBINS,-1.1,1.1,NBINS,-1.1,1.1);
 
 
    // PhiH and PhiR vs. other variables
@@ -319,15 +337,24 @@ int main(int argc, char** argv) {
        ZpairDist->Fill(ev->Zpair);
        xFDist->Fill(ev->xF);
        MmissDist->Fill(ev->Mmiss);
-       thetaDist->Fill(ev->theta);
 
        PhiHDist->Fill(ev->PhiH);
        PhiRDist->Fill(ev->PhiR);
        PhiHvsPhiR->Fill(ev->PhiR,ev->PhiH);
 
-       PhiHR = Tools::AdjAngle(ev->PhiH - ev->PhiR);
-       PhiHRDist->Fill(PhiHR);
-       g1perpWeightVsMod->Fill(TMath::Sin(PhiHR),ev->PhPerp/ev->Mh);
+       PhiHRDist->Fill(ev->PhiHR);
+       g1perpWeightVsMod->Fill(TMath::Sin(ev->PhiHR),ev->PhPerp/ev->Mh);
+
+       thetaDist->Fill(ev->theta);
+       thetaVsPhiH->Fill(ev->PhiH,ev->theta);
+       thetaVsPhiR->Fill(ev->PhiR,ev->theta);
+       thetaVsPhiHR->Fill(ev->PhiHR,ev->theta);
+       pwaSS->Fill(TMath::Sin(ev->theta));
+       pwaSP->Fill(TMath::Sin(ev->theta)*TMath::Cos(ev->theta));
+       pwaCorr->Fill(
+         TMath::Sin(ev->theta)*TMath::Cos(ev->theta),
+         TMath::Sin(ev->theta)
+       );
 
        PhiHvsMh->Fill(ev->Mh,ev->PhiH);
        PhiHvsX->Fill(ev->x,ev->PhiH);
@@ -337,7 +364,7 @@ int main(int argc, char** argv) {
        PhiRvsX->Fill(ev->x,ev->PhiR);
        PhiRvsZ->Fill(ev->Zpair,ev->PhiR);
        PhiRvsAlpha->Fill(ev->alpha,ev->PhiR);
-       PhiHRvsAlpha->Fill(ev->alpha,PhiHR);
+       PhiHRvsAlpha->Fill(ev->alpha,ev->PhiHR);
 
        helicityDist->Fill(ev->helicity);
        torusDist->Fill(ev->torus);
@@ -410,7 +437,6 @@ int main(int argc, char** argv) {
    ZpairDist->Write();
    xFDist->Write();
    MmissDist->Write();
-   thetaDist->Write();
 
    PhiHDist->Write();
    PhiRDist->Write();
@@ -418,6 +444,14 @@ int main(int argc, char** argv) {
 
    PhiHRDist->Write();
    g1perpWeightVsMod->Write();
+
+   thetaDist->Write();
+   thetaVsPhiH->Write();
+   thetaVsPhiR->Write();
+   thetaVsPhiHR->Write();
+   pwaSS->Write();
+   pwaSP->Write();
+   pwaCorr->Write();
 
    PhiHvsMh->Write();
    PhiHvsX->Write();
