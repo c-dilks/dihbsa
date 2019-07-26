@@ -171,6 +171,7 @@ int main(int argc, char** argv) {
    // set output file
    TString outfileName = "spin";
    if(batchMode) {
+     outfileName = "spinout/" + outfileName;
      outfileName += "__" + dihName + "_";
      for(int d=0; d<dimensions; d++) 
        outfileName += "_" + BS->IVname[ivVar[d]];
@@ -962,20 +963,20 @@ int main(int argc, char** argv) {
    // print images
    TString pngName;
    if(batchMode) {
-     pngName = Form("%s.%s.png",kindepCanv->GetName(),dihName.Data());
+     pngName = Form("spinout/%s.%s.png",kindepCanv->GetName(),dihName.Data());
      kindepCanv->Print(pngName,"png");
      for(int aa=0; aa<Asymmetry::nAmp; aa++) {
-       pngName = Form("%s.%s.png",RFkindepCanv[aa]->GetName(),dihName.Data());
+       pngName = Form("spinout/%s.%s.png",RFkindepCanv[aa]->GetName(),dihName.Data());
        RFkindepCanv[aa]->Print(pngName,"png");
      };
-     pngName = Form("%s.%s.png",chindfCanv->GetName(),dihName.Data());
+     pngName = Form("spinout/%s.%s.png",chindfCanv->GetName(),dihName.Data());
      chindfCanv->Print(pngName,"png");
-     pngName = Form("%s.%s.png",rellumCanv->GetName(),dihName.Data());
+     pngName = Form("spinout/%s.%s.png",rellumCanv->GetName(),dihName.Data());
      rellumCanv->Print(pngName,"png");
      if(dimensions==1 || dimensions==2) {
-       pngName = Form("%s.%s.png",asymModCanv->GetName(),dihName.Data());
+       pngName = Form("spinout/%s.%s.png",asymModCanv->GetName(),dihName.Data());
        asymModCanv->Print(pngName,"png"); 
-       pngName = Form("%s.%s.png",modDistCanv->GetName(),dihName.Data());
+       pngName = Form("spinout/%s.%s.png",modDistCanv->GetName(),dihName.Data());
        modDistCanv->Print(pngName,"png"); 
      };
    };

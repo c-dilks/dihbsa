@@ -2,7 +2,7 @@ R__LOAD_LIBRARY(DihBsa)
 
 #include "Constants.h"
 
-void PrintEnumerators() {
+void PrintEnumerators(Bool_t printAllPairs=false) {
   printf("\n");
 
   // print particles
@@ -22,7 +22,7 @@ void PrintEnumerators() {
   gSystem->RedirectOutput(outft,"w");
   for(int o1=0; o1<nObservables; o1++) {
     for(int o2=0; o2<nObservables; o2++) {
-      if(IterPair(o1,o2,pa,pb)) {
+      if(IterPair(o1,o2,pa,pb) || printAllPairs) {
         printf("0x%x %s\n", EncodePairType(pa,pb), PairName(pa,pb).Data() );
       };
     };

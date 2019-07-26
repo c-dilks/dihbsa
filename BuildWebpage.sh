@@ -1,18 +1,23 @@
 #!/bin/bash
 
-dir="spinout.pairP0"
-if [ $# -ge 1 ]; then dir="$1"; fi
+pairStr="piPlus_piMinus"
+if [ $# -ne 2 ]; then 
+  echo "USAGE: $0 [pairStr] [spinout_dir] "
+  echo "... prefer to call this by loop_BuildWebpage.sh"
+  exit
+fi
+pairStr=$1
+dir=$2
 
-name=$(echo $dir | sed 's/spinout\.//g' | sed 's/\/$//g')
-html=spin.${name}.html
+html="${dir}/web_${pairStr}.html"
 
 function a { 
   echo "$1" >> $html
 }
 
 function ai {
-  a "<a href=\"${dir}/${1}_${2}.png\">"
-  a "<img class=\"${3}\" src=\"${dir}/${1}_${2}.png\" />"
+  a "<a href=\"${1}_${2}.${pairStr}.png\">"
+  a "<img class=\"${3}\" src=\"${1}_${2}.${pairStr}.png\" />"
   a "</a>"
 }
 
@@ -22,8 +27,10 @@ function ai {
 > suffixList2
 > suffixList3
 
-for f in ${dir}/kindepCanv*.png; do
-  suf=$(echo $f | sed 's/^.*\/kindepCanv_//g' | sed 's/\.png//g')
+
+for f in ${dir}/kindepCanv*.${pairStr}.png; do
+  suf=$(echo $f | sed 's/^.*\/kindepCanv_//g' | sed 's/\..*\.png//g')
+  echo $suf
 
   if [ -z `echo $suf|grep bins` ]; then 
     # 1D
@@ -60,17 +67,19 @@ cat suffixList3
 
 
 a "<html><head>"
-a "<title>$name</title>"
+a "<title>${pairStr} asymmetries</title>"
 a "<style>"
 a ".h { height: 400px; }"
 a ".w { width: 800px; }"
 a "</style>"
 a "</head><body>"
-a "<h1>${name}</h1><hr />"
+a "<h1>${pairStr} asymmetries</h1><hr />"
 
 
-a "<br /><h1>1D:</h1><hr />"
+a "<br /><h1>1D binning:</h1><hr />"
 while read s; do
+  for ((amp=0; amp<2; amp++)); do ai RF_A${amp}_kindepCanv $s h; done
+  a "<br />"
   ai kindepCanv $s h
   ai asymModCanv $s h
   a "<br />"
@@ -82,8 +91,10 @@ while read s; do
 done < suffixList1
 
 
-a "<br /><br /><h1>2D:</h1><hr />"
+a "<br /><br /><h1>2D binning:</h1><hr />"
 while read s; do
+  for ((amp=0; amp<2; amp++)); do ai RF_A${amp}_kindepCanv $s h; done
+  a "<br />"
   ai kindepCanv $s h
   ai asymModCanv $s h
   a "<br />"
@@ -96,7 +107,7 @@ while read s; do
 done < suffixList2
 
 
-a "<br /><br /><h1>3D:</h1><hr />"
+a "<br /><br /><h1>3D binning:</h1><hr />"
 while read s; do
   ai kindepCanv $s w
   ai chindfCanv $s w

@@ -43,7 +43,7 @@ Asymmetry::Asymmetry(
       break;
     case weightSinPhiHR:
       ModulationTitle = "weighted sin(#phi_{h}-#phi_{R})";
-      ModulationName = "sinPhiHR_weight";
+      ModulationName = "sinPhiHRweight";
       modMax = modMaxDefault;
       aziMax = modMaxDefault;
       break;
