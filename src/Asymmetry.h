@@ -201,9 +201,10 @@ class Asymmetry : public TObject
 
     TString rfModulation[nMod];
     TString pwFactorSS,pwFactorSP;
-    TString paramFormu;
+    TString asymExpansion;
     TString preFactor[2];
     Float_t rfParamRange;
+    TString spinOp[2];
 
 
     RooRealVar *rfPhiH, *rfPhiR, *rfWeight, *rfTheta;

@@ -485,36 +485,38 @@ void Asymmetry::CalculateRooAsymmetries() {
   rfModulation[mod2d] = "rfWeight*TMath::Sin(rfPhiH-rfPhiR)";
 
   // -- partial wave expansion factors
-  pwFactorSS = "TMath::Sin(rfTheta)";
-  pwFactorSP = "TMath::Sin(rfTheta)*TMath::Cos(rfTheta)";
+  //pwFactorSS = "TMath::Sin(rfTheta)";
+  //pwFactorSP = "TMath::Sin(rfTheta)*TMath::Cos(rfTheta)";
+  pwFactorSS = "1";
+  pwFactorSP = "TMath::Cos(rfTheta)";
 
   // -- build formula with modulation and PW amplitudes
   Int_t whichFormu = 3; //  <-- <-- <-- <-- <-- <-- <-- <-- <-- <-- <--
   switch(whichFormu) {
     case 0: // test whichMod modulation
-      paramFormu = 
+      asymExpansion = 
         "A0*" + rfModulation[whichMod];
       rfParams->add(*rfA[0]);
       break;
     case 1: // test linear combination of e(x) and g1perp modulations
-      paramFormu = 
+      asymExpansion = 
         "A0*" + rfModulation[modSinPhiR] + "+A1*" + rfModulation[weightSinPhiHR];
       rfParams->add(*rfA[0]);
       rfParams->add(*rfA[1]);
       break;
     case 2: // test single partial wave
-      paramFormu = 
+      asymExpansion = 
         "A0*" + pwFactorSS + "*" + rfModulation[whichMod];
       rfParams->add(*rfA[0]);
       break;
     case 3: // test 2 partial waves
-      paramFormu = 
+      asymExpansion = 
         "(A0*" + pwFactorSS + "+A1*" + pwFactorSP + ")*" + rfModulation[whichMod];
       rfParams->add(*rfA[0]);
       rfParams->add(*rfA[1]);
       break;
     case 4: // test 2 partial waves and full linear combination of e(x) & g1perp
-      paramFormu = 
+      asymExpansion = 
         "(A0*" + pwFactorSS + "+A1*" + pwFactorSP + ")*(" +
         "A2*" + rfModulation[modSinPhiR] + "+A3*" + rfModulation[weightSinPhiHR] + ")";
       rfParams->add(*rfA[0]);
@@ -526,14 +528,19 @@ void Asymmetry::CalculateRooAsymmetries() {
       fprintf(stderr,"ERROR: bad whichFormu\n");
       return;
   };
+
+  // append polarization factor
+  asymExpansion = Form("%f*(%s)", pol, asymExpansion.Data());
+
       
   // -- prefactors for each spin (relative luminosity & polarization)
-  preFactor[sP] = Form("%f", pol);
-  preFactor[sM] = Form("-1*(%f/%f)", pol, rellum);
+  preFactor[sP] = Form("%f/(%f+1)", rellum, rellum);
+  preFactor[sM] = Form("1/(%f+1)", rellum);
 
-  // -- build full PDF ( = prefactor * paramFormu ) for each spin
+  // -- build full PDF ( = prefactor * asymExpansion ) for each spin
+  spinOp[sP] = "+"; spinOp[sM] = "-";
   for(int s=0; s<nSpin; s++) {
-    rfPdfFormu[s] = preFactor[s] + "*(" + paramFormu + ")+1";
+    rfPdfFormu[s] = preFactor[s] + "*(1" + spinOp[s] + asymExpansion + ")";
     rfPdf[s] = new RooGenericPdf(
       TString("rfPdf" + SpinName(s)),
       TString("rfPdf " + SpinTitle(s)),
