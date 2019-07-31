@@ -42,7 +42,7 @@ Asymmetry::Asymmetry(
       aziMax = modMaxDefault;
       break;
     case weightSinPhiHR:
-      ModulationTitle = "weighted sin(#phi_{h}-#phi_{R})";
+      ModulationTitle = "p_{T}/M_{h} sin(#phi_{h}-#phi_{R})";
       ModulationName = "sinPhiHRweight";
       modMax = modMaxDefault;
       aziMax = modMaxDefault;
@@ -264,39 +264,14 @@ Asymmetry::Asymmetry(
     fitFunc2->SetParName(0,"A_{LU}");
   };
 
-
-  // initialise RooFit
-  if(roofitter) {
-    // event vars
-    rfPhiH = new RooRealVar("rfPhiH","#phi_{h}",-PIe,PIe);
-    rfPhiR = new RooRealVar("rfPhiR","#phi_{R}",-PIe,PIe);
-    rfWeight = new RooRealVar("rfWeight","P_{h}^{T}/M_{h}",0,4);
-    rfTheta = new RooRealVar("rfTheta","#theta",-PIe,PIe);
-
-    // fit params (amplitudes)
-    rfParamRange = 0.5;
-    for(int aa=0; aa<nAmp; aa++) {
-      rfAname[aa] = Form("A%d",aa);
-      rfA[aa] = new RooRealVar(rfAname[aa],rfAname[aa],-rfParamRange,rfParamRange);
-    };
-
-    for(int s=0; s<nSpin; s++) {
-      rfData[s] = new RooDataSet(
-        TString("rfData"+SpinName(s)),
-        TString("rfData"+SpinName(s)),
-        RooArgSet(*rfPhiH,*rfPhiR,*rfWeight,*rfTheta)
-      );
-    };
-  };
-
-
-
   // initialize kinematic variables
   ResetVars();
   nEvents = 0;
   for(int s=0; s<nSpin; s++) yield[s]=0;
 
-  success = true;
+
+  // initialise RooFit
+  success = this->InitRooFit();
 
   if(debug) printf("Asymmetry instantiated.\n");
 
@@ -341,7 +316,7 @@ Bool_t Asymmetry::FillPlots() {
     *rfPhiR = PhiR;
     *rfWeight = Mh>0 ? PhPerp/Mh : 0;
     *rfTheta = theta;
-    rfData[spinn]->add(RooArgSet(*rfPhiH,*rfPhiR,*rfWeight,*rfTheta));
+    rfData[spinn]->add(*rfVars);
   };
 
 
@@ -466,16 +441,46 @@ void Asymmetry::CalculateAsymmetries() {
 };
 
 
-// calculate the asymmetries with RooFit; to be called at end of event loop
-// -- called by CalculateAsymmetries() if roofitter==true
-//
-void Asymmetry::CalculateRooAsymmetries() {
+
+// -------------------------------------------
+// initialize unbinned ML fit
+// -------------------------------------------
+Bool_t Asymmetry::InitRooFit() {
+
+  // initialize variables and parameters and data set containers
+  // -------------------------------------------------------------
+  // - event vars
+  rfPhiH = new RooRealVar("rfPhiH","#phi_{h}",-PIe,PIe);
+  rfPhiR = new RooRealVar("rfPhiR","#phi_{R}",-PIe,PIe);
+  rfWeight = new RooRealVar("rfWeight","P_{h}^{T}/M_{h}",0,4);
+  rfTheta = new RooRealVar("rfTheta","#theta",-PIe,PIe);
+  rfVars = new RooArgSet(*rfPhiH,*rfPhiR,*rfWeight,*rfTheta);
+
+  // - amplitudes (fit parameters)
+  rfParamRange = 0.5;
+  for(int aa=0; aa<nAmp; aa++) {
+    rfAname[aa] = Form("A%d",aa);
+    rfA[aa] = new RooRealVar(rfAname[aa],rfAname[aa],-rfParamRange,rfParamRange);
+  };
+
+  // - yield factor (proportional to actual yield, only for extended fit)
+  rfYield[sP] = new RooRealVar("rfYieldP","YP",1e5);
+  rfYield[sM] = new RooRealVar("rfYieldM","YM",1e5);
+  rfYieldBoth = new RooRealVar("rfYieldBoth","Y",1e5);
+
+  // - data sets for each spin
+  for(int s=0; s<nSpin; s++) {
+    rfData[s] = new RooDataSet(
+      TString("rfData"+SpinName(s)),
+      TString("rfData"+SpinName(s)),
+      *rfVars
+    );
+  };
 
 
-  // build PDFs for each spin state
-  // -------------------------------
-
-  rfParams = new RooArgSet(*rfPhiH,*rfPhiR,*rfWeight,*rfTheta);
+  // build asymmetry modulation paramaterization "asymExpansion" 
+  // = sum { amplitude_i * modulation_i }
+  // --------------------------------------------
 
   // -- modulations
   rfModulation[modSinPhiR] = "TMath::Sin(rfPhiR)";
@@ -485,51 +490,64 @@ void Asymmetry::CalculateRooAsymmetries() {
   rfModulation[mod2d] = "rfWeight*TMath::Sin(rfPhiH-rfPhiR)";
 
   // -- partial wave expansion factors
-  //pwFactorSS = "TMath::Sin(rfTheta)";
-  //pwFactorSP = "TMath::Sin(rfTheta)*TMath::Cos(rfTheta)";
-  pwFactorSS = "1";
-  pwFactorSP = "TMath::Cos(rfTheta)";
+  //pwFactorSP = "TMath::Sin(rfTheta)";
+  //pwFactorPP = "TMath::Sin(rfTheta)*TMath::Cos(rfTheta)";
+  pwFactorSP = "1";
+  pwFactorPP = "TMath::Cos(rfTheta)";
 
   // -- build formula with modulation and PW amplitudes
-  Int_t whichFormu = 3; //  <-- <-- <-- <-- <-- <-- <-- <-- <-- <-- <--
+  Int_t whichFormu = 0; //  <-- <-- <-- <-- <-- <-- <-- <-- <-- <-- <--
   switch(whichFormu) {
     case 0: // test whichMod modulation
       asymExpansion = 
         "A0*" + rfModulation[whichMod];
-      rfParams->add(*rfA[0]);
+      rfA[0]->SetTitle("A_{LU}");
+      nAmpUsed = 1;
       break;
     case 1: // test linear combination of e(x) and g1perp modulations
       asymExpansion = 
         "A0*" + rfModulation[modSinPhiR] + "+A1*" + rfModulation[weightSinPhiHR];
-      rfParams->add(*rfA[0]);
-      rfParams->add(*rfA[1]);
+      rfA[0]->SetTitle("A_{LU}[sin#phi_{R}]");
+      rfA[1]->SetTitle("A_{LU}[sin#phi_{hR}]");
+      nAmpUsed = 2;
       break;
     case 2: // test single partial wave
       asymExpansion = 
-        "A0*" + pwFactorSS + "*" + rfModulation[whichMod];
-      rfParams->add(*rfA[0]);
+        "A0*" + pwFactorSP + "*" + rfModulation[whichMod];
+      rfA[0]->SetTitle("A_{LU}^{sp}[" +ModulationTitle+"]");
+      nAmpUsed = 1;
       break;
     case 3: // test 2 partial waves
       asymExpansion = 
-        "(A0*" + pwFactorSS + "+A1*" + pwFactorSP + ")*" + rfModulation[whichMod];
-      rfParams->add(*rfA[0]);
-      rfParams->add(*rfA[1]);
+        "(A0*" + pwFactorSP + "+A1*" + pwFactorPP + ")*" + rfModulation[whichMod];
+      rfA[0]->SetTitle("A_{LU}^{sp}[" +ModulationTitle+"]");
+      rfA[1]->SetTitle("A_{LU}^{pp}[" +ModulationTitle+"]");
+      nAmpUsed = 2;
       break;
     case 4: // test 2 partial waves and full linear combination of e(x) & g1perp
       asymExpansion = 
-        "(A0*" + pwFactorSS + "+A1*" + pwFactorSP + ")*(" +
+        "(A0*" + pwFactorSP + "+A1*" + pwFactorPP + ")*(" +
         "A2*" + rfModulation[modSinPhiR] + "+A3*" + rfModulation[weightSinPhiHR] + ")";
-      rfParams->add(*rfA[0]);
-      rfParams->add(*rfA[1]);
-      rfParams->add(*rfA[2]);
-      rfParams->add(*rfA[3]);
+      rfA[0]->SetTitle("a_{LU}^{sp}");
+      rfA[1]->SetTitle("a_{LU}^{pp}");
+      rfA[2]->SetTitle("a_{LU}[sin#phi_{R}]");
+      rfA[3]->SetTitle("a_{LU}[sin#phi_{hR}]");
+      nAmpUsed = 4;
       break;
     default:
       fprintf(stderr,"ERROR: bad whichFormu\n");
-      return;
+      return false;
   };
 
-  // append polarization factor
+
+  return true;
+};
+
+
+// calculate the asymmetries with RooFit; to be called at end of event loop
+void Asymmetry::CalculateRooAsymmetries() {
+
+  // append polarization factor to asymExpansion
   asymExpansion = Form("%f*(%s)", pol, asymExpansion.Data());
 
       
@@ -537,18 +555,48 @@ void Asymmetry::CalculateRooAsymmetries() {
   preFactor[sP] = Form("%f/(%f+1)", rellum, rellum);
   preFactor[sM] = Form("1/(%f+1)", rellum);
 
-  // -- build full PDF ( = prefactor * asymExpansion ) for each spin
-  spinOp[sP] = "+"; spinOp[sM] = "-";
+  // -- append yield factor to prefactors
+  //for(int s=0; s<nSpin; s++) preFactor[s] = "rfYieldBoth*" + preFactor[s];
+  //rfParams->add(*rfYieldBoth); // DEPRECATED! ADD IT BELOW
+  //preFactor[sP] = "rfYieldP*" + preFactor[sP];
+  //preFactor[sM] = "rfYieldM*" + preFactor[sM];
+  //for(int s=0; s<nSpin; s++) rfParams->add(*rfYield[s]); // DEPRECATED! ADD IT BELOW
+  
+
+
+  // -- build full PDF ( = prefactor * ( 1 +/- pol*asymExpansion ) for each spin
   for(int s=0; s<nSpin; s++) {
-    rfPdfFormu[s] = preFactor[s] + "*(1" + spinOp[s] + asymExpansion + ")";
+    rfPdfFormu[s] = preFactor[s] + "*(1" + SpinSign(s) + asymExpansion + ")";
+
+    // build list of variables and parameters; we *only* want variables that
+    // are actually being used in the PDF
+    rfParams[s] = new RooArgSet();
+    if(rfPdfFormu[s].Contains("rfPhiH")) rfParams[s]->add(*rfPhiH);
+    if(rfPdfFormu[s].Contains("rfPhiR")) rfParams[s]->add(*rfPhiR);
+    if(rfPdfFormu[s].Contains("rfWeight")) rfParams[s]->add(*rfWeight);
+    if(rfPdfFormu[s].Contains("rfTheta")) rfParams[s]->add(*rfTheta);
+    for(int aa=0; aa<nAmpUsed; aa++) rfParams[s]->add(*rfA[aa]);
+    
     rfPdf[s] = new RooGenericPdf(
+      TString("rfModel" + SpinName(s)),
+      TString("rfModel " + SpinTitle(s)),
+      rfPdfFormu[s],
+      *rfParams[s]
+    );
+    /*
+    rfModelExt[s] = new RooExtendPdf(
       TString("rfPdf" + SpinName(s)),
       TString("rfPdf " + SpinTitle(s)),
-      rfPdfFormu[s],
-      *rfParams
+      *rfModel[s],
+      *rfYield[s]
     );
+    rfPdf[s] = new RooAddPdf(
+      TString("rfPdf" + SpinName(s)),
+      TString("rfPdf " + SpinTitle(s)),
+      RooArgList(*rfModel[s])
+    );
+    */
   };
-
 
   // build category and combine data sets from each spin
   rfCateg = new RooCategory("rfCateg","rfCateg");
@@ -558,7 +606,7 @@ void Asymmetry::CalculateRooAsymmetries() {
   };
   rfCombData = new RooDataSet(
     "rfCombData","rfCombData",
-    RooArgSet(*rfPhiH,*rfPhiR,*rfWeight,*rfTheta),
+    *rfVars,
     RooFit::Index(*rfCateg),
     RooFit::Import(rfTypeName[sP],*rfData[sP]),
     RooFit::Import(rfTypeName[sM],*rfData[sM])
@@ -572,6 +620,7 @@ void Asymmetry::CalculateRooAsymmetries() {
 
   // fit simultaneous PDF to combined data
   rfSimPdf->fitTo(*rfCombData);
+  //rfResult = rfSimPdf->fitTo(*rfCombData, RooFit::Extended(kTRUE), RooFit::Save(kTRUE));
   //rfSimPdf->fitTo(*rfCombData,RooFit::PrintLevel(-1));
   /*
   rfResult = rfSimPdf->fitTo(*rfCombData,RooFit::Save());
@@ -581,11 +630,15 @@ void Asymmetry::CalculateRooAsymmetries() {
   // get -log likelihood
   rfNLL = new RooNLLVar("rfNLL","rfNLL",*rfSimPdf,*rfCombData);
   for(int aa=0; aa<nAmp; aa++) {
-    rfNLLplot[aa] = rfA[aa]->frame(
-      RooFit::Range(-rfParamRange,rfParamRange),
-      RooFit::Title(TString("-log(L) scan vs. A"+TString::Itoa(aa,10)))
-    );
-    rfNLL->plotOn(rfNLLplot[aa]);
+    if(aa<nAmpUsed) {
+      rfNLLplot[aa] = rfA[aa]->frame(
+        RooFit::Range(-rfParamRange,rfParamRange),
+        RooFit::Title(TString("-log(L) scan vs. A"+TString::Itoa(aa,10)))
+      );
+      rfNLL->plotOn(rfNLLplot[aa]);
+    } else {
+      rfNLLplot[aa] = new RooPlot(); // unused
+    };
   };
 
 

@@ -42,6 +42,7 @@
 #include <RooCategory.h>
 #include <RooDataHist.h>
 #include <RooSimultaneous.h>
+#include <RooAddPdf.h>
 #include <RooPlot.h>
 #include <RooNLLVar.h>
 
@@ -66,6 +67,7 @@ class Asymmetry : public TObject
     );
     ~Asymmetry();
 
+    Bool_t InitRooFit();
     void CalculateAsymmetries();
     void CalculateRooAsymmetries();
     void SetAsymGrPoint(Int_t modBin_, Int_t modBin2_=-1);
@@ -192,25 +194,30 @@ class Asymmetry : public TObject
     RooDataSet * rfData[2];
     RooDataSet * rfCombData;
     RooGenericPdf * rfPdf[2];
+    //RooExtendPdf * rfModelExt[2];
+    //RooAddPdf * rfPdf[2];
     RooSimultaneous * rfSimPdf;
     RooCategory * rfCateg;
     RooFitResult * rfResult;
-    RooArgSet * rfParams;
+    RooArgSet * rfVars;
+    RooArgSet * rfParams[2];
     TString rfPdfFormu[2];
     TString rfTypeName[2];
 
     TString rfModulation[nMod];
-    TString pwFactorSS,pwFactorSP;
+    TString pwFactorSP,pwFactorPP;
     TString asymExpansion;
     TString preFactor[2];
     Float_t rfParamRange;
-    TString spinOp[2];
 
 
     RooRealVar *rfPhiH, *rfPhiR, *rfWeight, *rfTheta;
     static const Int_t nAmp = 4;
+    Int_t nAmpUsed;
     TString rfAname[nAmp];
     RooRealVar *rfA[nAmp];
+    RooRealVar *rfYieldBoth;
+    RooRealVar *rfYield[2];
 
     RooNLLVar * rfNLL;
     RooPlot * rfNLLplot[nAmp];

@@ -154,25 +154,33 @@ int main(int argc, char** argv) {
      NBINS,-1.1,1.1,
      NBINS,0,6);
 
+   // distributions for partial wave analysis
    TH1D * thetaDist = new TH1D("thetaDist","#theta distribution;#theta",NBINS,0,PI);
+
    TH2D * thetaVsPhiH = new TH2D("thetaVsPhiH",
      "#theta vs #phi_{h};#phi_{h};#theta",
-     NBINS,-PIe,PIe,NBINS,-PIe,PIe);
+     NBINS,-PIe,PIe,NBINS,0,PIe);
    TH2D * thetaVsPhiR = new TH2D("thetaVsPhiR",
      "#theta vs #phi_{R};#phi_{R};#theta",
-     NBINS,-PIe,PIe,NBINS,-PIe,PIe);
+     NBINS,-PIe,PIe,NBINS,0,PIe);
    TH2D * thetaVsPhiHR = new TH2D("thetaVsPhiHR",
      "#theta vs #phi_{h}-#phi_{R};#phi_{h}-#phi_{R};#theta",
-     NBINS,-PIe,PIe,NBINS,-PIe,PIe);
+     NBINS,-PIe,PIe,NBINS,0,PIe);
+
+   TH2D * thetaVsMh = new TH2D("thetaVsMh","#theta vs. M_{h};M_{h};#theta",
+     NBINS,0,3,NBINS,0,PIe);
+   TH2D * thetaVsZ = new TH2D("thetaVsZ","#theta vs. z;z;#theta",
+     NBINS,0,1,NBINS,0,PIe);
+   TH2D * thetaVsX = new TH2D("thetaVsX","#theta vs. x;x;#theta",
+     NBINS,0,1,NBINS,0,PIe);
    
-   // distributions for partial wave analysis
-   TH1D * pwaSS = new TH1D("pwaSS",
+   TH1D * sinThetaDist = new TH1D("sinThetaDist",
      "sin(#theta) distribution;sin(#theta)",NBINS,-1.1,1.1);
-   TH1D * pwaSP = new TH1D("pwaSP",
+   TH1D * sinThetaCosThetaDist = new TH1D("sinThetaCosThetaDist",
      "sin(#theta)cos(#theta) distribution;sin(#theta)cos(#theta)",NBINS,-1.1,1.1);
-   TH2D * pwaCorr = new TH2D("pwaCorr",
-     "sin(#theta) vs. sin(#theta)cos(#theta);sin(#theta)cos(#theta);sin(#theta)",
-     NBINS,-1.1,1.1,NBINS,-1.1,1.1);
+
+   TH1D * cosThetaDist = new TH1D("cosThetaDist",
+     "cos(#theta) distribution;cos(#theta)",NBINS,-1.1,1.1);
 
 
    // PhiH and PhiR vs. other variables
@@ -346,15 +354,17 @@ int main(int argc, char** argv) {
        g1perpWeightVsMod->Fill(TMath::Sin(ev->PhiHR),ev->PhPerp/ev->Mh);
 
        thetaDist->Fill(ev->theta);
+       sinThetaDist->Fill(TMath::Sin(ev->theta));
+       sinThetaCosThetaDist->Fill(TMath::Sin(ev->theta)*TMath::Cos(ev->theta));
+       cosThetaDist->Fill(TMath::Cos(ev->theta));
+
        thetaVsPhiH->Fill(ev->PhiH,ev->theta);
        thetaVsPhiR->Fill(ev->PhiR,ev->theta);
        thetaVsPhiHR->Fill(ev->PhiHR,ev->theta);
-       pwaSS->Fill(TMath::Sin(ev->theta));
-       pwaSP->Fill(TMath::Sin(ev->theta)*TMath::Cos(ev->theta));
-       pwaCorr->Fill(
-         TMath::Sin(ev->theta)*TMath::Cos(ev->theta),
-         TMath::Sin(ev->theta)
-       );
+
+       thetaVsMh->Fill(ev->Mh,ev->theta);
+       thetaVsX->Fill(ev->x,ev->theta);
+       thetaVsZ->Fill(ev->Zpair,ev->theta);
 
        PhiHvsMh->Fill(ev->Mh,ev->PhiH);
        PhiHvsX->Fill(ev->x,ev->PhiH);
@@ -446,12 +456,17 @@ int main(int argc, char** argv) {
    g1perpWeightVsMod->Write();
 
    thetaDist->Write();
+   sinThetaDist->Write();
+   cosThetaDist->Write();
+   sinThetaCosThetaDist->Write();
+
    thetaVsPhiH->Write();
    thetaVsPhiR->Write();
    thetaVsPhiHR->Write();
-   pwaSS->Write();
-   pwaSP->Write();
-   pwaCorr->Write();
+
+   thetaVsMh->Write();
+   thetaVsX->Write();
+   thetaVsZ->Write();
 
    PhiHvsMh->Write();
    PhiHvsX->Write();

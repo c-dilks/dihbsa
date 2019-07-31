@@ -348,14 +348,17 @@ static TString SpinName(Int_t s) {
       return "unknown";
   };
 };
-static TString SpinTitle(Int_t s) {
+static TString SpinSign(Int_t s) {
   switch(s) {
-    case sP: return "spin +";
-    case sM: return "spin -";
+    case sP: return "+";
+    case sM: return "-";
     default:
-      fprintf(stderr,"ERROR: bad SpinTitle request\n");
+      fprintf(stderr,"ERROR: bad SpinSign request\n");
       return "unknown";
   };
+};
+static TString SpinTitle(Int_t s) {
+  return "spin " + SpinSign(s);
 };
 
 

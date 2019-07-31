@@ -17,6 +17,7 @@
 #include "TCanvas.h"
 #include "TLine.h"
 #include "TStyle.h"
+#include "TMultiGraph.h"
 
 // DihBsa
 #include "Constants.h"
@@ -33,6 +34,7 @@ void DrawSimpleGraph(TGraphErrors * g_, Binning * B_, Int_t v, Bool_t setRange_=
 void DrawAsymGr(TGraphErrors * g_);
 void DrawAsymGr2(TGraph2DErrors * g_);
 void SetCloneName(TH1 * clone_);
+TGraphErrors * ShiftGraph(TGraphErrors * gr, Int_t nShift);
 
 Int_t pairType;
 TString inDir;
@@ -41,6 +43,7 @@ Int_t dimensions;
 Int_t ivType;
 Int_t whichPhiR;
 Bool_t batchMode;
+Int_t N_AMP;
 
 TString dihTitle, dihName;
 
@@ -205,6 +208,7 @@ int main(int argc, char** argv) {
                                           // use this map to get the index of the
                                           // corresponding kinematic-dependent asymmetry
                                           // graph
+   std::map<int,TMultiGraph*> multiMap; // kindepMap for multiGr
    std::map<int,TGraphErrors*> chindfMap; // kindepMap for chindfGr
    std::map<int,TGraphErrors*> rellumMap; // kindepMap for rellumGr
    std::map<int,TGraphErrors*> RFkindepMap[Asymmetry::nAmp]; // follows kindepMap,
@@ -213,8 +217,10 @@ int main(int argc, char** argv) {
 
    TGraphErrors * kindepGr;
    TGraphErrors * RFkindepGr[Asymmetry::nAmp];
+   TGraphErrors * RFkindepGrClone[Asymmetry::nAmp];
    TGraphErrors * chindfGr;
    TGraphErrors * rellumGr;
+   TMultiGraph * multiGr;
    TString grTitle,grTitleSuffix,grName,grNameSuffix;
 
    Int_t binNum;
@@ -225,6 +231,7 @@ int main(int argc, char** argv) {
 
        A = new Asymmetry(BS, whichModulation, 1, ivVar[0], b);
        if(!(A->success)) return 0;
+       N_AMP = A->nAmpUsed;
        asymVec.push_back(A);
        binNum = GetBinNum(b);
        binMap.insert(std::pair<int,int>(binNum,bcnt));
@@ -239,18 +246,25 @@ int main(int argc, char** argv) {
          grNameSuffix = BS->IVname[ivVar[0]];
 
          grTitle =
-           dihTitle + " " + (A->ModulationTitle).Data() + " vs. " +
-           grTitleSuffix;
+           dihTitle + " A_{LU}[" + A->ModulationTitle + "]_{l.f.} " + 
+           " vs. " + grTitleSuffix;
          grName = "kindep_" + grNameSuffix;
          kindepGr = new TGraphErrors();
          kindepGr->SetName(grName);
          kindepGr->SetTitle(grTitle);
 
-         for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+         grTitle =
+           dihTitle + " A_{LU}[" + A->ModulationTitle + "] " + 
+           " vs. " + grTitleSuffix;
+         grName = "multiGr_" + grNameSuffix;
+         multiGr = new TMultiGraph();
+         multiGr->SetName(grName);
+         multiGr->SetTitle(grTitle);
+
+         for(int aa=0; aa<N_AMP; aa++) {
            grTitle = 
-             "[RooFit A" + TString::Itoa(aa,10) + "] " +
-             dihTitle + " " + (A->ModulationTitle).Data() + " vs. " +
-             grTitleSuffix;
+             dihTitle + " " + TString(A->rfA[aa]->GetTitle()) + "_{m.l.m.} " +
+             " vs. " + grTitleSuffix;
            grName = "RF_A" + TString::Itoa(aa,10) + "_kindep_" + grNameSuffix;
            RFkindepGr[aa] = new TGraphErrors();
            RFkindepGr[aa]->SetName(grName);
@@ -259,8 +273,8 @@ int main(int argc, char** argv) {
 
          grTitle = 
            "#chi^{2}/NDF of " +
-           dihTitle + " " + (A->ModulationTitle).Data() + " vs. " +
-           grTitleSuffix;
+           dihTitle + " A_{LU}[" + A->ModulationTitle + "]_{l.f.} " + 
+           " vs. " + grTitleSuffix;
          grName = "chindf_" + grNameSuffix;
          chindfGr = new TGraphErrors();
          chindfGr->SetName(grName);
@@ -274,9 +288,10 @@ int main(int argc, char** argv) {
        };
 
        kindepMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,kindepGr));
+       multiMap.insert(std::pair<Int_t,TMultiGraph*>(binNum,multiGr));
        chindfMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,chindfGr));
        rellumMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,rellumGr));
-       for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+       for(int aa=0; aa<N_AMP; aa++) {
          RFkindepMap[aa].insert(
            std::pair<Int_t,TGraphErrors*>(binNum,RFkindepGr[aa]) );
        };
@@ -292,6 +307,7 @@ int main(int argc, char** argv) {
            ivVar[1], b1
          );
          if(!(A->success)) return 0;
+         N_AMP = A->nAmpUsed;
          asymVec.push_back(A);
          binNum = GetBinNum(b0,b1);
          binMap.insert(std::pair<int,int>(binNum,bcnt));
@@ -307,19 +323,26 @@ int main(int argc, char** argv) {
            );
 
              
-           grTitle = 
-             dihTitle + " " + (A->ModulationTitle).Data() + " vs. " +
-             grTitleSuffix;
+           grTitle =
+             dihTitle + " A_{LU}[" + A->ModulationTitle + "]_{l.f.} " + 
+             " vs. " + grTitleSuffix;
            grName = "kindep_" + grNameSuffix;
            kindepGr = new TGraphErrors();
            kindepGr->SetName(grName);
            kindepGr->SetTitle(grTitle);
 
-           for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+           grTitle =
+             dihTitle + " A_{LU}[" + A->ModulationTitle + "] " + 
+             " vs. " + grTitleSuffix;
+           grName = "multiGr_" + grNameSuffix;
+           multiGr = new TMultiGraph();
+           multiGr->SetName(grName);
+           multiGr->SetTitle(grTitle);
+
+           for(int aa=0; aa<N_AMP; aa++) {
              grTitle = 
-               "[RooFit A" + TString::Itoa(aa,10) + "] " +
-               dihTitle + " " + (A->ModulationTitle).Data() + " vs. " +
-               grTitleSuffix;
+               dihTitle + " " + TString(A->rfA[aa]->GetTitle()) + "_{m.l.m.} " +
+               " vs. " + grTitleSuffix;
              grName = "RF_A" + TString::Itoa(aa,10) + "_kindep_" + grNameSuffix;
              RFkindepGr[aa] = new TGraphErrors();
              RFkindepGr[aa]->SetName(grName);
@@ -328,8 +351,8 @@ int main(int argc, char** argv) {
 
            grTitle = 
              "#chi^{2}/NDF of " +
-             dihTitle + " " + (A->ModulationTitle).Data() + " vs. " +
-             grTitleSuffix;
+             dihTitle + " A_{LU}[" + A->ModulationTitle + "]_{l.f.} " + 
+             " vs. " + grTitleSuffix;
            grName = "chindf_" + grNameSuffix;
            chindfGr = new TGraphErrors();
            chindfGr->SetName(grName);
@@ -344,9 +367,10 @@ int main(int argc, char** argv) {
          };
 
          kindepMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,kindepGr));
+         multiMap.insert(std::pair<Int_t,TMultiGraph*>(binNum,multiGr));
          chindfMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,chindfGr));
          rellumMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,rellumGr));
-         for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+         for(int aa=0; aa<N_AMP; aa++) {
            RFkindepMap[aa].insert(
              std::pair<Int_t,TGraphErrors*>(binNum,RFkindepGr[aa]) );
          };
@@ -365,6 +389,7 @@ int main(int argc, char** argv) {
              ivVar[2], b2
            );
            if(!(A->success)) return 0;
+           N_AMP = A->nAmpUsed;
            asymVec.push_back(A);
            binNum = GetBinNum(b0,b1,b2);
            binMap.insert(std::pair<int,int>(binNum,bcnt));
@@ -382,18 +407,25 @@ int main(int argc, char** argv) {
              );
 
              grTitle =
-               dihTitle + " " + (A->ModulationTitle).Data() + " vs. " +
-               grTitleSuffix;
+               dihTitle + " A_{LU}[" + A->ModulationTitle + "]_{l.f.} " + 
+               " vs. " + grTitleSuffix;
              grName = "kindep_" + grNameSuffix;
              kindepGr = new TGraphErrors();
              kindepGr->SetName(grName);
              kindepGr->SetTitle(grTitle);
 
-             for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+             grTitle =
+               dihTitle + " A_{LU}[" + A->ModulationTitle + "] " + 
+               " vs. " + grTitleSuffix;
+             grName = "multiGr_" + grNameSuffix;
+             multiGr = new TMultiGraph();
+             multiGr->SetName(grName);
+             multiGr->SetTitle(grTitle);
+
+             for(int aa=0; aa<N_AMP; aa++) {
                grTitle = 
-                 "[RooFit A" + TString::Itoa(aa,10) + "] " +
-                 dihTitle + " " + (A->ModulationTitle).Data() + " vs. " +
-                 grTitleSuffix;
+                 dihTitle + " " + TString(A->rfA[aa]->GetTitle()) + "_{m.l.m.} " +
+                 " vs. " + grTitleSuffix;
                grName = "RF_A" + TString::Itoa(aa,10) + "_kindep_" + grNameSuffix;
                RFkindepGr[aa] = new TGraphErrors();
                RFkindepGr[aa]->SetName(grName);
@@ -402,8 +434,8 @@ int main(int argc, char** argv) {
 
              grTitle = 
                "#chi^{2}/NDF of " +
-               dihTitle + " " + (A->ModulationTitle).Data() + " vs. " +
-               grTitleSuffix;
+               dihTitle + " A_{LU}[" + A->ModulationTitle + "]_{l.f.} " + 
+               " vs. " + grTitleSuffix;
              grName = "chindf_" + grNameSuffix;
              chindfGr = new TGraphErrors();
              chindfGr->SetName(grName);
@@ -418,9 +450,10 @@ int main(int argc, char** argv) {
            };
 
            kindepMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,kindepGr));
+           multiMap.insert(std::pair<Int_t,TMultiGraph*>(binNum,multiGr));
            chindfMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,chindfGr));
            rellumMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,rellumGr));
-           for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+           for(int aa=0; aa<N_AMP; aa++) {
              RFkindepMap[aa].insert(
                std::pair<Int_t,TGraphErrors*>(binNum,RFkindepGr[aa]) );
            };
@@ -429,6 +462,8 @@ int main(int argc, char** argv) {
        };
      };
    };
+
+
 
 
    // overall summary plots
@@ -527,6 +562,7 @@ int main(int argc, char** argv) {
            kinError = A->ivDist3->GetRMS(1);
            break;
        };
+       kinError = 0; // OVERRIDE
 
        // chi2 and ndf
        if(!(A->asym2d)) {
@@ -545,7 +581,7 @@ int main(int argc, char** argv) {
        kindepGr->SetPoint(A->B[0],kinValue,asymValue);
        kindepGr->SetPointError(A->B[0],kinError,asymError);
 
-       for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+       for(int aa=0; aa<N_AMP; aa++) {
          RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
          RFkindepGr[aa]->SetPoint(A->B[0],kinValue,A->rfA[aa]->getVal());
          RFkindepGr[aa]->SetPointError(A->B[0],kinError,A->rfA[aa]->getError());
@@ -561,6 +597,9 @@ int main(int argc, char** argv) {
      };
 
    };
+
+   
+   // build multigraph of asymmetries
 
 
    //gStyle->SetOptFit(1); // (better to put this in your ~/.rootlogon.C file)
@@ -601,7 +640,7 @@ int main(int argc, char** argv) {
    kindepCanv->Divide(divX,divY);
 
    TCanvas * RFkindepCanv[Asymmetry::nAmp];
-   for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+   for(int aa=0; aa<N_AMP; aa++) {
      canvName = "RF_A"+TString::Itoa(aa,10)+"_kindep" + canvNameSuffix;
      RFkindepCanv[aa] = new TCanvas(canvName,canvName,canvX,canvY);
      RFkindepCanv[aa]->Divide(divX,divY);
@@ -630,7 +669,7 @@ int main(int argc, char** argv) {
 
 
 
-   // -- add objects to canvases
+   // -- add objects to canvases and graphs to multiGr
    Int_t pad;
    if(dimensions==1) {
      binNum = GetBinNum(0);
@@ -639,10 +678,15 @@ int main(int argc, char** argv) {
      kindepCanv->cd();
      DrawKinDepGraph(kindepGr,BS,ivVar[0]);
 
-     for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+     multiGr = multiMap.at(binNum);
+     multiGr->Add(kindepGr);
+
+     for(int aa=0; aa<N_AMP; aa++) {
        RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
        RFkindepCanv[aa]->cd();
        DrawKinDepGraph(RFkindepGr[aa],BS,ivVar[0]);
+       RFkindepGrClone[aa] = ShiftGraph(RFkindepGr[aa],aa+1);
+       multiGr->Add(RFkindepGrClone[aa]);
      };
 
      chindfGr = chindfMap.at(binNum);
@@ -677,10 +721,15 @@ int main(int argc, char** argv) {
        kindepCanv->cd(pad);
        DrawKinDepGraph(kindepGr,BS,ivVar[0]);
 
-       for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+       multiGr = multiMap.at(binNum);
+       multiGr->Add(kindepGr);
+
+       for(int aa=0; aa<N_AMP; aa++) {
          RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
          RFkindepCanv[aa]->cd(pad);
          DrawKinDepGraph(RFkindepGr[aa],BS,ivVar[0]);
+         RFkindepGrClone[aa] = ShiftGraph(RFkindepGr[aa],aa+1);
+         multiGr->Add(RFkindepGrClone[aa]);
        };
        
        chindfGr = chindfMap.at(binNum);
@@ -717,10 +766,15 @@ int main(int argc, char** argv) {
          kindepCanv->cd(pad);
          DrawKinDepGraph(kindepGr,BS,ivVar[0]);
 
-         for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+         multiGr = multiMap.at(binNum);
+         multiGr->Add(kindepGr);
+
+         for(int aa=0; aa<N_AMP; aa++) {
            RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
            RFkindepCanv[aa]->cd(pad);
            DrawKinDepGraph(RFkindepGr[aa],BS,ivVar[0]);
+           RFkindepGrClone[aa] = ShiftGraph(RFkindepGr[aa],aa+1);
+           multiGr->Add(RFkindepGrClone[aa]);
          };
 
          chindfGr = chindfMap.at(binNum);
@@ -886,11 +940,13 @@ int main(int argc, char** argv) {
        binNum = GetBinNum(A->B[0], A->B[1], A->B[2]);
        kindepGr = kindepMap.at(binNum);
        kindepGr->Write();
+       multiGr = multiMap.at(binNum);
+       multiGr->Write();
      };
    };
 
    kindepCanv->Write();
-   for(int aa=0; aa<Asymmetry::nAmp; aa++) RFkindepCanv[aa]->Write();
+   for(int aa=0; aa<N_AMP; aa++) RFkindepCanv[aa]->Write();
    chindfCanv->Write();
    chisqDist->Write();
    rellumCanv->Write();
@@ -911,7 +967,7 @@ int main(int argc, char** argv) {
      A = *it;
      if(A->roofitter) {
        
-       for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+       for(int aa=0; aa<N_AMP; aa++) {
          rfCanvName[aa] = "RF_A" + TString::Itoa(aa,10) + "_NLL_" + A->binN;
          rfCanv[aa] = new TCanvas(rfCanvName[aa],rfCanvName[aa],800,800);
          A->rfNLLplot[aa]->Draw();
@@ -926,10 +982,17 @@ int main(int argc, char** argv) {
        };
        printf("\n");
 
-       for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+       for(int aa=0; aa<N_AMP; aa++) {
          printf(" >> A%d = %.3f +/- %.3f\n",
            aa, A->rfA[aa]->getVal(), A->rfA[aa]->getError() );
        };
+       /*
+       printf(" >> Y+ = %.3f +/- %.3f\n",
+         A->rfYield[0]->getVal(), A->rfYield[0]->getError() );
+       printf(" >> Y- = %.3f +/- %.3f\n",
+         A->rfYield[1]->getVal(), A->rfYield[1]->getError() );
+       */
+
        printf("\n");
 
      };
@@ -965,7 +1028,7 @@ int main(int argc, char** argv) {
    if(batchMode) {
      pngName = Form("spinout/%s.%s.png",kindepCanv->GetName(),dihName.Data());
      kindepCanv->Print(pngName,"png");
-     for(int aa=0; aa<Asymmetry::nAmp; aa++) {
+     for(int aa=0; aa<N_AMP; aa++) {
        pngName = Form("spinout/%s.%s.png",RFkindepCanv[aa]->GetName(),dihName.Data());
        RFkindepCanv[aa]->Print(pngName,"png");
      };
@@ -1136,3 +1199,31 @@ void SetCloneName(TH1 * clone_) {
   clone_->SetName(cloneName);
   clone_->SetTitle(cloneTitle);
 };
+
+
+// shift a graph's points to the right slightly (a clone of the graph, with shifted
+// points, is returned)
+TGraphErrors * ShiftGraph(TGraphErrors * gr, Int_t nShift) {
+  //TGraphErrors * retGr = (TGrapErrors*) gr->Clone();
+  TGraphErrors * retGr = new TGraphErrors();
+  Double_t * grX = gr->GetX();
+  Double_t * grY = gr->GetY();
+  Double_t * grEX = gr->GetEX();
+  Double_t * grEY = gr->GetEY();
+  for(int nn=0; nn<gr->GetN(); nn++) {
+    retGr->SetPoint(nn, grX[nn]+nShift*0.01, grY[nn]);
+    retGr->SetPointError(nn, grEX[nn], grEY[nn]);
+  };
+
+  if(nShift==1) retGr->SetLineColor(kBlack);
+  else retGr->SetLineColor(kGray);
+
+  retGr->SetLineWidth(2);
+
+  retGr->SetMarkerStyle(kCircle);
+  retGr->SetMarkerColor(kBlack);
+  retGr->SetMarkerSize(1.3);
+
+  return retGr;
+};
+
