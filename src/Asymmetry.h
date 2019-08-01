@@ -191,18 +191,17 @@ class Asymmetry : public TObject
 
     // RooFit variables
     Bool_t roofitter;
-    RooDataSet * rfData[2];
-    RooDataSet * rfCombData;
+    RooDataSet * rfData;
     RooGenericPdf * rfPdf[2];
     //RooExtendPdf * rfModelExt[2];
     //RooAddPdf * rfPdf[2];
     RooSimultaneous * rfSimPdf;
-    RooCategory * rfCateg;
+    RooCategory * rfSpinCateg;
     RooFitResult * rfResult;
     RooArgSet * rfVars;
     RooArgSet * rfParams[2];
     TString rfPdfFormu[2];
-    TString rfTypeName[2];
+    TString rfSpinName[2];
 
     TString rfModulation[nMod];
     TString pwFactorSP,pwFactorPP;
@@ -211,7 +210,8 @@ class Asymmetry : public TObject
     Float_t rfParamRange;
 
 
-    RooRealVar *rfPhiH, *rfPhiR, *rfWeight, *rfTheta;
+    RooRealVar *rfPhiH, *rfPhiR, *rfTheta;
+    RooRealVar *rfWeight;
     static const Int_t nAmp = 4;
     Int_t nAmpUsed;
     TString rfAname[nAmp];

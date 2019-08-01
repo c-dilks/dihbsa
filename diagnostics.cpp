@@ -153,6 +153,10 @@ int main(int argc, char** argv) {
    TH2D * g1perpWeightVsMod = new TH2D("g1perpWeightVsMod",plotTitle,
      NBINS,-1.1,1.1,
      NBINS,0,6);
+   TH2D * PhPerpVsMh = new TH2D("PhPerpVsMh",
+     "P_{h}^{perp} vs. M_{h};M_{h};P_{h}^{perp}",
+     NBINS,0,3,
+     NBINS,0,3);
 
    // distributions for partial wave analysis
    TH1D * thetaDist = new TH1D("thetaDist","#theta distribution;#theta",NBINS,0,PI);
@@ -352,6 +356,7 @@ int main(int argc, char** argv) {
 
        PhiHRDist->Fill(ev->PhiHR);
        g1perpWeightVsMod->Fill(TMath::Sin(ev->PhiHR),ev->PhPerp/ev->Mh);
+       PhPerpVsMh->Fill(ev->Mh,ev->PhPerp);
 
        thetaDist->Fill(ev->theta);
        sinThetaDist->Fill(TMath::Sin(ev->theta));
@@ -454,7 +459,8 @@ int main(int argc, char** argv) {
 
    PhiHRDist->Write();
    g1perpWeightVsMod->Write();
-
+   PhPerpVsMh->Write(); 
+  
    thetaDist->Write();
    sinThetaDist->Write();
    cosThetaDist->Write();

@@ -310,25 +310,24 @@ Bool_t Asymmetry::FillPlots() {
   if(spinn<0 || spinn>=nSpin) return false;
 
 
+  // evaluate modulation 
+  modulation = EvalModulation(); // (if asym2d==true, modulation=-10000, i.e., not used)
+
+  // set weight (it's just 1, unless whichMod is set to do a weighted analysis)
+  weight = EvalWeight();
+
   // set RooFit vars
   if(roofitter) {
-    *rfPhiH = PhiH;
-    *rfPhiR = PhiR;
-    *rfWeight = Mh>0 ? PhPerp/Mh : 0;
-    *rfTheta = theta;
-    rfData[spinn]->add(*rfVars);
+    rfPhiH->setVal(PhiH);
+    rfPhiR->setVal(PhiR);
+    rfWeight->setVal(weight);
+    rfTheta->setVal(theta);
+    rfSpinCateg->setLabel(rfSpinName[spinn]);
+    rfData->add(*rfVars,rfWeight->getVal());
   };
 
 
 
-  // evaluate modulation 
-  modulation = EvalModulation(); // (if asym2d==true, modulation=-10000, i.e., not used)
-
-
-
-
-  // set weight (it's just 1, unless whichMod is set to do a weighted analysis)
-  weight = EvalWeight();
 
 
   // fill plots
@@ -449,12 +448,20 @@ Bool_t Asymmetry::InitRooFit() {
 
   // initialize variables and parameters and data set containers
   // -------------------------------------------------------------
+  // - build category to index spins
+  rfSpinCateg = new RooCategory("rfSpinCateg","rfSpinCateg");
+  for(int s=0; s<nSpin; s++) {
+    rfSpinName[s] = "rfSpin" + SpinName(s);
+    rfSpinCateg->defineType(rfSpinName[s]);
+  };
   // - event vars
   rfPhiH = new RooRealVar("rfPhiH","#phi_{h}",-PIe,PIe);
   rfPhiR = new RooRealVar("rfPhiR","#phi_{R}",-PIe,PIe);
-  rfWeight = new RooRealVar("rfWeight","P_{h}^{T}/M_{h}",0,4);
   rfTheta = new RooRealVar("rfTheta","#theta",-PIe,PIe);
-  rfVars = new RooArgSet(*rfPhiH,*rfPhiR,*rfWeight,*rfTheta);
+  rfWeight = new RooRealVar("rfWeight","P_{h}^{T}/M_{h}",0,10);
+  rfVars = new RooArgSet(*rfPhiH,*rfPhiR,*rfTheta);
+  rfVars->add(*rfWeight);
+  rfVars->add(*rfSpinCateg);
 
   // - amplitudes (fit parameters)
   rfParamRange = 0.5;
@@ -469,13 +476,11 @@ Bool_t Asymmetry::InitRooFit() {
   rfYieldBoth = new RooRealVar("rfYieldBoth","Y",1e5);
 
   // - data sets for each spin
-  for(int s=0; s<nSpin; s++) {
-    rfData[s] = new RooDataSet(
-      TString("rfData"+SpinName(s)),
-      TString("rfData"+SpinName(s)),
-      *rfVars
-    );
-  };
+  rfData = new RooDataSet(
+    "rfData","rfData",
+    *rfVars,
+    rfWeight->GetName()
+  );
 
 
   // build asymmetry modulation paramaterization "asymExpansion" 
@@ -485,9 +490,9 @@ Bool_t Asymmetry::InitRooFit() {
   // -- modulations
   rfModulation[modSinPhiR] = "TMath::Sin(rfPhiR)";
   rfModulation[modSinPhiHR] = "TMath::Sin(rfPhiH-rfPhiR)";
-  rfModulation[weightSinPhiHR] = "rfWeight*TMath::Sin(rfPhiH-rfPhiR)";
+  rfModulation[weightSinPhiHR] = "TMath::Sin(rfPhiH-rfPhiR)";
   rfModulation[modSinPhiH] = "TMath::Sin(rfPhiH)";
-  rfModulation[mod2d] = "rfWeight*TMath::Sin(rfPhiH-rfPhiR)";
+  rfModulation[mod2d] = "TMath::Sin(rfPhiH-rfPhiR)";
 
   // -- partial wave expansion factors
   //pwFactorSP = "TMath::Sin(rfTheta)";
@@ -573,7 +578,6 @@ void Asymmetry::CalculateRooAsymmetries() {
     rfParams[s] = new RooArgSet();
     if(rfPdfFormu[s].Contains("rfPhiH")) rfParams[s]->add(*rfPhiH);
     if(rfPdfFormu[s].Contains("rfPhiR")) rfParams[s]->add(*rfPhiR);
-    if(rfPdfFormu[s].Contains("rfWeight")) rfParams[s]->add(*rfWeight);
     if(rfPdfFormu[s].Contains("rfTheta")) rfParams[s]->add(*rfTheta);
     for(int aa=0; aa<nAmpUsed; aa++) rfParams[s]->add(*rfA[aa]);
     
@@ -598,37 +602,24 @@ void Asymmetry::CalculateRooAsymmetries() {
     */
   };
 
-  // build category and combine data sets from each spin
-  rfCateg = new RooCategory("rfCateg","rfCateg");
-  for(int s=0; s<nSpin; s++) {
-    rfTypeName[s] = "rfType" + SpinName(s);
-    rfCateg->defineType(rfTypeName[s]);
-  };
-  rfCombData = new RooDataSet(
-    "rfCombData","rfCombData",
-    *rfVars,
-    RooFit::Index(*rfCateg),
-    RooFit::Import(rfTypeName[sP],*rfData[sP]),
-    RooFit::Import(rfTypeName[sM],*rfData[sM])
-  );
 
 
   // build simultanous PDF 
-  rfSimPdf = new RooSimultaneous("rfSimPdf","rfSimPdf",*rfCateg);
-  for(int s=0; s<nSpin; s++) rfSimPdf->addPdf(*rfPdf[s],rfTypeName[s]);
+  rfSimPdf = new RooSimultaneous("rfSimPdf","rfSimPdf",*rfSpinCateg);
+  for(int s=0; s<nSpin; s++) rfSimPdf->addPdf(*rfPdf[s],rfSpinName[s]);
 
 
   // fit simultaneous PDF to combined data
-  rfSimPdf->fitTo(*rfCombData);
-  //rfResult = rfSimPdf->fitTo(*rfCombData, RooFit::Extended(kTRUE), RooFit::Save(kTRUE));
-  //rfSimPdf->fitTo(*rfCombData,RooFit::PrintLevel(-1));
+  rfResult = rfSimPdf->fitTo(*rfData, RooFit::Save());
+  //rfResult = rfSimPdf->fitTo(*rfData, RooFit::Extended(kTRUE), RooFit::Save(kTRUE));
+  //rfSimPdf->fitTo(*rfData,RooFit::PrintLevel(-1));
   /*
-  rfResult = rfSimPdf->fitTo(*rfCombData,RooFit::Save());
-  //rfResult = rfSimPdf->fitTo(*rfCombData,RooFit::PrintLevel(-1),RooFit::Save());
+  rfResult = rfSimPdf->fitTo(*rfData,RooFit::Save());
+  //rfResult = rfSimPdf->fitTo(*rfData,RooFit::PrintLevel(-1),RooFit::Save());
   */
 
   // get -log likelihood
-  rfNLL = new RooNLLVar("rfNLL","rfNLL",*rfSimPdf,*rfCombData);
+  rfNLL = new RooNLLVar("rfNLL","rfNLL",*rfSimPdf,*rfData);
   for(int aa=0; aa<nAmp; aa++) {
     if(aa<nAmpUsed) {
       rfNLLplot[aa] = rfA[aa]->frame(
@@ -643,13 +634,10 @@ void Asymmetry::CalculateRooAsymmetries() {
 
 
   // print fit results
-  /*
   Tools::PrintTitleBox("ROOFIT RESULTS");
   this->PrintSettings();
-  rfResult->Print();
-  //rfResult->Print("v"); // verbose printout
+  rfResult->Print("v");
   Tools::PrintSeparator(30);
-  */
 
 };
 
