@@ -173,10 +173,22 @@ int main(int argc, char** argv) {
 
    TH2D * thetaVsMh = new TH2D("thetaVsMh","#theta vs. M_{h};M_{h};#theta",
      NBINS,0,3,NBINS,0,PIe);
-   TH2D * thetaVsZ = new TH2D("thetaVsZ","#theta vs. z;z;#theta",
+   TH2D * thetaVsZpair = new TH2D("thetaVsZpair","#theta vs. z;z;#theta",
      NBINS,0,1,NBINS,0,PIe);
    TH2D * thetaVsX = new TH2D("thetaVsX","#theta vs. x;x;#theta",
      NBINS,0,1,NBINS,0,PIe);
+   TH2D * thetaVsP = new TH2D("thetaVsP","#theta vs. p;p;#theta",
+     NBINS,0,10,NBINS,0,PIe);
+   TH2D * thetaVsZ[2];
+   TH2D * thetaVsHadP[2];
+   for(int h=0; h<2; h++) {
+     thetaVsZ[h] = new TH2D(TString("thetaVsZ_"+hadName[h]),
+       TString("#theta vs. "+hadTitle[h]+" z;z;#theta"),
+       NBINS,0,1,NBINS,0,PIe);
+     thetaVsHadP[h] = new TH2D(TString("thetaVsHadP_"+hadName[h]),
+       TString("#theta vs. "+hadTitle[h]+" p;p;#theta"),
+       NBINS,0,10,NBINS,0,PIe);
+   };
    
    TH1D * sinThetaDist = new TH1D("sinThetaDist",
      "sin(#theta) distribution;sin(#theta)",NBINS,-1.1,1.1);
@@ -369,7 +381,12 @@ int main(int argc, char** argv) {
 
        thetaVsMh->Fill(ev->Mh,ev->theta);
        thetaVsX->Fill(ev->x,ev->theta);
-       thetaVsZ->Fill(ev->Zpair,ev->theta);
+       thetaVsZpair->Fill(ev->Zpair,ev->theta);
+       thetaVsP->Fill(ev->Ph,ev->theta);
+       for(int h=0; h<2; h++) {
+         thetaVsZ[h]->Fill(ev->Z[h],ev->theta);
+         thetaVsHadP[h]->Fill(ev->hadP[h],ev->theta);
+       };
 
        PhiHvsMh->Fill(ev->Mh,ev->PhiH);
        PhiHvsX->Fill(ev->x,ev->PhiH);
@@ -472,7 +489,10 @@ int main(int argc, char** argv) {
 
    thetaVsMh->Write();
    thetaVsX->Write();
-   thetaVsZ->Write();
+   thetaVsZpair->Write();
+   for(int h=0; h<2; h++) thetaVsZ[h]->Write();
+   thetaVsP->Write();
+   for(int h=0; h<2; h++) thetaVsHadP[h]->Write();
 
    PhiHvsMh->Write();
    PhiHvsX->Write();

@@ -4,6 +4,8 @@
 #include "TString.h"
 #include "TMath.h"
 #include "TH1.h"
+#include "TH2.h"
+#include "TProfile.h"
 #include "TLorentzVector.h"
 
 class Tools {
@@ -123,6 +125,21 @@ class Tools {
         if( fabs( fabs(phi_) - p*PI/3.0) < 0.35 ) return true;
       };
       return false;
+    };
+
+    
+    static void ApplyProfile(TH2D * histo, Int_t whichAxis) {
+      TProfile * prof;
+      switch(whichAxis) {
+        case 1: prof = histo->ProfileX(); break;
+        case 2: prof = histo->ProfileY(); break;
+        default: 
+          fprintf(stderr,"ERROR: bad whichAxis in Tools::ApplyProfile\n");
+          return;
+      };
+      prof->SetLineColor(kBlack);
+      prof->SetLineWidth(3);
+      prof->Draw("same");
     };
 
 

@@ -501,7 +501,7 @@ Bool_t Asymmetry::InitRooFit() {
   pwFactorPP = "TMath::Cos(rfTheta)";
 
   // -- build formula with modulation and PW amplitudes
-  Int_t whichFormu = 0; //  <-- <-- <-- <-- <-- <-- <-- <-- <-- <-- <--
+  Int_t whichFormu = 3; //  <-- <-- <-- <-- <-- <-- <-- <-- <-- <-- <--
   switch(whichFormu) {
     case 0: // test whichMod modulation
       asymExpansion = 

@@ -17,6 +17,7 @@
 #include "TFile.h"
 #include "TString.h"
 #include "TMath.h"
+#include "TRandom.h"
 
 // dihbsa
 #include "Constants.h"
@@ -128,6 +129,8 @@ class EventTree : public TObject
   private:
     TChain * chain;
     Int_t whichHad[2];
+
+    TRandom * RNG;
 
 
   ClassDef(EventTree,1);
