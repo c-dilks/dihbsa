@@ -45,6 +45,7 @@
 #include <RooAddPdf.h>
 #include <RooPlot.h>
 #include <RooNLLVar.h>
+#include <RooMinuit.h>
 
 
 // dihbsa
@@ -220,7 +221,9 @@ class Asymmetry : public TObject
     RooRealVar *rfYield[2];
 
     RooNLLVar * rfNLL;
+    RooAbsReal * rfNLLcreated;
     RooPlot * rfNLLplot[nAmp];
+    RooPlot * rfNLLcreatedPlot[nAmp];
 
   private:
 

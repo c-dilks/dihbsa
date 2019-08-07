@@ -260,7 +260,8 @@ Asymmetry::Asymmetry(
     fitFunc->SetParName(0,"B");
     fitFunc->SetParName(1,"A_{LU}");
   } else {
-    fitFunc2 = new TF2(fitFuncName,"[0]*TMath::Sin(y-x)",-aziMax,aziMax);
+    fitFunc2 = new TF2(fitFuncName,"[0]*TMath::Sin(y-x)",-aziMax,aziMax); // +++
+    //fitFunc2 = new TF2(fitFuncName,"[0]*TMath::Sin(x)",-aziMax,aziMax); // +++
     fitFunc2->SetParName(0,"A_{LU}");
   };
 
@@ -492,7 +493,8 @@ Bool_t Asymmetry::InitRooFit() {
   rfModulation[modSinPhiHR] = "TMath::Sin(rfPhiH-rfPhiR)";
   rfModulation[weightSinPhiHR] = "TMath::Sin(rfPhiH-rfPhiR)";
   rfModulation[modSinPhiH] = "TMath::Sin(rfPhiH)";
-  rfModulation[mod2d] = "TMath::Sin(rfPhiH-rfPhiR)";
+  rfModulation[mod2d] = "TMath::Sin(rfPhiH-rfPhiR)"; // +++
+  //rfModulation[mod2d] = "TMath::Sin(rfPhiR)"; // +++
 
   // -- partial wave expansion factors
   //pwFactorSP = "TMath::Sin(rfTheta)";
@@ -610,6 +612,10 @@ void Asymmetry::CalculateRooAsymmetries() {
 
 
   // fit simultaneous PDF to combined data
+  Tools::PrintSeparator(100,"=");
+  printf("call PDF fit with MIGRAD\n");
+  Tools::PrintSeparator(100,"=");
+
   rfResult = rfSimPdf->fitTo(*rfData, RooFit::Save());
   //rfResult = rfSimPdf->fitTo(*rfData, RooFit::Extended(kTRUE), RooFit::Save(kTRUE));
   //rfSimPdf->fitTo(*rfData,RooFit::PrintLevel(-1));
@@ -618,26 +624,43 @@ void Asymmetry::CalculateRooAsymmetries() {
   //rfResult = rfSimPdf->fitTo(*rfData,RooFit::PrintLevel(-1),RooFit::Save());
   */
 
-  // get -log likelihood
+  Tools::PrintSeparator(100,"=");
+  printf("call NLL minimization with MIGRAD\n");
+  Tools::PrintSeparator(100,"=");
+  // get -log likelihood (old way)
   rfNLL = new RooNLLVar("rfNLL","rfNLL",*rfSimPdf,*rfData);
+  // minimize -log likelihood (new teting way)
+  rfNLLcreated = rfSimPdf->createNLL(*rfData,RooFit::NumCPU(8));
+  RooMinuit(*rfNLLcreated).migrad(); // MIGRAD minimization
+
   for(int aa=0; aa<nAmp; aa++) {
     if(aa<nAmpUsed) {
       rfNLLplot[aa] = rfA[aa]->frame(
         RooFit::Range(-rfParamRange,rfParamRange),
-        RooFit::Title(TString("-log(L) scan vs. A"+TString::Itoa(aa,10)))
+        RooFit::Title(TString("[OLD] -log(L) scan vs. A"+TString::Itoa(aa,10)))
       );
-      rfNLL->plotOn(rfNLLplot[aa]);
+      rfNLLcreatedPlot[aa] = rfA[aa]->frame(
+        RooFit::Range(-rfParamRange,rfParamRange),
+        RooFit::Title(TString("[NEW] -log(L) scan vs. A"+TString::Itoa(aa,10)))
+      );
+      rfNLL->plotOn(rfNLLplot[aa],RooFit::ShiftToZero());
+      rfNLLcreated->plotOn(rfNLLcreatedPlot[aa],RooFit::ShiftToZero());
     } else {
       rfNLLplot[aa] = new RooPlot(); // unused
+      rfNLLcreatedPlot[aa] = new RooPlot(); // unused
     };
   };
 
+
+  Tools::PrintSeparator(100,"=");
 
   // print fit results
   Tools::PrintTitleBox("ROOFIT RESULTS");
   this->PrintSettings();
   rfResult->Print("v");
   Tools::PrintSeparator(30);
+
+  Tools::PrintSeparator(100,"=");
 
 };
 
@@ -717,9 +740,9 @@ Float_t Asymmetry::EvalModulation() {
 
 
 Float_t Asymmetry::EvalWeight() {
-  if( whichMod == weightSinPhiHR ||
-      whichMod == mod2d
-  ) {
+  if( whichMod == weightSinPhiHR
+      || whichMod == mod2d
+  ) { //+++
     return Mh>0 ? PhPerp/Mh : 0;
   };
   return 1;

@@ -96,7 +96,7 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("diphPhi",diphPhi);
 
   // random number generator
-  RNG = new TRandom(642); // (argument is seed)
+  RNG = new TRandom(928); // (argument is seed)
 };
 
 
@@ -105,9 +105,9 @@ void EventTree::GetEvent(Int_t i) {
 
   chain->GetEntry(i);
 
-  // HERMES theta symmetrization (rectifies Cos(theta))
-  // theta = fabs( fabs(theta-PI/2.0) - PI/2.0 ); 
-  //if(Z[qB] > Z[qA]) theta = PI - theta; // symmetrization tests
+  // theta symmetrization tests
+  //theta = fabs( fabs(theta-PI/2.0) - PI/2.0 ); // HERMES symmetrization
+  //if(Z[qB] > Z[qA]) theta = PI - theta; // Z symmetrization
   //if( RNG->Rndm() > 0.5 ) theta = PI - theta; // coin-flip symmetrization
 
   // DIS cuts
@@ -187,6 +187,10 @@ void EventTree::GetEvent(Int_t i) {
   PhiR = PhiRp;
 
   PhiHR = Tools::AdjAngle( PhiH - PhiR );
+
+  // calculate zeta
+  zeta = ( Z[qA] - Z[qB] ) / Zpair;
+
 };
 
 

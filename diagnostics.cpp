@@ -135,6 +135,7 @@ int main(int argc, char** argv) {
 
    TH1D * MhDist = new TH1D("MhDist","M_{h} distribution;M_{h}",2*NBINS,0,3);
    TH1D * ZpairDist = new TH1D("ZpairDist","z_{pair} distribution;z_{pair}",NBINS,0,1);
+   TH1D * zetaDist = new TH1D("zetaDist","#zeta distribution;#zeta",NBINS,-1,1);
    TH1D * xFDist = new TH1D("xFDist","x_{F} distribution;x_{F}",NBINS,-2,2);
    TH1D * MmissDist = new TH1D("MmissDist","M_{X} distribution;M_{X}",NBINS,-2,6);
    
@@ -175,10 +176,13 @@ int main(int argc, char** argv) {
      NBINS,0,3,NBINS,0,PIe);
    TH2D * thetaVsZpair = new TH2D("thetaVsZpair","#theta vs. z;z;#theta",
      NBINS,0,1,NBINS,0,PIe);
+   TH2D * thetaVsZeta = new TH2D("thetaVsZeta","#theta vs. #zeta;#zeta;#theta",
+     NBINS,-1,1,NBINS,0,PIe);
    TH2D * thetaVsX = new TH2D("thetaVsX","#theta vs. x;x;#theta",
      NBINS,0,1,NBINS,0,PIe);
-   TH2D * thetaVsP = new TH2D("thetaVsP","#theta vs. p;p;#theta",
+   TH2D * thetaVsPh = new TH2D("thetaVsPh","#theta vs. p;p;#theta",
      NBINS,0,10,NBINS,0,PIe);
+
    TH2D * thetaVsZ[2];
    TH2D * thetaVsHadP[2];
    for(int h=0; h<2; h++) {
@@ -359,6 +363,7 @@ int main(int argc, char** argv) {
 
        MhDist->Fill(ev->Mh);
        ZpairDist->Fill(ev->Zpair);
+       zetaDist->Fill(ev->zeta);
        xFDist->Fill(ev->xF);
        MmissDist->Fill(ev->Mmiss);
 
@@ -382,7 +387,8 @@ int main(int argc, char** argv) {
        thetaVsMh->Fill(ev->Mh,ev->theta);
        thetaVsX->Fill(ev->x,ev->theta);
        thetaVsZpair->Fill(ev->Zpair,ev->theta);
-       thetaVsP->Fill(ev->Ph,ev->theta);
+       thetaVsZeta->Fill(ev->zeta,ev->theta);
+       thetaVsPh->Fill(ev->Ph,ev->theta);
        for(int h=0; h<2; h++) {
          thetaVsZ[h]->Fill(ev->Z[h],ev->theta);
          thetaVsHadP[h]->Fill(ev->hadP[h],ev->theta);
@@ -467,6 +473,7 @@ int main(int argc, char** argv) {
 
    MhDist->Write();
    ZpairDist->Write();
+   zetaDist->Write();
    xFDist->Write();
    MmissDist->Write();
 
@@ -490,8 +497,9 @@ int main(int argc, char** argv) {
    thetaVsMh->Write();
    thetaVsX->Write();
    thetaVsZpair->Write();
+   thetaVsZeta->Write();
    for(int h=0; h<2; h++) thetaVsZ[h]->Write();
-   thetaVsP->Write();
+   thetaVsPh->Write();
    for(int h=0; h<2; h++) thetaVsHadP[h]->Write();
 
    PhiHvsMh->Write();

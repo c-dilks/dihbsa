@@ -970,7 +970,11 @@ int main(int argc, char** argv) {
        for(int aa=0; aa<N_AMP; aa++) {
          rfCanvName[aa] = "RF_A" + TString::Itoa(aa,10) + "_NLL_" + A->binN;
          rfCanv[aa] = new TCanvas(rfCanvName[aa],rfCanvName[aa],800,800);
+         rfCanv[aa]->Divide(2,1);
+         rfCanv[aa]->cd(1);
          A->rfNLLplot[aa]->Draw();
+         rfCanv[aa]->cd(2);
+         A->rfNLLcreatedPlot[aa]->Draw();
          rfCanv[aa]->Write();
        };
 
