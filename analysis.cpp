@@ -278,6 +278,13 @@ int main(int argc, char** argv) {
 
 #elif HIPO_VERSION == 4
    clas12::clas12reader reader(infileN.Data()); // HIPO4
+   printf("BEGIN TEST DICTIONARY READ\n");
+   hipo::dictionary factory;
+   reader.getReader().readDictionary(factory);
+   //factory.show();
+
+   hipo::event readerEvent;
+   hipo::bank mcLund(factory.getSchema("MC::Lund"));
 #endif
 
    
@@ -399,6 +406,8 @@ int main(int argc, char** argv) {
        vecObsPz = particleBank.getFloat(o_pz,i);
 
 #elif HIPO_VERSION == 4
+     /*
+     // reconstructed particles
      particleCntAll = reader.getNParticles(); // -->tree
      if(debug) printf("reader.getNParticles() = %d\n",particleCntAll);
      for(auto & part : reader.getDetParticles()) {
@@ -407,6 +416,17 @@ int main(int argc, char** argv) {
        vecObsPx = part->par()->getPx();
        vecObsPy = part->par()->getPy();
        vecObsPz = part->par()->getPz();
+       */
+     // MC::Lund particles
+     reader.getReader().read(readerEvent);
+ 		 readerEvent.getStructure(mcLund);
+     particleCntAll = mcLund.getRows(); // -->tree
+     printf("mcLund.getRows() = %d\n",particleCntAll);
+     for(int rr=0; rr<particleCntAll; rr++) {
+       pidCur = mcLund.getInt("pid",rr);
+       vecObsPx = mcLund.getFloat("px",rr);
+       vecObsPy = mcLund.getFloat("py",rr);
+       vecObsPz = mcLund.getFloat("pz",rr);
 #endif
 
 
