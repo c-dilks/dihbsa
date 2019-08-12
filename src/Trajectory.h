@@ -15,10 +15,12 @@
 #include "TTree.h"
 #include "TFile.h"
 #include "TLorentzVector.h"
+#include "TVector3.h"
 #include "TString.h"
 
 // dihbsa
 #include "Constants.h"
+#include "Tools.h"
 
 
 
@@ -35,6 +37,7 @@ class Trajectory : public TObject
     TString Title() { return PartTitle(Idx); };
     Int_t PID() { return PartPID(Idx); };
     Float_t Mass() { return PartMass(Idx); };
+    Float_t Ptq(TLorentzVector q_);
 
 
     Int_t Idx;

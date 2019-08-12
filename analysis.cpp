@@ -16,6 +16,7 @@
 #include "reader.h"
 #include "bank.h"
 #include "particle.h"
+#include "mcparticle.h"
 #include "clas12reader.h"
 
 // DihBsa
@@ -150,14 +151,16 @@ int main(int argc, char** argv) {
    Int_t hadIdx[2]; // particle Idx of each hadron in the pair
    Float_t hadE[2];
    Float_t hadP[2];
-   Float_t hadPt[2];
+   Float_t hadPt[2]; 
+   Float_t hadPtq[2];
    Float_t hadEta[2];
    Float_t hadPhi[2];
-   tree->Branch("pairType",&pairType,"pairType/I");
+   tree->Branch("pairType",&pairType,"pairType/I"); // pair type number
    tree->Branch("hadIdx",hadIdx,"hadIdx[2]/I");
    tree->Branch("hadE",hadE,"hadE[2]/F");
    tree->Branch("hadP",hadP,"hadP[2]/F");
    tree->Branch("hadPt",hadPt,"hadPt[2]/F");
+   tree->Branch("hadPtq",hadPtq,"hadPtq[2]/F");
    tree->Branch("hadEta",hadEta,"hadEta[2]/F");
    tree->Branch("hadPhi",hadPhi,"hadPhi[2]/F");
 
@@ -278,13 +281,14 @@ int main(int argc, char** argv) {
 
 #elif HIPO_VERSION == 4
    clas12::clas12reader reader(infileN.Data()); // HIPO4
+   /*
    printf("BEGIN TEST DICTIONARY READ\n");
    hipo::dictionary factory;
    reader.getReader().readDictionary(factory);
    //factory.show();
-
    hipo::event readerEvent;
    hipo::bank mcLund(factory.getSchema("MC::Lund"));
+   */
 #endif
 
    
@@ -297,6 +301,8 @@ int main(int argc, char** argv) {
    Int_t i1,i2;
 
    Bool_t foundObservablePair;
+   Bool_t useLund = false;
+   Int_t whichEle;
 
 
    // photon pair ("php") variables
@@ -336,6 +342,7 @@ int main(int argc, char** argv) {
        hadE[h] = -10000;
        hadP[h] = -10000;
        hadPt[h] = -10000;
+       hadPtq[h] = -10000;
        hadEta[h] = -10000;
        hadPhi[h] = -10000;
      };
@@ -406,8 +413,8 @@ int main(int argc, char** argv) {
        vecObsPz = particleBank.getFloat(o_pz,i);
 
 #elif HIPO_VERSION == 4
-     /*
      // reconstructed particles
+     ///*
      particleCntAll = reader.getNParticles(); // -->tree
      if(debug) printf("reader.getNParticles() = %d\n",particleCntAll);
      for(auto & part : reader.getDetParticles()) {
@@ -416,17 +423,33 @@ int main(int argc, char** argv) {
        vecObsPx = part->par()->getPx();
        vecObsPy = part->par()->getPy();
        vecObsPz = part->par()->getPz();
-       */
-     // MC::Lund particles
+       //*/
+
+     // MC::Lund particles -- OLD
+     /*
+     useLund = true;
      reader.getReader().read(readerEvent);
  		 readerEvent.getStructure(mcLund);
      particleCntAll = mcLund.getRows(); // -->tree
-     printf("mcLund.getRows() = %d\n",particleCntAll);
+     //printf("mcLund.getRows() = %d\n",particleCntAll);
      for(int rr=0; rr<particleCntAll; rr++) {
        pidCur = mcLund.getInt("pid",rr);
        vecObsPx = mcLund.getFloat("px",rr);
        vecObsPy = mcLund.getFloat("py",rr);
        vecObsPz = mcLund.getFloat("pz",rr);
+       */
+
+     // MC::Lund particles -- NEW
+     /*
+     useLund = true;
+     particleCntAll = (*(reader.mcparts())).getRows(); // -->tree
+     for(int rr=0; rr<particleCntAll; rr++) {
+       pidCur = (*(reader.mcparts())).getPid(rr);
+       vecObsPx = (*(reader.mcparts())).getPx(rr);
+       vecObsPy = (*(reader.mcparts())).getPy(rr);
+       vecObsPz = (*(reader.mcparts())).getPz(rr);
+       */
+
 #endif
 
 
@@ -641,11 +664,15 @@ int main(int argc, char** argv) {
      // HADRON PAIRING, and fill the tree
      // ---------------------------------------------------
      
-     // first make sure there's an electron
-     if(trajCnt[kE] > 0) {
+     // select highest-E electron, or 2nd highest-E electron if reading Lund file
+     // (since the highest-E Lund electron will be the beam electron)
+     whichEle = useLund ? 1 : 0;
+
+     // first make sure there's a scattered electron
+     if(trajCnt[kE] > whichEle) {
 
        // compute DIS kinematics
-       ele = (Trajectory*) trajArr[kE]->At(0); // select highest-E electron
+       ele = (Trajectory*) trajArr[kE]->At(whichEle); 
        disEv->SetElectron(ele);
        disEv->Analyse(); // -->tree
 
@@ -693,12 +720,13 @@ int main(int argc, char** argv) {
 
              if(debug) printf(">>> BEGIN DIHADRON EVENT %s\n",PairName(i1,i2).Data());
 
-             // set hadron kinematics
+             // get hadron kinematics
              pairType = EncodePairType(hadIdx[qA],hadIdx[qB]); // -->tree
              for(int h=0; h<2; h++) {
                hadE[h] = (had[h]->Vec).E(); // -->tree
                hadP[h] = (had[h]->Vec).P(); // -->tree
                hadPt[h] = (had[h]->Vec).Pt(); // -->tree
+               hadPtq[h] = had[h]->Ptq(disEv->vecQ); // -->tree
 
                if(hadE[h]>0 && hadPt[h]>0) {
                  hadEta[h] = (had[h]->Vec).Eta(); // -->tree

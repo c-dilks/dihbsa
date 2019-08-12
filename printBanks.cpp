@@ -36,16 +36,22 @@ int main(int argc, char** argv) {
 
 #if HIPO_VERSION == 3
 
+  /*
   hipo::reader reader; // HIPO3
   reader.open(infileN.Data());
   reader.readDictionary(factory);
+  factory.show();
+  */
+  fprintf(stderr,"HIPO3 not implemented yet\n");
+  return 0;
 
 #elif HIPO_VERSION == 4
+
   clas12::clas12reader c12reader(infileN.Data()); // HIPO4
   c12reader.getReader().readDictionary(factory);
+  factory.show();
 
 #endif
 
 
-  factory.show();
 };
