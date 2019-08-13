@@ -16,11 +16,12 @@ const Int_t NF = 2; // number of files
 enum xenum { kTim, kHarut, kHarutOS, kOrlando, 
              kSimpleC, kSimpleJava, kAnalysis, kAnalysisLund };
 
-//Int_t xcheck[NF] = { kAnalysis, kTim };
+Int_t xcheck[NF] = { kAnalysis, kTim };
 //Int_t xcheck[NF] = { kAnalysisLund, kOrlando };
-//aqui
 //Int_t xcheck[NF] = { kAnalysisLund, kHarut };
 //Int_t xcheck[NF] = { kAnalysisLund, kHarutOS };
+
+//Int_t xcheck[NF] = { kHarut, kOrlando };
 
 //
 ///////////////////////////////
@@ -144,18 +145,22 @@ void CrossChecker() {
           xstr += ":"+hadN[h]+"Theta/F";
           xstr += ":"+hadN[h]+"Phi/F";
           xstr += ":"+hadN[h]+"Ptq/F";
+          xstr += ":"+hadN[h]+"XF/F";
         };
-        xstr += ":PhPerp/F";
+        xstr += ":PhPerp/F:PhiH/F:PhiR1/F:PhiR2/F";
         printf("xtree[%d] branches: %s\n",f,xstr.Data());
         xtree[f]->ReadFile("xtreeHarut.dat",xstr);
 
         xtree[f]->SetBranchAddress("evnum",&evnum[f]);
         xtree[f]->SetBranchAddress("PhPerp",&PhPerp[f]);
+        xtree[f]->SetBranchAddress("PhiH",&PhiH[f]);
+        xtree[f]->SetBranchAddress("PhiR2",&PhiR[f]);
         for(h=0; h<nHad; h++) {
           xtree[f]->SetBranchAddress( TString(hadN[h]+"E"), &hadE[f][h] );
           xtree[f]->SetBranchAddress( TString(hadN[h]+"Ptq"), &hadPtq[f][h] );
           xtree[f]->SetBranchAddress( TString(hadN[h]+"Theta"), &hadTheta[f][h] );
           xtree[f]->SetBranchAddress( TString(hadN[h]+"Phi"), &hadPhi[f][h] );
+          xtree[f]->SetBranchAddress( TString(hadN[h]+"XF"), &hadXF[f][h] );
         };
 
         break;
@@ -383,7 +388,7 @@ void CrossChecker() {
           PrintCompare( "Mh", Mh[0], Mh[1] );
           PrintCompare( "xF", xF[0], xF[1] );
           PrintCompare( "PhPerp", PhPerp[0], PhPerp[1] );
-          PrintCompare( "theta", theta[0], theta[1] ); // note: sin(theta) is compared
+          PrintCompare( "theta", theta[0], theta[1] );
           PrintCompare( "PhiH", PhiH[0], PhiH[1] );
           PrintCompare( "PhiR", PhiR[0], PhiR[1] );
 
@@ -412,18 +417,12 @@ void PrintCompare(TString name, Float_t val0, Float_t val1) {
     val0 = Tools::AdjAngle(val0);
     val1 = Tools::AdjAngle(val1);
     diff = Tools::AdjAngle( val0 - val1 );
-  } else if(name=="theta") {
-    // if it's theta (dihadron CoM frame angle for partial wave expansion), compare sin
-    name = "sin(theta)";
-    val0 = TMath::Sin(val0);
-    val1 = TMath::Sin(val1);
-    diff = val0 - val1;
   } else {
     // otherwise just compare the values
     diff = val0 - val1;
   };
 
-  TString suffix = diff > 1e-4 ? "  <- disagreement" : "";
+  TString suffix = fabs(diff) > 1e-4 ? "  <- disagreement" : "";
 
   // print comparison
   printf("%12d %12s %12.5f %12.5f %12.5f%s\n",

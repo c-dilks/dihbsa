@@ -50,7 +50,7 @@ with open("xfiles/dihad1000.dis.0000.nrad.dat.evio.hipo2.txt") as iFile, open("x
             s = 0 # reset s
 
             evnum = lineCols[0]
-            PhPhiStar = lineCols[1]
+            PhPhiStar = lineCols[1] # actually this is PhiH
             PhPt = lineCols[2]
             phiRT1 = lineCols[3]
             phiRT2 = lineCols[4] # (preferred phiR def)
@@ -66,9 +66,10 @@ with open("xfiles/dihad1000.dis.0000.nrad.dat.evio.hipo2.txt") as iFile, open("x
 
             for h in range(2):
                 outStr = " ".join([outStr,hadE[h],hadTheta[h],hadPhi[h],hadPt[h]])
+                outStr = " ".join([outStr,hadXF[h]])
                 print(outStr)
 
-            outStr = " ".join([outStr,PhPt]);
+            outStr = " ".join([outStr,PhPt,PhPhiStar,phiRT1,phiRT2]);
             print(outStr)
 
             print "---"
