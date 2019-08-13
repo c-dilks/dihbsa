@@ -79,6 +79,7 @@ class Dihadron : public TObject
     Float_t hadM[2]; // hadron mass
     Float_t Mmiss; // missing mass
     Float_t xF; // feynman-x
+    Float_t hadXF[2]; // feynman-x for each hadron
     Float_t alpha; // dihadron opening angle
     Float_t theta; // CoM-frame angle between Ph and P1
     //Float_t theta2; // CoM-frame angle between Ph and P2 (for testing)
@@ -129,7 +130,9 @@ class Dihadron : public TObject
     TLorentzVector vecPh_com; // P+q COM frame Ph
     TLorentzVector disVecQ_com; // P+q COM frame Q
     TLorentzVector vecHad_com[2]; // P+q COM frame hadron momenta
+    TLorentzVector vecHad_dihCom[2]; // dihadron COM frame hadron momenta
     TVector3 pHad_com[2];
+    TVector3 pHad_dihCom[2];
     TVector3 pPh_com;
     TVector3 pQ_com;
 

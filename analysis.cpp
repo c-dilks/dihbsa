@@ -163,6 +163,7 @@ int main(int argc, char** argv) {
    tree->Branch("hadPtq",hadPtq,"hadPtq[2]/F");
    tree->Branch("hadEta",hadEta,"hadEta[2]/F");
    tree->Branch("hadPhi",hadPhi,"hadPhi[2]/F");
+   tree->Branch("hadXF",dih->hadXF,"hadXF[2]/F");
 
    // dihadron branches
    tree->Branch("Mh",&(dih->Mh),"Mh/F");
@@ -414,7 +415,7 @@ int main(int argc, char** argv) {
 
 #elif HIPO_VERSION == 4
      // reconstructed particles
-     ///*
+     /*
      particleCntAll = reader.getNParticles(); // -->tree
      if(debug) printf("reader.getNParticles() = %d\n",particleCntAll);
      for(auto & part : reader.getDetParticles()) {
@@ -423,9 +424,20 @@ int main(int argc, char** argv) {
        vecObsPx = part->par()->getPx();
        vecObsPy = part->par()->getPy();
        vecObsPz = part->par()->getPz();
+       */
+       
+     // MC::Lund particles -- NEW
+     ///*
+     useLund = true;
+     particleCntAll = (*(reader.mcparts())).getRows(); // -->tree
+     for(int rr=0; rr<particleCntAll; rr++) {
+       pidCur = (*(reader.mcparts())).getPid(rr);
+       vecObsPx = (*(reader.mcparts())).getPx(rr);
+       vecObsPy = (*(reader.mcparts())).getPy(rr);
+       vecObsPz = (*(reader.mcparts())).getPz(rr);
        //*/
 
-     // MC::Lund particles -- OLD
+     // MC::Lund particles -- DEPRECATED
      /*
      useLund = true;
      reader.getReader().read(readerEvent);
@@ -439,16 +451,6 @@ int main(int argc, char** argv) {
        vecObsPz = mcLund.getFloat("pz",rr);
        */
 
-     // MC::Lund particles -- NEW
-     /*
-     useLund = true;
-     particleCntAll = (*(reader.mcparts())).getRows(); // -->tree
-     for(int rr=0; rr<particleCntAll; rr++) {
-       pidCur = (*(reader.mcparts())).getPid(rr);
-       vecObsPx = (*(reader.mcparts())).getPx(rr);
-       vecObsPy = (*(reader.mcparts())).getPy(rr);
-       vecObsPz = (*(reader.mcparts())).getPz(rr);
-       */
 
 #endif
 

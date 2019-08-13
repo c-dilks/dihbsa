@@ -15,7 +15,13 @@ const Int_t NF = 2; // number of files
 //
 enum xenum { kTim, kHarut, kHarutOS, kOrlando, 
              kSimpleC, kSimpleJava, kAnalysis, kAnalysisLund };
-Int_t xcheck[NF] = { kAnalysisLund, kOrlando };
+
+//Int_t xcheck[NF] = { kAnalysis, kTim };
+//Int_t xcheck[NF] = { kAnalysisLund, kOrlando };
+//aqui
+//Int_t xcheck[NF] = { kAnalysisLund, kHarut };
+//Int_t xcheck[NF] = { kAnalysisLund, kHarutOS };
+
 //
 ///////////////////////////////
 
@@ -48,6 +54,7 @@ Float_t hadPx[NF][nHad];
 Float_t hadPy[NF][nHad];
 Float_t hadPz[NF][nHad];
 Float_t hadZ[NF][nHad];
+Float_t hadXF[NF][nHad];
 ////////////////////////////
 
 
@@ -77,8 +84,9 @@ void CrossChecker() {
 
   TString xtreeN[NF];
 
-  char sep[20]; strcpy(sep,"-------");
+  char sep[20]; strcpy(sep,"--------");
   TString compareTitle[NF];
+  TString compareName[NF];
   for(f=0; f<NF; f++) {
 
     if( f != kSimpleC ) {
@@ -90,6 +98,7 @@ void CrossChecker() {
 
       case kTim:
         compareTitle[f] = "Timothy -- hayward_cross_check_os_format.txt";
+        compareName[f] = "timothy";
         gROOT->ProcessLine(
           ".! tail -n +2 xfiles/hayward_cross_check_os_format.txt > xtreeTim.dat"
         ); // (strip header)
@@ -127,6 +136,7 @@ void CrossChecker() {
 
       case kHarut:
         compareTitle[f] = "Harut -- dihad1000.dis.0000.nrad.dat.evio.hipo2.txt";
+        compareName[f] = "harut";
         gROOT->ProcessLine(".! python formatHarutFile.py");
         xstr = "evnum/I";
         for(h=0; h<nHad; h++) {
@@ -151,20 +161,23 @@ void CrossChecker() {
         break;
 
       case kOrlando:
-        compareTitle[f] = "Orlando -- dataOS_HA_mc.txt";
         // Orlando's data
+        compareTitle[f] = "Orlando -- dataOS_HA_mc.txt";
+        compareName[f] = "orlando";
         ReadOrlandoFormat("xfiles/dataOS_HA_mc.txt",f);
         break;
 
       case kHarutOS:
-        compareTitle[f] = "Harut (formatted by Orlando) -- dataHA.txt";
         // Harut's data, reformatted by Orlando
+        compareTitle[f] = "Harut (formatted by Orlando) -- dataHA.txt";
+        compareName[f] = "harutOS";
         ReadOrlandoFormat("xfiles/dataHA.txt",f);
         break;
 
 
       case kSimpleC:
         compareTitle[f] = "Chris (simple tree from Clas12Tool) -- simpleTree.root";
+        compareName[f] = "chrisSimpleC";
 
         xfile[f] = new TFile("../simpleTree.root","READ");
         xtree[f] = (TTree*) xfile[f]->Get("tree");
@@ -182,6 +195,7 @@ void CrossChecker() {
 
       case kSimpleJava:
         compareTitle[f] = "Chris (simple tree from java tools) -- javaOut.root";
+        compareName[f] = "chrisSimpleJava";
         
         xstr = "evnum/I";
         for(h=0; h<nHad; h++) {
@@ -207,10 +221,12 @@ void CrossChecker() {
       
       // using EventTree these cases; no need to set branch addresses
       case kAnalysis: 
-        compareTitle[f] = "Chris (REC::Particle analysis) -- outrootCC/rec.root";
+        compareTitle[f] = "Chris (REC::Particle bank) -- outrootCC/rec.root";
+        compareName[f] = "chrisRec";
         break;
       case kAnalysisLund:
-        compareTitle[f] = "Chris (MC::Lund analysis) -- outrootCC/lund.root";
+        compareTitle[f] = "Chris (MC::Lund bank) -- outrootCC/lund.root";
+        compareName[f] = "chrisLund";
         break;
 
       default: 
@@ -253,9 +269,9 @@ void CrossChecker() {
 
 
   // define output file
-  TString outdat = "compare.dat";
+  TString outdat = "compare_" + compareName[0] + "_" + compareName[1] + ".dat";
   gSystem->RedirectOutput(outdat,"w");
-  for(f=0; f<NF; f++) printf("xtree%d:  %s\n",compareTitle[f].Data());
+  for(f=0; f<NF; f++) printf("xtree%d:  %s\n",f,compareTitle[f].Data());
   printf("\n");
   gSystem->RedirectOutput(0);
 
@@ -291,6 +307,7 @@ void CrossChecker() {
         hadPy[f][h] = -10000;
         hadPz[f][h] = -10000;
         hadZ[f][h] = -10000;
+        hadXF[f][h] = -10000;
       };
     };
 
@@ -339,8 +356,9 @@ void CrossChecker() {
           printf("EVENT#");
           for(f=0; f<NF; f++) printf("  xtree%d: %d",f,evnum[f]); printf("\n");
           //printf("HASH  xtree0: %d  xtree1: %d\n",hashVal,hashIter->first);
-          printf("%12s %12s %12s %12s\n","var","xtree0","xtree1","diff");
-          printf("%12s %12s %12s %12s\n",sep,sep,sep,sep);
+          printf("%12s %12s %12s %12s %12s\n",
+            "evnum","var",compareName[0].Data(),compareName[1].Data(),"diff");
+          printf("%12s %12s %12s %12s %12s\n",sep,sep,sep,sep,sep);
 
 
           for(h=0; h<nHad; h++) {
@@ -354,6 +372,7 @@ void CrossChecker() {
             PrintCompare( TString(hadN[h]+"Theta"), hadTheta[0][h], hadTheta[1][h] );
             PrintCompare( TString(hadN[h]+"Phi"), hadPhi[0][h], hadPhi[1][h] );
             PrintCompare( TString(hadN[h]+"Z"), hadZ[0][h], hadZ[1][h] );
+            PrintCompare( TString(hadN[h]+"XF"), hadXF[0][h], hadXF[1][h] );
           };
 
           PrintCompare( "eleP", eleP[0], eleP[1] );
@@ -390,9 +409,9 @@ void PrintCompare(TString name, Float_t val0, Float_t val1) {
 
   if(name.Contains("Phi")) {
     // if it's an angle, ensure it's in proper range
-    val0 = Tools::AdjAngleTwoPi(val0);
-    val1 = Tools::AdjAngleTwoPi(val1);
-    diff = Tools::AdjAngleTwoPi( val0 - val1 );
+    val0 = Tools::AdjAngle(val0);
+    val1 = Tools::AdjAngle(val1);
+    diff = Tools::AdjAngle( val0 - val1 );
   } else if(name=="theta") {
     // if it's theta (dihadron CoM frame angle for partial wave expansion), compare sin
     name = "sin(theta)";
@@ -400,11 +419,15 @@ void PrintCompare(TString name, Float_t val0, Float_t val1) {
     val1 = TMath::Sin(val1);
     diff = val0 - val1;
   } else {
+    // otherwise just compare the values
     diff = val0 - val1;
   };
 
+  TString suffix = diff > 1e-4 ? "  <- disagreement" : "";
+
   // print comparison
-  printf("%12s %12.5f %12.5f %12.5f\n",name.Data(),val0,val1,diff);
+  printf("%12d %12s %12.5f %12.5f %12.5f%s\n",
+    evnum[0],name.Data(),val0,val1,diff,suffix.Data());
 
 };
 
@@ -439,6 +462,7 @@ void GetEventTreeVars(Int_t ff, Int_t ii) {
       hadTheta[ff][hh] = Tools::EtaToTheta(ev[ff]->hadEta[hh]);
       hadPhi[ff][hh] = ev[ff]->hadPhi[hh];
       hadZ[ff][hh] = ev[ff]->Z[hh];
+      hadXF[ff][hh] = ev[ff]->hadXF[hh];
     };
   };
 };
@@ -474,6 +498,7 @@ void ReadOrlandoFormat(TString datname, Int_t ff) {
     xtree[ff]->SetBranchAddress( TString(hadN[hh]+"Phi"), &hadPhi[ff][hh] );
     xtree[ff]->SetBranchAddress( TString(hadN[hh]+"Ptq"), &hadPtq[ff][hh] );
     xtree[ff]->SetBranchAddress( TString(hadN[hh]+"Z"), &hadZ[ff][hh] );
+    xtree[ff]->SetBranchAddress( TString(hadN[hh]+"XF"), &hadXF[ff][hh] );
   };
   xtree[ff]->SetBranchAddress("PhPerp",&PhPerp[ff]);
   xtree[ff]->SetBranchAddress("PhiH",&PhiH[ff]);

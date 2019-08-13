@@ -79,19 +79,26 @@ void Dihadron::SetEvent(
   // compute xF
   vecPh_com = vecPh;
   disVecQ_com = disVecQ;
+  for(h=0; h<2; h++) vecHad_com[h] = vecHad[h];
   // -- (if in Breit frame, boost to lab frame)
   if(useBreit) { 
     vecPh_com.Boost(-1*(disEv->BreitBoost));
     disVecQ_com.Boost(-1*(disEv->BreitBoost));
+    for(h=0; h<2; h++) vecHad_com[h].Boost(-1*(disEv->BreitBoost));
   };
   // -- boost to CoM frame
   vecPh_com.Boost(disEv->ComBoost);
   disVecQ_com.Boost(disEv->ComBoost);
+  for(h=0; h<2; h++) vecHad_com[h].Boost(disEv->ComBoost);
 
   pPh_com = vecPh_com.Vect();
   pQ_com = disVecQ_com.Vect();
+  for(h=0; h<2; h++) pHad_com[h] = vecHad_com[h].Vect();
 
   xF = 2 * pPh_com.Dot(pQ_com) / (disEv->W * pQ_com.Mag());
+  for(h=0; h<2; h++)
+    hadXF[h] = 2 * pHad_com[h].Dot(pQ_com) / (disEv->W * pQ_com.Mag());
+
 
 
   // compute theta
@@ -99,22 +106,22 @@ void Dihadron::SetEvent(
   dihComBoost = -1*vecPh.BoostVector();
   if(debug) printf("========== theta\n");
   for(h=0; h<2; h++) {
-    vecHad_com[h] = vecHad[h];
-    //if(useBreit) vecHad_com[h].Boost(-1*(disEv->BreitBoost));
-    vecHad_com[h].Boost(dihComBoost);
-    pHad_com[h] = vecHad_com[h].Vect();
-    if(debug) vecHad_com[h].Print();
+    vecHad_dihCom[h] = vecHad[h];
+    //if(useBreit) vecHad_dihCom[h].Boost(-1*(disEv->BreitBoost));
+    vecHad_dihCom[h].Boost(dihComBoost);
+    pHad_dihCom[h] = vecHad_dihCom[h].Vect();
+    if(debug) vecHad_dihCom[h].Print();
   };
   if(debug) {
-    (vecHad_com[qA]+vecHad_com[qB]).Print(); // momenta should be zero
+    (vecHad_dihCom[qA]+vecHad_dihCom[qB]).Print(); // momenta should be zero
     printf("Mh = %f\n",Mh); // should equal energy component of 4-momenta sum
   };
 
   // -- in this frame, Ph=0, and the boost direction was along Ph
   // -- calculate theta as the angle between boosted hadron momentum
   //    and original Ph direction
-  theta = Tools::AngleSubtend(pHad_com[qA],pPh);
-  //theta2 = Tools::AngleSubtend(pHad_com[qB],pPh); // == PI - theta
+  theta = Tools::AngleSubtend(pHad_dihCom[qA],pPh);
+  //theta2 = Tools::AngleSubtend(pHad_dihCom[qB],pPh); // == PI - theta
 
 
 
@@ -238,6 +245,7 @@ void Dihadron::ResetVars() {
   for(h=0; h<2; h++) z[h] = -10000;
   zpair = -10000;
   xF = -10000;
+  for(h=0; h<2; h++) hadXF[h] = -10000;
   alpha = -10000;
 
   PhMag = -10000;
