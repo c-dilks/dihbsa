@@ -43,7 +43,7 @@ Int_t dimensions;
 Int_t ivType;
 Int_t whichPhiR;
 Bool_t batchMode;
-Int_t N_AMP;
+Int_t N_AMP,N_D;
 
 TString dihTitle, dihName;
 
@@ -232,6 +232,7 @@ int main(int argc, char** argv) {
        A = new Asymmetry(BS, whichModulation, 1, ivVar[0], b);
        if(!(A->success)) return 0;
        N_AMP = A->nAmpUsed;
+       N_D = A->nDparamUsed;
        asymVec.push_back(A);
        binNum = GetBinNum(b);
        binMap.insert(std::pair<int,int>(binNum,bcnt));
@@ -970,11 +971,7 @@ int main(int argc, char** argv) {
        for(int aa=0; aa<N_AMP; aa++) {
          rfCanvName[aa] = "RF_A" + TString::Itoa(aa,10) + "_NLL_" + A->binN;
          rfCanv[aa] = new TCanvas(rfCanvName[aa],rfCanvName[aa],800,800);
-         rfCanv[aa]->Divide(2,1);
-         rfCanv[aa]->cd(1);
          A->rfNLLplot[aa]->Draw();
-         rfCanv[aa]->cd(2);
-         A->rfNLLcreatedPlot[aa]->Draw();
          rfCanv[aa]->Write();
        };
 
@@ -989,6 +986,10 @@ int main(int argc, char** argv) {
        for(int aa=0; aa<N_AMP; aa++) {
          printf(" >> A%d = %.3f +/- %.3f\n",
            aa, A->rfA[aa]->getVal(), A->rfA[aa]->getError() );
+       };
+       for(int dd=0; dd<N_D; dd++) {
+         printf(" >> D%d = %.3f +/- %.3f\n",
+           dd, A->rfD[dd]->getVal(), A->rfD[dd]->getError() );
        };
        /*
        printf(" >> Y+ = %.3f +/- %.3f\n",

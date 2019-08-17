@@ -470,6 +470,12 @@ Bool_t Asymmetry::InitRooFit() {
     rfAname[aa] = Form("A%d",aa);
     rfA[aa] = new RooRealVar(rfAname[aa],rfAname[aa],-rfParamRange,rfParamRange);
   };
+  for(int dd=0; dd<nDparam; dd++) {
+    rfDname[dd] = Form("D%d",dd);
+    rfD[dd] = new RooRealVar(rfDname[dd],rfDname[dd],-3.0,3.0);
+  };
+  nAmpUsed = 0;
+  nDparamUsed = 0;
 
   // - yield factor (proportional to actual yield, only for extended fit)
   rfYield[sP] = new RooRealVar("rfYieldP","YP",1e5);
@@ -496,14 +502,23 @@ Bool_t Asymmetry::InitRooFit() {
   rfModulation[mod2d] = "TMath::Sin(rfPhiH-rfPhiR)"; // +++
   //rfModulation[mod2d] = "TMath::Sin(rfPhiR)"; // +++
 
-  // -- partial wave expansion factors
+  // -- define Legendre polynomials; note that these follow the PW expansion of DiFFs,
+  //    so overall coefficients may differ slightly from the actual Legendre polynomials
+  legendre[0] = "1";
+  legendre[1] = "TMath::Cos(rfTheta)";
+  legendre[2] = "0.25*(3*TMath::Power(TMath::Cos(rfTheta),2)-1)";
+
+  // -- partial wave expansion factors for asymmetry numerator
   //pwFactorSP = "TMath::Sin(rfTheta)";
-  //pwFactorPP = "TMath::Sin(rfTheta)*TMath::Cos(rfTheta)";
-  pwFactorSP = "1";
-  pwFactorPP = "TMath::Cos(rfTheta)";
+  //pwFactorPP = "TMath::Sin(rfTheta)*"+legendre[1];
+  pwFactorSP = legendre[0];
+  pwFactorPP = legendre[1];
+
+  // -- partial wave expansion factors for asymmetry denominator (unpolarized DiFF)
+  pwUnpolDiff = "1+D0*"+legendre[1]+"+D1*"+legendre[2];
 
   // -- build formula with modulation and PW amplitudes
-  Int_t whichFormu = 3; //  <-- <-- <-- <-- <-- <-- <-- <-- <-- <-- <--
+  Int_t whichFormu = 4; //  <-- <-- <-- <-- <-- <-- <-- <-- <-- <-- <--
   switch(whichFormu) {
     case 0: // test whichMod modulation
       asymExpansion = 
@@ -531,7 +546,25 @@ Bool_t Asymmetry::InitRooFit() {
       rfA[1]->SetTitle("A_{LU}^{pp}[" +ModulationTitle+"]");
       nAmpUsed = 2;
       break;
-    case 4: // test 2 partial waves and full linear combination of e(x) & g1perp
+    case 4: // test 2 partial waves with PW-expanded denominator
+      asymExpansion = 
+        "(A0*" + pwFactorSP + "+A1*" + pwFactorPP + ")*" + rfModulation[whichMod] +
+        "/("+pwUnpolDiff+")";
+      rfA[0]->SetTitle("A_{LU}^{sp}[" +ModulationTitle+"]");
+      rfA[1]->SetTitle("A_{LU}^{pp}[" +ModulationTitle+"]");
+      rfD[0]->SetTitle("D^{sp}/D^{ss}");
+      rfD[1]->SetTitle("D^{pp}/D^{ss}");
+
+      rfD[0]->setVal(2.0);
+      rfD[1]->setVal(-2.0);
+
+      rfD[0]->setConstant(kTRUE);
+      rfD[1]->setConstant(kTRUE);
+
+      nAmpUsed = 2;
+      nDparamUsed = 2;
+      break;
+    case 5: // test 2 partial waves and full linear combination of e(x) & g1perp
       asymExpansion = 
         "(A0*" + pwFactorSP + "+A1*" + pwFactorPP + ")*(" +
         "A2*" + rfModulation[modSinPhiR] + "+A3*" + rfModulation[weightSinPhiHR] + ")";
@@ -582,6 +615,7 @@ void Asymmetry::CalculateRooAsymmetries() {
     if(rfPdfFormu[s].Contains("rfPhiR")) rfParams[s]->add(*rfPhiR);
     if(rfPdfFormu[s].Contains("rfTheta")) rfParams[s]->add(*rfTheta);
     for(int aa=0; aa<nAmpUsed; aa++) rfParams[s]->add(*rfA[aa]);
+    for(int dd=0; dd<nDparamUsed; dd++) rfParams[s]->add(*rfD[dd]);
     
     rfPdf[s] = new RooGenericPdf(
       TString("rfModel" + SpinName(s)),
@@ -612,42 +646,29 @@ void Asymmetry::CalculateRooAsymmetries() {
 
 
   // fit simultaneous PDF to combined data
-  Tools::PrintSeparator(100,"=");
-  printf("call PDF fit with MIGRAD\n");
-  Tools::PrintSeparator(100,"=");
+  Tools::PrintSeparator(70,"=");
+  printf("BEGIN FIT\n");
+  Tools::PrintSeparator(70,"=");
 
   rfResult = rfSimPdf->fitTo(*rfData, RooFit::Save());
   //rfResult = rfSimPdf->fitTo(*rfData, RooFit::Extended(kTRUE), RooFit::Save(kTRUE));
   //rfSimPdf->fitTo(*rfData,RooFit::PrintLevel(-1));
-  /*
-  rfResult = rfSimPdf->fitTo(*rfData,RooFit::Save());
-  //rfResult = rfSimPdf->fitTo(*rfData,RooFit::PrintLevel(-1),RooFit::Save());
-  */
 
-  Tools::PrintSeparator(100,"=");
-  printf("call NLL minimization with MIGRAD\n");
-  Tools::PrintSeparator(100,"=");
-  // get -log likelihood (old way)
+  // get -log likelihood
   rfNLL = new RooNLLVar("rfNLL","rfNLL",*rfSimPdf,*rfData);
-  // minimize -log likelihood (new teting way)
-  rfNLLcreated = rfSimPdf->createNLL(*rfData,RooFit::NumCPU(8));
-  RooMinuit(*rfNLLcreated).migrad(); // MIGRAD minimization
 
   for(int aa=0; aa<nAmp; aa++) {
     if(aa<nAmpUsed) {
       rfNLLplot[aa] = rfA[aa]->frame(
         RooFit::Range(-rfParamRange,rfParamRange),
-        RooFit::Title(TString("[OLD] -log(L) scan vs. A"+TString::Itoa(aa,10)))
+        RooFit::Title(TString("-log(L) scan vs. A"+TString::Itoa(aa,10)))
       );
-      rfNLLcreatedPlot[aa] = rfA[aa]->frame(
-        RooFit::Range(-rfParamRange,rfParamRange),
-        RooFit::Title(TString("[NEW] -log(L) scan vs. A"+TString::Itoa(aa,10)))
+      rfNLL->plotOn(
+        rfNLLplot[aa],
+        RooFit::ShiftToZero()
       );
-      rfNLL->plotOn(rfNLLplot[aa],RooFit::ShiftToZero());
-      rfNLLcreated->plotOn(rfNLLcreatedPlot[aa],RooFit::ShiftToZero());
     } else {
       rfNLLplot[aa] = new RooPlot(); // unused
-      rfNLLcreatedPlot[aa] = new RooPlot(); // unused
     };
   };
 

@@ -51,7 +51,28 @@ int main(int argc, char** argv) {
   c12reader.getReader().readDictionary(factory);
   factory.show();
 
+  // example of how to read a bank and its rows, within an event loop
+  /*
+  hipo::event readerEvent;
+  hipo::bank mcLund(factory.getSchema("MC::Lund"));
+  int nrows,pid;
+  float momentum[3];
+  while(c12reader.next()==true) {
+    c12reader.getReader().read(readerEvent);
+    readerEvent.getStructure(mcLund);
+    nrows = mcLund.getRows();
+    for(int r=0; r<nrows; r++) {
+      pid = mcLund.getInt("pid",r);
+      momentum[0] = mcLund.getFloat("px",r);
+      momentum[1] = mcLund.getFloat("py",r);
+      momentum[2] = mcLund.getFloat("pz",r);
+    };
+  };
+  */
+
 #endif
+
+
 
 
 };

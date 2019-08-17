@@ -205,7 +205,9 @@ class Asymmetry : public TObject
     TString rfSpinName[2];
 
     TString rfModulation[nMod];
+    TString legendre[3];
     TString pwFactorSP,pwFactorPP;
+    TString pwUnpolDiff;
     TString asymExpansion;
     TString preFactor[2];
     Float_t rfParamRange;
@@ -213,17 +215,22 @@ class Asymmetry : public TObject
 
     RooRealVar *rfPhiH, *rfPhiR, *rfTheta;
     RooRealVar *rfWeight;
+
     static const Int_t nAmp = 4;
     Int_t nAmpUsed;
     TString rfAname[nAmp];
     RooRealVar *rfA[nAmp];
+
+    static const Int_t nDparam = 2;
+    Int_t nDparamUsed;
+    TString rfDname[nDparam];
+    RooRealVar *rfD[nDparam];
+
     RooRealVar *rfYieldBoth;
     RooRealVar *rfYield[2];
 
     RooNLLVar * rfNLL;
-    RooAbsReal * rfNLLcreated;
     RooPlot * rfNLLplot[nAmp];
-    RooPlot * rfNLLcreatedPlot[nAmp];
 
   private:
 

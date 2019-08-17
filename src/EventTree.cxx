@@ -40,10 +40,16 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("hadE",hadE);
   chain->SetBranchAddress("hadP",hadP);
   chain->SetBranchAddress("hadPt",hadPt);
-  chain->SetBranchAddress("hadPtq",hadPtq);
   chain->SetBranchAddress("hadEta",hadEta);
   chain->SetBranchAddress("hadPhi",hadPhi);
-  chain->SetBranchAddress("hadXF",hadXF);
+
+  // (these branches, which were added for cross-checking, 
+  //  aren't yet in current ROOT files)
+  if(chain->GetBranch("hadPtq")) chain->SetBranchAddress("hadPtq",hadPtq);
+  else { for(int h=0; h<2; h++) hadPtq[h]=-10000; };
+  if(chain->GetBranch("hadXF")) chain->SetBranchAddress("hadXF",hadXF);
+  else { for(int h=0; h<2; h++) hadXF[h]=-10000; };
+  /////////////
 
   chain->SetBranchAddress("particleCnt",particleCnt);
   chain->SetBranchAddress("particleCntAll",&particleCntAll);
@@ -111,6 +117,7 @@ void EventTree::GetEvent(Int_t i) {
   //theta = fabs( fabs(theta-PI/2.0) - PI/2.0 ); // HERMES symmetrization
   //if(Z[qB] > Z[qA]) theta = PI - theta; // Z symmetrization
   //if( RNG->Rndm() > 0.5 ) theta = PI - theta; // coin-flip symmetrization
+  //theta = PI-theta; // full theta flip
 
   // DIS cuts
   cutQ2 = Q2 > 1.0;

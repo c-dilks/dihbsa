@@ -415,7 +415,7 @@ int main(int argc, char** argv) {
 
 #elif HIPO_VERSION == 4
      // reconstructed particles
-     /*
+     ///*
      particleCntAll = reader.getNParticles(); // -->tree
      if(debug) printf("reader.getNParticles() = %d\n",particleCntAll);
      for(auto & part : reader.getDetParticles()) {
@@ -424,10 +424,10 @@ int main(int argc, char** argv) {
        vecObsPx = part->par()->getPx();
        vecObsPy = part->par()->getPy();
        vecObsPz = part->par()->getPz();
-       */
+       //*/
        
      // MC::Lund particles -- NEW
-     ///*
+     /*
      useLund = true;
      particleCntAll = (*(reader.mcparts())).getRows(); // -->tree
      for(int rr=0; rr<particleCntAll; rr++) {
@@ -435,7 +435,7 @@ int main(int argc, char** argv) {
        vecObsPx = (*(reader.mcparts())).getPx(rr);
        vecObsPy = (*(reader.mcparts())).getPy(rr);
        vecObsPz = (*(reader.mcparts())).getPz(rr);
-       //*/
+       */
 
      // MC::Lund particles -- DEPRECATED
      /*
