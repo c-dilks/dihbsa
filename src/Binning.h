@@ -32,6 +32,7 @@
 class Binning : public TObject
 {
   public:
+    Binning() {}; // empty default constructor for streaming instances to ROOT files
     Binning(Int_t pairType_);
     ~Binning();
     void AddBinBound(Int_t ivIdx, Float_t newBound);
@@ -43,7 +44,6 @@ class Binning : public TObject
 
     Bool_t ValidIV(Int_t v_) { return v_>=0 && v_<nIV; };
 
-    Int_t nEvents;
 
 
     // enumerators 

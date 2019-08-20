@@ -3,12 +3,10 @@
 dir="outroot.dnp2018"
 pairType="0x34"
 modulation=0
-phiR=3
 
 if [ $# -ge 1 ]; then dir=$1; fi
 if [ $# -ge 2 ]; then pairType=$2; fi
 if [ $# -ge 3 ]; then modulation=$3; fi
-if [ $# -ge 4 ]; then phiR=$4; fi
 
 exe="asym.exe"
 outdir="spinout"
@@ -26,7 +24,7 @@ mkdir -p $outdir
 # 1D
 for ((iv=0; iv<$nIV; iv++)); do
   echo $iv
-  echo $dir $pairType $modulation 1 $iv $phiR 1 >> $argfile
+  echo $dir $pairType $modulation 1 $iv 1 >> $argfile
 done
 
 
@@ -38,7 +36,7 @@ done
     #if [ $iv1 -eq $iv2 ]; then continue; fi
     #iv=$[10*$iv1 + $iv2]
     #echo $iv1 $iv2 $iv
-    #echo $dir $pairType $modulation 2 $iv $phiR 1 >> $argfile
+    #echo $dir $pairType $modulation 2 $iv 1 >> $argfile
   #done
 #done
 
@@ -56,7 +54,7 @@ done
       #if [ $iv2 -eq $iv3 ]; then continue; fi
       #iv=$[100*$iv1 + 10*$iv2 + $iv3]
       #echo $iv1 $iv2 $iv3 $iv
-      #echo $dir $pairType $modulation 3 $iv $phiR 1 >> $argfile
+      #echo $dir $pairType $modulation 3 $iv 1 >> $argfile
     #done
   #done
 #done

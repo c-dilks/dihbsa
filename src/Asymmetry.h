@@ -59,6 +59,7 @@
 class Asymmetry : public TObject
 {
   public:
+    Asymmetry() {}; // empty default constructor for streaming instances to ROOT files
     Asymmetry(
       Binning * binScheme,
       Int_t phiModulation, Int_t dimension=1, 
@@ -67,6 +68,7 @@ class Asymmetry : public TObject
       Int_t var2=-1, Int_t bin2=-1
     );
     ~Asymmetry();
+
 
     Bool_t InitRooFit();
     void CalculateAsymmetries();

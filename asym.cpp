@@ -28,6 +28,7 @@
 #include "Binning.h"
 #include "Asymmetry.h"
 
+// subroutines
 Int_t GetBinNum(Int_t bin0, Int_t bin1=-1, Int_t bin2=-1);
 void DrawKinDepGraph(TGraphErrors * g_, Binning * B_, Int_t v_);
 void DrawSimpleGraph(TGraphErrors * g_, Binning * B_, Int_t v, Bool_t setRange_=true);
@@ -36,88 +37,106 @@ void DrawAsymGr2(TGraph2DErrors * g_);
 void SetCloneName(TH1 * clone_);
 TGraphErrors * ShiftGraph(TGraphErrors * gr, Int_t nShift);
 
+// global vars
 Int_t pairType;
 TString inDir;
 Int_t whichModulation;
 Int_t dimensions;
 Int_t ivType;
-Int_t whichPhiR;
-Bool_t batchMode;
+Int_t batchMode;
 Int_t N_AMP,N_D;
-
 TString dihTitle, dihName;
+
+
+//////////////////////////////////////
+
 
 int main(int argc, char** argv) {
    
    gStyle->SetOptFit(1);
 
 
-   // ARGUMENTS
-   pairType = EncodePairType(kPip,kPim);
+   // ARGUMENTS -- for documentation, run this program without any arguments
    inDir = "outroot";
-   whichModulation = 0; // see src/Asymmetry.h
-   dimensions = 1; // number of dimensions 
-   ivType = 1; // which variables to bin in (see below)
-   whichPhiR = 3; // 1:phiRq  2:phiRp_r  3:phiRp // Alessandro prefers 3:phiRp
-   batchMode = 0; // if true, renames output files and prints pngs
+   pairType = EncodePairType(kPip,kPim);
+   whichModulation = 0;
+   dimensions = 1;
+   ivType = 1;
+   batchMode = 0;
 
    if(argc>1) inDir =           TString(argv[1]);
    if(argc>2) pairType =        (Int_t) strtof(argv[2],NULL);
    if(argc>3) whichModulation = (Int_t) strtof(argv[3],NULL);
    if(argc>4) dimensions =      (Int_t) strtof(argv[4],NULL);
    if(argc>5) ivType =          (Int_t) strtof(argv[5],NULL);
-   if(argc>6) whichPhiR =       (Int_t) strtof(argv[6],NULL);
-   if(argc>7) batchMode =       (Bool_t) strtof(argv[7],NULL);
+   if(argc>6) batchMode =       (Int_t) strtof(argv[6],NULL);
 
-   printf("pairType = 0x%x\n",pairType);
-   printf("inDir = %s\n",inDir.Data());
-   printf("whichModulation = %d\n",whichModulation);
-   printf("dimensions = %d\n",dimensions);
-   printf("ivType = %d\n",ivType);
-   printf("whichPhiR = %d\n",whichPhiR);
-   printf("batchMode = %d\n",(Int_t)batchMode);
-   printf("\n");
 
    Binning * BS = new Binning(pairType); // instantiate binning scheme 
    Asymmetry * A; // Asymmetry pointer
-   Int_t whichHad[2];
-   DecodePairType(pairType,whichHad[qA],whichHad[qB]);
-   dihTitle = PairTitle(whichHad[qA],whichHad[qB]);
-   dihName = PairName(whichHad[qA],whichHad[qB]);
+
 
    // help printout
    if(argc==1) {
-     fprintf(stderr,
-       "\nUSAGE: %s [inDir] [pairType] [whichModulation] [dimensions] [ivType] [whichPhiR] [batchMode]\n",
-       argv[0]);
+
+     fprintf(stderr,"\nUSAGE: %s",arg[0]);
+     printf(" [inDir]");
+     printf(" [pairType]");
+     printf(" [whichModulation]");
+     printf(" [dimensions]");
+     printf(" [ivType]");
+     printf(" [batchMode]\n");
+
      printf("\n- inDir: directory of ROOT files to analyse\n");
-     printf("\n- pairType: hadron pair type (run PrintEnumerators.C)\n");
+     printf("         (if batchMode==2, must be a single file!)\n");
+
+     printf("\n- pairType: hadron pair type (run PrintEnumerators.C for notation)\n");
+
      printf("\n- whichModulation:\n");
      for(int m=0; m<Asymmetry::nMod; m++) {
        A = new Asymmetry(BS,m,-10000);
        printf("   %d = %s =  %s\n",m,
          (A->ModulationName).Data(),(A->ModulationTitle).Data());
      };
-     printf("\n- dimensions: for multi-dimensional asymmetry analysis in 1, 2, or 3-D\n");
+
+     printf("\n- dimensions: for multi-dim asymmetry analysis (1, 2, or 3)\n");
+
      printf("\n- ivType: 3-digit number, one for each dimension, ");
      printf("where the digits represent:\n");
      for(int i=0; i<Binning::nIV; i++) {
        printf("   %d = %s\n",i,(BS->IVtitle[i]).Data());
      };
-     printf("\n- whichPhiR:\n");
-     printf("   1 = PhiRq: from R_perp via vector rejection\n");
-     printf("   2 = PhiRp_r: from R_T via vector rejection\n");
-     printf("   3 = PhiRp: from R_T via k_T relation (PREFERRED)\n");
-     printf("\n- batchMode: boolean, where if true, renames output root file\n");
-     printf("  and prints pngs\n");
+
+     printf("\n- batchMode:\n");
+     printf("   0 = default behavior\n");
+     printf("   1 = rename output spin.root rootfile and prints pngs\n");
+     printf("   2 = test writing out spinroot file (inDir must be 1 file!)\n");
      printf("\n");
+
      return 0;
    };
 
 
+   // print arguments' values
+   printf("pairType = 0x%x\n",pairType);
+   printf("inDir = %s\n",inDir.Data());
+   printf("whichModulation = %d\n",whichModulation);
+   printf("dimensions = %d\n",dimensions);
+   printf("ivType = %d\n",ivType);
+   printf("batchMode = %d\n",batchMode);
+   printf("\n");
+
+
+   // set dihadron name / title
+   Int_t whichHad[2];
+   DecodePairType(pairType,whichHad[qA],whichHad[qB]);
+   dihTitle = PairTitle(whichHad[qA],whichHad[qB]);
+   dihName = PairName(whichHad[qA],whichHad[qB]);
+
+
 
    // ivType:
-   // -- if dimensions==1, all asymetries will be plotted against one independent
+   // -- if dimensions==1, all asymmetries will be plotted against one independent
    //    variable (IV); in this case, ivType is that IV, according to enumerators in
    //    Binning (ivEnum)
    // -- if dimensions==2, asymmetries are plotted for two IVs. For this one, ivType is
@@ -148,7 +167,7 @@ int main(int argc, char** argv) {
 
 
    // check IV enumerators and get number of bins for each IV
-   Int_t NB[3];
+   Int_t NB[3]; // # of bins for each IV
    for(int d=0; d<dimensions; d++) {
      printf("ivVar[%d] = %d\n",d,ivVar[d]);
      if(!(BS->ValidIV(ivVar[d]))) {
@@ -173,19 +192,37 @@ int main(int argc, char** argv) {
 
    // set output file
    TString outfileName = "spin";
-   if(batchMode) {
-     outfileName = "spinout/" + outfileName;
-     outfileName += "__" + dihName + "_";
-     for(int d=0; d<dimensions; d++) 
-       outfileName += "_" + BS->IVname[ivVar[d]];
-     outfileName += "__" + modN;
+   TFile * outfile;
+   if(batchMode!=2) {
+     if(batchMode==1) {
+       outfileName = "spinout/" + outfileName;
+       outfileName += "__" + dihName + "_";
+       for(int d=0; d<dimensions; d++) 
+         outfileName += "_" + BS->IVname[ivVar[d]];
+       outfileName += "__" + modN;
+     };
+     outfileName += ".root";
+     printf("outfileName = %s\n",outfileName.Data());
+     outfile = new TFile(outfileName,"RECREATE");
    };
-   outfileName = outfileName + ".root";
-   printf("outfileName = %s\n",outfileName.Data());
-   TFile * outfile = new TFile(outfileName,"RECREATE");
+
+   //aqui
 
 
-   EventTree * ev = new EventTree(TString(inDir+"/*.root"),pairType);
+   // set spinroot file
+   TString spinrootFileName; 
+   TFile * spinrootFile;
+   if(batchMode==2) {
+     spinrootFileName = inDir;
+     spinrootFileName(TRegexp("^.*/")) = "spinroot/";
+     spinrootFile = new TFile(spinrootFileName,"RECREATE");
+   };
+
+
+   // set EventTree
+   EventTree * ev;
+   if(batchMode!=2) ev = new EventTree(TString(inDir+"/*.root"),pairType);
+   else ev = new EventTree(inDir,pairType);
 
 
    
@@ -488,27 +525,13 @@ int main(int argc, char** argv) {
          
          A = *it;
 
-         switch(whichPhiR) {
-           case 1:
-             A->PhiR = ev->PhiRq;
-             break;
-           case 2:
-             A->PhiR = ev->PhiRp_r;
-             break;
-           case 3:
-             A->PhiR = ev->PhiRp;
-             break;
-           default:
-             fprintf(stderr,"ERROR: invalid whichPhiR\n");
-             return 0;
-         };
-
          A->Mh = ev->Mh;
          A->x = ev->x;
          A->z = ev->Zpair;
          A->eSpin = ev->helicity;
          A->pSpin = 0;
          A->PhiH = ev->PhiH;
+         A->PhiR = ev->PhiR;
          A->PhPerp = ev->PhPerp;
          A->theta = ev->theta;
 
@@ -878,178 +901,201 @@ int main(int argc, char** argv) {
 
 
    // write output to TFile
-   // -- Asymmetry objects
-   printf("--- write Asymmetry objects\n");
-   for(std::vector<Asymmetry*>::iterator it = asymVec.begin(); 
-     it!=asymVec.end(); ++it
-   ) {
+   if(batchMode!=2) {
 
-     A = *it;
+     outfile->cd();
+     // -- Asymmetry objects
+     printf("--- write Asymmetry objects\n");
+     for(std::vector<Asymmetry*>::iterator it = asymVec.begin(); 
+       it!=asymVec.end(); ++it
+     ) {
 
-     printf("writing plots for:\n");
-     A->PrintSettings();
+       A = *it;
 
-     switch(dimensions) {
-       case 1: A->ivDist1->Write(); break;
-       case 2: A->ivDist2->Write(); break;
-       case 3: A->ivDist3->Write(); break;
-     };
-
-     if(!(A->asym2d)) {
-       A->modDist->Write();
-       for(Int_t m=0; m<Asymmetry::nModBins; m++) A->modBinDist[m]->Write();
-       if(dimensions==1) A->IVvsModDist->Write();
-       for(Int_t s=0; s<nSpin; s++) A->aziDist[s]->Write();
-     } else {
-       A->modDist2->Write();
-       for(Int_t mmH=0; mmH<Asymmetry::nModBins2; mmH++) {
-         for(Int_t mmR=0; mmR<Asymmetry::nModBins2; mmR++) {
-           A->modBinDist2[mmH][mmR]->Write();
-         };
-       };
-       for(Int_t s=0; s<nSpin; s++) A->aziDist2[s]->Write();
-     };
-   };
-
-   if(dimensions==1) {
-     ivFullDist1->Write();
-     if(!(A->asym2d)) IVvsModFullDist->Write();
-   } else if(dimensions==2) {
-     ivFullDist2->Write();
-   } else if(dimensions==3) {
-     ivFullDist3->Write();
-   };
-   if(!(A->asym2d)) modFullDist->Write();
-   else modFullDist2->Write();
-
-
-   // -- asymmetries and kindep graphs
-   printf("--- write kinematic-dependent asymmetries\n");
-   for(std::vector<Asymmetry*>::iterator it = asymVec.begin(); 
-     it!=asymVec.end(); ++it
-   ) {
-     A = *it;
-     A->PrintSettings();
-
-     // first write out the asymmetry vs. modulation graphs
-     if(!(A->asym2d)) A->asymGr->Write();
-     else A->asymGr2->Write();
-
-     // then write out the kindepGr *after* writing out all the
-     // relevant asymmetry vs. modulation graphs
-     if(A->B[0] + 1 == NB[0]) {
-       binNum = GetBinNum(A->B[0], A->B[1], A->B[2]);
-       kindepGr = kindepMap.at(binNum);
-       kindepGr->Write();
-       multiGr = multiMap.at(binNum);
-       multiGr->Write();
-     };
-   };
-
-   kindepCanv->Write();
-   for(int aa=0; aa<N_AMP; aa++) RFkindepCanv[aa]->Write();
-   chindfCanv->Write();
-   chisqDist->Write();
-   rellumCanv->Write();
-   if(dimensions==1 || dimensions==2) {
-     asymModCanv->Write();
-     if(A->asym2d) asymModHist2Canv->Write();
-     modDistCanv->Write();
-   };
-
-
-   // RooFit results
-   TCanvas * rfCanv[Asymmetry::nAmp];
-   TString rfCanvName[Asymmetry::nAmp];
-
-   for(std::vector<Asymmetry*>::iterator it = asymVec.begin(); 
-     it!=asymVec.end(); ++it
-   ) {
-     A = *it;
-     if(A->roofitter) {
-       
-       for(int aa=0; aa<N_AMP; aa++) {
-         rfCanvName[aa] = "RF_A" + TString::Itoa(aa,10) + "_NLL_" + A->binN;
-         rfCanv[aa] = new TCanvas(rfCanvName[aa],rfCanvName[aa],800,800);
-         A->rfNLLplot[aa]->Draw();
-         rfCanv[aa]->Write();
-       };
-
-       Tools::PrintTitleBox("roofit function");
+       printf("writing plots for:\n");
        A->PrintSettings();
-       printf("\n");
-       for(int ss=0; ss<nSpin; ss++) {
-         printf("%s: %s\n",SpinTitle(ss).Data(),A->rfPdfFormu[ss].Data());
+
+       switch(dimensions) {
+         case 1: A->ivDist1->Write(); break;
+         case 2: A->ivDist2->Write(); break;
+         case 3: A->ivDist3->Write(); break;
        };
-       printf("\n");
 
-       for(int aa=0; aa<N_AMP; aa++) {
-         printf(" >> A%d = %.3f +/- %.3f\n",
-           aa, A->rfA[aa]->getVal(), A->rfA[aa]->getError() );
+       if(!(A->asym2d)) {
+         A->modDist->Write();
+         for(Int_t m=0; m<Asymmetry::nModBins; m++) A->modBinDist[m]->Write();
+         if(dimensions==1) A->IVvsModDist->Write();
+         for(Int_t s=0; s<nSpin; s++) A->aziDist[s]->Write();
+       } else {
+         A->modDist2->Write();
+         for(Int_t mmH=0; mmH<Asymmetry::nModBins2; mmH++) {
+           for(Int_t mmR=0; mmR<Asymmetry::nModBins2; mmR++) {
+             A->modBinDist2[mmH][mmR]->Write();
+           };
+         };
+         for(Int_t s=0; s<nSpin; s++) A->aziDist2[s]->Write();
        };
-       for(int dd=0; dd<N_D; dd++) {
-         printf(" >> D%d = %.3f +/- %.3f\n",
-           dd, A->rfD[dd]->getVal(), A->rfD[dd]->getError() );
+     };
+
+     if(dimensions==1) {
+       ivFullDist1->Write();
+       if(!(A->asym2d)) IVvsModFullDist->Write();
+     } else if(dimensions==2) {
+       ivFullDist2->Write();
+     } else if(dimensions==3) {
+       ivFullDist3->Write();
+     };
+     if(!(A->asym2d)) modFullDist->Write();
+     else modFullDist2->Write();
+
+
+     // -- asymmetries and kindep graphs
+     printf("--- write kinematic-dependent asymmetries\n");
+     for(std::vector<Asymmetry*>::iterator it = asymVec.begin(); 
+       it!=asymVec.end(); ++it
+     ) {
+       A = *it;
+       A->PrintSettings();
+
+       // first write out the asymmetry vs. modulation graphs
+       if(!(A->asym2d)) A->asymGr->Write();
+       else A->asymGr2->Write();
+
+       // then write out the kindepGr *after* writing out all the
+       // relevant asymmetry vs. modulation graphs
+       if(A->B[0] + 1 == NB[0]) {
+         binNum = GetBinNum(A->B[0], A->B[1], A->B[2]);
+         kindepGr = kindepMap.at(binNum);
+         kindepGr->Write();
+         multiGr = multiMap.at(binNum);
+         multiGr->Write();
        };
-       /*
-       printf(" >> Y+ = %.3f +/- %.3f\n",
-         A->rfYield[0]->getVal(), A->rfYield[0]->getError() );
-       printf(" >> Y- = %.3f +/- %.3f\n",
-         A->rfYield[1]->getVal(), A->rfYield[1]->getError() );
-       */
-
-       printf("\n");
-
      };
-   };
 
-
-   // DEPRECATED
-   // print modDist boundaries (used for determining modDist boundaries
-   // which depend on kinematics, for g1perp modulation PhPerp/Mh-scaling test)
-   /*
-   Float_t mbound;
-   if(dimensions==1 && whichModulation==Asymmetry::scaleSinPhiHR) {
-     printf("MBOUND\n");
-     printf("if(v_==v%s) {\n",(BS->IVname[ivVar[0]]).Data());
-     for(int b=0; b<NB[0]; b++) {
-       binNum = GetBinNum(b);
-       A = asymMap.at(binNum);
-       mbound = TMath::Max(
-         TMath::Abs(Tools::GetFirstFilledX(A->modDist)),
-         TMath::Abs(Tools::GetLastFilledX(A->modDist))
-       );
-       mbound += 0.1;
-       printf("  if(b_==%d) return %f;\n",b,mbound);
-     };
-     printf("};\n");
-   };
-   */
-
-
-
-   // print images
-   TString pngName;
-   if(batchMode) {
-     pngName = Form("spinout/%s.%s.png",kindepCanv->GetName(),dihName.Data());
-     kindepCanv->Print(pngName,"png");
-     for(int aa=0; aa<N_AMP; aa++) {
-       pngName = Form("spinout/%s.%s.png",RFkindepCanv[aa]->GetName(),dihName.Data());
-       RFkindepCanv[aa]->Print(pngName,"png");
-     };
-     pngName = Form("spinout/%s.%s.png",chindfCanv->GetName(),dihName.Data());
-     chindfCanv->Print(pngName,"png");
-     pngName = Form("spinout/%s.%s.png",rellumCanv->GetName(),dihName.Data());
-     rellumCanv->Print(pngName,"png");
+     kindepCanv->Write();
+     for(int aa=0; aa<N_AMP; aa++) RFkindepCanv[aa]->Write();
+     chindfCanv->Write();
+     chisqDist->Write();
+     rellumCanv->Write();
      if(dimensions==1 || dimensions==2) {
-       pngName = Form("spinout/%s.%s.png",asymModCanv->GetName(),dihName.Data());
-       asymModCanv->Print(pngName,"png"); 
-       pngName = Form("spinout/%s.%s.png",modDistCanv->GetName(),dihName.Data());
-       modDistCanv->Print(pngName,"png"); 
+       asymModCanv->Write();
+       if(A->asym2d) asymModHist2Canv->Write();
+       modDistCanv->Write();
+     };
+
+
+     // RooFit results
+     TCanvas * rfCanv[Asymmetry::nAmp];
+     TString rfCanvName[Asymmetry::nAmp];
+
+     for(std::vector<Asymmetry*>::iterator it = asymVec.begin(); 
+       it!=asymVec.end(); ++it
+     ) {
+       A = *it;
+       if(A->roofitter) {
+         
+         for(int aa=0; aa<N_AMP; aa++) {
+           rfCanvName[aa] = "RF_A" + TString::Itoa(aa,10) + "_NLL_" + A->binN;
+           rfCanv[aa] = new TCanvas(rfCanvName[aa],rfCanvName[aa],800,800);
+           A->rfNLLplot[aa]->Draw();
+           rfCanv[aa]->Write();
+         };
+
+         Tools::PrintTitleBox("roofit function");
+         A->PrintSettings();
+         printf("\n");
+         for(int ss=0; ss<nSpin; ss++) {
+           printf("%s: %s\n",SpinTitle(ss).Data(),A->rfPdfFormu[ss].Data());
+         };
+         printf("\n");
+
+         for(int aa=0; aa<N_AMP; aa++) {
+           printf(" >> A%d = %.3f +/- %.3f\n",
+             aa, A->rfA[aa]->getVal(), A->rfA[aa]->getError() );
+         };
+         for(int dd=0; dd<N_D; dd++) {
+           printf(" >> D%d = %.3f +/- %.3f\n",
+             dd, A->rfD[dd]->getVal(), A->rfD[dd]->getError() );
+         };
+         /*
+         printf(" >> Y+ = %.3f +/- %.3f\n",
+           A->rfYield[0]->getVal(), A->rfYield[0]->getError() );
+         printf(" >> Y- = %.3f +/- %.3f\n",
+           A->rfYield[1]->getVal(), A->rfYield[1]->getError() );
+         */
+
+         printf("\n");
+
+       };
+     };
+
+
+     // DEPRECATED
+     // print modDist boundaries (used for determining modDist boundaries
+     // which depend on kinematics, for g1perp modulation PhPerp/Mh-scaling test)
+     /*
+     Float_t mbound;
+     if(dimensions==1 && whichModulation==Asymmetry::scaleSinPhiHR) {
+       printf("MBOUND\n");
+       printf("if(v_==v%s) {\n",(BS->IVname[ivVar[0]]).Data());
+       for(int b=0; b<NB[0]; b++) {
+         binNum = GetBinNum(b);
+         A = asymMap.at(binNum);
+         mbound = TMath::Max(
+           TMath::Abs(Tools::GetFirstFilledX(A->modDist)),
+           TMath::Abs(Tools::GetLastFilledX(A->modDist))
+         );
+         mbound += 0.1;
+         printf("  if(b_==%d) return %f;\n",b,mbound);
+       };
+       printf("};\n");
+     };
+     */
+
+
+
+     // print images
+     TString pngName;
+     if(batchMode==1) {
+       pngName = Form("spinout/%s.%s.png",kindepCanv->GetName(),dihName.Data());
+       kindepCanv->Print(pngName,"png");
+       for(int aa=0; aa<N_AMP; aa++) {
+         pngName = Form("spinout/%s.%s.png",RFkindepCanv[aa]->GetName(),dihName.Data());
+         RFkindepCanv[aa]->Print(pngName,"png");
+       };
+       pngName = Form("spinout/%s.%s.png",chindfCanv->GetName(),dihName.Data());
+       chindfCanv->Print(pngName,"png");
+       pngName = Form("spinout/%s.%s.png",rellumCanv->GetName(),dihName.Data());
+       rellumCanv->Print(pngName,"png");
+       if(dimensions==1 || dimensions==2) {
+         pngName = Form("spinout/%s.%s.png",asymModCanv->GetName(),dihName.Data());
+         asymModCanv->Print(pngName,"png"); 
+         pngName = Form("spinout/%s.%s.png",modDistCanv->GetName(),dihName.Data());
+         modDistCanv->Print(pngName,"png"); 
+       };
+     };
+
+   }; // eo if batchMode!=2
+
+
+   // test writing spinroot file
+   TString Aname;
+   if(batchMode==2) {
+     spinrootFile->cd();
+     BS->Write("BS");
+     for(std::vector<Asymmetry*>::iterator it = asymVec.begin(); 
+       it!=asymVec.end(); ++it
+     ) {
+       A = *it;
+       Aname = "A" + A->binN;
+       printf("write %s\n",Aname.Data());
+       A->PrintSettings();
+       A->rfData->Write(Aname);
      };
    };
 
    outfile->Close();
+   if(batchMode==2) spinrootFile->Close();
 
    printf("--- end %s\n",argv[0]);
 

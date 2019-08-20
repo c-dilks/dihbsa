@@ -193,7 +193,7 @@ void EventTree::GetEvent(Int_t i) {
     
 
   // set preferred PhiR definition
-  PhiR = PhiRp;
+  PhiR = PhiRp; // preferred definition by Bacchetta (see Dihadron.cxx)
 
   PhiHR = Tools::AdjAngle( PhiH - PhiR );
 

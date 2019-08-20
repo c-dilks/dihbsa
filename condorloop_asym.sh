@@ -28,9 +28,6 @@ argfile="args.dat"
 # total number of IVs
 nIV=4
 
-# which phiR definition
-phiR=3
-
 # pairs list loop
 while read pairTypeInfo; do
   echo "--- $pairTypeInfo"
@@ -41,7 +38,7 @@ while read pairTypeInfo; do
   if [ $dim1 -eq 1 ]; then
     for ((iv=0; iv<$nIV; iv++)); do
       echo $iv
-      echo $dir $pairType $modulation 1 $iv $phiR 1 >> $argfile
+      echo $dir $pairType $modulation 1 $iv 1 >> $argfile
     done
   fi
 
@@ -55,7 +52,7 @@ while read pairTypeInfo; do
         if [ $iv1 -eq $iv2 ]; then continue; fi
         iv=$[10*$iv1 + $iv2]
         echo $iv1 $iv2 $iv
-        echo $dir $pairType $modulation 2 $iv $phiR 1 >> $argfile
+        echo $dir $pairType $modulation 2 $iv 1 >> $argfile
       done
     done
   fi
@@ -75,7 +72,7 @@ while read pairTypeInfo; do
           if [ $iv2 -eq $iv3 ]; then continue; fi
           iv=$[100*$iv1 + 10*$iv2 + $iv3]
           echo $iv1 $iv2 $iv3 $iv
-          echo $dir $pairType $modulation 3 $iv $phiR 1 >> $argfile
+          echo $dir $pairType $modulation 3 $iv 1 >> $argfile
         done
       done
     done
