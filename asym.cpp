@@ -29,7 +29,7 @@
 #include "Asymmetry.h"
 
 // subroutines
-Int_t GetBinNum(Int_t bin0, Int_t bin1=-1, Int_t bin2=-1);
+Int_t HashBinNum(Int_t bin0, Int_t bin1=-1, Int_t bin2=-1);
 void DrawKinDepGraph(TGraphErrors * g_, Binning * B_, Int_t v_);
 void DrawSimpleGraph(TGraphErrors * g_, Binning * B_, Int_t v, Bool_t setRange_=true);
 void DrawAsymGr(TGraphErrors * g_);
@@ -39,7 +39,7 @@ TGraphErrors * ShiftGraph(TGraphErrors * gr, Int_t nShift);
 
 // global vars
 Int_t pairType;
-TString inDir;
+TString inputData;
 Int_t whichModulation;
 Int_t dimensions;
 Int_t ivType;
@@ -57,14 +57,14 @@ int main(int argc, char** argv) {
 
 
    // ARGUMENTS -- for documentation, run this program without any arguments
-   inDir = "outroot";
+   inputData = "outroot";
    pairType = EncodePairType(kPip,kPim);
    whichModulation = 0;
    dimensions = 1;
    ivType = 1;
    batchMode = 0;
 
-   if(argc>1) inDir =           TString(argv[1]);
+   if(argc>1) inputData =       TString(argv[1]);
    if(argc>2) pairType =        (Int_t) strtof(argv[2],NULL);
    if(argc>3) whichModulation = (Int_t) strtof(argv[3],NULL);
    if(argc>4) dimensions =      (Int_t) strtof(argv[4],NULL);
@@ -80,15 +80,15 @@ int main(int argc, char** argv) {
    if(argc==1) {
 
      fprintf(stderr,"\nUSAGE: %s",arg[0]);
-     printf(" [inDir]");
+     printf(" [inputData]");
      printf(" [pairType]");
      printf(" [whichModulation]");
      printf(" [dimensions]");
      printf(" [ivType]");
      printf(" [batchMode]\n");
 
-     printf("\n- inDir: directory of ROOT files to analyse\n");
-     printf("         (if batchMode==2, must be a single file!)\n");
+     printf("\n- inputData: directory of ROOT files to analyse\n");
+     printf(  "             (if batchMode==2, must be a single file!)\n");
 
      printf("\n- pairType: hadron pair type (run PrintEnumerators.C for notation)\n");
 
@@ -107,10 +107,10 @@ int main(int argc, char** argv) {
        printf("   %d = %s\n",i,(BS->IVtitle[i]).Data());
      };
 
-     printf("\n- batchMode:\n");
+     printf("\n- batchMode: (typically used by wrapper scripts)\n");
      printf("   0 = default behavior\n");
      printf("   1 = rename output spin.root rootfile and prints pngs\n");
-     printf("   2 = test writing out spinroot file (inDir must be 1 file!)\n");
+     printf("   2 = test writing out spinroot file (inputData must be 1 file!)\n");
      printf("\n");
 
      return 0;
@@ -119,7 +119,7 @@ int main(int argc, char** argv) {
 
    // print arguments' values
    printf("pairType = 0x%x\n",pairType);
-   printf("inDir = %s\n",inDir.Data());
+   printf("inputData = %s\n",inputData.Data());
    printf("whichModulation = %d\n",whichModulation);
    printf("dimensions = %d\n",dimensions);
    printf("ivType = %d\n",ivType);
@@ -190,149 +190,80 @@ int main(int argc, char** argv) {
    printf("\n\n");
    
 
-   // set output file
-   TString outfileName = "spin";
-   TFile * outfile;
-   if(batchMode!=2) {
-     if(batchMode==1) {
-       outfileName = "spinout/" + outfileName;
-       outfileName += "__" + dihName + "_";
-       for(int d=0; d<dimensions; d++) 
-         outfileName += "_" + BS->IVname[ivVar[d]];
-       outfileName += "__" + modN;
-     };
-     outfileName += ".root";
-     printf("outfileName = %s\n",outfileName.Data());
-     outfile = new TFile(outfileName,"RECREATE");
-   };
-
-   //aqui
-
-
-   // set spinroot file
-   TString spinrootFileName; 
-   TFile * spinrootFile;
-   if(batchMode==2) {
-     spinrootFileName = inDir;
-     spinrootFileName(TRegexp("^.*/")) = "spinroot/";
-     spinrootFile = new TFile(spinrootFileName,"RECREATE");
-   };
-
-
-   // set EventTree
+   // set output file names and instantiate EventTree
    EventTree * ev;
-   if(batchMode!=2) ev = new EventTree(TString(inDir+"/*.root"),pairType);
-   else ev = new EventTree(inDir,pairType);
+   TString outName;
+   TFile *resultFile, *spinrootFile;
+   if(batchMode==0 || batchMode==1) {
+     ev = new EventTree(TString(inputData+"/*.root"),pairType);
+     outName = "spin";
+     if(batchMode==1) {
+       outName = "spinout/" + outName;
+       outName += "__" + dihName + "_";
+       for(int d=0; d<dimensions; d++) outName += "_" + BS->IVname[ivVar[d]];
+       outName += "__" + modN;
+     };
+     outName += ".root";
+     resultFile = new TFile(outName,"RECREATE");
+   }
+   else if(batchMode==2) {
+     ev = new EventTree(inputData,pairType);
+     outName = inputData;
+     outName(TRegexp("^.*/")) = "spinroot/spin.";
+     printf("outName = %s\n",outName.Data());
+     spinrootFile = new TFile(outName,"RECREATE");
+   }
+   else {
+     fprintf(stderr,"ERROR: bad batchMode (%d)\n",batchMode);
+     return 0;
+   };
+   printf("\nCREATING OUTPUT FILE = %s\n\n",outName.Data());
+
 
 
    
-   // instantiate Asymmetry pointers 
-   std::vector<Asymmetry*> asymVec; // vector of Asymmetry instances, one for each bin
-                                    // (iterator invalidation is not protected
-                                    // against, but access may be faster than a map)
-   std::map<Int_t, Asymmetry*> asymMap; // map of asymVec entry number (iterator) 
-                                        // and Asymmetry instance (this may be slower
-                                        // than asymVec, but protects against iterator
-                                        // invalidation)
-   std::map<int,int> binMap; // 3-digit bin number -> asym iterator
-                                 // -- use GetBinNum(...) to convert a set of bin
-                                 //    numbers to the 3-digit bin number; then use this
-                                 //    map to get the index of the corresponding
-                                 //    Asymmetry pointer in asymVec
-   std::map<int,TGraphErrors*> kindepMap; // 3-digit bin number -> kinematic-dependent
-                                          // -- use GetBinNum(...) to convert a set of
-                                          // bin numbers to the 3-digit bin number; then
-                                          // use this map to get the index of the
-                                          // corresponding kinematic-dependent asymmetry
-                                          // graph
-   std::map<int,TMultiGraph*> multiMap; // kindepMap for multiGr
-   std::map<int,TGraphErrors*> chindfMap; // kindepMap for chindfGr
-   std::map<int,TGraphErrors*> rellumMap; // kindepMap for rellumGr
-   std::map<int,TGraphErrors*> RFkindepMap[Asymmetry::nAmp]; // follows kindepMap,
-                                          // but for RooFit results (array index
-                                          // for each fit parameter result (amplitude))
+   // MAPS:
+   // - each IV bin is assigned a 3-digit bin number
+   // - the maps map that 3-digit bin number to an object (Asymmetry object, plot, etc)
+   // - use HashBinNum(...) to convert a set of bin numbers to the 3-digit bin number
+   std::vector<Int_t> binVec; // vector of 3-digit bin numbers, used for looping
+                              // over all possible bins
+   std::map<Int_t, Int_t> binVecMap[3]; // map 3-digit bin number back to each
+                                        // single-digit bin number [dimension]
+   std::map<Int_t, Asymmetry*> asymMap; // map to Asymmetry pointers
+   std::map<Int_t, TGraphErrors*> kindepMap; // map to kindep plots
+   std::map<Int_t, TMultiGraph*> multiMap; // map to multiGr
+   std::map<Int_t, TGraphErrors*> chindfMap; // map to chindfGr
+   std::map<Int_t, TGraphErrors*> rellumMap; // map to rellumGr
+   std::map<Int_t, TGraphErrors*> RFkindepMap[Asymmetry::nAmp]; 
+                                          // map to MLM amplitudes [for each param]
 
    TGraphErrors * kindepGr;
    TGraphErrors * RFkindepGr[Asymmetry::nAmp];
-   TGraphErrors * RFkindepGrClone[Asymmetry::nAmp];
    TGraphErrors * chindfGr;
    TGraphErrors * rellumGr;
    TMultiGraph * multiGr;
+
    TString grTitle,grTitleSuffix,grName,grNameSuffix;
+   Int_t binn[3];
+   Bool_t first;
 
+
+
+   // build binVec and instantiate Asymmetry objects
    Int_t binNum;
-   Int_t bcnt = 0;
    if(dimensions == 1) {
-
      for(int b=0; b<NB[0]; b++) {
 
+       binNum = HashBinNum(b);
+       binVec.push_back(binNum);
+       binVecMap[0].insert(std::pair<Int_t,Int_t>(binNum,b));
+       binVecMap[1].insert(std::pair<Int_t,Int_t>(binNum,-1));
+       binVecMap[2].insert(std::pair<Int_t,Int_t>(binNum,-1));
+
        A = new Asymmetry(BS, whichModulation, 1, ivVar[0], b);
-       if(!(A->success)) return 0;
-       N_AMP = A->nAmpUsed;
-       N_D = A->nDparamUsed;
-       asymVec.push_back(A);
-       binNum = GetBinNum(b);
-       binMap.insert(std::pair<int,int>(binNum,bcnt));
-       asymMap.insert(std::pair<Int_t, Asymmetry*>(binNum,A));
-       bcnt++;
-       if(b==0) {
-         // TODO -- this scope should be it's own function, since it's
-         // basically repeated for each number of dimensions case
-
-         grTitleSuffix =
-           BS->IVtitle[ivVar[0]] + ";" + BS->IVtitle[ivVar[0]];
-         grNameSuffix = BS->IVname[ivVar[0]];
-
-         grTitle =
-           dihTitle + " A_{LU}[" + A->ModulationTitle + "]_{l.f.} " + 
-           " vs. " + grTitleSuffix;
-         grName = "kindep_" + grNameSuffix;
-         kindepGr = new TGraphErrors();
-         kindepGr->SetName(grName);
-         kindepGr->SetTitle(grTitle);
-
-         grTitle =
-           dihTitle + " A_{LU}[" + A->ModulationTitle + "] " + 
-           " vs. " + grTitleSuffix;
-         grName = "multiGr_" + grNameSuffix;
-         multiGr = new TMultiGraph();
-         multiGr->SetName(grName);
-         multiGr->SetTitle(grTitle);
-
-         for(int aa=0; aa<N_AMP; aa++) {
-           grTitle = 
-             dihTitle + " " + TString(A->rfA[aa]->GetTitle()) + "_{m.l.m.} " +
-             " vs. " + grTitleSuffix;
-           grName = "RF_A" + TString::Itoa(aa,10) + "_kindep_" + grNameSuffix;
-           RFkindepGr[aa] = new TGraphErrors();
-           RFkindepGr[aa]->SetName(grName);
-           RFkindepGr[aa]->SetTitle(grTitle);
-         };
-
-         grTitle = 
-           "#chi^{2}/NDF of " +
-           dihTitle + " A_{LU}[" + A->ModulationTitle + "]_{l.f.} " + 
-           " vs. " + grTitleSuffix;
-         grName = "chindf_" + grNameSuffix;
-         chindfGr = new TGraphErrors();
-         chindfGr->SetName(grName);
-         chindfGr->SetTitle(grTitle);
-
-         grTitle = "relative luminosity vs. " + grTitleSuffix;
-         grName = "rellum_" + grNameSuffix;
-         rellumGr = new TGraphErrors();
-         rellumGr->SetName(grName);
-         rellumGr->SetTitle(grTitle);
-       };
-
-       kindepMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,kindepGr));
-       multiMap.insert(std::pair<Int_t,TMultiGraph*>(binNum,multiGr));
-       chindfMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,chindfGr));
-       rellumMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,rellumGr));
-       for(int aa=0; aa<N_AMP; aa++) {
-         RFkindepMap[aa].insert(
-           std::pair<Int_t,TGraphErrors*>(binNum,RFkindepGr[aa]) );
-       };
+       if(A->success) asymMap.insert(std::pair<Int_t, Asymmetry*>(binNum,A));
+       else return 0;
 
      };
    }
@@ -340,78 +271,18 @@ int main(int argc, char** argv) {
      for(int b1=0; b1<NB[1]; b1++) {
        for(int b0=0; b0<NB[0]; b0++) {
 
+         binNum = HashBinNum(b0,b1);
+         binVec.push_back(binNum);
+         binVecMap[0].insert(std::pair<Int_t,Int_t>(binNum,b0));
+         binVecMap[1].insert(std::pair<Int_t,Int_t>(binNum,b1));
+         binVecMap[2].insert(std::pair<Int_t,Int_t>(binNum,-1));
+
          A = new Asymmetry(BS, whichModulation, 2, 
            ivVar[0], b0,
            ivVar[1], b1
          );
-         if(!(A->success)) return 0;
-         N_AMP = A->nAmpUsed;
-         asymVec.push_back(A);
-         binNum = GetBinNum(b0,b1);
-         binMap.insert(std::pair<int,int>(binNum,bcnt));
-         asymMap.insert(std::pair<Int_t, Asymmetry*>(binNum,A));
-         bcnt++;
-
-         if(b0==0) {
-           grTitleSuffix = BS->IVtitle[ivVar[0]] + " :: " +
-                           BS->GetBoundStr(ivVar[1],b1) + ";" +
-                           BS->IVtitle[ivVar[0]];
-           grNameSuffix = Form("%s_bin_%s%d",
-             (BS->IVname[ivVar[0]]).Data(), (BS->IVname[ivVar[1]]).Data(), b1
-           );
-
-             
-           grTitle =
-             dihTitle + " A_{LU}[" + A->ModulationTitle + "]_{l.f.} " + 
-             " vs. " + grTitleSuffix;
-           grName = "kindep_" + grNameSuffix;
-           kindepGr = new TGraphErrors();
-           kindepGr->SetName(grName);
-           kindepGr->SetTitle(grTitle);
-
-           grTitle =
-             dihTitle + " A_{LU}[" + A->ModulationTitle + "] " + 
-             " vs. " + grTitleSuffix;
-           grName = "multiGr_" + grNameSuffix;
-           multiGr = new TMultiGraph();
-           multiGr->SetName(grName);
-           multiGr->SetTitle(grTitle);
-
-           for(int aa=0; aa<N_AMP; aa++) {
-             grTitle = 
-               dihTitle + " " + TString(A->rfA[aa]->GetTitle()) + "_{m.l.m.} " +
-               " vs. " + grTitleSuffix;
-             grName = "RF_A" + TString::Itoa(aa,10) + "_kindep_" + grNameSuffix;
-             RFkindepGr[aa] = new TGraphErrors();
-             RFkindepGr[aa]->SetName(grName);
-             RFkindepGr[aa]->SetTitle(grTitle);
-           };
-
-           grTitle = 
-             "#chi^{2}/NDF of " +
-             dihTitle + " A_{LU}[" + A->ModulationTitle + "]_{l.f.} " + 
-             " vs. " + grTitleSuffix;
-           grName = "chindf_" + grNameSuffix;
-           chindfGr = new TGraphErrors();
-           chindfGr->SetName(grName);
-           chindfGr->SetTitle(grTitle);
-
-           grTitle = "relative luminosity vs. " + grTitleSuffix;
-           grName = "rellum_" + grNameSuffix;
-           rellumGr = new TGraphErrors();
-           rellumGr->SetName(grName);
-           rellumGr->SetTitle(grTitle);
-
-         };
-
-         kindepMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,kindepGr));
-         multiMap.insert(std::pair<Int_t,TMultiGraph*>(binNum,multiGr));
-         chindfMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,chindfGr));
-         rellumMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,rellumGr));
-         for(int aa=0; aa<N_AMP; aa++) {
-           RFkindepMap[aa].insert(
-             std::pair<Int_t,TGraphErrors*>(binNum,RFkindepGr[aa]) );
-         };
+         if(A->success) asymMap.insert(std::pair<Int_t, Asymmetry*>(binNum,A));
+         else return 0;
 
        };
      };
@@ -421,80 +292,19 @@ int main(int argc, char** argv) {
        for(int b1=0; b1<NB[1]; b1++) {
          for(int b0=0; b0<NB[0]; b0++) {
 
+           binNum = HashBinNum(b0,b1,b2);
+           binVec.push_back(binNum);
+           binVecMap[0].insert(std::pair<Int_t,Int_t>(binNum,b0));
+           binVecMap[1].insert(std::pair<Int_t,Int_t>(binNum,b1));
+           binVecMap[2].insert(std::pair<Int_t,Int_t>(binNum,b2));
+
            A = new Asymmetry(BS, whichModulation, 3, 
              ivVar[0], b0,
              ivVar[1], b1,
              ivVar[2], b2
            );
-           if(!(A->success)) return 0;
-           N_AMP = A->nAmpUsed;
-           asymVec.push_back(A);
-           binNum = GetBinNum(b0,b1,b2);
-           binMap.insert(std::pair<int,int>(binNum,bcnt));
-           asymMap.insert(std::pair<Int_t, Asymmetry*>(binNum,A));
-           bcnt++;
-
-           if(b0==0) {
-             grTitleSuffix = BS->IVtitle[ivVar[0]] + " :: " +
-               BS->GetBoundStr(ivVar[1],b1) + ", " +
-               BS->GetBoundStr(ivVar[2],b2) + ";" +
-               BS->IVtitle[ivVar[0]];
-             grName = Form("bin_%s%d_%s%d",
-               (BS->IVname[ivVar[1]]).Data(), b1,
-               (BS->IVname[ivVar[2]]).Data(), b2
-             );
-
-             grTitle =
-               dihTitle + " A_{LU}[" + A->ModulationTitle + "]_{l.f.} " + 
-               " vs. " + grTitleSuffix;
-             grName = "kindep_" + grNameSuffix;
-             kindepGr = new TGraphErrors();
-             kindepGr->SetName(grName);
-             kindepGr->SetTitle(grTitle);
-
-             grTitle =
-               dihTitle + " A_{LU}[" + A->ModulationTitle + "] " + 
-               " vs. " + grTitleSuffix;
-             grName = "multiGr_" + grNameSuffix;
-             multiGr = new TMultiGraph();
-             multiGr->SetName(grName);
-             multiGr->SetTitle(grTitle);
-
-             for(int aa=0; aa<N_AMP; aa++) {
-               grTitle = 
-                 dihTitle + " " + TString(A->rfA[aa]->GetTitle()) + "_{m.l.m.} " +
-                 " vs. " + grTitleSuffix;
-               grName = "RF_A" + TString::Itoa(aa,10) + "_kindep_" + grNameSuffix;
-               RFkindepGr[aa] = new TGraphErrors();
-               RFkindepGr[aa]->SetName(grName);
-               RFkindepGr[aa]->SetTitle(grTitle);
-             };
-
-             grTitle = 
-               "#chi^{2}/NDF of " +
-               dihTitle + " A_{LU}[" + A->ModulationTitle + "]_{l.f.} " + 
-               " vs. " + grTitleSuffix;
-             grName = "chindf_" + grNameSuffix;
-             chindfGr = new TGraphErrors();
-             chindfGr->SetName(grName);
-             chindfGr->SetTitle(grTitle);
-
-             grTitle = "relative luminosity vs. " + grTitleSuffix;
-             grName = "rellum_" + grNameSuffix;
-             rellumGr = new TGraphErrors();
-             rellumGr->SetName(grName);
-             rellumGr->SetTitle(grTitle);
-
-           };
-
-           kindepMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,kindepGr));
-           multiMap.insert(std::pair<Int_t,TMultiGraph*>(binNum,multiGr));
-           chindfMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,chindfGr));
-           rellumMap.insert(std::pair<Int_t,TGraphErrors*>(binNum,rellumGr));
-           for(int aa=0; aa<N_AMP; aa++) {
-             RFkindepMap[aa].insert(
-               std::pair<Int_t,TGraphErrors*>(binNum,RFkindepGr[aa]) );
-           };
+           if(A->success) asymMap.insert(std::pair<Int_t, Asymmetry*>(binNum,A));
+           else return 0;
 
          };
        };
@@ -502,28 +312,140 @@ int main(int argc, char** argv) {
    };
 
 
+   // instantiate all graphs etc. and insert them in the map
+   first = true;
+   for(Int_t bn : binVec) {
+
+     A = asymMap.at(bn);
+
+     // get bin numbers from 3-digit bin number; get number of RooFit params
+     if(first) { 
+       for(int d=0; d<3; d++) binn[d]=binMap.at(d);
+       N_AMP = A->nAmpUsed;
+       N_D = A->nDparamUsed;
+     };
+     first = false;
+
+
+     // set title and name suffixes
+     switch(dimensions) {
+       case 1:
+         grTitleSuffix =
+           BS->IVtitle[ivVar[0]] + ";" + BS->IVtitle[ivVar[0]];
+         grNameSuffix = BS->IVname[ivVar[0]];
+         break;
+       case 2:
+         grTitleSuffix = BS->IVtitle[ivVar[0]] + " :: " +
+           BS->GetBoundStr(ivVar[1],binn[1]) + ";" +
+           BS->IVtitle[ivVar[0]];
+         grNameSuffix = Form("%s_bin_%s%d",
+           (BS->IVname[ivVar[0]]).Data(),
+           (BS->IVname[ivVar[1]]).Data(), binn[1]
+         );
+         break;
+       case 3:
+         grTitleSuffix = BS->IVtitle[ivVar[0]] + " :: " +
+           BS->GetBoundStr(ivVar[1],binn[1]) + ", " +
+           BS->GetBoundStr(ivVar[2],binn[2]) + ";" +
+           BS->IVtitle[ivVar[0]];
+         grNameSuffix = Form("%s_bin_%s%d_%s%d",
+           (BS->IVname[ivVar[0]]).Data(),
+           (BS->IVname[ivVar[1]]).Data(), binn[1],
+           (BS->IVname[ivVar[2]]).Data(), binn[2]
+         );
+         break;
+     };
+
+
+     // instantiate graphs; only needs to be done for each IV1 and IV2 bin, since the
+     // horizontal axis of these graphs are all IV0 (hence the requirement binn[0]==0)
+     if(binn[0]==0) {
+
+       // instantiate kindep graph, for linear fit ("l.f.") result
+       grTitle = dihTitle + " A_{LU}[" + A->ModulationTitle + "]_{l.f.} " + 
+         " vs. " + grTitleSuffix;
+       grName = "kindep_" + grNameSuffix;
+       kindepGr = new TGraphErrors();
+       kindepGr->SetName(grName);
+       kindepGr->SetTitle(grTitle);
+
+       // instantiate multiGraph, for plotting kindep graphs together
+       grTitle = dihTitle + " A_{LU}[" + A->ModulationTitle + "] " + 
+         " vs. " + grTitleSuffix;
+       grName = "multiGr_" + grNameSuffix;
+       multiGr = new TMultiGraph();
+       multiGr->SetName(grName);
+       multiGr->SetTitle(grTitle);
+
+       // instantiate kindep graphs for maximum likelihood method (m.l.m.) result
+       // for each fit parameter
+       for(int aa=0; aa<N_AMP; aa++) {
+         grTitle = dihTitle + " " + TString(A->rfA[aa]->GetTitle()) + "_{m.l.m.} " +
+           " vs. " + grTitleSuffix;
+         grName = "RF_A" + TString::Itoa(aa,10) + "_kindep_" + grNameSuffix;
+         RFkindepGr[aa] = new TGraphErrors();
+         RFkindepGr[aa]->SetName(grName);
+         RFkindepGr[aa]->SetTitle(grTitle);
+       };
+
+       // instantiate chi2/ndf graphs
+       grTitle = "#chi^{2}/NDF of " +
+         dihTitle + " A_{LU}[" + A->ModulationTitle + "]_{l.f.} " + 
+         " vs. " + grTitleSuffix;
+       grName = "chindf_" + grNameSuffix;
+       chindfGr = new TGraphErrors();
+       chindfGr->SetName(grName);
+       chindfGr->SetTitle(grTitle);
+
+       // instantiate relative luminosity graphs
+       grTitle = "relative luminosity vs. " + grTitleSuffix;
+       grName = "rellum_" + grNameSuffix;
+       rellumGr = new TGraphErrors();
+       rellumGr->SetName(grName);
+       rellumGr->SetTitle(grTitle);
+
+     }; // eo if(binn[0]==0)
+
+
+     // insert objects into maps (note: these are many-to-one, i.e., several
+     // bin numbers will map to the same pointer)
+     kindepMap.insert(std::pair<Int_t,TGraphErrors*>(bn,kindepGr));
+     multiMap.insert(std::pair<Int_t,TMultiGraph*>(bn,multiGr));
+     chindfMap.insert(std::pair<Int_t,TGraphErrors*>(bn,chindfGr));
+     rellumMap.insert(std::pair<Int_t,TGraphErrors*>(bn,rellumGr));
+     for(int aa=0; aa<N_AMP; aa++) {
+       RFkindepMap[aa].insert(std::pair<Int_t,TGraphErrors*>(bn,RFkindepGr[aa]) );
+     };
+         
+        
+     
+   }; // eo binVec loop
+
 
 
    // overall summary plots
-   TH1F * chisqDist = new TH1F("chisqDist","#chi^{2} distribution",100,0,20);
+   TH1F * chisqDist = new TH1F("chisqDist",
+     "#chi^{2} distribution (from linear fit results)",100,0,20);
 
 
-   // EVENT LOOP -------------------------------------------
+
+   //-----------------------------------------------------
+   // EVENT LOOP  
+   //-----------------------------------------------------
    printf("begin loop through %lld events...\n",ev->ENT);
-   Bool_t filled;
+   Bool_t eventAdded;
    for(int i=0; i<ev->ENT; i++) {
 
      ev->GetEvent(i);
 
      if(ev->Valid()) {
        
-       // fill asymmetry plots; Asymmetry::FillPlots() checks the bin,
-       // and fills plots if it's the correct bin
-       for(std::vector<Asymmetry*>::iterator it = asymVec.begin(); 
-         it!=asymVec.end(); ++it
-       ) {
-         
-         A = *it;
+       // fill asymmetry plots; Asymmetry::AddEvent() checks the bin,
+       // and fills plots if it's the correct bin; if not, AddEvent() does nothing
+       // and returns false
+       for(Int_t bn : binVec) {
+
+         A = asymMap.at(bn);
 
          A->Mh = ev->Mh;
          A->x = ev->x;
@@ -535,9 +457,9 @@ int main(int argc, char** argv) {
          A->PhPerp = ev->PhPerp;
          A->theta = ev->theta;
 
-         filled = A->FillPlots(); 
+         eventAdded = A->AddEvent(); 
 
-         //if(filled && A->debug) ev->PrintEvent();
+         //if(eventAdded && A->debug) ev->PrintEvent();
        };
 
      };
@@ -546,16 +468,39 @@ int main(int argc, char** argv) {
 
 
 
+   // write spinroot file and exit
+   TString Aname;
+   if(batchMode==2) {
+     spinrootFile->cd();
+     BS->Write("BS");
+     for(Int_t bn : binVec) {
+       A = asymMap.at(bn);
+       Aname = "A" + A->binN;
+       printf("write %s\n",Aname.Data());
+       A->PrintSettings();
+       A->rfData->Write(Aname);
+     };
+     spinrootFile->Close();
+     return 1;
+   };
+
+
+   // aqui
+   // -- beyond here calculates asymmetries, adds points to graphs, and draws
+   //    them
+   //    perhaps it's better to do if(batchMode!=2) { execute asymCalculate.exe) };
+   //    otherwise, asymCalculate.exe would be run on a "concatenation" of spinroot
+   //    files
+
+
+
    // compute asymmetries
    Float_t asymValue,asymError;
    Float_t kinValue,kinError;
    Float_t chisq,ndf;
    printf("--- calculate asymmetries\n");
-   for(std::vector<Asymmetry*>::iterator it = asymVec.begin(); 
-     it!=asymVec.end(); ++it
-   ) {
-
-     A = *it;
+   for(Int_t bn : binVec) {
+     A = asymMap.at(bn);
      A->CalculateAsymmetries();
 
      if( ( A->asym2d==false && A->fitFunc!=NULL) || 
@@ -599,22 +544,20 @@ int main(int argc, char** argv) {
        chisqDist->Fill(chisq);
 
        // set points
-       binNum = GetBinNum(A->B[0], A->B[1], A->B[2]);
-
-       kindepGr = kindepMap.at(binNum);
+       kindepGr = kindepMap.at(bn);
        kindepGr->SetPoint(A->B[0],kinValue,asymValue);
        kindepGr->SetPointError(A->B[0],kinError,asymError);
 
        for(int aa=0; aa<N_AMP; aa++) {
-         RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
+         RFkindepGr[aa] = RFkindepMap[aa].at(bn);
          RFkindepGr[aa]->SetPoint(A->B[0],kinValue,A->rfA[aa]->getVal());
          RFkindepGr[aa]->SetPointError(A->B[0],kinError,A->rfA[aa]->getError());
        };
 
-       chindfGr = chindfMap.at(binNum);
+       chindfGr = chindfMap.at(bn);
        chindfGr->SetPoint(A->B[0],kinValue,chisq/ndf);
 
-       rellumGr = rellumMap.at(binNum);
+       rellumGr = rellumMap.at(bn);
        rellumGr->SetPoint(A->B[0],kinValue,A->rellum);
        rellumGr->SetPointError(A->B[0],0,A->rellumErr);
 
@@ -624,9 +567,8 @@ int main(int argc, char** argv) {
 
    
    // build multigraph of asymmetries
-
-
    //gStyle->SetOptFit(1); // (better to put this in your ~/.rootlogon.C file)
+
 
    // -- instantiate canvases
    TString canvNameSuffix = "Canv_" + modN;
@@ -695,8 +637,9 @@ int main(int argc, char** argv) {
 
    // -- add objects to canvases and graphs to multiGr
    Int_t pad;
+   TGraphErrors * RFkindepGrClone[Asymmetry::nAmp];
    if(dimensions==1) {
-     binNum = GetBinNum(0);
+     binNum = HashBinNum(0);
 
      kindepGr = kindepMap.at(binNum);
      kindepCanv->cd();
@@ -722,7 +665,7 @@ int main(int argc, char** argv) {
      DrawSimpleGraph(rellumGr,BS,ivVar[0],false);
 
      for(int b0=0; b0<NB[0]; b0++) {
-       binNum = GetBinNum(b0);
+       binNum = HashBinNum(b0);
        A = asymMap.at(binNum);
        asymModCanv->cd(b0+1);
        if(!(A->asym2d)) DrawAsymGr(A->asymGr);
@@ -739,7 +682,7 @@ int main(int argc, char** argv) {
    else if(dimensions==2) {
      for(int b1=0; b1<NB[1]; b1++) {
        pad = b1+1;
-       binNum = GetBinNum(0,b1);
+       binNum = HashBinNum(0,b1);
 
        kindepGr = kindepMap.at(binNum);
        kindepCanv->cd(pad);
@@ -765,7 +708,7 @@ int main(int argc, char** argv) {
        DrawSimpleGraph(rellumGr,BS,ivVar[0],false);
 
        for(int b0=0; b0<NB[0]; b0++) {
-         binNum = GetBinNum(b0,b1);
+         binNum = HashBinNum(b0,b1);
          A = asymMap.at(binNum);
          asymModCanv->cd(b0*NB[1]+b1+1);
          if(!(A->asym2d)) DrawAsymGr(A->asymGr);
@@ -784,7 +727,7 @@ int main(int argc, char** argv) {
      for(int b1=0; b1<NB[1]; b1++) {
        for(int b2=0; b2<NB[2]; b2++) {
          pad = b1*NB[2]+b2+1;
-         binNum = GetBinNum(0,b1,b2);
+         binNum = HashBinNum(0,b1,b2);
 
          kindepGr = kindepMap.at(binNum);
          kindepCanv->cd(pad);
@@ -823,7 +766,7 @@ int main(int argc, char** argv) {
 
    if(dimensions==1) {
      for(int b0=0; b0<NB[0]; b0++) {
-       binNum = GetBinNum(b0);
+       binNum = HashBinNum(b0);
        A = asymMap.at(binNum);
        if(b0==0) {
          ivFullDist1 = (TH1D*)(A->ivDist1)->Clone();
@@ -851,7 +794,7 @@ int main(int argc, char** argv) {
    else if(dimensions==2) {
      for(int b1=0; b1<NB[1]; b1++) {
        for(int b0=0; b0<NB[0]; b0++) {
-         binNum = GetBinNum(b0,b1);
+         binNum = HashBinNum(b0,b1);
          A = asymMap.at(binNum);
          if(b0==0 && b1==0) {
            ivFullDist2 = (TH2D*)(A->ivDist2)->Clone();
@@ -875,7 +818,7 @@ int main(int argc, char** argv) {
      for(int b2=0; b2<NB[2]; b2++) {
        for(int b1=0; b1<NB[1]; b1++) {
          for(int b0=0; b0<NB[0]; b0++) {
-           binNum = GetBinNum(b0,b1,b2);
+           binNum = HashBinNum(b0,b1,b2);
            A = asymMap.at(binNum);
            if(b0==0 && b1==0 && b2==0) {
              ivFullDist3 = (TH3D*)(A->ivDist3)->Clone();
@@ -903,14 +846,11 @@ int main(int argc, char** argv) {
    // write output to TFile
    if(batchMode!=2) {
 
-     outfile->cd();
+     resultFile->cd();
      // -- Asymmetry objects
      printf("--- write Asymmetry objects\n");
-     for(std::vector<Asymmetry*>::iterator it = asymVec.begin(); 
-       it!=asymVec.end(); ++it
-     ) {
-
-       A = *it;
+     for(Int_t bn : binVec) {
+       A = asymMap.at(bn);
 
        printf("writing plots for:\n");
        A->PrintSettings();
@@ -951,10 +891,8 @@ int main(int argc, char** argv) {
 
      // -- asymmetries and kindep graphs
      printf("--- write kinematic-dependent asymmetries\n");
-     for(std::vector<Asymmetry*>::iterator it = asymVec.begin(); 
-       it!=asymVec.end(); ++it
-     ) {
-       A = *it;
+     for(Int_t bn : binVec) {
+       A = asymMap.at(bn);
        A->PrintSettings();
 
        // first write out the asymmetry vs. modulation graphs
@@ -964,7 +902,7 @@ int main(int argc, char** argv) {
        // then write out the kindepGr *after* writing out all the
        // relevant asymmetry vs. modulation graphs
        if(A->B[0] + 1 == NB[0]) {
-         binNum = GetBinNum(A->B[0], A->B[1], A->B[2]);
+         binNum = HashBinNum(A->B[0], A->B[1], A->B[2]);
          kindepGr = kindepMap.at(binNum);
          kindepGr->Write();
          multiGr = multiMap.at(binNum);
@@ -988,10 +926,8 @@ int main(int argc, char** argv) {
      TCanvas * rfCanv[Asymmetry::nAmp];
      TString rfCanvName[Asymmetry::nAmp];
 
-     for(std::vector<Asymmetry*>::iterator it = asymVec.begin(); 
-       it!=asymVec.end(); ++it
-     ) {
-       A = *it;
+     for(Int_t bn : binVec) {
+       A = asymMap.at(bn);
        if(A->roofitter) {
          
          for(int aa=0; aa<N_AMP; aa++) {
@@ -1039,7 +975,7 @@ int main(int argc, char** argv) {
        printf("MBOUND\n");
        printf("if(v_==v%s) {\n",(BS->IVname[ivVar[0]]).Data());
        for(int b=0; b<NB[0]; b++) {
-         binNum = GetBinNum(b);
+         binNum = HashBinNum(b);
          A = asymMap.at(binNum);
          mbound = TMath::Max(
            TMath::Abs(Tools::GetFirstFilledX(A->modDist)),
@@ -1078,31 +1014,15 @@ int main(int argc, char** argv) {
    }; // eo if batchMode!=2
 
 
-   // test writing spinroot file
-   TString Aname;
-   if(batchMode==2) {
-     spinrootFile->cd();
-     BS->Write("BS");
-     for(std::vector<Asymmetry*>::iterator it = asymVec.begin(); 
-       it!=asymVec.end(); ++it
-     ) {
-       A = *it;
-       Aname = "A" + A->binN;
-       printf("write %s\n",Aname.Data());
-       A->PrintSettings();
-       A->rfData->Write(Aname);
-     };
-   };
 
-   outfile->Close();
-   if(batchMode==2) spinrootFile->Close();
+   if(batchMode!=2) resultFile->Close();
 
    printf("--- end %s\n",argv[0]);
 
 };
 
 
-Int_t GetBinNum(Int_t bin0, Int_t bin1, Int_t bin2) {
+Int_t HashBinNum(Int_t bin0, Int_t bin1, Int_t bin2) {
   Int_t retval = bin0;
   if(bin1>=0) retval += 10 * bin1;
   if(bin2>=0) retval += 100 * bin2;

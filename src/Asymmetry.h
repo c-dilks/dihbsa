@@ -76,7 +76,7 @@ class Asymmetry : public TObject
     void SetAsymGrPoint(Int_t modBin_, Int_t modBin2_=-1);
 
 
-    Bool_t FillPlots();
+    Bool_t AddEvent();
     Float_t EvalModulation();
     Float_t EvalWeight();
     Int_t SpinState(Int_t spin_);

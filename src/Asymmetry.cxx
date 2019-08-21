@@ -283,7 +283,7 @@ Asymmetry::Asymmetry(
 // fill all the plots; to be called in event loop
 // -- returns true if filled successfully, or false
 //    if not (which usually happens if it's the wrong bin)
-Bool_t Asymmetry::FillPlots() {
+Bool_t Asymmetry::AddEvent() {
 
   // set iv variable
   for(int d=0; d<whichDim; d++) {
@@ -295,7 +295,7 @@ Bool_t Asymmetry::FillPlots() {
       //case Binning::vTh: iv[d] = TMath::Sin(theta); break;
       default: 
         fprintf(stderr,
-          "ERROR: Asymmetry::FillPlots does not understand I[%d]=%d\n",d,I[d]);
+          "ERROR: Asymmetry::AddEvent does not understand I[%d]=%d\n",d,I[d]);
         return false;
     };
   };
