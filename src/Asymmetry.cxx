@@ -646,9 +646,9 @@ void Asymmetry::CalculateRooAsymmetries() {
 
 
   // fit simultaneous PDF to combined data
-  Tools::PrintSeparator(70,"=");
+  Tools::PrintSeparator(50,"=");
   printf("BEGIN FIT\n");
-  Tools::PrintSeparator(70,"=");
+  Tools::PrintSeparator(50,"=");
 
   rfResult = rfSimPdf->fitTo(*rfData, RooFit::Save());
   //rfResult = rfSimPdf->fitTo(*rfData, RooFit::Extended(kTRUE), RooFit::Save(kTRUE));
@@ -673,7 +673,7 @@ void Asymmetry::CalculateRooAsymmetries() {
   };
 
 
-  Tools::PrintSeparator(100,"=");
+  Tools::PrintSeparator(50,"=");
 
   // print fit results
   Tools::PrintTitleBox("ROOFIT RESULTS");
@@ -681,7 +681,7 @@ void Asymmetry::CalculateRooAsymmetries() {
   rfResult->Print("v");
   Tools::PrintSeparator(30);
 
-  Tools::PrintSeparator(100,"=");
+  Tools::PrintSeparator(50,"=");
 
 };
 
