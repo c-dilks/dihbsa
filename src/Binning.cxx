@@ -186,8 +186,5 @@ Float_t Binning::GetAziMax(Int_t v_, Int_t b_) {
   return 5;
 };
 
-
-
-
 Binning::~Binning() {};
 

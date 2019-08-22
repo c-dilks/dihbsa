@@ -15,7 +15,6 @@ Asymmetry::Asymmetry(
 
   // OPTIONS ////////////
   debug = true;
-  roofitter = true;
   ///////////////////////
 
 
@@ -132,6 +131,10 @@ Asymmetry::Asymmetry(
 
 
   // ivDist
+  // - the histogram of appropriate dimension will be instantiated
+  // - the unused dimensions will also be instantiated, but never filled; this is done
+  //   to prevent null pointers when streaming to an output file (names prefixed with
+  //   "nop"=not operational)
   ivName = Form("ivDist%s",binN.Data());
   if(whichDim == 1) {
     ivTitle = Form("%s distribution %s;%s",
@@ -141,6 +144,9 @@ Asymmetry::Asymmetry(
     ivDist1 = new TH1D(ivName,ivTitle,
       iv1Bins,ivMin[0],ivMax[0]
     );
+    // nop
+    ivDist2 = new TH2D(TString("nop2_"+ivName),TString("nop2"+ivName),1,0,1,1,0,1);
+    ivDist3 = new TH3D(TString("nop3_"+ivName),TString("nop3"+ivName),1,0,1,1,0,1,1,0,1);
   }
   else if(whichDim == 2) {
     ivTitle = Form("%s vs. %s %s;%s;%s",
@@ -151,6 +157,9 @@ Asymmetry::Asymmetry(
       iv2Bins,ivMin[0],ivMax[0],
       iv2Bins,ivMin[1],ivMax[1]
     );
+    // nop
+    ivDist1 = new TH1D(TString("nop1_"+ivName),TString("nop1"+ivName),1,0,1);
+    ivDist3 = new TH3D(TString("nop3_"+ivName),TString("nop3"+ivName),1,0,1,1,0,1,1,0,1);
   }
   else if(whichDim == 3) {
     ivTitle = Form("%s vs. %s vs. %s %s;%s;%s;%s",
@@ -162,6 +171,9 @@ Asymmetry::Asymmetry(
       iv3Bins,ivMin[1],ivMax[1],
       iv3Bins,ivMin[2],ivMax[2]
     );
+    // nop
+    ivDist1 = new TH1D(TString("nop1_"+ivName),TString("nop1"+ivName),1,0,1);
+    ivDist2 = new TH2D(TString("nop2_"+ivName),TString("nop2"+ivName),1,0,1,1,0,1);
   };
   //if(debug) printf("built %s\n\t%s\n",ivName.Data(),ivTitle.Data());
 
@@ -172,46 +184,61 @@ Asymmetry::Asymmetry(
   if(!asym2d) {
     modTitle += ";" + ModulationTitle;
     modDist = new TH1D(modName,modTitle,iv1Bins,-modMax,modMax);
+    // nop
+    modDist2 = new TH2D(TString("nop_"+modName),TString("nop_"+modName),1,0,1,1,0,1);
   } else {
     modTitle += ";#phi_{R};#phi_{h}";
     modDist2 = new TH2D(modName,modTitle,iv2Bins,-modMax,modMax,iv2Bins,-modMax,modMax);
+    // nop
+    modDist = new TH1D(TString("nop_"+modName),TString("nop_"+modName),1,0,1);
   };
   //if(debug) printf("built %s\n\t%s\n",modName.Data(),modTitle.Data());
 
-  if(!asym2d) {
-    for(int m=0; m<nModBins; m++) {
-      modBinName = Form("%s_bin_%d",modName.Data(),m);
-      modBinTitle = Form("bin %d %s",m,modTitle.Data());
-      modBinTitle += ";" + modTitle;
+  for(int m=0; m<nModBins; m++) {
+    modBinName = Form("%s_bin_%d",modName.Data(),m);
+    modBinTitle = Form("bin %d %s",m,modTitle.Data());
+    modBinTitle += ";" + modTitle;
+    if(!asym2d) {
+      modBinDist[m] = new TH1D(modBinName,modBinTitle,iv1Bins,-modMax,modMax);
+    } else {
+      // nop
       modBinDist[m] = new TH1D(
-        modBinName.Data(),modBinTitle.Data(),iv1Bins,-modMax,modMax);
+        TString("nop_"+modBinName),TString("nop_"+modBinName),1,0,1);
     };
-  } else {
-    for(int mmH=0; mmH<nModBins2; mmH++) {
-      for(int mmR=0; mmR<nModBins2; mmR++) {
-        modBinName = Form("%s_bin_H%d_R%d",modName.Data(),mmH,mmR);
-        modBinTitle = Form("bin (H%d,R%d) %s",mmH,mmR,modTitle.Data());
-        modBinTitle += ";#phi_{R};#phi_{h}";
+  };
+  for(int mmH=0; mmH<nModBins2; mmH++) {
+    for(int mmR=0; mmR<nModBins2; mmR++) {
+      modBinName = Form("%s_bin_H%d_R%d",modName.Data(),mmH,mmR);
+      modBinTitle = Form("bin (H%d,R%d) %s",mmH,mmR,modTitle.Data());
+      modBinTitle += ";#phi_{R};#phi_{h}";
+      if(asym2d) {
         modBinDist2[mmH][mmR] = new TH2D(
-          modBinName.Data(),modBinTitle.Data(),
+          modBinName,modBinTitle,
           iv2Bins,-modMax,modMax,iv2Bins,-modMax,modMax);
+      } else {
+        //nop
+        modBinDist2[mmH][mmR] = new TH2D(
+          TString("nop_"+modBinName),TString("nop_"+modBinName),1,0,1,1,0,1);
       };
     };
   };
 
 
   // IVvsModDist (only for 1D binning and 1D modulation)
+  IVvsModName = Form("IVvsModDist%s",binN.Data());
+  IVvsModTitle = Form("%s vs. %s %s;%s;%s",
+    ivT[0].Data(),ModulationTitle.Data(),binT.Data(),
+    ModulationTitle.Data(),ivT[0].Data()
+  );
   if(whichDim==1 && !asym2d) {
-    IVvsModName = Form("IVvsModDist%s",binN.Data());
-    IVvsModTitle = Form("%s vs. %s %s;%s;%s",
-      ivT[0].Data(),ModulationTitle.Data(),binT.Data(),
-      ModulationTitle.Data(),ivT[0].Data()
-    );
     IVvsModDist = new TH2D(IVvsModName,IVvsModTitle,
       iv1Bins,-modMax,modMax,
       iv1Bins,ivMin[0],ivMax[0]
     );
-    //if(debug) printf("built %s\n\t%s\n",IVvsModName.Data(),IVvsModTitle.Data());
+  } else {
+    //nop
+    IVvsModDist = new TH2D(TString("nop_"+IVvsModName),TString("nop_"+IVvsModName),
+      1,0,1,1,0,1);
   };
 
 
@@ -224,10 +251,16 @@ Asymmetry::Asymmetry(
     if(!asym2d) {
       aziTitle[s] += ";" + ModulationTitle;
       aziDist[s] = new TH1D(aziName[s],aziTitle[s],nModBins,-aziMax,aziMax);
+      //nop
+      aziDist2[s] = new TH2D(TString("nop_"+aziName[s]),TString("nop_"+aziName[s]),
+        1,0,1,1,0,1);
     } else {
       aziTitle[s] += ";#phi_{R};#phi_{h}"; // PhiR is horizontal, PhiH is vertical
       aziDist2[s] = new TH2D(aziName[s],aziTitle[s],
         nModBins2,-aziMax,aziMax,nModBins2,-aziMax,aziMax);
+      //nop
+      aziDist[s] = new TH1D(TString("nop_"+aziName[s]),TString("nop_"+aziName[s]),
+        1,0,1);
     };
   };
 
@@ -241,6 +274,10 @@ Asymmetry::Asymmetry(
     asymGr = new TGraphErrors();
     asymGr->SetName(asymName);
     asymGr->SetTitle(asymTitle);
+    //nop
+    asymGr2 = new TGraph2DErrors(); asymGr2->SetTitle(TString("nop_"+asymTitle));
+    asymGr2hist = new TH2D(TString("nop_hist"+asymName),TString("nop_hist"+asymName),
+      1,0,1,1,0,1);
   } else {
     asymTitle = Form("%s asymmetry %s;#phi_{R};#phi_{h};asymmetry",
       ModulationTitle.Data(), binT.Data()
@@ -250,19 +287,27 @@ Asymmetry::Asymmetry(
     asymGr2->SetTitle(asymTitle);
     asymGr2hist = new TH2D(TString("hist"+asymName),asymTitle,
       nModBins2,-aziMax,aziMax,nModBins2,-aziMax,aziMax);
+    //nop
+    asymGr = new TGraphErrors(); asymGr->SetTitle(TString("nop_"+asymTitle));
   };
 
 
   // fit function
-    fitFuncName = "fit_"+asymName;
+  fitFuncName = "fit_"+asymName;
   if(!asym2d) {
     fitFunc = new TF1(fitFuncName,"[0]+[1]*x",-aziMax,aziMax);
     fitFunc->SetParName(0,"B");
     fitFunc->SetParName(1,"A_{LU}");
+    //nop
+    fitFunc2 = new TF2(TString("nop_"+fitFuncName),"");
   } else {
-    fitFunc2 = new TF2(fitFuncName,"[0]*TMath::Sin(y-x)",-aziMax,aziMax); // +++
-    //fitFunc2 = new TF2(fitFuncName,"[0]*TMath::Sin(x)",-aziMax,aziMax); // +++
+    fitFunc2 = new TF2(fitFuncName,"[0]*TMath::Sin(y-x)",
+      -aziMax,aziMax,-aziMax,aziMax); // +++
+    //fitFunc2 = new TF2(fitFuncName,"[0]*TMath::Sin(x)",
+      //-aziMax,aziMax,-aziMax,aziMax); // +++
     fitFunc2->SetParName(0,"A_{LU}");
+    //nop
+    fitFunc = new TF1(TString("nop_"+fitFuncName),"");
   };
 
   // initialize kinematic variables
@@ -318,14 +363,13 @@ Bool_t Asymmetry::AddEvent() {
   weight = EvalWeight();
 
   // set RooFit vars
-  if(roofitter) {
-    rfPhiH->setVal(PhiH);
-    rfPhiR->setVal(PhiR);
-    rfWeight->setVal(weight);
-    rfTheta->setVal(theta);
-    rfSpinCateg->setLabel(rfSpinName[spinn]);
-    rfData->add(*rfVars,rfWeight->getVal());
-  };
+  rfPhiH->setVal(PhiH);
+  rfPhiR->setVal(PhiR);
+  rfWeight->setVal(weight);
+  rfTheta->setVal(theta);
+  rfSpinCateg->setLabel(rfSpinName[spinn]);
+  rfData->add(*rfVars,rfWeight->getVal());
+
 
 
 
@@ -407,7 +451,7 @@ void Asymmetry::CalculateAsymmetries() {
 
 
   // fit asymmetry with RooFit (needs rellum !)
-  if(roofitter) this->CalculateRooAsymmetries();
+  this->CalculateRooAsymmetries();
 
 
    
@@ -460,6 +504,7 @@ Bool_t Asymmetry::InitRooFit() {
   rfPhiR = new RooRealVar("rfPhiR","#phi_{R}",-PIe,PIe);
   rfTheta = new RooRealVar("rfTheta","#theta",-PIe,PIe);
   rfWeight = new RooRealVar("rfWeight","P_{h}^{T}/M_{h}",0,10);
+
   rfVars = new RooArgSet(*rfPhiH,*rfPhiR,*rfTheta);
   rfVars->add(*rfWeight);
   rfVars->add(*rfSpinCateg);
@@ -481,6 +526,10 @@ Bool_t Asymmetry::InitRooFit() {
   rfYield[sP] = new RooRealVar("rfYieldP","YP",1e5);
   rfYield[sM] = new RooRealVar("rfYieldM","YM",1e5);
   rfYieldBoth = new RooRealVar("rfYieldBoth","Y",1e5);
+
+  // - polarization and rellum
+  rfPol = new RooRealVar("rfPol","P",0,1);
+  rfRellum = new RooRealVar("rfRellum","R",0,3);
 
   // - data sets for each spin
   rfData = new RooDataSet(
@@ -579,34 +628,24 @@ Bool_t Asymmetry::InitRooFit() {
       return false;
   };
 
-
-  return true;
-};
-
-
-// calculate the asymmetries with RooFit; to be called at end of event loop
-void Asymmetry::CalculateRooAsymmetries() {
-
   // append polarization factor to asymExpansion
-  asymExpansion = Form("%f*(%s)", pol, asymExpansion.Data());
-
+  asymExpansion = "P*("+asymExpansion+")";
       
-  // -- prefactors for each spin (relative luminosity & polarization)
-  preFactor[sP] = Form("%f/(%f+1)", rellum, rellum);
-  preFactor[sM] = Form("1/(%f+1)", rellum);
+  // rellum factors
+  rellumFactor[sP] = "R/(R+1)";
+  rellumFactor[sM] = "1/(R+1)";
 
-  // -- append yield factor to prefactors
-  //for(int s=0; s<nSpin; s++) preFactor[s] = "rfYieldBoth*" + preFactor[s];
+  // append yield factor to prefactors
+  //for(int s=0; s<nSpin; s++) rellumFactor[s] = "rfYieldBoth*" + rellumFactor[s];
   //rfParams->add(*rfYieldBoth); // DEPRECATED! ADD IT BELOW
-  //preFactor[sP] = "rfYieldP*" + preFactor[sP];
-  //preFactor[sM] = "rfYieldM*" + preFactor[sM];
+  //rellumFactor[sP] = "rfYieldP*" + rellumFactor[sP];
+  //rellumFactor[sM] = "rfYieldM*" + rellumFactor[sM];
   //for(int s=0; s<nSpin; s++) rfParams->add(*rfYield[s]); // DEPRECATED! ADD IT BELOW
-  
 
 
-  // -- build full PDF ( = prefactor * ( 1 +/- pol*asymExpansion ) for each spin
+  // -- build full PDF ( = rellumFactor * ( 1 +/- pol*asymExpansion ) for each spin
   for(int s=0; s<nSpin; s++) {
-    rfPdfFormu[s] = preFactor[s] + "*(1" + SpinSign(s) + asymExpansion + ")";
+    rfPdfFormu[s] = rellumFactor[s] + "*(1" + SpinSign(s) + asymExpansion + ")";
 
     // build list of variables and parameters; we *only* want variables that
     // are actually being used in the PDF
@@ -616,7 +655,12 @@ void Asymmetry::CalculateRooAsymmetries() {
     if(rfPdfFormu[s].Contains("rfTheta")) rfParams[s]->add(*rfTheta);
     for(int aa=0; aa<nAmpUsed; aa++) rfParams[s]->add(*rfA[aa]);
     for(int dd=0; dd<nDparamUsed; dd++) rfParams[s]->add(*rfD[dd]);
-    
+
+    rfParams[s]->add(*rfPol);
+    rfParams[s]->add(*rfRellum);
+
+
+    // build pdf
     rfPdf[s] = new RooGenericPdf(
       TString("rfModel" + SpinName(s)),
       TString("rfModel " + SpinTitle(s)),
@@ -644,44 +688,56 @@ void Asymmetry::CalculateRooAsymmetries() {
   rfSimPdf = new RooSimultaneous("rfSimPdf","rfSimPdf",*rfSpinCateg);
   for(int s=0; s<nSpin; s++) rfSimPdf->addPdf(*rfPdf[s],rfSpinName[s]);
 
+  // -log likelihood
+  rfNLL = new RooNLLVar("rfNLL","rfNLL",*rfSimPdf,*rfData);
+  for(int aa=0; aa<nAmp; aa++) rfNLLplot[aa] = new RooPlot();
+
+
+  return true;
+};
+
+
+// calculate the asymmetries with RooFit; to be called at end of event loop
+void Asymmetry::CalculateRooAsymmetries() {
+
+  // fix polarization and rellum PDF parameters
+  rfPol->setVal(pol);
+  rfRellum->setVal(rellum);
+  rfPol->setConstant(true);
+  rfRellum->setConstant(true);
+
 
   // fit simultaneous PDF to combined data
-  Tools::PrintSeparator(50,"=");
+  Tools::PrintSeparator(70,"=");
   printf("BEGIN FIT\n");
-  Tools::PrintSeparator(50,"=");
+  Tools::PrintSeparator(70,"=");
 
-  rfResult = rfSimPdf->fitTo(*rfData, RooFit::Save());
-  //rfResult = rfSimPdf->fitTo(*rfData, RooFit::Extended(kTRUE), RooFit::Save(kTRUE));
+  rfSimPdf->fitTo(*rfData, RooFit::Save());
+  //rfSimPdf->fitTo(*rfData, RooFit::Extended(kTRUE), RooFit::Save(kTRUE));
   //rfSimPdf->fitTo(*rfData,RooFit::PrintLevel(-1));
 
   // get -log likelihood
-  rfNLL = new RooNLLVar("rfNLL","rfNLL",*rfSimPdf,*rfData);
-
-  for(int aa=0; aa<nAmp; aa++) {
-    if(aa<nAmpUsed) {
-      rfNLLplot[aa] = rfA[aa]->frame(
-        RooFit::Range(-rfParamRange,rfParamRange),
-        RooFit::Title(TString("-log(L) scan vs. A"+TString::Itoa(aa,10)))
-      );
-      rfNLL->plotOn(
-        rfNLLplot[aa],
-        RooFit::ShiftToZero()
-      );
-    } else {
-      rfNLLplot[aa] = new RooPlot(); // unused
-    };
+  for(int aa=0; aa<nAmpUsed; aa++) {
+    rfNLLplot[aa] = rfA[aa]->frame(
+      RooFit::Range(-rfParamRange,rfParamRange),
+      RooFit::Title(TString("-log(L) scan vs. A"+TString::Itoa(aa,10)))
+    );
+    rfNLL->plotOn(
+      rfNLLplot[aa],
+      RooFit::ShiftToZero()
+    );
   };
 
 
-  Tools::PrintSeparator(50,"=");
+  Tools::PrintSeparator(70,"=");
 
   // print fit results
+  /*
   Tools::PrintTitleBox("ROOFIT RESULTS");
   this->PrintSettings();
   rfResult->Print("v");
-  Tools::PrintSeparator(30);
-
-  Tools::PrintSeparator(50,"=");
+  Tools::PrintSeparator(70,"=");
+  */
 
 };
 

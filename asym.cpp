@@ -68,6 +68,7 @@ enum flowEnum {
 int main(int argc, char** argv) {
 
   gStyle->SetOptFit(1);
+  gDebug = 2; // use to debug streaming problems
 
   SetDefaultArgs();
 
@@ -497,13 +498,14 @@ int main(int argc, char** argv) {
   TString Aname;
   if(flowControl==fParallelFill) {
     spinrootFile->cd();
-    BS->Write("BS");
+    //BS->Write("BS");
     for(Int_t bn : binVec) {
       A = asymMap.at(bn);
       Aname = "A" + A->binN;
       printf("write %s\n",Aname.Data());
       A->PrintSettings();
-      A->rfData->Write(Aname);
+      //A->rfData->Write(Aname);
+      A->Write(Aname,TObject::kSingleKey);
     };
     spinrootFile->Close();
     return 1;
@@ -950,41 +952,39 @@ int main(int argc, char** argv) {
 
     for(Int_t bn : binVec) {
       A = asymMap.at(bn);
-      if(A->roofitter) {
 
-        for(int aa=0; aa<N_AMP; aa++) {
-          rfCanvName[aa] = "RF_A" + TString::Itoa(aa,10) + "_NLL_" + A->binN;
-          rfCanv[aa] = new TCanvas(rfCanvName[aa],rfCanvName[aa],800,800);
-          A->rfNLLplot[aa]->Draw();
-          rfCanv[aa]->Write();
-        };
-
-        Tools::PrintTitleBox("roofit function");
-        A->PrintSettings();
-        printf("\n");
-        for(int ss=0; ss<nSpin; ss++) {
-          printf("%s: %s\n",SpinTitle(ss).Data(),A->rfPdfFormu[ss].Data());
-        };
-        printf("\n");
-
-        for(int aa=0; aa<N_AMP; aa++) {
-          printf(" >> A%d = %.3f +/- %.3f\n",
-              aa, A->rfA[aa]->getVal(), A->rfA[aa]->getError() );
-        };
-        for(int dd=0; dd<N_D; dd++) {
-          printf(" >> D%d = %.3f +/- %.3f\n",
-              dd, A->rfD[dd]->getVal(), A->rfD[dd]->getError() );
-        };
-        /*
-           printf(" >> Y+ = %.3f +/- %.3f\n",
-           A->rfYield[0]->getVal(), A->rfYield[0]->getError() );
-           printf(" >> Y- = %.3f +/- %.3f\n",
-           A->rfYield[1]->getVal(), A->rfYield[1]->getError() );
-           */
-
-        printf("\n");
-
+      for(int aa=0; aa<N_AMP; aa++) {
+        rfCanvName[aa] = "RF_A" + TString::Itoa(aa,10) + "_NLL_" + A->binN;
+        rfCanv[aa] = new TCanvas(rfCanvName[aa],rfCanvName[aa],800,800);
+        A->rfNLLplot[aa]->Draw();
+        rfCanv[aa]->Write();
       };
+
+      Tools::PrintTitleBox("roofit function");
+      A->PrintSettings();
+      printf("\n");
+      for(int ss=0; ss<nSpin; ss++) {
+        printf("%s: %s\n",SpinTitle(ss).Data(),A->rfPdfFormu[ss].Data());
+      };
+      printf("\n");
+
+      for(int aa=0; aa<N_AMP; aa++) {
+        printf(" >> A%d = %.3f +/- %.3f\n",
+            aa, A->rfA[aa]->getVal(), A->rfA[aa]->getError() );
+      };
+      for(int dd=0; dd<N_D; dd++) {
+        printf(" >> D%d = %.3f +/- %.3f\n",
+            dd, A->rfD[dd]->getVal(), A->rfD[dd]->getError() );
+      };
+      /*
+         printf(" >> Y+ = %.3f +/- %.3f\n",
+         A->rfYield[0]->getVal(), A->rfYield[0]->getError() );
+         printf(" >> Y- = %.3f +/- %.3f\n",
+         A->rfYield[1]->getVal(), A->rfYield[1]->getError() );
+         */
+
+      printf("\n");
+
     };
 
 

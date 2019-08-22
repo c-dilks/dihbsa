@@ -170,9 +170,6 @@ class Asymmetry : public TObject
     TH2D * asymGr2hist;
     TF2 * fitFunc2;
 
-    // bin lines
-    TLine * boundLine;
-
     TString ModulationTitle,ModulationName;
 
 
@@ -193,14 +190,13 @@ class Asymmetry : public TObject
 
 
     // RooFit variables
-    Bool_t roofitter;
     RooDataSet * rfData;
     RooGenericPdf * rfPdf[2];
     //RooExtendPdf * rfModelExt[2];
     //RooAddPdf * rfPdf[2];
     RooSimultaneous * rfSimPdf;
     RooCategory * rfSpinCateg;
-    RooFitResult * rfResult;
+    //RooFitResult * rfResult;
     RooArgSet * rfVars;
     RooArgSet * rfParams[2];
     TString rfPdfFormu[2];
@@ -211,12 +207,13 @@ class Asymmetry : public TObject
     TString pwFactorSP,pwFactorPP;
     TString pwUnpolDiff;
     TString asymExpansion;
-    TString preFactor[2];
+    TString rellumFactor[2];
     Float_t rfParamRange;
 
 
     RooRealVar *rfPhiH, *rfPhiR, *rfTheta;
     RooRealVar *rfWeight;
+    RooRealVar *rfPol, *rfRellum;
 
     static const Int_t nAmp = 4;
     Int_t nAmpUsed;
