@@ -1,16 +1,17 @@
 <Request>
   <Project name="clas12"/>
-  <Track name="debug"/>
+  <Track name="analysis"/>
   <Name name="dihbsa"/>
 
 <!-- sample XML Files in /u/group/hps/production/ -->
 
   <List name="hipoFile">
+<!--
 4013_4
 4014_4
 4015_4
 4016_4
-<!--
+-->
 4017_4
 4018_4
 4020_4
@@ -43,7 +44,6 @@
 4073_4
 4074_4
 4078_4
--->
   </List>
 
   <Variable name="workDir" value="/w/hallb-scifs17exp/clas12/dilks/dihbsa" />

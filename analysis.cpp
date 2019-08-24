@@ -747,6 +747,10 @@ int main(int argc, char** argv) {
 
              // compute dihadron kinematics
              dih->debugTheta = pairType==0x34 ? true : false;
+             if(dih->debugTheta) {
+               printf("\nevnum = %d\n",evnum);
+               printf("hadIdx = %d %d\n",dih->hadron[qA]->Idx,dih->hadron[qB]->Idx);
+             };
              dih->SetEvent(had[qA],had[qB],disEv); // -->tree
              dihBr->SetEvent(had[qA],had[qB],disEv); // -->tree
 

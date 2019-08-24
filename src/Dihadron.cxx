@@ -132,7 +132,8 @@ void Dihadron::SetEvent(
     (vecHad_dihCom[qA]+vecHad_dihCom[qB]).Print(); // should have p=0, E=Mh
     printf("---\n");
     printf("Mh = %f\n",Mh); // should equal energy component of 4-momenta sum
-    printf("theta = %f\n\n",theta);
+    printf("theta = %f\n",theta);
+    printf("\n");
   };
 
 
