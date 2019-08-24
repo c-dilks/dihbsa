@@ -7,6 +7,7 @@ using namespace std;
 
 Dihadron::Dihadron() {
   debug = false;
+  debugTheta = false;
   useBreit = false;
 
   for(h=0; h<2; h++) vecHad[h] = TLorentzVector(0,0,0,0);
@@ -104,17 +105,11 @@ void Dihadron::SetEvent(
   // compute theta
   // -- boost hadron momenta to dihadron CoM frame
   dihComBoost = -1*vecPh.BoostVector();
-  if(debug) printf("========== theta\n");
   for(h=0; h<2; h++) {
     vecHad_dihCom[h] = vecHad[h];
     //if(useBreit) vecHad_dihCom[h].Boost(-1*(disEv->BreitBoost));
     vecHad_dihCom[h].Boost(dihComBoost);
     pHad_dihCom[h] = vecHad_dihCom[h].Vect();
-    if(debug) vecHad_dihCom[h].Print();
-  };
-  if(debug) {
-    (vecHad_dihCom[qA]+vecHad_dihCom[qB]).Print(); // momenta should be zero
-    printf("Mh = %f\n",Mh); // should equal energy component of 4-momenta sum
   };
 
   // -- in this frame, Ph=0, and the boost direction was along Ph
@@ -123,6 +118,22 @@ void Dihadron::SetEvent(
   theta = Tools::AngleSubtend(pHad_dihCom[qA],pPh);
   //theta2 = Tools::AngleSubtend(pHad_dihCom[qB],pPh); // == PI - theta
 
+  if(debugTheta) {
+    printf("========== theta calculation:\n");
+    for(h=0; h<2; h++) {
+      printf("lab frame hadron %d: ",h); vecHad[h].Print();
+    };
+    printf("lab frame dihadron: "); vecPh.Print(); printf("---\n");
+    printf("boost vector: "); dihComBoost.Print(); printf("---\n");
+    for(h=0; h<2; h++) {
+      printf("com frame hadron %d: ",h); vecHad_dihCom[h].Print();
+    };
+    printf("com frame dihadron: ");
+    (vecHad_dihCom[qA]+vecHad_dihCom[qB]).Print(); // should have p=0, E=Mh
+    printf("---\n");
+    printf("Mh = %f\n",Mh); // should equal energy component of 4-momenta sum
+    printf("theta = %f\n\n",theta);
+  };
 
 
   // compute angles

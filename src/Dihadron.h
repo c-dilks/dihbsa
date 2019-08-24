@@ -34,6 +34,7 @@ class Dihadron : public TObject
     ~Dihadron();
 
     Bool_t debug;
+    Bool_t debugTheta;
     Bool_t useBreit;
 
     void SetEvent(
