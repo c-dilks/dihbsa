@@ -68,7 +68,7 @@ enum flowEnum {
 int main(int argc, char** argv) {
 
   gStyle->SetOptFit(1);
-  gDebug = 2; // use to debug streaming problems
+  //gDebug = 2; // use to debug streaming problems
 
   SetDefaultArgs();
 
@@ -201,7 +201,7 @@ int main(int argc, char** argv) {
       fprintf(stderr,"ERROR: flowControl is serial, inputData must be a directory\n");
       return 0;
     };
-  } else if(flowControl==fParallelFill || flowControl==fParallelCalc) {
+  } else if(flowControl==fParallelFill) {
     if(inputType==1) 
       ev = new EventTree(inputData,pairType);
     else {
@@ -232,8 +232,7 @@ int main(int argc, char** argv) {
     spinrootFile = new TFile(outName,"RECREATE");
   }
   else if(flowControl==fParallelCalc) {
-    // TODO -- define final output file
-    return 0;
+    resultFile = new TFile("spinFinal.root","RECREATE");
   }
   else {
     fprintf(stderr,"ERROR: bad flowControl (%d)\n",flowControl);
@@ -491,35 +490,63 @@ int main(int argc, char** argv) {
   };
   // end event loop -------------------------------------------
 
+  // concatenate spinroot files data
+  TFile * appFile;
+  if(flowControl==fParallelCalc) {
+    appFile = new TFile("spinroot/spin.4037_4.root","READ");
+    for(Int_t bn : binVec) {
+      A = asymMap.at(bn);
+      A->AppendData(appFile);
+    };
+    appFile = new TFile("spinroot/spin.4039_4.root","READ");
+    for(Int_t bn : binVec) {
+      A = asymMap.at(bn);
+      A->AppendData(appFile);
+    };
+    resultFile->cd();
+  };
 
 
   // if we are filling a single spinroot file in a parallelized analysis,
   // write it out and exit
+  // - this doesn't work, unfortunately. The Asymmetry objects get written, and have a
+  //   data size that indicates histograms/data structures are being written, however
+  //   upon trying to access anything in the TFile, it immediately seg faults
+  // - alternative implementation below writes out only pertinent members of Asymmetry
+  //   instead of the full Asymmetry object
+  /*
   TString Aname;
   if(flowControl==fParallelFill) {
     spinrootFile->cd();
-    //BS->Write("BS");
+    BS->Write("BS");
     for(Int_t bn : binVec) {
       A = asymMap.at(bn);
       Aname = "A" + A->binN;
       printf("write %s\n",Aname.Data());
       A->PrintSettings();
       //A->rfData->Write(Aname);
-      A->Write(Aname,TObject::kSingleKey);
+      A->Write(Aname);
     };
     spinrootFile->Close();
     return 1;
   };
-
-
-  // concatenate spinroot files data
-  if(flowControl==fParallelCalc) {
-    //TODO -- combine spinroot files' data here
-    return 0;
+  */
+  if(flowControl==fParallelFill) {
+    spinrootFile->cd();
+    BS->Write("BS");
+    for(Int_t bn : binVec) {
+      A = asymMap.at(bn);
+      A->StreamData(spinrootFile);
+    };
+    spinrootFile->Close();
+    return 1;
   };
+    
 
 
-  // aqui
+
+
+  // aqui (cleanup progress)
 
   // compute asymmetries
   Float_t asymValue,asymError;
@@ -868,39 +895,20 @@ int main(int argc, char** argv) {
 
 
   // write output to TFile
-  if(flowControl==fSerial || flowControl==fSerialRenamed) {
+  if(flowControl==fSerial || 
+     flowControl==fSerialRenamed || 
+     flowControl==fParallelCalc
+  ) {
 
     resultFile->cd();
     // -- Asymmetry objects
     printf("--- write Asymmetry objects\n");
     for(Int_t bn : binVec) {
       A = asymMap.at(bn);
-
-      printf("writing plots for:\n");
-      A->PrintSettings();
-
-      switch(dimensions) {
-        case 1: A->ivDist1->Write(); break;
-        case 2: A->ivDist2->Write(); break;
-        case 3: A->ivDist3->Write(); break;
-      };
-
-      if(!(A->asym2d)) {
-        A->modDist->Write();
-        for(Int_t m=0; m<Asymmetry::nModBins; m++) A->modBinDist[m]->Write();
-        if(dimensions==1) A->IVvsModDist->Write();
-        for(Int_t s=0; s<nSpin; s++) A->aziDist[s]->Write();
-      } else {
-        A->modDist2->Write();
-        for(Int_t mmH=0; mmH<Asymmetry::nModBins2; mmH++) {
-          for(Int_t mmR=0; mmR<Asymmetry::nModBins2; mmR++) {
-            A->modBinDist2[mmH][mmR]->Write();
-          };
-        };
-        for(Int_t s=0; s<nSpin; s++) A->aziDist2[s]->Write();
-      };
+      A->StreamData(resultFile);
     };
 
+    // -- "full" distributions
     if(dimensions==1) {
       ivFullDist1->Write();
       if(!(A->asym2d)) IVvsModFullDist->Write();
@@ -946,7 +954,7 @@ int main(int argc, char** argv) {
     };
 
 
-    // RooFit results
+    // -- RooFit results
     TCanvas * rfCanv[Asymmetry::nAmp];
     TString rfCanvName[Asymmetry::nAmp];
 
@@ -1037,10 +1045,16 @@ int main(int argc, char** argv) {
 
 
 
-  if(flowControl==fSerial || flowControl==fSerialRenamed) resultFile->Close();
+  if(flowControl==fSerial || 
+     flowControl==fSerialRenamed || 
+     flowControl==fParallelCalc
+  ) {
+    resultFile->Close();
+  };
 
   printf("--- end %s\n",argv[0]);
 
+  return 0;
 };
 
 

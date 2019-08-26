@@ -128,6 +128,7 @@ Asymmetry::Asymmetry(
     binN = Form("%s_%s%d",binN.Data(),ivN[d].Data(),B[d]);
   };
   if(debug) printf("binT = %s\nbinN = %s\n",binT.Data(),binN.Data());
+  aName = "A" + binN;
 
 
   // ivDist
@@ -197,7 +198,6 @@ Asymmetry::Asymmetry(
   for(int m=0; m<nModBins; m++) {
     modBinName = Form("%s_bin_%d",modName.Data(),m);
     modBinTitle = Form("bin %d %s",m,modTitle.Data());
-    modBinTitle += ";" + modTitle;
     if(!asym2d) {
       modBinDist[m] = new TH1D(modBinName,modBinTitle,iv1Bins,-modMax,modMax);
     } else {
@@ -264,6 +264,13 @@ Asymmetry::Asymmetry(
     };
   };
 
+  // yieldDist
+  yieldDist = new TH1D(
+    TString("yieldDist"+binN),
+    TString("yield for each helicity :: "+binT),
+    2,0,2
+  );
+
 
   // asymGr
   asymName = Form("asym%s",binN.Data());
@@ -313,7 +320,6 @@ Asymmetry::Asymmetry(
   // initialize kinematic variables
   ResetVars();
   nEvents = 0;
-  for(int s=0; s<nSpin; s++) yield[s]=0;
 
 
   // initialise RooFit
@@ -413,10 +419,10 @@ Bool_t Asymmetry::AddEvent() {
   if(whichDim==1 && !asym2d) IVvsModDist->Fill(modulation,iv[0],weight);
 
 
+  yieldDist->Fill(spinn);
   
   // increment event counter
   nEvents++;
-  yield[spinn]++;
   return true;
 };
   
@@ -432,9 +438,10 @@ void Asymmetry::CalculateAsymmetries() {
   };
 
   // compute relative luminosity
-  //
-  rNumer = yield[sP];
-  rDenom = yield[sM];
+  spinbin = yieldDist->FindBin(sP);
+  rNumer = yieldDist->GetBinContent(spinbin);
+  spinbin = yieldDist->FindBin(sM);
+  rDenom = yieldDist->GetBinContent(spinbin);
 
   if(rDenom>0) {
     // -- relative luminosity
@@ -533,7 +540,7 @@ Bool_t Asymmetry::InitRooFit() {
 
   // - data sets for each spin
   rfData = new RooDataSet(
-    "rfData","rfData",
+    TString("rfData"+binN),TString("rfData"+binN),
     *rfVars,
     rfWeight->GetName()
   );
@@ -629,11 +636,11 @@ Bool_t Asymmetry::InitRooFit() {
   };
 
   // append polarization factor to asymExpansion
-  asymExpansion = "P*("+asymExpansion+")";
+  asymExpansion = "rfPol*("+asymExpansion+")";
       
   // rellum factors
-  rellumFactor[sP] = "R/(R+1)";
-  rellumFactor[sM] = "1/(R+1)";
+  rellumFactor[sP] = "rfRellum/(rfRellum+1)";
+  rellumFactor[sM] = "1/(rfRellum+1)";
 
   // append yield factor to prefactors
   //for(int s=0; s<nSpin; s++) rellumFactor[s] = "rfYieldBoth*" + rellumFactor[s];
@@ -746,7 +753,7 @@ void Asymmetry::CalculateRooAsymmetries() {
 // set new asymGr point and error
 // -- called by CalculateAsymmetries() for each modulation bin
 // -- need to have yL, yR, and rellum set before calling
-// -- modBin_ and modBin2_ are used to address modDistBin for getting mean modulation
+// -- modBin_ and modBin2_ are used to address modBinDist for getting mean modulation
 //    for this modulation bin
 void Asymmetry::SetAsymGrPoint(Int_t modBin_, Int_t modBin2_) {
 
@@ -868,6 +875,150 @@ void Asymmetry::PrintSettings() {
     d,I[d],d,B[d]
   );
 };
+
+
+// stream pertinent data structures to a TFile
+void Asymmetry::StreamData(TFile * tf) {
+
+  tf->cd();
+  tf->mkdir(aName);
+  tf->cd(TString("/"+aName));
+
+  appName = this->AppFileName(tf);
+
+  printf("writing plots for: "); this->PrintSettings();
+
+  switch(whichDim) {
+    case 1: 
+      objName = appName + ivDist1->GetName(); ivDist1->Write(objName); 
+      break;
+    case 2: 
+      objName = appName + ivDist2->GetName(); ivDist2->Write(objName); 
+      break;
+    case 3: 
+      objName = appName + ivDist3->GetName(); ivDist3->Write(objName); 
+      break;
+  };
+
+  if(!asym2d) {
+    objName = appName + modDist->GetName(); modDist->Write(objName);
+    for(Int_t m=0; m<nModBins; m++) {
+      objName = appName + modBinDist[m]->GetName(); modBinDist[m]->Write(objName);
+    };
+    if(whichDim==1) {
+      objName = appName + IVvsModDist->GetName(); IVvsModDist->Write(objName);
+    }; 
+    for(int s=0; s<nSpin; s++) {
+      objName = appName + aziDist[s]->GetName(); aziDist[s]->Write(objName);
+    };
+  } else {
+    objName = appName + modDist2->GetName(); modDist2->Write(objName);
+    for(Int_t mmH=0; mmH<nModBins2; mmH++) {
+      for(Int_t mmR=0; mmR<nModBins2; mmR++) {
+        objName = appName + modBinDist2[mmH][mmR]->GetName();
+        modBinDist2[mmH][mmR]->Write(objName);
+      };
+    };
+    for(int s=0; s<nSpin; s++) {
+      objName = appName + aziDist2[s]->GetName(); aziDist2[s]->Write(objName);
+    };
+  };
+
+  objName = appName + yieldDist->GetName(); yieldDist->Write(objName);
+
+  objName = appName + rfData->GetName(); rfData->Write(objName);
+
+  tf->cd("/");
+};
+
+
+// append pertinent data structures a TFile to this current instance
+void Asymmetry::AppendData(TFile * tf) {
+  TH1D * appDist1;
+  TH2D * appDist2;
+  TH3D * appDist3;
+  RooDataSet * appRooDataSet;
+
+  appName = "/" + aName + "/" + this->AppFileName(tf);
+
+  printf("reading plots for: "); this->PrintSettings();
+
+  switch(whichDim) {
+    case 1: 
+      objName = appName + ivDist1->GetName();
+      appDist1 = (TH1D*) tf->Get(objName);
+      ivDist1->Add(appDist1); 
+      break;
+    case 2: 
+      objName = appName + ivDist2->GetName();
+      appDist2 = (TH2D*) tf->Get(objName);
+      ivDist2->Add(appDist2); 
+      break;
+    case 3: 
+      objName = appName + ivDist3->GetName();
+      appDist3 = (TH3D*) tf->Get(objName);
+      ivDist3->Add(appDist3); 
+      break;
+  };
+
+  if(!asym2d) {
+    objName = appName + modDist->GetName();
+    appDist1 = (TH1D*) tf->Get(objName);
+    modDist->Add(appDist1);
+    for(Int_t m=0; m<nModBins; m++) {
+      objName = appName + modBinDist[m]->GetName();
+      appDist1 = (TH1D*) tf->Get(objName);
+      modBinDist[m]->Add(appDist1);
+    };
+    if(whichDim==1) {
+      objName = appName + IVvsModDist->GetName();
+      appDist2 = (TH2D*) tf->Get(objName);
+      IVvsModDist->Add(appDist2);
+    };
+    for(int s=0; s<nSpin; s++) {
+      objName = appName + aziDist[s]->GetName();
+      appDist1 = (TH1D*) tf->Get(objName);
+      aziDist[s]->Add(appDist1);
+    };
+  } else {
+    objName = appName + modDist2->GetName();
+    appDist2 = (TH2D*) tf->Get(objName);
+    modDist2->Add(appDist2);
+    for(Int_t mmH=0; mmH<nModBins2; mmH++) {
+      for(Int_t mmR=0; mmR<nModBins2; mmR++) {
+        objName = appName + modBinDist2[mmH][mmR]->GetName();
+        appDist2 = (TH2D*) tf->Get(objName);
+        modBinDist2[mmH][mmR]->Add(appDist2);
+      };
+    };
+    for(int s=0; s<nSpin; s++) {
+      objName = appName + aziDist2[s]->GetName();
+      appDist2 = (TH2D*) tf->Get(objName);
+      aziDist2[s]->Add(appDist2);
+    };
+  };
+
+  objName = appName + yieldDist->GetName(); 
+  appDist1 = (TH1D*) tf->Get(objName);
+  yieldDist->Add(appDist1);
+
+  objName = appName + rfData->GetName();
+  appRooDataSet = (RooDataSet*) tf->Get(objName);
+  rfData->append(*appRooDataSet); 
+  printf("----- appRooDataSet entries = %d\n",appRooDataSet->numEntries());
+  printf("----- rfData entries = %d\n",rfData->numEntries());
+  
+  tf->cd("/");
+};
+
+
+TString Asymmetry::AppFileName(TFile * tf) {
+  TString retstr = TString(tf->GetName());
+  retstr(TRegexp("^.*/spin.")) = "stream_";
+  retstr(TRegexp(".root$")) = "_";
+  return retstr;
+};
+
 
 
 Asymmetry::~Asymmetry() {};

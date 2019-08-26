@@ -107,7 +107,7 @@ void Dihadron::SetEvent(
   dihComBoost = -1*vecPh.BoostVector();
   for(h=0; h<2; h++) {
     vecHad_dihCom[h] = vecHad[h];
-    //if(useBreit) vecHad_dihCom[h].Boost(-1*(disEv->BreitBoost));
+    if(useBreit) vecHad_dihCom[h].Boost(-1*(disEv->BreitBoost));
     vecHad_dihCom[h].Boost(dihComBoost);
     pHad_dihCom[h] = vecHad_dihCom[h].Vect();
   };
@@ -124,7 +124,6 @@ void Dihadron::SetEvent(
       printf("lab frame hadron %d: ",h); vecHad[h].Print();
     };
     printf("lab frame dihadron: "); vecPh.Print(); printf("---\n");
-    printf("boost vector: "); dihComBoost.Print(); printf("---\n");
     for(h=0; h<2; h++) {
       printf("com frame hadron %d: ",h); vecHad_dihCom[h].Print();
     };
@@ -132,8 +131,7 @@ void Dihadron::SetEvent(
     (vecHad_dihCom[qA]+vecHad_dihCom[qB]).Print(); // should have p=0, E=Mh
     printf("---\n");
     printf("Mh = %f\n",Mh); // should equal energy component of 4-momenta sum
-    printf("theta = %f\n",theta);
-    printf("\n");
+    printf("theta = %f\n\n",theta);
   };
 
 

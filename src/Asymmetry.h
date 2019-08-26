@@ -29,6 +29,7 @@
 #include "TGraphErrors.h"
 #include "TGraph2DErrors.h"
 #include "TLine.h"
+#include "TRegexp.h"
 
 // RooFit
 #include <RooGlobalFunc.h>
@@ -84,8 +85,11 @@ class Asymmetry : public TObject
     void ResetVars();
     void PrintSettings();
 
+    void StreamData(TFile * tf);
+    void AppendData(TFile * tf);
+    TString AppFileName(TFile * tf);
+
     Double_t nEvents;
-    Double_t yield[nSpin];
 
     Bool_t success;
     Bool_t successIVmode;
@@ -160,6 +164,9 @@ class Asymmetry : public TObject
     TH2D * modBinDist2[nModBins2][nModBins2];
     TH2D * modDist2;
 
+    // yield dist (for computing rellum)
+    TH1D * yieldDist;
+
     // asymmetry vs. azimuthal modulation bin
     TGraphErrors * asymGr;
     TString asymName,asymTitle;
@@ -184,6 +191,7 @@ class Asymmetry : public TObject
     TString ivN[3]; // IV name
     TString ivT[3]; // IV title
     TString binT,binN; // bin title/name suffixes
+    TString aName;
 
     Double_t rNumer,rDenom,rellum,rellumErr;
 
@@ -245,7 +253,9 @@ class Asymmetry : public TObject
     Double_t asymErr,modErr,modErrH,modErrR;
 
     Double_t bMax;
+    Int_t spinbin;
 
+    TString objName,appName;
 
 
 
