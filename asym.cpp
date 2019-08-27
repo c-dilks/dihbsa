@@ -18,6 +18,10 @@
 #include "TLine.h"
 #include "TStyle.h"
 #include "TMultiGraph.h"
+#include "TSystemDirectory.h"
+#include "TSystemFile.h"
+#include "TList.h"
+#include "TCollection.h" // for TIter
 
 // DihBsa
 #include "Constants.h"
@@ -103,7 +107,8 @@ int main(int argc, char** argv) {
       default: return PrintUsage();
     };
   };
-  if(inputType==0) {
+
+  if(inputType==0 && flowControl!=fParallelCalc) {
     fprintf(stderr,"ERROR: must specify input file or directory\n");
     return PrintUsage();
   };
@@ -490,21 +495,34 @@ int main(int argc, char** argv) {
   };
   // end event loop -------------------------------------------
 
+
   // concatenate spinroot files data
+  TSystemDirectory * sysDir;
+  TSystemFile * sysFile;
+  TList * sysFileList;
   TFile * appFile;
+  TString appFileName;
   if(flowControl==fParallelCalc) {
-    appFile = new TFile("spinroot/spin.4037_4.root","READ");
-    for(Int_t bn : binVec) {
-      A = asymMap.at(bn);
-      A->AppendData(appFile);
+    sysDir = new TSystemDirectory("spinroot","spinroot");
+    sysFileList = sysDir->GetListOfFiles();
+    TIter nxt(sysFileList);
+    while(( sysFile = (TSystemFile*) nxt() )) {
+      appFileName = "spinroot/" + TString(sysFile->GetName());
+      if(!sysFile->IsDirectory() && appFileName.EndsWith(".root")) {
+        Tools::PrintSeparator(40,".");
+        printf("concatenating data from %s\n",appFileName.Data());
+        appFile = new TFile(appFileName,"READ");
+        for(Int_t bn : binVec) {
+          A = asymMap.at(bn);
+          A->AppendData(appFile);
+        };
+      };
     };
-    appFile = new TFile("spinroot/spin.4039_4.root","READ");
-    for(Int_t bn : binVec) {
-      A = asymMap.at(bn);
-      A->AppendData(appFile);
-    };
+    Tools::PrintSeparator(40,".");
+    printf("spinroot files concatenated\n\n");
     resultFile->cd();
   };
+
 
 
   // if we are filling a single spinroot file in a parallelized analysis,
@@ -543,10 +561,6 @@ int main(int argc, char** argv) {
   };
     
 
-
-
-
-  // aqui (cleanup progress)
 
   // compute asymmetries
   Float_t asymValue,asymError;

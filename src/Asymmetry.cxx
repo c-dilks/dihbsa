@@ -1005,8 +1005,6 @@ void Asymmetry::AppendData(TFile * tf) {
   objName = appName + rfData->GetName();
   appRooDataSet = (RooDataSet*) tf->Get(objName);
   rfData->append(*appRooDataSet); 
-  printf("----- appRooDataSet entries = %d\n",appRooDataSet->numEntries());
-  printf("----- rfData entries = %d\n",rfData->numEntries());
   
   tf->cd("/");
 };
