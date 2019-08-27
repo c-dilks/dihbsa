@@ -115,7 +115,8 @@ void Dihadron::SetEvent(
   // -- in this frame, Ph=0, and the boost direction was along Ph
   // -- calculate theta as the angle between boosted hadron momentum
   //    and original Ph direction
-  theta = Tools::AngleSubtend(pHad_dihCom[qA],pPh);
+  theta = Tools::AngleSubtend(pHad_dihCom[qA],pPh); // P_h from fixed-target frame
+  //theta = Tools::AngleSubtend(pHad_dihCom[qA],pPh_com); // P_h from photon-target CoM
   //theta2 = Tools::AngleSubtend(pHad_dihCom[qB],pPh); // == PI - theta
 
   if(debugTheta) {

@@ -18,6 +18,9 @@ log="logfiles"
 mkdir -p $log
 
 mkdir -p spinroot
+rm -v spinroot/*.root
+rm -v logfiles/*
+
 
 echo "generate batchfile: $job"
 echo "Executable = asym.exe" > $job
@@ -46,4 +49,4 @@ sleep 1
 condor_q
 
 ./wait_for_condor
-asym.exe -c3
+asym.exe $opts -c3
