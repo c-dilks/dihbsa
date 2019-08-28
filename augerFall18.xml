@@ -1,6 +1,6 @@
 <Request>
   <Project name="clas12"/>
-  <Track name="debug"/>
+  <Track name="analysis"/>
   <Name name="dihbsa"/>
 
 <!-- sample XML Files in /u/group/hps/production/ -->
