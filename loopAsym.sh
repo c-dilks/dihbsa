@@ -49,4 +49,7 @@ sleep 1
 condor_q
 
 ./wait_for_condor
+sleep 3
 asym.exe $opts -c3
+sleep 3
+asym.exe $opts -c4

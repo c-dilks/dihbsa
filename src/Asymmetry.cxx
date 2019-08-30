@@ -52,10 +52,17 @@ Asymmetry::Asymmetry(
       modMax = modMaxDefault;
       aziMax = modMaxDefault;
       break;
-    case mod2d:
+    case mod2dSinPhiR:
       asym2d = true;
-      ModulationTitle = "2D (#phi_{h},#phi_{R})";
-      ModulationName = "PhiHvsPhiR";
+      ModulationTitle = "2D-fit sin(#phi_{R})";
+      ModulationName = "2dPhiHvsPhiR";
+      modMax = PI + 0.2;
+      aziMax = PI + 0.2;
+      break;
+    case mod2dWeightSinPhiHR:
+      asym2d = true;
+      ModulationTitle = "2D-fit p_{T}/M_{h} sin(#phi_{h}-#phi_{R})";
+      ModulationName = "2dWeightPhiHvsPhiHR";
       modMax = PI + 0.2;
       aziMax = PI + 0.2;
       break;
@@ -308,10 +315,14 @@ Asymmetry::Asymmetry(
     //nop
     fitFunc2 = new TF2(TString("nop_"+fitFuncName),"");
   } else {
-    fitFunc2 = new TF2(fitFuncName,"[0]*TMath::Sin(y-x)",
-      -aziMax,aziMax,-aziMax,aziMax); // +++
-    //fitFunc2 = new TF2(fitFuncName,"[0]*TMath::Sin(x)",
-      //-aziMax,aziMax,-aziMax,aziMax); // +++
+    if(whichMod == mod2dSinPhiR) {
+      fitFunc2 = new TF2(fitFuncName,"[0]*TMath::Sin(x)",
+        -aziMax,aziMax,-aziMax,aziMax);
+    }
+    else if(whichMod == mod2dWeightSinPhiHR) {
+      fitFunc2 = new TF2(fitFuncName,"[0]*TMath::Sin(y-x)",
+        -aziMax,aziMax,-aziMax,aziMax);
+    };
     fitFunc2->SetParName(0,"A_{LU}");
     //nop
     fitFunc = new TF1(TString("nop_"+fitFuncName),"");
@@ -351,14 +362,24 @@ Bool_t Asymmetry::AddEvent() {
     };
   };
 
+
   // check if we're in the proper bin; if not, simply return
   for(int d=0; d<whichDim; d++) {
     if(B[d] != BS->GetBin(I[d],iv[d])) return false;
   };
 
 
-  // get spin state number
-  spinn = SpinState(eSpin);
+  // check to make sure kinematics are defined (if they're not, something else
+  // probably set them to -10000)
+  for(int d=0; d<whichDim; d++) { 
+    if(iv[d]<-8000) return KickEvent(TString(ivN[d]+" out of range"),iv[d]);
+  };
+  if(PhiH<-PIe || PhiH>PIe) return KickEvent("PhiH out of range",PhiH);
+  if(PhiR<-PIe || PhiH>PIe) return KickEvent("PhiR out of range",PhiR);
+  if(PhPerp<-8000) return KickEvent("PhPerp out of range",PhPerp);
+  if(theta<-0.1 || theta>PIe) return KickEvent("theta out of range",theta);
+
+  // check spin state, which was set by EventTree
   if(spinn<0 || spinn>=nSpin) return false;
 
 
@@ -555,8 +576,8 @@ Bool_t Asymmetry::InitRooFit() {
   rfModulation[modSinPhiHR] = "TMath::Sin(rfPhiH-rfPhiR)";
   rfModulation[weightSinPhiHR] = "TMath::Sin(rfPhiH-rfPhiR)";
   rfModulation[modSinPhiH] = "TMath::Sin(rfPhiH)";
-  rfModulation[mod2d] = "TMath::Sin(rfPhiH-rfPhiR)"; // +++
-  //rfModulation[mod2d] = "TMath::Sin(rfPhiR)"; // +++
+  rfModulation[mod2dSinPhiR] = "TMath::Sin(rfPhiR)";
+  rfModulation[mod2dWeightSinPhiHR] = "TMath::Sin(rfPhiH-rfPhiR)";
 
   // -- define Legendre polynomials; note that these follow the PW expansion of DiFFs,
   //    so overall coefficients may differ slightly from the actual Legendre polynomials
@@ -574,7 +595,7 @@ Bool_t Asymmetry::InitRooFit() {
   pwUnpolDiff = "1+D0*"+legendre[1]+"+D1*"+legendre[2];
 
   // -- build formula with modulation and PW amplitudes
-  Int_t whichFormu = 0; //  <-- <-- <-- <-- <-- <-- <-- <-- <-- <-- <--
+  Int_t whichFormu = 1; //  <-- <-- <-- <-- <-- <-- <-- <-- <-- <-- <--
   switch(whichFormu) {
     case 0: // test whichMod modulation
       asymExpansion = 
@@ -628,6 +649,16 @@ Bool_t Asymmetry::InitRooFit() {
       rfA[1]->SetTitle("a_{LU}^{pp}");
       rfA[2]->SetTitle("a_{LU}[sin#phi_{R}]");
       rfA[3]->SetTitle("a_{LU}[sin#phi_{hR}]");
+      nAmpUsed = 4;
+      break;
+    case 6: // test more linear combination of modulations
+      asymExpansion = 
+        "A0*" + rfModulation[modSinPhiR] + "+A1*" + rfModulation[weightSinPhiHR] +
+        "+A2*TMath::Sin(rfPhiH)+A3*TMath::Sin(rfPhiH+rfPhiR)";
+      rfA[0]->SetTitle("A_{LU}[sin#phi_{R}]");
+      rfA[1]->SetTitle("A_{LU}[sin(#phi_{h}-#phi_{R}]");
+      rfA[2]->SetTitle("A_{LU}[sin#phi_{h}]");
+      rfA[3]->SetTitle("A_{LU}[sin(#phi_{h}+#phi_{R}]");
       nAmpUsed = 4;
       break;
     default:
@@ -719,7 +750,12 @@ void Asymmetry::CalculateRooAsymmetries() {
   printf("BEGIN FIT\n");
   Tools::PrintSeparator(70,"=");
 
-  rfSimPdf->fitTo(*rfData, RooFit::Save());
+  // get number of available threads; if this method fails, set number of threads to 1
+  nThreads = (Int_t) std::thread::hardware_concurrency();
+  if(nThreads<1) nThreads=1;
+  printf("---- fit with %d parallel threads\n",nThreads);
+
+  rfSimPdf->fitTo(*rfData, RooFit::NumCPU(nThreads), RooFit::Save());
   //rfSimPdf->fitTo(*rfData, RooFit::Extended(kTRUE), RooFit::Save(kTRUE));
   //rfSimPdf->fitTo(*rfData,RooFit::PrintLevel(-1));
 
@@ -799,6 +835,8 @@ void Asymmetry::SetAsymGrPoint(Int_t modBin_, Int_t modBin2_) {
   
 Float_t Asymmetry::EvalModulation() {
 
+  if(PhiH<-1000 || PhiR<-1000) return -10000;
+
   switch(whichMod) {
     case modSinPhiR:
       return TMath::Sin(PhiR);
@@ -812,7 +850,10 @@ Float_t Asymmetry::EvalModulation() {
     case modSinPhiH:
       return TMath::Sin(PhiH);
       break;
-    case mod2d:
+    case mod2dSinPhiR:
+      return -10000; // (not used if asym2d==true)
+      break;
+    case mod2dWeightSinPhiHR:
       return -10000; // (not used if asym2d==true)
       break;
     default:
@@ -825,46 +866,23 @@ Float_t Asymmetry::EvalModulation() {
 
 Float_t Asymmetry::EvalWeight() {
   if( whichMod == weightSinPhiHR
-      || whichMod == mod2d
-  ) { //+++
+   || whichMod == mod2dWeightSinPhiHR
+  ) {
     return Mh>0 ? PhPerp/Mh : 0;
   };
   return 1;
 };
 
  
-Int_t Asymmetry::SpinState(Int_t spin_) {
-  /*
-  // +1 -1 convention
-  switch(spin_) {
-    case 1: return sP;
-    case -1: return sM;
-    default:
-      fprintf(stderr,"WARNING: bad SpinState request: %d\n",spin_);
-      return -10000;
-  };
-  */
-  // DNP 2018 convention
-  switch(spin_) {
-    case 0: return sP;
-    case 1: return sM;
-    default:
-      fprintf(stderr,"WARNING: bad SpinState request: %d\n",spin_);
-      return -10000;
-  };
-};
-
-
 void Asymmetry::ResetVars() {
   Mh = -10000;
   x = -10000;
   z = -10000;
-  eSpin = -10000;
-  pSpin = 0;
   PhiH = -10000;
   PhiR = -10000;
   PhPerp = -10000;
   theta = -10000;
+  spinn = -10000;
   for(int d=0; d<3; d++) iv[d]=-10000;
 };
 
@@ -1015,6 +1033,12 @@ TString Asymmetry::AppFileName(TFile * tf) {
   retstr(TRegexp("^.*/spin.")) = "stream_";
   retstr(TRegexp(".root$")) = "_";
   return retstr;
+};
+
+
+Bool_t Asymmetry::KickEvent(TString reason,Float_t badValue) {
+  fprintf(stderr,"kick event, since %s (value=%f)\n",reason.Data(),badValue);
+  return false;
 };
 
 

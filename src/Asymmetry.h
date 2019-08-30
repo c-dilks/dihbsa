@@ -10,6 +10,7 @@
 #include <map>
 #include <vector>
 #include <vector>
+#include <thread>
 
 // ROOT
 #include "TSystem.h"
@@ -81,6 +82,7 @@ class Asymmetry : public TObject
     Float_t EvalModulation();
     Float_t EvalWeight();
     Int_t SpinState(Int_t spin_);
+    Bool_t KickEvent(TString reason,Float_t badValue);
 
     void ResetVars();
     void PrintSettings();
@@ -102,7 +104,8 @@ class Asymmetry : public TObject
       modSinPhiHR,
       weightSinPhiHR,
       modSinPhiH,
-      mod2d,
+      mod2dSinPhiR,
+      mod2dWeightSinPhiHR,
       nMod
     };
     Int_t whichMod;
@@ -117,13 +120,12 @@ class Asymmetry : public TObject
     Float_t Mh;
     Float_t x;
     Float_t z;
-    Int_t eSpin;
-    Int_t pSpin;
     Float_t PhiH;
     Float_t PhiR;
     Float_t PhPerp;
     Float_t theta;
     Float_t pol;
+    Int_t spinn;
 
 
     // number of bins
@@ -243,7 +245,6 @@ class Asymmetry : public TObject
 
     Float_t modulation;
     Int_t modbin,modbinH,modbinR;
-    Int_t spinn;
     Int_t pointCnt;
 
 
@@ -256,6 +257,8 @@ class Asymmetry : public TObject
     Int_t spinbin;
 
     TString objName,appName;
+
+    Int_t nThreads;
 
 
 

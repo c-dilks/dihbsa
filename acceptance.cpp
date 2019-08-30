@@ -146,12 +146,12 @@ int main(int argc, char** argv) {
          A[m]->Mh = ev->Mh;
          A[m]->x = ev->x;
          A[m]->z = ev->Zpair;
-         A[m]->eSpin = ev->helicity;
-         A[m]->pSpin = 0;
          A[m]->PhPerp = ev->PhPerp;
          A[m]->PhiH = ev->PhiH;
          A[m]->PhiR = ev->PhiR;
          //A[m]->PhiR = ev->PhiRq;
+
+         A[m]->spinn = ev->SpinState();
 
          modulation = A[m]->EvalModulation();
          weight = A[m]->EvalWeight();

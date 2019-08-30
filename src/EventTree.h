@@ -35,8 +35,11 @@ class EventTree : public TObject
     ~EventTree();
 
     void GetEvent(Int_t i);
+    Int_t SpinState();
     Bool_t Valid();
     void PrintEvent();
+
+    Float_t GetAngleWrtElectron(TLorentzVector mom_);
 
     Bool_t debug;
     Long64_t ENT;
@@ -103,11 +106,11 @@ class EventTree : public TObject
 
     // diphotons
     Int_t diphCnt;
-    Float_t diphPhotE[2][2];
+    Float_t diphPhotE[2][2]; // [diphCnt] [photon 0 or 1]
     Float_t diphPhotPt[2][2];
     Float_t diphPhotEta[2][2];
     Float_t diphPhotPhi[2][2];
-    Float_t diphE[2];
+    Float_t diphE[2]; // [diphCnt]
     Float_t diphZ[2];
     Float_t diphPt[2];
     Float_t diphM[2];

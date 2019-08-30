@@ -231,7 +231,7 @@ Float_t Dihadron::PlaneAngle(
 
   sgn = crossAB.Dot(vD); // (AxB).D
 
-  if(fabs(sgn)<0.0001) {
+  if(fabs(sgn)<0.00001) {
     //fprintf(stderr,"WARNING: Dihadron::PlaneAngle (AxB).D == 0\n");
     return -10000;
   };
@@ -241,7 +241,7 @@ Float_t Dihadron::PlaneAngle(
   numer = crossAB.Dot(crossCD); // (AxB).(CxD)
   denom = crossAB.Mag() * crossCD.Mag(); // |AxB|*|CxD|
 
-  if(fabs(denom)<0.0001) {
+  if(fabs(denom)<0.00001) {
     //fprintf(stderr,"WARNING: Dihadron::PlaneAngle |AxB|*|CxD| == 0\n");
     return -10000;
   };

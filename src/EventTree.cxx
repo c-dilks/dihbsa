@@ -208,6 +208,29 @@ Bool_t EventTree::Valid() {
 };
 
 
+Int_t EventTree::SpinState() {
+  if(runnum>=5000 && runnum<=5300) {
+    // Fall 2018 convention
+    switch(helicity) {
+      case 1: return sM;
+      case -1: return sP;
+      case 0: return -10000;
+      default: fprintf(stderr,"WARNING: bad SpinState request: %d\n",helicity);
+    };
+  }
+  else if(runnum>=4000 && runnum<=4100) {
+    // Spring 2018 (for DNP18) convention
+    switch(helicity) {
+      case 0: return sP;
+      case 1: return sM;
+      default: fprintf(stderr,"WARNING: bad SpinState request: %d\n",helicity);
+    };
+  }
+  else fprintf(stderr,"WARNING: runnum %d not in EventTree::SpinState\n",runnum);
+  return -10000;
+};
+
+
 void EventTree::PrintEvent() {
   printf("[---] Event Info\n");
   printf("  evnum=%d",evnum);
@@ -253,6 +276,14 @@ void EventTree::PrintEvent() {
 };
 
 
+Float_t EventTree::GetAngleWrtElectron(TLorentzVector mom_) {
+  TLorentzVector eleMom;
+  eleMom.SetPtEtaPhiE(elePt,eleEta,elePhi,eleE);
+  return Tools::AngleSubtend(mom_.Vect(),eleMom.Vect());
+};
+
+
 EventTree::~EventTree() {
 };
+
 

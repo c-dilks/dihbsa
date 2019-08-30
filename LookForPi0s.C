@@ -3,25 +3,35 @@ R__LOAD_LIBRARY(DihBsa)
 #include "Constants.h"
 #include "EventTree.h"
 #include "Tools.h"
+#include "TLorentzVector.h"
+#include "TString.h"
+#include "TMath.h"
 
-void LookForPi0s(TString dir="outroot.dnp2018.some") {
+void LookForPi0s(TString dir="outroot.fall18.some") {
 
   TString files = dir + "/*.root";
   TFile * outfile = new TFile("pi0.root","RECREATE");
-  Int_t whichPair = EncodePairType(kPip,kDiph); // must have a diphoton
+
+  // instantiate EventTree; it doesn't matter what whichPair is, because the cuts that
+  // we use from EventTree do not involve selecting pairType (we want to look at all the
+  // diphotons "inclusively")
+  Int_t whichPair = EncodePairType(kPip,kDiph);
   EventTree * ev = new EventTree(files,whichPair);
 
   Bool_t cut;
   Bool_t phiCut;
+  Float_t angEle[2];
+  TLorentzVector photMom[2];
 
   const Int_t NBINS = 200;
   const Float_t mMax = 0.7;
   const Float_t ptMax = 1.5;
-  const Float_t alphaMax = 0.35;
+  const Float_t alphaMax = 50;
   TH1D * hMass = new TH1D("hMass","diphoton mass;M",NBINS,0,mMax);
-  TH1D * hAlpha = new TH1D("hAlpha","diphoton opening angle;#alpha",NBINS,0,alphaMax);
+  TH1D * hAlpha = new TH1D("hAlpha","diphoton opening angle [deg];#alpha",
+    NBINS,0,alphaMax);
   TH2D * hMAlpha = new TH2D("hMAlpha",
-    "diphoton mass vs. opening angle;#alpha;M",
+    "diphoton mass vs. opening angle [deg];#alpha;M",
     NBINS,0,alphaMax,NBINS,0,mMax);
   TH2D * hME = new TH2D("hME",
     "diphoton mass vs. energy;E;M",
@@ -38,6 +48,10 @@ void LookForPi0s(TString dir="outroot.dnp2018.some") {
   TH2D * hMPhi = new TH2D("hMPhi",
     "diphoton mass vs. azimuth;#phi;M",
     NBINS,-PIe,PIe,NBINS,0,mMax);
+
+  TH2D * hMAngEle = new TH2D("hMangle",
+    "diphoton mass vs. #theta_{e#gamma} [deg];#theta_{e#gamma};M",
+    NBINS,0,30,NBINS,0,mMax);
 
   TH2D * photEcorr = new TH2D("photEcorr","photon E correlation",
     NBINS,0,7,NBINS,0,7);
@@ -64,121 +78,112 @@ void LookForPi0s(TString dir="outroot.dnp2018.some") {
   for(int i=0; i<ev->ENT; i++) {
     ev->GetEvent(i);
 
-    // require dihadron with kinematics and DIS cuts; 
-    // one of the hadrons must be of type pi0
-    /*
-    - this gives us a diphoton, without any pi0 cuts, paired with any of the
-      observable hadrons such that the observable-diphoton system satisfies dihadron
-      kinematic and DIS cuts
-    - in the case where we have {diphoton, pi+, pi-}, there are 3 ways to make
-      dihadrons, 2 of which contain the diphoton; this diphoton will be filled twice
-      in the distributions
-    */
-    if( /*ev->cutDihadronKinematics &&*/ ev->cutDIS && 
-        (ev->hadIdx[qA]==kDiph || ev->hadIdx[qB]==kDiph) )
-    {
+    // check basic cuts:
+    // - cutDIS ensures that x,Q,W are in proper range
+    // - cutDihadronKinematics checks Z,Mmiss,xF,hadP (but *not* pairType)
+    if( ev->cutDihadronKinematics && ev->cutDIS ) {
 
-      phiCut = Tools::PhiFiducialCut(ev->diphPhotPhi[0]) && 
-               Tools::PhiFiducialCut(ev->diphPhotPhi[1]);
+      // loop over the diphotons in the hadron
+      // (if there are none, diphCnt==0)
+      for(int h=0; h<ev->diphCnt; h++) {
 
+        // check if photons are in fiducial phi range
+        phiCut = Tools::PhiFiducialCut(ev->diphPhotPhi[h][0]) && 
+                 Tools::PhiFiducialCut(ev->diphPhotPhi[h][1]);
 
-      // 0
-      cut = true;
-
-      // 1
-      //cut = ev->diphPhotE[0]>0.5 && ev->diphPhotE[1]>0.5;
-
-      // 2
-      /*
-      cut = ev->diphPhotE[0]>0.5 && ev->diphPhotE[1]>0.5 &&
-            ev->diphAlpha > 0.05 && ev->diphAlpha < 0.2;
-            */
-
-      // 3
-      /*
-      cut = ev->diphPhotE[0]>0.5 && ev->diphPhotE[1]>0.5 &&
-            ev->diphAlpha > 0.05 && ev->diphAlpha < 0.2 &&
-            ev->diphPt > 0.15;
-            */
-
-      // 4
-      /*
-      cut = ev->diphPhotE[0]>0.5 && ev->diphPhotE[1]>0.5 &&
-            ev->diphAlpha > 0.05 && ev->diphAlpha < 0.2 &&
-            ev->diphPt > 0.15 &&
-            ev->diphZ > 0.1 && ev->diphZ < 0.6;
-            */
-      // 5 -- tighten alpha cut and add phi fiducial cut on each photon
-      /*
-      cut = ev->diphPhotE[0]>0.5 && ev->diphPhotE[1]>0.5 &&
-            ev->diphAlpha > 0.05 && ev->diphAlpha < 0.2 &&
-            ev->diphPt > 0.15 &&
-            ev->diphZ > 0.1 && ev->diphZ < 0.6 &&
-            phiCut;
-            */
-
-      // OLD DNP2018 ATTEMPT
-      // spans pi0 peak alpha range
-      //cut = ev->diphAlpha < 0.3 && ev->diphAlpha > 0.05;
-      // now cut out low pT radiative junk
-      //cut = ev->diphAlpha < 0.3 && ev->diphAlpha > 0.05 && ev->diphPt>0.15;
-      // add on E_hadron > 1 GeV cut (also mass peak is rather wide below 1 GeV)
-      //cut = ev->diphAlpha < 0.3 && ev->diphAlpha > 0.05 && ev->diphPt>0.15 &&
-            //ev->diphE > 1;
-      // standard high-Z cut
-      //cut = ev->diphAlpha < 0.3 && ev->diphAlpha > 0.05 && ev->diphPt>0.15 &&
-            //ev->diphE > 1 && ev->diphZ < 0.6;
-      // make sure both photons are in azimuthal sectors
-      //cut = ev->diphAlpha < 0.3 && ev->diphAlpha > 0.05 && ev->diphPt>0.15 &&
-            //ev->diphE > 1 && ev->diphZ < 0.6 && phiCut;
-      // tighten alpha and energy cuts
-      //cut = ev->diphAlpha < 0.25 && ev->diphAlpha > 0.07 && ev->diphPt>0.15 &&
-            //ev->diphE > 1.3 && ev->diphZ < 0.6 && phiCut;
+        // get angle between photon and electron
+        for(int p=0; p<2; p++) {
+          photMom[p].SetPtEtaPhiE(
+            ev->diphPhotPt[h][p], ev->diphPhotEta[h][p],
+            ev->diphPhotPhi[h][p], ev->diphPhotE[h][p] );
+          angEle[p] = ev->GetAngleWrtElectron(photMom[p]);
+          angEle[p] *= TMath::RadToDeg();
+        };
 
 
-
-      // 5038 CUTS
-      //cut = ev->diphE > 2 && ev->diphZ < 0.6; // old cuts
-      
-      // 0
-      //cut = true;
-      // 1
-      //cut = ev->diphPhotE[0]>0.5 && ev->diphPhotE[1]>0.5;
-      // 2
-      /*
-      cut = ev->diphPhotE[0]>0.5 && ev->diphPhotE[1]>0.5 &&
-            ev->diphAlpha > 0.04 && ev->diphAlpha < 0.15;
-            */
-
-      if(cut) {
-        hMass->Fill(ev->diphM);
-        hAlpha->Fill(ev->diphAlpha);
-        hMAlpha->Fill(ev->diphAlpha,ev->diphM);
-        hME->Fill(ev->diphE,ev->diphM);
-        hMZ->Fill(ev->diphZ,ev->diphM);
-        hMPt->Fill(ev->diphPt,ev->diphM);
-        hMEta->Fill(ev->diphEta,ev->diphM);
-        hMPhi->Fill(ev->diphPhi,ev->diphM);
+        // 5038 CUTS
+        //cut = ev->diphE[h] > 2 && ev->diphZ[h] < 0.6; // old cuts
         
-        photEcorr->Fill(ev->diphPhotE[1],ev->diphPhotE[0]);
-        photPtcorr->Fill(ev->diphPhotPt[1],ev->diphPhotPt[0]);
-        photEtacorr->Fill(ev->diphPhotEta[1],ev->diphPhotEta[0]);
-        photPhicorr->Fill(ev->diphPhotPhi[1],ev->diphPhotPhi[0]);
+        // 0
+        //cut = true;
+        // 1
+        cut = angEle[0]>5 && angEle[1]>5;
+        // 2
+        //cut = ev->diphPhotE[h][0]>0.5 && ev->diphPhotE[h][1]>0.5;
 
-        hMphotE->Fill(ev->diphPhotE[0],ev->diphM);
-        hMphotPt->Fill(ev->diphPhotPt[0],ev->diphM);
-        hMphotEta->Fill(ev->diphPhotEta[0],ev->diphM);
-        hMphotPhi->Fill(ev->diphPhotPhi[0],ev->diphM);
-        photPyPx->Fill(TMath::Cos(ev->diphPhotPhi[0])*ev->diphPhotPt[0],
-                       TMath::Sin(ev->diphPhotPhi[0])*ev->diphPhotPt[0]);
+
+
+
+        // TUNING FOR DNP2018 DATASET
+        // 0
+        //cut = true;
+
+        // 1
+        //cut = ev->diphPhotE[h][0]>0.5 && ev->diphPhotE[h][1]>0.5;
+
+        // 2
+        /*
+        cut = ev->diphPhotE[h][0]>0.5 && ev->diphPhotE[h][1]>0.5 &&
+              ev->diphAlpha[h] > 0.05 && ev->diphAlpha[h] < 0.2;
+              */
+
+        // 3
+        /*
+        cut = ev->diphPhotE[h][0]>0.5 && ev->diphPhotE[h][1]>0.5 &&
+              ev->diphAlpha[h] > 0.05 && ev->diphAlpha[h] < 0.2 &&
+              ev->diphPt[h] > 0.15;
+              */
+
+        // 4
+        /*
+        cut = ev->diphPhotE[h][0]>0.5 && ev->diphPhotE[h][1]>0.5 &&
+              ev->diphAlpha[h] > 0.05 && ev->diphAlpha[h] < 0.2 &&
+              ev->diphPt[h] > 0.15 &&
+              ev->diphZ[h] > 0.1 && ev->diphZ[h] < 0.6;
+              */
+        // 5 -- tighten alpha cut and add phi fiducial cut on each photon
+        /*
+        cut = ev->diphPhotE[h][0]>0.5 && ev->diphPhotE[h][1]>0.5 &&
+              ev->diphAlpha[h] > 0.05 && ev->diphAlpha[h] < 0.2 &&
+              ev->diphPt[h] > 0.15 &&
+              ev->diphZ[h] > 0.1 && ev->diphZ[h] < 0.6 &&
+              phiCut;
+              */
+
+
+
+
+        if(cut) {
+          hMass->Fill(ev->diphM[h]);
+          hAlpha->Fill(ev->diphAlpha[h]*TMath::RadToDeg());
+          hMAlpha->Fill(ev->diphAlpha[h]*TMath::RadToDeg(),ev->diphM[h]);
+          hME->Fill(ev->diphE[h],ev->diphM[h]);
+          hMZ->Fill(ev->diphZ[h],ev->diphM[h]);
+          hMPt->Fill(ev->diphPt[h],ev->diphM[h]);
+          hMEta->Fill(ev->diphEta[h],ev->diphM[h]);
+          hMPhi->Fill(ev->diphPhi[h],ev->diphM[h]);
+          for(int p=0; p<2; p++) hMAngEle->Fill(angEle[p],ev->diphM[h]);
+
+          photEcorr->Fill(ev->diphPhotE[h][1],ev->diphPhotE[h][0]);
+          photPtcorr->Fill(ev->diphPhotPt[h][1],ev->diphPhotPt[h][0]);
+          photEtacorr->Fill(ev->diphPhotEta[h][1],ev->diphPhotEta[h][0]);
+          photPhicorr->Fill(ev->diphPhotPhi[h][1],ev->diphPhotPhi[h][0]);
+
+          hMphotE->Fill(ev->diphPhotE[h][0],ev->diphM[h]);
+          hMphotPt->Fill(ev->diphPhotPt[h][0],ev->diphM[h]);
+          hMphotEta->Fill(ev->diphPhotEta[h][0],ev->diphM[h]);
+          hMphotPhi->Fill(ev->diphPhotPhi[h][0],ev->diphM[h]);
+          photPyPx->Fill(TMath::Cos(ev->diphPhotPhi[h][0])*ev->diphPhotPt[h][0],
+                         TMath::Sin(ev->diphPhotPhi[h][0])*ev->diphPhotPt[h][0]);
+        };
+
+
       };
-
-
     };
   };
 
 
-  hMass->Fit("gaus","","",0.13,0.16);
+  hMass->Fit("gaus","","",0.110,0.155);
 
   hMass->Write();
   hAlpha->Write();
@@ -188,6 +193,7 @@ void LookForPi0s(TString dir="outroot.dnp2018.some") {
   hMPt->Write();
   hMEta->Write();
   hMPhi->Write();
+  hMAngEle->Write();
 
   photEcorr->Write();
   photPtcorr->Write();

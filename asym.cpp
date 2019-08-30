@@ -62,6 +62,7 @@ enum flowEnum {
   fSerial,
   fSerialRenamed,
   fParallelFill,
+  fParallelCat,
   fParallelCalc
 };
 
@@ -108,7 +109,7 @@ int main(int argc, char** argv) {
     };
   };
 
-  if(inputType==0 && flowControl!=fParallelCalc) {
+  if(inputType==0 && flowControl!=fParallelCat && flowControl!=fParallelCalc) {
     fprintf(stderr,"ERROR: must specify input file or directory\n");
     return PrintUsage();
   };
@@ -235,6 +236,9 @@ int main(int argc, char** argv) {
     outName(TRegexp("^.*/")) = "spinroot/spin.";
     printf("outName = %s\n",outName.Data());
     spinrootFile = new TFile(outName,"RECREATE");
+  }
+  else if(flowControl==fParallelCat) {
+    spinrootFile = new TFile("spinrootCat.root","RECREATE");
   }
   else if(flowControl==fParallelCalc) {
     resultFile = new TFile("spinFinal.root","RECREATE");
@@ -459,7 +463,7 @@ int main(int argc, char** argv) {
   //-----------------------------------------------------
   // EVENT LOOP  
   //-----------------------------------------------------
-  if(flowControl!=fParallelCalc) {
+  if(flowControl!=fParallelCat && flowControl!=fParallelCalc) {
     printf("begin loop through %lld events...\n",ev->ENT);
     Bool_t eventAdded;
     for(int i=0; i<ev->ENT; i++) {
@@ -478,12 +482,12 @@ int main(int argc, char** argv) {
           A->Mh = ev->Mh;
           A->x = ev->x;
           A->z = ev->Zpair;
-          A->eSpin = ev->helicity;
-          A->pSpin = 0;
           A->PhiH = ev->PhiH;
           A->PhiR = ev->PhiR;
           A->PhPerp = ev->PhPerp;
           A->theta = ev->theta;
+
+          A->spinn = ev->SpinState();
 
           eventAdded = A->AddEvent(); 
 
@@ -496,13 +500,13 @@ int main(int argc, char** argv) {
   // end event loop -------------------------------------------
 
 
-  // concatenate spinroot files data
+  // concatenate spinroot files data, or just read in the concatenated file
   TSystemDirectory * sysDir;
   TSystemFile * sysFile;
   TList * sysFileList;
   TFile * appFile;
   TString appFileName;
-  if(flowControl==fParallelCalc) {
+  if(flowControl==fParallelCat) {
     sysDir = new TSystemDirectory("spinroot","spinroot");
     sysFileList = sysDir->GetListOfFiles();
     TIter nxt(sysFileList);
@@ -516,11 +520,19 @@ int main(int argc, char** argv) {
           A = asymMap.at(bn);
           A->AppendData(appFile);
         };
+        appFile->Close();
       };
     };
     Tools::PrintSeparator(40,".");
     printf("spinroot files concatenated\n\n");
-    resultFile->cd();
+    spinrootFile->cd();
+  }
+  else if(flowControl==fParallelCalc) {
+    appFile = new TFile("spinrootCat.root","READ");
+    for(Int_t bn : binVec) {
+      A = asymMap.at(bn);
+      A->AppendData(appFile);
+    };
   };
 
 
@@ -549,7 +561,7 @@ int main(int argc, char** argv) {
     return 1;
   };
   */
-  if(flowControl==fParallelFill) {
+  if(flowControl==fParallelFill || flowControl==fParallelCat) {
     spinrootFile->cd();
     BS->Write("BS");
     for(Int_t bn : binVec) {
@@ -1236,8 +1248,14 @@ TGraphErrors * ShiftGraph(TGraphErrors * gr, Int_t nShift) {
     retGr->SetPointError(nn, grEX[nn], grEY[nn]);
   };
 
-  if(nShift==1) retGr->SetLineColor(kBlack);
-  else retGr->SetLineColor(kGray);
+  switch(nShift) {
+    case 1: retGr->SetLineColor(kGreen+1); break;
+    case 2: retGr->SetLineColor(kRed); break;
+    case 3: retGr->SetLineColor(kBlue); break;
+    case 4: retGr->SetLineColor(kMagenta); break;
+    default: retGr->SetLineColor(kGray);
+  };
+  
 
   retGr->SetLineWidth(2);
 
