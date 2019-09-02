@@ -39,13 +39,13 @@ int main(int argc, char** argv) {
    
    // ARGUMENTS
    TString infileN;
-   Bool_t batchMode = false;
+   Bool_t augerMode = false;
    if(argc<=1) {
      printf("USAGE: %s [hipo file]\n",argv[0]);
      exit(0);
    };
    if(argc>1) infileN = TString(argv[1]);
-   if(argc>2) batchMode = true;
+   if(argc>2) augerMode = true;
 
 
    // debugging flags
@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
 
    // set output file
    TString outfileN;
-   if(batchMode) outfileN = "outroot.root";
+   if(augerMode) outfileN = "outroot.root";
    else {
      outfileN = infileN;
      outfileN(TRegexp("^.*/")) = "outroot/";
