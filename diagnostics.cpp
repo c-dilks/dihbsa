@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
    // electron kinematics
    TH1D * eleEDist = new TH1D("eleEDist","e^{-} E distribution",NBINS,0,12);
    TH1D * elePtDist = new TH1D("elePtDist","e^{-} p_{T} distribution",NBINS,0,4);
-   TH1D * eleEtaDist = new TH1D("eleEtaDist","e^{-} #phi distribution",NBINS,-3,6);
+   TH1D * eleEtaDist = new TH1D("eleEtaDist","e^{-} #eta distribution",NBINS,-3,6);
    TH1D * elePhiDist = new TH1D("elePhiDist","e^{-} #phi distribution",NBINS,-PIe,PIe);
    TH2D * eleEtaVsPhi = new TH2D("eleEtavsPhi","e^{-} #eta vs #phi;#phi;#eta",
      NBINS,-PIe,PIe,NBINS,-3,6);
