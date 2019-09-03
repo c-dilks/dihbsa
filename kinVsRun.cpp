@@ -28,7 +28,7 @@ Int_t whichHad[2];
 TString hadName[2];
 TString hadTitle[2];
 
-TString distTitle(TString var);
+void normalize(TH2D * d);
 
 int main(int argc, char** argv) {
 
@@ -99,17 +99,23 @@ int main(int argc, char** argv) {
   TH2D * hadPhiDist[2];
   TH2D * hadZDist[2];
   for(int h=0; h<2; h++) {
-    hadEDist[h] = new TH2D(TString(hadName[h]+"hadEDist"),distTitle("E"),
+    hadEDist[h] = new TH2D(TString(hadName[h]+"hadEDist"),
+        TString(hadTitle[h]+" E vs. runnum;runnum;E"),
         runnumBins,runnumMin,runnumMax,NBINS,0,10);
-    hadPDist[h] = new TH2D(TString(hadName[h]+"hadPDist"),distTitle("p"),
+    hadPDist[h] = new TH2D(TString(hadName[h]+"hadPDist"),
+        TString(hadTitle[h]+" p vs. runnum;runnum;p"),
         runnumBins,runnumMin,runnumMax,NBINS,0,10);
-    hadPtDist[h] = new TH2D(TString(hadName[h]+"hadPtDist"),distTitle("p_{T}"),
+    hadPtDist[h] = new TH2D(TString(hadName[h]+"hadPtDist"),
+        TString(hadTitle[h]+" p_{T} vs. runnum;runnum;p_{T}"),
         runnumBins,runnumMin,runnumMax,NBINS,0,4);
-    hadEtaDist[h] = new TH2D(TString(hadName[h]+"hadEtaDist"),distTitle("#eta"),
+    hadEtaDist[h] = new TH2D(TString(hadName[h]+"hadEtaDist"),
+        TString(hadTitle[h]+" #eta vs. runnum;runnum;#eta"),
         runnumBins,runnumMin,runnumMax,NBINS,0,5);
-    hadPhiDist[h] = new TH2D(TString(hadName[h]+"hadPhiDist"),distTitle("#phi"),
+    hadPhiDist[h] = new TH2D(TString(hadName[h]+"hadPhiDist"),
+        TString(hadTitle[h]+" #phi vs. runnum;runnum;#phi"),
         runnumBins,runnumMin,runnumMax,NBINS,-PIe,PIe);
-    hadZDist[h] = new TH2D(TString(hadName[h]+"hadZDist"),distTitle("z"),
+    hadZDist[h] = new TH2D(TString(hadName[h]+"hadZDist"),
+        TString(hadTitle[h]+" z vs. runnum;runnum;z"),
         runnumBins,runnumMin,runnumMax,NBINS,0,1);
   };
 
@@ -259,44 +265,40 @@ int main(int argc, char** argv) {
 
 
   // normalize distributions
-  Double_t norm;
-  norm = WDist->Integral(); WDist->Scale(1/norm);
-  norm = XDist->Integral(); XDist->Scale(1/norm);
-  norm = YDist->Integral(); YDist->Scale(1/norm);
+  normalize(WDist);
+  normalize(XDist);
+  normalize(YDist);
 
-  norm = eleEDist->Integral(); eleEDist->Scale(1/norm);
-  norm = elePtDist->Integral(); elePtDist->Scale(1/norm);
-  norm = eleEtaDist->Integral(); eleEtaDist->Scale(1/norm);
-  norm = elePhiDist->Integral(); elePhiDist->Scale(1/norm);
+  normalize(eleEDist);
+  normalize(elePtDist);
+  normalize(eleEtaDist);
+  normalize(elePhiDist);
 
-  norm = partMultiplicity->Integral(); partMultiplicity->Scale(1/norm);
-  norm = obsMultiplicity->Integral(); obsMultiplicity->Scale(1/norm);
+  normalize(partMultiplicity);
+  normalize(obsMultiplicity);
 
   for(int h=0; h<2; h++) {
-    norm = hadEDist[h]->Integral(); hadEDist[h]->Scale(1/norm);
-    norm = hadPDist[h]->Integral(); hadPDist[h]->Scale(1/norm);
-    norm = hadPtDist[h]->Integral(); hadPtDist[h]->Scale(1/norm);
-    norm = hadEtaDist[h]->Integral(); hadEtaDist[h]->Scale(1/norm);
-    norm = hadPhiDist[h]->Integral(); hadPhiDist[h]->Scale(1/norm);
-    norm = hadZDist[h]->Integral(); hadZDist[h]->Scale(1/norm);
+    normalize(hadEDist[h]);
+    normalize(hadPDist[h]);
+    normalize(hadPtDist[h]);
+    normalize(hadEtaDist[h]);
+    normalize(hadPhiDist[h]);
+    normalize(hadZDist[h]);
   };
 
-  norm = deltaPhiDist->Integral(); deltaPhiDist->Scale(1/norm);
+  normalize(deltaPhiDist);
+  normalize(MhDist);
+  normalize(ZpairDist);
+  normalize(zetaDist);
+  normalize(xFDist);
+  normalize(MmissDist);
+  normalize(thetaDist);
 
-  norm = MhDist->Integral(); MhDist->Scale(1/norm);
-  norm = ZpairDist->Integral(); ZpairDist->Scale(1/norm);
-  norm = zetaDist->Integral(); zetaDist->Scale(1/norm);
-  norm = xFDist->Integral(); xFDist->Scale(1/norm);
-  norm = MmissDist->Integral(); MmissDist->Scale(1/norm);
+  normalize(PhiHDist);
+  normalize(PhiRDist);
+  normalize(PhiHRDist);
 
-  norm = PhiHDist->Integral(); PhiHDist->Scale(1/norm);
-  norm = PhiRDist->Integral(); PhiRDist->Scale(1/norm);
-  norm = PhiHRDist->Integral(); PhiHRDist->Scale(1/norm);
-
-  norm = thetaDist->Integral(); thetaDist->Scale(1/norm);
-
-  norm = helicityDist->Integral(); helicityDist->Scale(1/norm);
-
+  normalize(helicityDist);
 
   // write output
   WDist->Write();
@@ -319,18 +321,17 @@ int main(int argc, char** argv) {
   for(int h=0; h<2; h++) hadZDist[h]->Write();
 
   deltaPhiDist->Write();
-
   MhDist->Write();
   ZpairDist->Write();
   zetaDist->Write();
   xFDist->Write();
   MmissDist->Write();
+  thetaDist->Write();
 
   PhiHDist->Write();
   PhiRDist->Write();
   PhiHRDist->Write();
 
-  thetaDist->Write();
 
   helicityDist->Write();
 
@@ -339,18 +340,42 @@ int main(int argc, char** argv) {
 };
 
 
+void normalize(TH2D * d) {
+  printf("normalize %s\n",d->GetName());
+  TH2D * c = (TH2D*)d->Clone();
+  d->Reset();
 
-TString distTitle(TString var) {
-  TString col[2]; 
-  if(whichHad[qA]!=whichHad[qB]) {
-    for(int cc=0; cc<2; cc++) {
-      col[cc] = PartColorName(dihHadIdx(whichHad[qA],whichHad[qB],cc)) + 
-        ":" + hadTitle[cc];
+  Int_t nx = c->GetNbinsX();
+  Int_t ny = c->GetNbinsY();
+
+  Double_t yl = c->GetYaxis()->GetXmin();
+  Double_t yh = c->GetYaxis()->GetXmax();
+  TH1D * pr = new TH1D("pr","pr",ny,yl,yh);
+
+  Double_t bc,norm;
+  for(int bx=1; bx<=nx; bx++) {
+    
+    pr->Reset();
+
+    for(int by=1; by<=ny; by++) {
+      //bn = c->GetBin(bx,by);
+      //bc = c->GetBinContent(bn);
+      bc = c->GetBinContent(bx,by);
+      pr->SetBinContent(by,bc);
     };
-  } else {
-    col[qA] = "solid:" + hadTitle[qA];
-    col[qB] = "dashed:" + hadTitle[qB]; 
+
+    norm = pr->Integral();
+    if(norm>0) pr->Scale(1/norm);
+
+    for(int by=1; by<=ny; by++) {
+      bc = pr->GetBinContent(by);
+      d->SetBinContent(bx,by,bc);
+    };
   };
-  TString ret = var + " distribution (" + col[qA] + " " + col[qB] + ") vs runnum;runnum;" + var;
-  return ret;
+
+  delete pr;
+   
 };
+      
+
+  
