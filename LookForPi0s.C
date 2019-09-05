@@ -106,10 +106,19 @@ void LookForPi0s(TString dir="outroot.fall18.some") {
         
         // 0
         //cut = true;
-        // 1
-        cut = angEle[0]>5 && angEle[1]>5;
-        // 2
+        // 1 // angEle cuts
+        //cut = angEle[0]>5 && angEle[1]>5;
+        // 2 // photE cuts
         //cut = ev->diphPhotE[h][0]>0.5 && ev->diphPhotE[h][1]>0.5;
+        // 3 // combine angEle and photE cuts
+        cut = angEle[0]>5 && angEle[1]>5 &&
+              ev->diphPhotE[h][0]>0.5 && ev->diphPhotE[h][1]>0.5;
+        // 4 // tighten photE cuts
+        //cut = angEle[0]>5 && angEle[1]>5 &&
+              //ev->diphPhotE[h][0]>1 && ev->diphPhotE[h][1]>1;
+        // 5 // tighten angEle cuts
+        //cut = angEle[0]>8 && angEle[1]>8 &&
+              //ev->diphPhotE[h][0]>1 && ev->diphPhotE[h][1]>1;
 
 
 
