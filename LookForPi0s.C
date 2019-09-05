@@ -62,14 +62,27 @@ void LookForPi0s(TString dir="outroot.fall18.some") {
   TH2D * photPhicorr = new TH2D("photPhicorr","photon #phi correlation",
     NBINS,-PIe,PIe,NBINS,-PIe,PIe);
 
-  TH2D * hMphotE = new TH2D("hMphotE","M_{#gamma#gamma} vs. photon1 E",
-    NBINS,0,7,NBINS,0,mMax);
-  TH2D * hMphotPt = new TH2D("hMphotPt","M_{#gamma#gamma} vs. photon1 p_{T}",
-    NBINS,0,ptMax,NBINS,0,mMax);
-  TH2D * hMphotEta = new TH2D("hMphotEta","M_{#gamma#gamma} vs. photon1 #eta",
-    NBINS,0,7,NBINS,0,mMax);
-  TH2D * hMphotPhi = new TH2D("hMphotPhi","M_{#gamma#gamma} vs. photon1 #phi",
-    NBINS,-PIe,PIe,NBINS,0,mMax);
+
+  TH2D * hMphotE[2];
+  TH2D * hMphotPt[2];
+  TH2D * hMphotEta[2];
+  TH2D * hMphotPhi[2];
+  TString photStr;
+  for(int p=0; p<2; p++) {
+    photStr = Form("phot%d",p+1);
+    hMphotE[p] = new TH2D(TString("hM"+photStr+"E"),
+      TString("M_{#gamma#gamma} vs. "+photStr+" E"),
+      NBINS,0,7,NBINS,0,mMax);
+    hMphotPt[p] = new TH2D(TString("hM"+photStr+"Pt"),
+      TString("M_{#gamma#gamma} vs. "+photStr+" p_{T}"),
+      NBINS,0,ptMax,NBINS,0,mMax);
+    hMphotEta[p] = new TH2D(TString("hM"+photStr+"Eta"),
+      TString("M_{#gamma#gamma} vs. "+photStr+" #eta"),
+      NBINS,0,7,NBINS,0,mMax);
+    hMphotPhi[p] = new TH2D(TString("hM"+photStr+"Phi"),
+      TString("M_{#gamma#gamma} vs. "+photStr+" #phi"),
+      NBINS,-PIe,PIe,NBINS,0,mMax);
+  };
 
   TH2D * photPyPx = new TH2D("photPyPx","photon1 p_{y} vs. p_{x}",
     NBINS,-ptMax,ptMax,NBINS,-ptMax,ptMax);
@@ -107,18 +120,10 @@ void LookForPi0s(TString dir="outroot.fall18.some") {
         // 0
         //cut = true;
         // 1 // angEle cuts
-        //cut = angEle[0]>5 && angEle[1]>5;
-        // 2 // photE cuts
-        //cut = ev->diphPhotE[h][0]>0.5 && ev->diphPhotE[h][1]>0.5;
-        // 3 // combine angEle and photE cuts
-        cut = angEle[0]>5 && angEle[1]>5 &&
-              ev->diphPhotE[h][0]>0.5 && ev->diphPhotE[h][1]>0.5;
-        // 4 // tighten photE cuts
-        //cut = angEle[0]>5 && angEle[1]>5 &&
-              //ev->diphPhotE[h][0]>1 && ev->diphPhotE[h][1]>1;
-        // 5 // tighten angEle cuts
-        //cut = angEle[0]>8 && angEle[1]>8 &&
-              //ev->diphPhotE[h][0]>1 && ev->diphPhotE[h][1]>1;
+        //cut = angEle[0]>8 && angEle[1]>8;
+        // 2 // combine angEle and photE cuts
+        cut = angEle[0]>8 && angEle[1]>8 &&
+              ev->diphPhotE[h][0]>0.6 && ev->diphPhotE[h][1]>0.6;
 
 
 
@@ -178,10 +183,13 @@ void LookForPi0s(TString dir="outroot.fall18.some") {
           photEtacorr->Fill(ev->diphPhotEta[h][1],ev->diphPhotEta[h][0]);
           photPhicorr->Fill(ev->diphPhotPhi[h][1],ev->diphPhotPhi[h][0]);
 
-          hMphotE->Fill(ev->diphPhotE[h][0],ev->diphM[h]);
-          hMphotPt->Fill(ev->diphPhotPt[h][0],ev->diphM[h]);
-          hMphotEta->Fill(ev->diphPhotEta[h][0],ev->diphM[h]);
-          hMphotPhi->Fill(ev->diphPhotPhi[h][0],ev->diphM[h]);
+          for(int p=0; p<2; p++) {
+            hMphotE[p]->Fill(ev->diphPhotE[h][p],ev->diphM[h]);
+            hMphotPt[p]->Fill(ev->diphPhotPt[h][p],ev->diphM[h]);
+            hMphotEta[p]->Fill(ev->diphPhotEta[h][p],ev->diphM[h]);
+            hMphotPhi[p]->Fill(ev->diphPhotPhi[h][p],ev->diphM[h]);
+          };
+
           photPyPx->Fill(TMath::Cos(ev->diphPhotPhi[h][0])*ev->diphPhotPt[h][0],
                          TMath::Sin(ev->diphPhotPhi[h][0])*ev->diphPhotPt[h][0]);
         };
@@ -209,10 +217,10 @@ void LookForPi0s(TString dir="outroot.fall18.some") {
   photEtacorr->Write();
   photPhicorr->Write();
 
-  hMphotE->Write();
-  hMphotPt->Write();
-  hMphotEta->Write();
-  hMphotPhi->Write();
+  for(int p=0; p<2; p++) hMphotE[p]->Write();
+  for(int p=0; p<2; p++) hMphotPt[p]->Write();
+  for(int p=0; p<2; p++) hMphotEta[p]->Write();
+  for(int p=0; p<2; p++) hMphotPhi[p]->Write();
 
   photPyPx->Write();
 
