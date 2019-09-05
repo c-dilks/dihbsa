@@ -595,7 +595,7 @@ Bool_t Asymmetry::InitRooFit() {
   pwUnpolDiff = "1+D0*"+legendre[1]+"+D1*"+legendre[2];
 
   // -- build formula with modulation and PW amplitudes
-  Int_t whichFormu = 1; //  <-- <-- <-- <-- <-- <-- <-- <-- <-- <-- <--
+  Int_t whichFormu = 0; //  <-- <-- <-- <-- <-- <-- <-- <-- <-- <-- <--
   switch(whichFormu) {
     case 0: // test whichMod modulation
       asymExpansion = 

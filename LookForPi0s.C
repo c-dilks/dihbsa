@@ -20,8 +20,6 @@ void LookForPi0s(TString dir="outroot.fall18.some") {
 
   Bool_t cut;
   Bool_t phiCut;
-  Float_t angEle[2];
-  TLorentzVector photMom[2];
 
   const Int_t NBINS = 200;
   const Float_t mMax = 0.7;
@@ -104,25 +102,13 @@ void LookForPi0s(TString dir="outroot.fall18.some") {
         phiCut = Tools::PhiFiducialCut(ev->diphPhotPhi[h][0]) && 
                  Tools::PhiFiducialCut(ev->diphPhotPhi[h][1]);
 
-        // get angle between photon and electron
-        for(int p=0; p<2; p++) {
-          photMom[p].SetPtEtaPhiE(
-            ev->diphPhotPt[h][p], ev->diphPhotEta[h][p],
-            ev->diphPhotPhi[h][p], ev->diphPhotE[h][p] );
-          angEle[p] = ev->GetAngleWrtElectron(photMom[p]);
-          angEle[p] *= TMath::RadToDeg();
-        };
-
-
-        // 5038 CUTS
-        //cut = ev->diphE[h] > 2 && ev->diphZ[h] < 0.6; // old cuts
         
         // 0
         //cut = true;
         // 1 // angEle cuts
-        //cut = angEle[0]>8 && angEle[1]>8;
+        //cut = ev->angEle[h][0]>8 && ev->angEle[h][1]>8;
         // 2 // combine angEle and photE cuts
-        cut = angEle[0]>8 && angEle[1]>8 &&
+        cut = ev->angEle[h][0]>8 && ev->angEle[h][1]>8 &&
               ev->diphPhotE[h][0]>0.6 && ev->diphPhotE[h][1]>0.6;
 
 
@@ -176,7 +162,7 @@ void LookForPi0s(TString dir="outroot.fall18.some") {
           hMPt->Fill(ev->diphPt[h],ev->diphM[h]);
           hMEta->Fill(ev->diphEta[h],ev->diphM[h]);
           hMPhi->Fill(ev->diphPhi[h],ev->diphM[h]);
-          for(int p=0; p<2; p++) hMAngEle->Fill(angEle[p],ev->diphM[h]);
+          for(int p=0; p<2; p++) hMAngEle->Fill(ev->angEle[h][p],ev->diphM[h]);
 
           photEcorr->Fill(ev->diphPhotE[h][1],ev->diphPhotE[h][0]);
           photPtcorr->Fill(ev->diphPhotPt[h][1],ev->diphPhotPt[h][0]);
@@ -225,6 +211,3 @@ void LookForPi0s(TString dir="outroot.fall18.some") {
   photPyPx->Write();
 
 };
-
-  
-

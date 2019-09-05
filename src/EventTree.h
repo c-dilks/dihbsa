@@ -39,7 +39,6 @@ class EventTree : public TObject
     Bool_t Valid();
     void PrintEvent();
 
-    Float_t GetAngleWrtElectron(TLorentzVector mom_);
 
     Bool_t debug;
     Long64_t ENT;
@@ -117,6 +116,7 @@ class EventTree : public TObject
     Float_t diphAlpha[2];
     Float_t diphEta[2];
     Float_t diphPhi[2];
+    Float_t angEle[2][2];
     ///////////////////////////
 
 
@@ -137,6 +137,9 @@ class EventTree : public TObject
     Int_t whichHad[2];
 
     TRandom * RNG;
+
+    TLorentzVector photMom[2];
+    TLorentzVector eleMom;
 
 
   ClassDef(EventTree,1);

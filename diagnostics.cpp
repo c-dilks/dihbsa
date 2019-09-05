@@ -258,12 +258,10 @@ int main(int argc, char** argv) {
    // event-level distributions
    TH1D * helicityDist = new TH1D("helicityDist","helicity",5,-2,3);
    TH1D * torusDist = new TH1D("torusDist","torus",5,-2,3);
-   TGraph * helicityVsEvnum = new TGraph();
-   helicityVsEvnum->SetName("helicityVsEvnum");
-   helicityVsEvnum->SetTitle("helicity vs runNum #times 10^{9} + eventNum");
-   Double_t helicityVsEvnumCnt = 0;
-   Double_t bigEvNum;
   
+   // diphoton-relevant distributions
+   TH1D * diphMdist = new TH1D("diphMdist",
+     "M_{#gamma#gamma} distribution;M_{#gamma#gamma}",NBINS,0,1);
 
 
 
@@ -407,9 +405,8 @@ int main(int argc, char** argv) {
        helicityDist->Fill(ev->helicity);
        torusDist->Fill(ev->torus);
 
-       // TODO - track helicity vs. time
-       bigEvNum = 10e9 * (ev->runnum) + ev->evnum;
-       //helicityVsEvnum->SetPoint(helicityVsEvnumCnt++,bigEvNum,ev->helicity);
+       for(int dp=0; dp<ev->diphCnt; dp++) diphMdist->Fill(ev->diphM[dp]);
+
      };
 
 
@@ -514,7 +511,8 @@ int main(int argc, char** argv) {
 
    torusDist->Write();
    helicityDist->Write();
-   //helicityVsEvnum->Write();
+
+   diphMdist->Write();
 
    outfile->Close();
 

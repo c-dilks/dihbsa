@@ -133,23 +133,27 @@ void EventTree::GetEvent(Int_t i) {
   for(int h=0; h<2; h++) {
     cutDiphKinematics[h] = true;
     cutDiph[h] = true;
+    for(int p=0; p<2; p++) angEle[h][p] = -10000;
   };
   // -- then if there are diphotons in this dihadron we evaluate their cuts
   if(diphCnt>0) {
+    eleMom.SetPtEtaPhiE(elePt,eleEta,elePhi,eleE);
     for(int h=0; h<diphCnt; h++) {
-      
-      if(runnum < 4500) { // spring 2018 and before (dnp2018 cuts)
-        cutDiphKinematics[h] = diphPhotE[h][0]>0.5 && diphPhotE[h][1]>0.5 &&
-                               diphAlpha[h] > 0.05 && diphAlpha[h] < 0.2 &&
-                               diphPt[h] > 0.15 &&
-                               diphZ[h] > 0.1 && diphZ[h] < 0.6 &&
-                               Tools::PhiFiducialCut(diphPhotPhi[h][0]) && 
-                               Tools::PhiFiducialCut(diphPhotPhi[h][1]);
-      } else { // fall 2018 and after
-        cutDiphKinematics[h] = diphPhotE[h][0]>0.5 && diphPhotE[h][1]>0.5;
-                               //Tools::PhiFiducialCut(diphPhotPhi[h][0]) && 
-                               //Tools::PhiFiducialCut(diphPhotPhi[h][1]);
+
+      // compute angle of photons wrt electron
+      for(int p=0; p<2; p++) {
+        photMom[p].SetPtEtaPhiE(
+          diphPhotPt[h][p], diphPhotEta[h][p],
+          diphPhotPhi[h][p], diphPhotE[h][p] );
+        angEle[h][p] = Tools::AngleSubtend( photMom[p].Vect(), eleMom.Vect() );
+        angEle[h][p] *= TMath::RadToDeg();
       };
+
+      // diphoton kinematics cut
+      cutDiphKinematics[h] = angEle[h][0]>8 && angEle[h][1]>8 &&
+                             diphPhotE[h][0]>0.6 && diphPhotE[h][1]>0.6;
+                             //Tools::PhiFiducialCut(diphPhotPhi[h][0]) && 
+                             //Tools::PhiFiducialCut(diphPhotPhi[h][1]);
 
       // mass cut (depends on whether pi0 signal or BG is desired
       if(useDiphBG) {
@@ -273,13 +277,6 @@ void EventTree::PrintEvent() {
   printf("  PhiRp=%.2f",PhiRp);
   printf("  PhiRp_r=%.2f",PhiRp_r);
   printf("\n");
-};
-
-
-Float_t EventTree::GetAngleWrtElectron(TLorentzVector mom_) {
-  TLorentzVector eleMom;
-  eleMom.SetPtEtaPhiE(elePt,eleEta,elePhi,eleE);
-  return Tools::AngleSubtend(mom_.Vect(),eleMom.Vect());
 };
 
 
