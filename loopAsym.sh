@@ -19,6 +19,7 @@ mkdir -p $log
 
 mkdir -p spinroot
 rm -v spinroot/*.root
+rm spinrootCat.root
 rm -v logfiles/*
 
 

@@ -479,6 +479,7 @@ int main(int argc, char** argv) {
 
           A = asymMap.at(bn);
 
+          // set kinematic vars
           A->Mh = ev->Mh;
           A->x = ev->x;
           A->z = ev->Zpair;
@@ -487,8 +488,26 @@ int main(int argc, char** argv) {
           A->PhPerp = ev->PhPerp;
           A->theta = ev->theta;
 
+          // set spin state
           A->spinn = ev->SpinState();
 
+          // set single hadron PhiH values (only if needed)
+          // note that Z is also set here to be Z of the hadron, rather than dihadron
+          switch(whichModulation) {
+            case Asymmetry::modSinPhiA:
+              A->PhiHsh = ev->GetDihadronObj()->GetSingleHadronPhiH(qA);
+              A->z = ev->Z[qA];
+              break;
+            case Asymmetry::modSinPhiB:
+              A->PhiHsh = ev->GetDihadronObj()->GetSingleHadronPhiH(qB);
+              A->z = ev->Z[qB];
+              break;
+            default:
+              A->PhiHsh = -10000;
+          };
+
+          // add this event to Asymmetry data structures (event won't be added the bin
+          // is not correct)
           eventAdded = A->AddEvent(); 
 
           //if(eventAdded && A->debug) ev->PrintEvent();

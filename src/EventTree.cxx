@@ -103,8 +103,16 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("diphEta",diphEta);
   chain->SetBranchAddress("diphPhi",diphPhi);
 
-  // random number generator
+  // random number generator (for random theta symmetrization)
   RNG = new TRandom(928); // (argument is seed)
+
+  // instantiate useful objects
+  objDihadron = new Dihadron();
+  objDIS = new DIS();
+  trEle = new Trajectory(kE);
+  for(int h=0; h<2; h++) {
+    trHad[h] = new Trajectory(dihHadIdx(whichHad[qA],whichHad[qB],h));
+  };
 };
 
 
@@ -277,6 +285,27 @@ void EventTree::PrintEvent() {
   printf("  PhiRp=%.2f",PhiRp);
   printf("  PhiRp_r=%.2f",PhiRp_r);
   printf("\n");
+};
+
+
+Dihadron * EventTree::GetDihadronObj() {
+  objDihadron->ResetVars();
+  for(int h=0; h<2; h++) {
+    hadMom[h].SetPtEtaPhiE(hadPt[h],hadEta[h],hadPhi[h],hadE[h]);
+    trHad[h]->SetVec(hadMom[h]);
+  };
+  this->GetDISObj();
+  objDihadron->SetEvent(trHad[qA],trHad[qB],objDIS);
+  return objDihadron;
+};
+
+DIS * EventTree::GetDISObj() {
+  objDIS->ResetVars();
+  eleMom.SetPtEtaPhiE(elePt,eleEta,elePhi,eleE);
+  trEle->SetVec(eleMom);
+  objDIS->SetElectron(trEle);
+  objDIS->Analyse();
+  return objDIS;
 };
 
 

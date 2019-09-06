@@ -85,6 +85,9 @@ class Dihadron : public TObject
     Float_t theta; // CoM-frame angle between Ph and P1
     //Float_t theta2; // CoM-frame angle between Ph and P2 (for testing)
 
+    // single-hadron PhiH
+    Float_t GetSingleHadronPhiH(Int_t h_idx);
+
 
     // PhiR angle
     // defined a couple different ways since transverse components of R vary in

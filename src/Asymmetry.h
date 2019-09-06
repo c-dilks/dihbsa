@@ -106,6 +106,8 @@ class Asymmetry : public TObject
       modSinPhiH,
       mod2dSinPhiR,
       mod2dWeightSinPhiHR,
+      modSinPhiA,
+      modSinPhiB,
       nMod
     };
     Int_t whichMod;
@@ -122,6 +124,7 @@ class Asymmetry : public TObject
     Float_t z;
     Float_t PhiH;
     Float_t PhiR;
+    Float_t PhiHsh;
     Float_t PhPerp;
     Float_t theta;
     Float_t pol;
@@ -222,6 +225,7 @@ class Asymmetry : public TObject
 
 
     RooRealVar *rfPhiH, *rfPhiR, *rfTheta;
+    RooRealVar *rfPhiHsh;
     RooRealVar *rfWeight;
     RooRealVar *rfPol, *rfRellum;
 

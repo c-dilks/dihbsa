@@ -6,7 +6,7 @@ using namespace std;
 
 
 DIS::DIS() {
-  printf("DIS instantiated\n");
+  //printf("DIS instantiated\n");
   debug = false;
   speedup = false;
 

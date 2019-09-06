@@ -23,6 +23,7 @@
 #include "Constants.h"
 #include "Trajectory.h"
 #include "DIS.h"
+#include "Dihadron.h"
 #include "Tools.h"
 
 
@@ -38,6 +39,10 @@ class EventTree : public TObject
     Int_t SpinState();
     Bool_t Valid();
     void PrintEvent();
+
+    Dihadron * GetDihadronObj();
+    DIS * GetDISObj();
+    
 
 
     Bool_t debug;
@@ -138,7 +143,13 @@ class EventTree : public TObject
 
     TRandom * RNG;
 
+    Dihadron * objDihadron;
+    DIS * objDIS;
+    Trajectory * trEle;
+    Trajectory * trHad[2];
+
     TLorentzVector photMom[2];
+    TLorentzVector hadMom[2];
     TLorentzVector eleMom;
 
 

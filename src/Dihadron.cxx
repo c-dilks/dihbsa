@@ -14,7 +14,7 @@ Dihadron::Dihadron() {
   vecPh = TLorentzVector(0,0,0,0);
   vecR = TLorentzVector(0,0,0,0);
 
-  printf("Dihadron instantiated\n");
+  //printf("Dihadron instantiated\n");
 };
 
 
@@ -217,6 +217,19 @@ void Dihadron::ComputeAngles() {
   // equation 9 in 1408.5721 (gliske, bacchetta, radici)
   PhiRp_g = PlaneAngle(pQ,pL,pQ,pR_T_byProj);
 };
+
+
+// MUST BE CALLED *AFTER* SetEvent()
+// returns "PhiH" angle for hadron h_idx
+Float_t Dihadron::GetSingleHadronPhiH(Int_t h_idx) {
+  if(h_idx==qA || h_idx==qB) return PlaneAngle(pQ,pL,pQ,pHad[h_idx]);
+  else {
+    fprintf(stderr,"ERROR: bad h_idx in GetSingleHadronPhiH\n");
+    return -10000;
+  }
+};
+
+
 
 
 // compute angle between planes given by
