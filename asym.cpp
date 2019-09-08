@@ -491,20 +491,16 @@ int main(int argc, char** argv) {
           // set spin state
           A->spinn = ev->SpinState();
 
-          // set single hadron PhiH values (only if needed)
-          // note that Z is also set here to be Z of the hadron, rather than dihadron
-          switch(whichModulation) {
-            case Asymmetry::modSinPhiA:
-              A->PhiHsh = ev->GetDihadronObj()->GetSingleHadronPhiH(qA);
-              A->z = ev->Z[qA];
-              break;
-            case Asymmetry::modSinPhiB:
-              A->PhiHsh = ev->GetDihadronObj()->GetSingleHadronPhiH(qB);
-              A->z = ev->Z[qB];
-              break;
-            default:
-              A->PhiHsh = -10000;
+
+          // set any test modulation variables
+          A->PhiTest = -10000;
+          /*
+          if(whichModulation == Asymmetry::modTest) {
+            A->PhiTest = ev->GetDihadronObj()->GetSingleHadronPhiH(qA);
+            A->z = ev->Z[qA];
           };
+          */
+          
 
           // add this event to Asymmetry data structures (event won't be added the bin
           // is not correct)

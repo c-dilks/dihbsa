@@ -106,8 +106,7 @@ class Asymmetry : public TObject
       modSinPhiH,
       mod2dSinPhiR,
       mod2dWeightSinPhiHR,
-      modSinPhiA,
-      modSinPhiB,
+      modTest,
       nMod
     };
     Int_t whichMod;
@@ -124,11 +123,12 @@ class Asymmetry : public TObject
     Float_t z;
     Float_t PhiH;
     Float_t PhiR;
-    Float_t PhiHsh;
     Float_t PhPerp;
     Float_t theta;
     Float_t pol;
     Int_t spinn;
+
+    Float_t PhiTest;
 
 
     // number of bins
@@ -225,7 +225,7 @@ class Asymmetry : public TObject
 
 
     RooRealVar *rfPhiH, *rfPhiR, *rfTheta;
-    RooRealVar *rfPhiHsh;
+    RooRealVar *rfPhiTest;
     RooRealVar *rfWeight;
     RooRealVar *rfPol, *rfRellum;
 

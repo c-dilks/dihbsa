@@ -66,15 +66,9 @@ Asymmetry::Asymmetry(
       modMax = PI + 0.2;
       aziMax = PI + 0.2;
       break;
-    case modSinPhiA:
-      ModulationTitle = "sin#phi_{A}";
-      ModulationName = "sinPhiA";
-      modMax = modMaxDefault;
-      aziMax = modMaxDefault;
-      break;
-    case modSinPhiB:
-      ModulationTitle = "sin#phi_{B}";
-      ModulationName = "sinPhiB";
+    case modTest:
+      ModulationTitle = "test modulation"; // for custum testing; search for '+++test'
+      ModulationName = "modTest";
       modMax = modMaxDefault;
       aziMax = modMaxDefault;
       break;
@@ -390,8 +384,8 @@ Bool_t Asymmetry::AddEvent() {
   if(PhiH<-PIe || PhiH>PIe) return KickEvent("PhiH out of range",PhiH);
   if(PhiR<-PIe || PhiR>PIe) return KickEvent("PhiR out of range",PhiR);
 
-  if((whichMod==modSinPhiA || whichMod==modSinPhiB) && (PhiHsh<-PIe || PhiHsh>PIe)) 
-    return KickEvent("PhiHsh out of range",PhiHsh);
+  if(whichMod==modTest && (PhiTest<-PIe || PhiTest>PIe)) 
+    return KickEvent("PhiTest out of range",PhiTest);
 
   if(PhPerp<-8000) return KickEvent("PhPerp out of range",PhPerp);
   if(theta<-0.1 || theta>PIe) return KickEvent("theta out of range",theta);
@@ -409,7 +403,7 @@ Bool_t Asymmetry::AddEvent() {
   // set RooFit vars
   rfPhiH->setVal(PhiH);
   rfPhiR->setVal(PhiR);
-  rfPhiHsh->setVal(PhiHsh);
+  rfPhiTest->setVal(PhiTest);
   rfWeight->setVal(weight);
   rfTheta->setVal(theta);
   rfSpinCateg->setLabel(rfSpinName[spinn]);
@@ -548,12 +542,12 @@ Bool_t Asymmetry::InitRooFit() {
   // - event vars
   rfPhiH = new RooRealVar("rfPhiH","#phi_{h}",-PIe,PIe);
   rfPhiR = new RooRealVar("rfPhiR","#phi_{R}",-PIe,PIe);
-  rfPhiHsh = new RooRealVar("rfPhiHsh","#phi_{H,sh}",-PIe,PIe);
+  rfPhiTest = new RooRealVar("rfPhiTest","#phi_{H,sh}",-PIe,PIe);
   rfTheta = new RooRealVar("rfTheta","#theta",-PIe,PIe);
   rfWeight = new RooRealVar("rfWeight","P_{h}^{T}/M_{h}",0,10);
 
   rfVars = new RooArgSet(*rfPhiH,*rfPhiR,*rfTheta);
-  if(whichMod==modSinPhiA || whichMod==modSinPhiB) rfVars->add(*rfPhiHsh);
+  if(whichMod==modTest) rfVars->add(*rfPhiTest);
   rfVars->add(*rfWeight);
   rfVars->add(*rfSpinCateg);
 
@@ -598,8 +592,7 @@ Bool_t Asymmetry::InitRooFit() {
   rfModulation[modSinPhiH] = "TMath::Sin(rfPhiH)";
   rfModulation[mod2dSinPhiR] = "TMath::Sin(rfPhiR)";
   rfModulation[mod2dWeightSinPhiHR] = "TMath::Sin(rfPhiH-rfPhiR)";
-  rfModulation[modSinPhiA] = "TMath::Sin(rfPhiHsh)";
-  rfModulation[modSinPhiB] = "TMath::Sin(rfPhiHsh)";
+  rfModulation[modTest] = "TMath::Sin(rfPhiTest)"; // +++test
 
   // -- define Legendre polynomials; note that these follow the PW expansion of DiFFs,
   //    so overall coefficients may differ slightly from the actual Legendre polynomials
@@ -712,7 +705,7 @@ Bool_t Asymmetry::InitRooFit() {
     rfParams[s] = new RooArgSet();
     if(rfPdfFormu[s].Contains("rfPhiH")) rfParams[s]->add(*rfPhiH);
     if(rfPdfFormu[s].Contains("rfPhiR")) rfParams[s]->add(*rfPhiR);
-    if(rfPdfFormu[s].Contains("rfPhiHsh")) rfParams[s]->add(*rfPhiHsh);
+    if(rfPdfFormu[s].Contains("rfPhiTest")) rfParams[s]->add(*rfPhiTest);
     if(rfPdfFormu[s].Contains("rfTheta")) rfParams[s]->add(*rfTheta);
     for(int aa=0; aa<nAmpUsed; aa++) rfParams[s]->add(*rfA[aa]);
     for(int dd=0; dd<nDparamUsed; dd++) rfParams[s]->add(*rfD[dd]);
@@ -879,11 +872,8 @@ Float_t Asymmetry::EvalModulation() {
     case mod2dWeightSinPhiHR:
       return -10000; // (not used if asym2d==true)
       break;
-    case modSinPhiA:
-      return TMath::Sin(PhiHsh); // (set to hadron A or B PhiHsh in asym.exe)
-      break;
-    case modSinPhiB:
-      return TMath::Sin(PhiHsh); // (set to hadron A or B PhiHsh in asym.exe)
+    case modTest:
+      return TMath::Sin(PhiTest); // +++test
       break;
     default:
       fprintf(stderr,"ERROR: bad phiModulation\n");
@@ -909,7 +899,7 @@ void Asymmetry::ResetVars() {
   z = -10000;
   PhiH = -10000;
   PhiR = -10000;
-  PhiHsh = -10000;
+  PhiTest = -10000;
   PhPerp = -10000;
   theta = -10000;
   spinn = -10000;
