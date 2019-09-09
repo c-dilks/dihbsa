@@ -115,9 +115,34 @@ void Dihadron::SetEvent(
   // -- in this frame, Ph=0, and the boost direction was along Ph
   // -- calculate theta as the angle between boosted hadron momentum
   //    and original Ph direction
-  theta = Tools::AngleSubtend(pHad_dihCom[qA],pPh); // P_h from fixed-target frame
-  //theta = Tools::AngleSubtend(pHad_dihCom[qA],pPh_com); // P_h from photon-target CoM
-  //theta2 = Tools::AngleSubtend(pHad_dihCom[qB],pPh); // == PI - theta
+  theta = Tools::AngleSubtend(pHad_dihCom[qA],pPh);
+  //thetaAlt = Tools::AngleSubtend(pHad_dihCom[qB],pPh); // == PI - theta
+  thetaAlt = Tools::AngleSubtend(pHad_dihCom[qA],pPh_com); // timothy's theta
+  // -- test calculation via breit frame Ph
+  /*
+  vecPh_breit = vecPh;
+  if(!useBreit) vecPh_breit.Boost(disEv->BreitBoost);
+  pPh_breit = vecPh_breit.Vect();
+  thetaAlt = Tools::AngleSubtend(pHad_dihCom[qA],pPh_breit); 
+  */
+
+
+  // calculate lorentz invariant theta (suggestion from Alessandro)
+  // -- first compute zeta
+  zeta = 2 * vecR.Dot(disVecTarget) / ( vecPh.Dot(disVecTarget) );
+  // -- then compute sqrt(M_k^2-|R|^2) for k=1,2
+  for(h=0; h<2; h++) 
+    MRterm[h] = TMath::Sqrt( vecHad[h].M2() + pR.Mag2() );
+  // -- then compute theta
+  thetaLI = TMath::ACos(  ( MRterm[qA] - MRterm[qB] - Mh*zeta ) / ( 2*pR.Mag() )  );
+
+  //printf("MRterm[qA]=%f  MRterm[qB]=%f\n",MRterm[qA],MRterm[qB]);
+  //printf("vecHad[qA].M=%f  vecHad[qB].M=%f\n",vecHad[qA].M(),vecHad[qB].M());
+  //printf("pRmag = %f\n",pR.Mag());
+  printf("theta=%f  thetaAlt=%f  thetaLI=%f  zeta=%f\n",
+    theta,thetaAlt,thetaLI,zeta);
+
+
 
   if(debugTheta) {
     printf("========== theta calculation:\n");
