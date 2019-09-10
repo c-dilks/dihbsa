@@ -1,3 +1,5 @@
+// draws 1D distributions from a single run, using output from kinVsRun.cpp
+
 R__LOAD_LIBRARY(DihBsa)
 
 #include "Constants.h"

@@ -1,3 +1,9 @@
+// compare MC generated and reconstructed distributions; use diagnostics.exe
+// to generate plots.root files for generated set and for reconstructed set:
+// - diagnostics.exe outroot.MC.gen 0x34 && mv plots{,.gen}.root
+// - diagnostics.exe outroot.MC.rec 0x34 && mv plots{,.rec}.root
+// - root MCcompare.C
+
 R__LOAD_LIBRARY(DihBsa)
 
 #include "Constants.h"
@@ -13,7 +19,7 @@ TFile * infile[2];
 TH1D * Fetch(Int_t f_,TString n_);
 void Acceptance(TH1D ** dists_);
 
-void CompareMC(TString fGen="plots.gen.root",
+void MCcompare(TString fGen="plots.gen.root",
                TString fRec="plots.rec.root"
 ) {
 

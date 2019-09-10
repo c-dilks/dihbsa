@@ -288,6 +288,9 @@ void EventTree::PrintEvent() {
 };
 
 
+
+
+// use hadron kinematics to reconstruct Dihadron object
 Dihadron * EventTree::GetDihadronObj() {
   objDihadron->ResetVars();
   for(int h=0; h<2; h++) {
@@ -299,6 +302,7 @@ Dihadron * EventTree::GetDihadronObj() {
   return objDihadron;
 };
 
+// use electron kinematics to reconstruct DIS object
 DIS * EventTree::GetDISObj() {
   objDIS->ResetVars();
   eleMom.SetPtEtaPhiE(elePt,eleEta,elePhi,eleE);
@@ -307,6 +311,41 @@ DIS * EventTree::GetDISObj() {
   objDIS->Analyse();
   return objDIS;
 };
+
+
+// build map : evnum -> tree entry num
+// -- return true if successful
+// -- only maps events with pairType specified in constructor
+Bool_t EventTree::BuildEvnumMap() {
+  printf("building evnumMap...\n");
+  for(int i=0; i<ENT; i++) {
+    chain->GetEntry(i);
+    if(Tools::PairSame(hadIdx[qA],hadIdx[qB],whichHad[qA],whichHad[qB])) {
+      inserted = evnumMap.insert(std::pair<Int_t,Int_t>(evnum,i)).second;
+      if(!inserted) {
+        fprintf(stderr,"ERROR: BuildEvnumMap found duplicate event %d (i=%d)\n",evnum,i);
+        return false;
+      };
+    };
+  };
+  return true;
+};
+
+// find event using evnumMap; BuildEvnumMap MUST be (successfully) called before using this
+Bool_t EventTree::FindEvent(Int_t evnum_) {
+  foundIt = evnumMap.find(evnum_);
+  if(foundIt!=evnumMap.end()) {
+    this->GetEvent(foundIt->second);
+    return true;
+  } else return false;
+};
+
+
+  
+
+
+
+
 
 
 EventTree::~EventTree() {

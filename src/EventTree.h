@@ -42,8 +42,9 @@ class EventTree : public TObject
 
     Dihadron * GetDihadronObj();
     DIS * GetDISObj();
-    
 
+    Bool_t BuildEvnumMap();
+    Bool_t FindEvent(Int_t evnum_);
 
     Bool_t debug;
     Long64_t ENT;
@@ -151,6 +152,10 @@ class EventTree : public TObject
     TLorentzVector photMom[2];
     TLorentzVector hadMom[2];
     TLorentzVector eleMom;
+
+    std::map<Int_t,Int_t> evnumMap;
+    bool inserted;
+    std::map<Int_t,Int_t>::iterator foundIt;
 
 
   ClassDef(EventTree,1);
