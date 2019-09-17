@@ -14,14 +14,6 @@
 
 int main(int argc, char** argv) {
 
-#ifdef HIPO_VERSION
-  printf("%s compiled with HIPO_VERSION = %d\n",argv[0],HIPO_VERSION);
-#else
-  fprintf(stderr,"ERROR: HIPO_VERSION preprocessor macro undefined\n");
-  exit(0);
-#endif
-
-
   // ARGUMENTS
   TString infileN;
   if(argc<=1) {
@@ -34,20 +26,7 @@ int main(int argc, char** argv) {
   hipo::dictionary factory;
 
 
-#if HIPO_VERSION == 3
-
-  /*
-  hipo::reader reader; // HIPO3
-  reader.open(infileN.Data());
-  reader.readDictionary(factory);
-  factory.show();
-  */
-  fprintf(stderr,"HIPO3 not implemented yet\n");
-  return 0;
-
-#elif HIPO_VERSION == 4
-
-  clas12::clas12reader c12reader(infileN.Data()); // HIPO4
+  clas12::clas12reader c12reader(infileN.Data()); 
   c12reader.getReader().readDictionary(factory);
   factory.show();
 
@@ -69,10 +48,5 @@ int main(int argc, char** argv) {
     };
   };
   */
-
-#endif
-
-
-
 
 };

@@ -29,14 +29,6 @@
 
 int main(int argc, char** argv) {
 
-#ifdef HIPO_VERSION
-   printf("%s compiled with HIPO_VERSION = %d\n",argv[0],HIPO_VERSION);
-#else
-   fprintf(stderr,"ERROR: HIPO_VERSION preprocessor macro undefined\n");
-   exit(0);
-#endif
-
-   
    // ARGUMENTS
    TString infileN;
    Bool_t augerMode = false;
@@ -251,45 +243,7 @@ int main(int argc, char** argv) {
 
 
    // define HIPO file reader and banks
-#if HIPO_VERSION == 3
-   // reader
-   hipo::reader reader; // HIPO3
-   reader.open(infileN.Data());
-
-   // particle bank
-   // -- for HIPO3, need to use general bank rather than clas12::particle
-   //    (see log 14.6.19 for details; seems HIPO3's clas12::particle is a bit broken)
-   hipo::bank particleBank("REC::Particle",reader);  // HIPO3
-   Int_t o_pid = particleBank.getn("pid");
-   Int_t o_px = particleBank.getn("px");
-   Int_t o_py = particleBank.getn("py");
-   Int_t o_pz = particleBank.getn("pz");
-   /*
-   clas12::particle particleBank("REC::Particle",reader); // see log 14.6.19
-   particleBank.init("REC::Particle",reader); // init needs to be called in HIPO3 version
-   */
-
-   // event and run config banks
-   // -- In Hipo3 Clas12Tool code, to access contents of bank entries, the entry order
-   //    number within the bank is needed, which can only be obtained by
-   //    Clas12Tool/Hipo3/bank::getEntryOrder, a protected method.
-   //
-   // -- simple workaround: add the following public method to Hipo3/bank.h:
-   //
-   //   int getn(const char *e) { return getEntryOrder(e); };
-   //
-   // -- in Hipo4/bank.h, bank entries are now accessible by name
-   //
-   hipo::bank configBank("RUN::config",reader); // HIPO3
-   hipo::bank evBank("REC::Event",reader); // HIPO3
-   Int_t o_torus = configBank.getn("torus"); // torus in/outbending
-   Int_t o_triggerBits = configBank.getn("trigger"); // trigger bits
-   Int_t o_evnum = evBank.getn("NEVENT"); // event #
-   Int_t o_runnum = evBank.getn("NRUN"); // run #
-   Int_t o_helicity = evBank.getn("Helic"); // e- helicity
-
-#elif HIPO_VERSION == 4
-   clas12::clas12reader reader(infileN.Data()); // HIPO4
+   clas12::clas12reader reader(infileN.Data());
    /*
    printf("BEGIN TEST DICTIONARY READ\n");
    hipo::dictionary factory;
@@ -298,9 +252,6 @@ int main(int argc, char** argv) {
    hipo::event readerEvent;
    hipo::bank mcLund(factory.getSchema("MC::Lund"));
    */
-#endif
-
-   
 
 
    // define observable variables
@@ -367,17 +318,6 @@ int main(int argc, char** argv) {
 
 
      // read event-header stuff
-     //    TODO: I'm guessing the same HIPO4 accessors now exist for the HIPO3 version
-     //    of Clas12Tool, so we may be able to get rid of this preprocessor conditional
-#if HIPO_VERSION == 3
-     evnum = evBank.getInt(o_evnum,0); // -->tree
-     runnum = evBank.getInt(o_runnum,0); // -->tree
-     helicity = evBank.getInt(o_helicity,0); // -->tree
-     triggerBits = configBank.getLong(o_triggerBits,0); // -->tree
-     torus = configBank.getFloat(o_torus,0); // -->tree
-     torus = -10000;
-     solenoid = -10000;
-#elif HIPO_VERSION == 4
      evnum = reader.runconfig()->getEvent(); // -->tree
      runnum = reader.runconfig()->getRun(); // -->tree
      helicity = reader.event()->getHelicity(); // -->tree
@@ -385,8 +325,6 @@ int main(int argc, char** argv) {
      torus = reader.runconfig()->getTorus(); // -->tree
      solenoid = reader.runconfig()->getSolenoid(); // -->tree
      //printf("schema name = %s\n",reader.head()->getSchema().getName().data());
-#endif
-
 
      if(debug) Tools::PrintSeparator(30);
      //if(debug) particleBank.show(); // causes segfault!
@@ -409,23 +347,7 @@ int main(int argc, char** argv) {
      // ---------------------------------------------------
      // -- read in each particle and put them into trajArr, which will be sorted
      //    afterward
-     // -- the way we loop through particles differs between HIPO versions (for now...)
-     //    TODO: I'm guessing the same HIPO4 particle momentum accessors now exist for
-     //    the HIPO3 version of Clas12Tool, so we may be able to get rid of this
-     //    preprocessor conditional
      
-#if HIPO_VERSION == 3
-     particleCntAll = particleBank.getSize(); // -->tree
-     if(debug) printf("particleBank.getSize() = %d\n",particleBank.getSize());
-     for(int i=0; i<particleCntAll; i++) {
-
-       // get particle PID and momentum components
-       pidCur = particleBank.getInt(o_pid,i);
-       vecObsP[eX] = particleBank.getFloat(o_px,i);
-       vecObsP[eY] = particleBank.getFloat(o_py,i);
-       vecObsP[eZ] = particleBank.getFloat(o_pz,i);
-
-#elif HIPO_VERSION == 4
      // reconstructed particles
      ///*
      particleCntAll = reader.getNParticles(); // -->tree
@@ -470,9 +392,6 @@ int main(int argc, char** argv) {
        vecObsP[eY] = mcLund.getFloat("py",rr);
        vecObsP[eZ] = mcLund.getFloat("pz",rr);
        */
-
-
-#endif
 
 
        // convert PID to local particle index; if it's not defined in Constants.h, pIdx

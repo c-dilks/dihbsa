@@ -18,8 +18,6 @@
 
 
 
-#if HIPO_VERSION == 4
-
 int main(int argc, char** argv) {
 
    // ARGUMENTS
@@ -144,11 +142,3 @@ int main(int argc, char** argv) {
    outfile->Close();
    printf("\n%s written\n\n",outfileN.Data());
 };
-
-
-#else
-int main(int argc, char** argv) {
-  fprintf(stderr,"ERROR: must use HIPO_VERSION == 4\n");
-  exit(0);
-};
-#endif
