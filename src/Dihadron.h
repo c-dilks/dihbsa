@@ -81,6 +81,9 @@ class Dihadron : public TObject
     Float_t Mmiss; // missing mass
     Float_t xF; // feynman-x
     Float_t hadXF[2]; // feynman-x for each hadron
+    Float_t hadVertex[2][3]; // vertex
+    Float_t hadChi2pid[2]; // chi2 of PID
+
     Float_t alpha; // dihadron opening angle
     Float_t zeta; // lab-frame energy sharing
     Float_t theta; // CoM-frame angle between Ph and P1

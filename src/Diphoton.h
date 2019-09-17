@@ -43,6 +43,8 @@ class Diphoton : public TObject
     Float_t photPt[2];
     Float_t photEta[2];
     Float_t photPhi[2];
+    Float_t photVertex[2][3];
+    Float_t photChi2pid[2];
 
     // diphoton variables
     Float_t E; // energy of the pair

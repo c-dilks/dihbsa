@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
      outfileN(TRegexp("hipo$")) = "root";
    };
    printf("outfileN = %s\n",outfileN.Data());
-   TFile outfile(outfileN,"RECREATE");
+   TFile * outfile = new TFile(outfileN,"RECREATE");
 
 
    // load libs
@@ -132,6 +132,8 @@ int main(int argc, char** argv) {
    tree->Branch("elePt",&(disEv->elePt),"elePt/F");
    tree->Branch("eleEta",&(disEv->eleEta),"eleEta/F");
    tree->Branch("elePhi",&(disEv->elePhi),"elePhi/F");
+   tree->Branch("eleVertex",disEv->eleVertex,"eleVertex[3]/F");
+   tree->Branch("eleChi2pid",&(disEv->eleChi2pid),"eleChi2pid/F");
 
 
    // miscellaneous branches for classifying the type of observables
@@ -164,6 +166,8 @@ int main(int argc, char** argv) {
    tree->Branch("hadEta",hadEta,"hadEta[2]/F");
    tree->Branch("hadPhi",hadPhi,"hadPhi[2]/F");
    tree->Branch("hadXF",dih->hadXF,"hadXF[2]/F");
+   tree->Branch("hadVertex",dih->hadVertex,"hadVertex[2][3]/F");
+   tree->Branch("hadChi2pid",dih->hadChi2pid,"hadChi2pid[2]/F");
 
    // dihadron branches
    tree->Branch("Mh",&(dih->Mh),"Mh/F");
@@ -213,19 +217,23 @@ int main(int argc, char** argv) {
    //    - diphCnt=2: both dihadron hadrons are diphotons (pi0-pi0, pi0-BG, or BG-BG)
    Int_t diphCnt,diphCnt_tr;
    Float_t diphPhotE[2][2], diphPhotPt[2][2], diphPhotEta[2][2], diphPhotPhi[2][2];
+   Float_t diphPhotVertex[2][2][3];
+   Float_t diphPhotChi2pid[2][2];
    Float_t diphE[2], diphZ[2], diphPt[2], diphM[2], diphAlpha[2], diphEta[2], diphPhi[2];
    tree->Branch("diphCnt",&diphCnt_tr,"diphCnt/I"); // number of diphotons {0,1,2}
-   tree->Branch("diphPhotE",   diphPhotE,   "diphPhotE[diphCnt][2]/F"); // photon energy
-   tree->Branch("diphPhotPt",  diphPhotPt,  "diphPhotPt[diphCnt][2]/F"); // photon pT
-   tree->Branch("diphPhotEta", diphPhotEta, "diphPhotEta[diphCnt][2]/F"); // photon eta
-   tree->Branch("diphPhotPhi", diphPhotPhi, "diphPhotPhi[diphCnt][2]/F"); // photon phi
-   tree->Branch("diphE",     diphE,     "diphE[diphCnt]/F"); // energy
-   tree->Branch("diphZ",     diphZ,     "diphZ[diphCnt]/F"); // energy imbalance
-   tree->Branch("diphPt",    diphPt,    "diphPt[diphCnt]/F"); // pT
-   tree->Branch("diphM",     diphM,     "diphM[diphCnt]/F"); // invariant mass
-   tree->Branch("diphAlpha", diphAlpha, "diphAlpha[diphCnt]/F"); // opening angle
-   tree->Branch("diphEta",   diphEta,   "diphEta[diphCnt]/F"); // eta
-   tree->Branch("diphPhi",   diphPhi,   "diphPhi[diphCnt]/F"); // pT
+   tree->Branch("diphPhotE",diphPhotE,"diphPhotE[diphCnt][2]/F"); // photon energy
+   tree->Branch("diphPhotPt",diphPhotPt,"diphPhotPt[diphCnt][2]/F"); // photon pT
+   tree->Branch("diphPhotEta",diphPhotEta,"diphPhotEta[diphCnt][2]/F"); // photon eta
+   tree->Branch("diphPhotPhi",diphPhotPhi,"diphPhotPhi[diphCnt][2]/F"); // photon phi
+   tree->Branch("diphPhotVertex",diphPhotVertex,"diphPhotVertex[diphCnt][2][3]/F"); // photon vertex
+   tree->Branch("diphPhotChi2pid",diphPhotChi2pid,"diphPhotChi2pid[diphCnt][2]/F"); // photon pid chi2
+   tree->Branch("diphE",diphE,"diphE[diphCnt]/F"); // energy
+   tree->Branch("diphZ",diphZ,"diphZ[diphCnt]/F"); // energy imbalance
+   tree->Branch("diphPt",diphPt,"diphPt[diphCnt]/F"); // pT
+   tree->Branch("diphM",diphM,"diphM[diphCnt]/F"); // invariant mass
+   tree->Branch("diphAlpha",diphAlpha,"diphAlpha[diphCnt]/F"); // opening angle
+   tree->Branch("diphEta",diphEta,"diphEta[diphCnt]/F"); // eta
+   tree->Branch("diphPhi",diphPhi,"diphPhi[diphCnt]/F"); // pT
 
    // miscellaneous event-header branches
    Int_t evnum,runnum;
@@ -297,7 +305,11 @@ int main(int argc, char** argv) {
 
    // define observable variables
    TLorentzVector vecObs; // observable 4-momentum
-   Float_t vecObsPx,vecObsPy,vecObsPz;
+   Float_t vecObsP[3];
+   Float_t vertex[3];
+   Float_t chi2pid;
+
+
    Int_t pidCur,pIdx;
    Int_t i1,i2;
 
@@ -409,9 +421,9 @@ int main(int argc, char** argv) {
 
        // get particle PID and momentum components
        pidCur = particleBank.getInt(o_pid,i);
-       vecObsPx = particleBank.getFloat(o_px,i);
-       vecObsPy = particleBank.getFloat(o_py,i);
-       vecObsPz = particleBank.getFloat(o_pz,i);
+       vecObsP[eX] = particleBank.getFloat(o_px,i);
+       vecObsP[eY] = particleBank.getFloat(o_py,i);
+       vecObsP[eZ] = particleBank.getFloat(o_pz,i);
 
 #elif HIPO_VERSION == 4
      // reconstructed particles
@@ -421,9 +433,13 @@ int main(int argc, char** argv) {
      for(auto & part : reader.getDetParticles()) {
        // get particle PID and momentum components
        pidCur = part->getPid();
-       vecObsPx = part->par()->getPx();
-       vecObsPy = part->par()->getPy();
-       vecObsPz = part->par()->getPz();
+       vecObsP[eX] = part->par()->getPx();
+       vecObsP[eY] = part->par()->getPy();
+       vecObsP[eZ] = part->par()->getPz();
+       vertex[eX] = part->par()->getVx();
+       vertex[eY] = part->par()->getVy();
+       vertex[eZ] = part->par()->getVz();
+       chi2pid = part->par()->getChi2Pid();
        //*/
        
      // MC::Lund particles -- NEW
@@ -432,9 +448,13 @@ int main(int argc, char** argv) {
      particleCntAll = (*(reader.mcparts())).getRows(); // -->tree
      for(int rr=0; rr<particleCntAll; rr++) {
        pidCur = (*(reader.mcparts())).getPid(rr);
-       vecObsPx = (*(reader.mcparts())).getPx(rr);
-       vecObsPy = (*(reader.mcparts())).getPy(rr);
-       vecObsPz = (*(reader.mcparts())).getPz(rr);
+       vecObsP[eX] = (*(reader.mcparts())).getPx(rr);
+       vecObsP[eY] = (*(reader.mcparts())).getPy(rr);
+       vecObsP[eZ] = (*(reader.mcparts())).getPz(rr);
+       vertex[eX] = (*(reader.mcparts())).getVx(rr);
+       vertex[eY] = (*(reader.mcparts())).getVy(rr);
+       vertex[eZ] = (*(reader.mcparts())).getVz(rr);
+       chi2pid = (*(reader.mcparts())).getChi2Pid(rr);
        */
 
      // MC::Lund particles -- DEPRECATED
@@ -446,9 +466,9 @@ int main(int argc, char** argv) {
      //printf("mcLund.getRows() = %d\n",particleCntAll);
      for(int rr=0; rr<particleCntAll; rr++) {
        pidCur = mcLund.getInt("pid",rr);
-       vecObsPx = mcLund.getFloat("px",rr);
-       vecObsPy = mcLund.getFloat("py",rr);
-       vecObsPz = mcLund.getFloat("pz",rr);
+       vecObsP[eX] = mcLund.getFloat("px",rr);
+       vecObsP[eY] = mcLund.getFloat("py",rr);
+       vecObsP[eZ] = mcLund.getFloat("pz",rr);
        */
 
 
@@ -472,13 +492,17 @@ int main(int argc, char** argv) {
            
            // make sure particle has sensible momentum (!=NaN)
            // (sometimes photons in dnp2018 skim files don't...)
-           if( !isnan(vecObsPx) && !isnan(vecObsPy) && !isnan(vecObsPz) ) {
+           if( !isnan(vecObsP[eX]) && !isnan(vecObsP[eY]) && !isnan(vecObsP[eZ]) ) {
 
              // set tr to allocated Trajectory instance and add it to the unsorted array
              tr = traj[pIdx][trajCnt[pIdx]]; 
-             vecObs.SetXYZM(vecObsPx,vecObsPy,vecObsPz,PartMass(pIdx));
+             vecObs.SetXYZM(vecObsP[eX],vecObsP[eY],vecObsP[eZ],PartMass(pIdx));
              tr->SetVec(vecObs);
+             tr->SetVertex(vertex[eX],vertex[eY],vertex[eZ]);
+             tr->chi2pid = chi2pid;
+
              trajArrUS[pIdx]->AddLast(tr);
+
 
              // add this trajectory's energy to the energy array
              trajE[pIdx][trajCnt[pIdx]] = vecObs.E();
@@ -648,6 +672,10 @@ int main(int argc, char** argv) {
            diphPhotPt[dp][h] = diPhot[dp]->photPt[h]; // -->tree
            diphPhotEta[dp][h] = diPhot[dp]->photEta[h]; // -->tree
            diphPhotPhi[dp][h] = diPhot[dp]->photPhi[h]; // -->tree
+           diphPhotChi2pid[dp][h] = diPhot[dp]->photChi2pid[h]; // -->tree
+           for(int c=0; c<3; c++) {
+             diphPhotVertex[dp][h][c] = diPhot[dp]->photVertex[h][c]; // -->tree
+           };
          };
          diphE[dp] = diPhot[dp]->E; // -->tree
          diphZ[dp] = diPhot[dp]->Z; // -->tree
@@ -792,7 +820,7 @@ int main(int argc, char** argv) {
 
    // write output tree
    printf("writing tree...\n");
-   outfile.cd();
+   outfile->cd();
    tree->Write("tree");
    printf("tree written\n");
 
@@ -817,5 +845,5 @@ int main(int argc, char** argv) {
 
 
    // close the output ROOT file
-   outfile.Close();
+   outfile->Close();
 };

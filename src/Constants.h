@@ -10,6 +10,10 @@ static Double_t PI = TMath::Pi();
 static Double_t PIe = TMath::Pi() + 0.3;
 
 
+// useful enumerators
+enum xyz_enum { eX, eY, eZ };
+
+
 // particles constants
 // ---------------------------------------------------
 
@@ -278,6 +282,7 @@ static TString PairHadName(Int_t p1, Int_t p2, Int_t h) {
 };
 static TString PairHadTitle(Int_t p1, Int_t p2, Int_t h) {
   TString ret = PartTitle(dihHadIdx(p1,p2,h));
+  if(ret=="#gamma#gamma") ret="#pi^{0}"; // change \gamma\gamma to \pi^0
   if(p1==p2) ret = Form("%s_{%d}",ret.Data(),h+1);
   return ret;
 };

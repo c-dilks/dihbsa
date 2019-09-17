@@ -22,8 +22,21 @@ Binning::Binning(Int_t pairType_) {
   // -- mass
   AddBinBound(vM,minIV[vM]);
   if(numKaons==0) {
+    /*
     AddBinBound(vM,0.4);
     AddBinBound(vM,0.8);
+    */
+    /*
+    AddBinBound(vM,0.4);
+    AddBinBound(vM,0.6);
+    AddBinBound(vM,0.8);
+    AddBinBound(vM,1.0);
+    AddBinBound(vM,1.2);
+    AddBinBound(vM,1.5);
+    */
+    ///*
+    AddBinBound(vM,0.77); // rho mass
+    //*/
   } else if(numKaons==1) {
     AddBinBound(vM,0.85);
     AddBinBound(vM,1.1);

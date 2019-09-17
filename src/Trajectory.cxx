@@ -15,6 +15,10 @@ Trajectory::Trajectory(Int_t particle_index) {
     0.0,
     PartMass(Idx) > 0 ? PartMass(Idx) : 0.0
   );
+
+  Vertex.SetXYZ(-10000,-10000,-10000);
+  chi2pid = -10000;
+
   if(debug) printf("Trajectory instantiated\n");
 };
 
@@ -27,6 +31,8 @@ void Trajectory::SetMomentum(Float_t px, Float_t py, Float_t pz) {
     PartMass(Idx) > 0 ? PartMass(Idx) : 0.0
   );
 };
+
+
 
 
 // calcuate momentum transverse to q, denoted "Ptq" or "pTq"

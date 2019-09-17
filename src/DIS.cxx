@@ -43,6 +43,10 @@ void DIS::SetElectron(Trajectory * tr) {
   elePt = vecElectron.Pt();
   eleEta = vecElectron.Eta();
   elePhi = vecElectron.Phi();
+  eleChi2pid = tr->chi2pid;
+  eleVertex[eX] = (tr->Vertex).X();
+  eleVertex[eY] = (tr->Vertex).Y();
+  eleVertex[eZ] = (tr->Vertex).Z();
 };
 
 

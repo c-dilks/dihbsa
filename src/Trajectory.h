@@ -43,6 +43,10 @@ class Trajectory : public TObject
     Int_t Idx;
     TLorentzVector Vec;
 
+    TVector3 Vertex;
+    void SetVertex(Float_t vx, Float_t vy, Float_t vz) { Vertex.SetXYZ(vx,vy,vz); };
+    Float_t chi2pid;
+
 
     Bool_t debug;
     

@@ -31,6 +31,10 @@ void Diphoton::SetEvent(Trajectory * traj1, Trajectory * traj2) {
     photPt[h] = (photon[h]->Vec).Pt();
     photEta[h] = (photon[h]->Vec).Eta();
     photPhi[h] = (photon[h]->Vec).Phi();
+    photChi2pid[h] = photon[h]->chi2pid;
+    photVertex[h][eX] = (photon[h]->Vertex).X();
+    photVertex[h][eY] = (photon[h]->Vertex).Y();
+    photVertex[h][eZ] = (photon[h]->Vertex).Z();
   };
   E = vecDiphoton.E();
 
@@ -79,6 +83,7 @@ void Diphoton::ResetVars() {
     photPt[h] = -10000;
     photEta[h] = -10000;
     photPhi[h] = -10000;
+    for(int c=0; c<3; c++) photVertex[h][c] = -10000;
   };
   E = -10000;
   Z = -10000;
