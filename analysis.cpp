@@ -320,7 +320,6 @@ int main(int argc, char** argv) {
      // read event-header stuff
      evnum = reader.runconfig()->getEvent(); // -->tree
      runnum = reader.runconfig()->getRun(); // -->tree
-     helicity = reader.event()->getHelicity(); // -->tree
      triggerBits = reader.runconfig()->getTrigger(); // -->tree
      torus = reader.runconfig()->getTorus(); // -->tree
      solenoid = reader.runconfig()->getSolenoid(); // -->tree
@@ -341,6 +340,13 @@ int main(int argc, char** argv) {
        };
      };
 
+
+     // HELICITY     // -->tree
+     // ---------------------------------------------------
+     helicity = reader.event()->getHelicity(); // from REC::Event.helicity bank
+     // MC generated: use RNG to "inject" a helicity
+     // MC reconstructed: use event matching to get injected helicity
+
      
      // ---------------------------------------------------
      // PARTICLE LOOP
@@ -348,8 +354,9 @@ int main(int argc, char** argv) {
      // -- read in each particle and put them into trajArr, which will be sorted
      //    afterward
      
+     
      // reconstructed particles
-     ///*
+     /*
      particleCntAll = reader.getNParticles(); // -->tree
      if(debug) printf("reader.getNParticles() = %d\n",particleCntAll);
      for(auto & part : reader.getDetParticles()) {
@@ -362,37 +369,22 @@ int main(int argc, char** argv) {
        vertex[eY] = part->par()->getVy();
        vertex[eZ] = part->par()->getVz();
        chi2pid = part->par()->getChi2Pid();
-       //*/
+       */
        
-     // MC::Lund particles -- NEW
-     /*
+     // MC::Lund particles
+     ///*
      useLund = true;
-     particleCntAll = (*(reader.mcparts())).getRows(); // -->tree
+     particleCntAll = (reader.mcparts())->getRows(); // -->tree
      for(int rr=0; rr<particleCntAll; rr++) {
-       pidCur = (*(reader.mcparts())).getPid(rr);
-       vecObsP[eX] = (*(reader.mcparts())).getPx(rr);
-       vecObsP[eY] = (*(reader.mcparts())).getPy(rr);
-       vecObsP[eZ] = (*(reader.mcparts())).getPz(rr);
-       vertex[eX] = (*(reader.mcparts())).getVx(rr);
-       vertex[eY] = (*(reader.mcparts())).getVy(rr);
-       vertex[eZ] = (*(reader.mcparts())).getVz(rr);
-       chi2pid = (*(reader.mcparts())).getChi2Pid(rr);
-       */
-
-     // MC::Lund particles -- DEPRECATED
-     /*
-     useLund = true;
-     reader.getReader().read(readerEvent);
- 		 readerEvent.getStructure(mcLund);
-     particleCntAll = mcLund.getRows(); // -->tree
-     //printf("mcLund.getRows() = %d\n",particleCntAll);
-     for(int rr=0; rr<particleCntAll; rr++) {
-       pidCur = mcLund.getInt("pid",rr);
-       vecObsP[eX] = mcLund.getFloat("px",rr);
-       vecObsP[eY] = mcLund.getFloat("py",rr);
-       vecObsP[eZ] = mcLund.getFloat("pz",rr);
-       */
-
+       pidCur = (reader.mcparts())->getPid(rr);
+       vecObsP[eX] = (reader.mcparts())->getPx(rr);
+       vecObsP[eY] = (reader.mcparts())->getPy(rr);
+       vecObsP[eZ] = (reader.mcparts())->getPz(rr);
+       vertex[eX] = (reader.mcparts())->getVx(rr);
+       vertex[eY] = (reader.mcparts())->getVy(rr);
+       vertex[eZ] = (reader.mcparts())->getVz(rr);
+       chi2pid = -10000;
+       //*/
 
        // convert PID to local particle index; if it's not defined in Constants.h, pIdx
        // will be -10000 and this particle will be ignored
