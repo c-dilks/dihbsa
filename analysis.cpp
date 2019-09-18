@@ -10,6 +10,7 @@
 #include "TRegexp.h"
 #include "TObjArray.h"
 #include "TLorentzVector.h"
+#include "TRandom.h"
 
 
 // Clas12Tool
@@ -265,8 +266,15 @@ int main(int argc, char** argv) {
    Int_t i1,i2;
 
    Bool_t foundObservablePair;
-   Bool_t useLund = false;
    Int_t whichEle;
+
+
+   // variables for MC studies
+   Bool_t useLund = false;
+   Bool_t printWarning = true;
+   Float_t asymInject,ampInject;
+   TRandom * RNG = new TRandom(14972);
+   Float_t rand;
 
 
    // photon pair ("php") variables
@@ -341,11 +349,8 @@ int main(int argc, char** argv) {
      };
 
 
-     // HELICITY     // -->tree
-     // ---------------------------------------------------
-     helicity = reader.event()->getHelicity(); // from REC::Event.helicity bank
-     // MC generated: use RNG to "inject" a helicity
-     // MC reconstructed: use event matching to get injected helicity
+     // HELICITY
+     helicity = reader.event()->getHelicity(); // -->tree
 
      
      // ---------------------------------------------------
@@ -699,6 +704,28 @@ int main(int argc, char** argv) {
              if(diphCnt>0) {
                if(hadIdx[qA]==kDiph || hadIdx[qB]==kDiph) diphCnt_tr = 1; // -->tree
                if(hadIdx[qA]==kDiph && hadIdx[qB]==kDiph) diphCnt_tr = 2; // -->tree
+             };
+
+
+
+             // MC helicity injection
+             if(useLund) {
+
+               // compute injected asymmetry
+               ampInject = 0.03;
+               asymInject = ampInject * TMath::Sin(dih->PhiH - dih->PhiRp);
+
+               // helicity re-assignment:  2 = spin -   3 = spin +
+               rand = RNG->Rndm();
+               helicity = rand < 0.5*(1+asymInject) ? 3 : 2;
+
+               // print a warning (to prevent from accidentally altering the helicity of
+               // real data)
+               if(printWarning) {
+                 fprintf(stderr,"WARNING WARNING WARNING: ");
+                 fprintf(stderr,"helicity has been altered!!!!!\n");
+                 printWarning = false;
+               };
              };
 
 

@@ -238,6 +238,14 @@ Int_t EventTree::SpinState() {
       default: fprintf(stderr,"WARNING: bad SpinState request: %d\n",helicity);
     };
   }
+  else if(runnum==11) {
+    // MC convention (from injected asymmetries)
+    switch(helicity) {
+      case 2: return sM;
+      case 3: return sP;
+      default: fprintf(stderr,"WARNING: bad SpinState request: %d\n",helicity);
+    };
+  }
   else fprintf(stderr,"WARNING: runnum %d not in EventTree::SpinState\n",runnum);
   return -10000;
 };
