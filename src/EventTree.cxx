@@ -243,6 +243,7 @@ Int_t EventTree::SpinState() {
     switch(helicity) {
       case 2: return sM;
       case 3: return sP;
+      case 0: return -10000;
       default: fprintf(stderr,"WARNING: bad SpinState request: %d\n",helicity);
     };
   }
@@ -323,7 +324,6 @@ DIS * EventTree::GetDISObj() {
 
 // build map : evnum -> tree entry num
 // -- return true if successful
-// -- only maps events with pairType specified in constructor
 Bool_t EventTree::BuildEvnumMap() {
   printf("building evnumMap...\n");
   for(int i=0; i<ENT; i++) {

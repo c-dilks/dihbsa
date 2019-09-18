@@ -26,6 +26,7 @@
 #include "Trajectory.h"
 #include "Dihadron.h"
 #include "Diphoton.h"
+#include "EventTree.h"
 
 
 int main(int argc, char** argv) {
@@ -33,12 +34,14 @@ int main(int argc, char** argv) {
    // ARGUMENTS
    TString infileN;
    Bool_t augerMode = false;
+   Bool_t MCrecMode = false;
    if(argc<=1) {
      printf("USAGE: %s [hipo file]\n",argv[0]);
      exit(0);
    };
    if(argc>1) infileN = TString(argv[1]);
-   if(argc>2) augerMode = true;
+   if(argc>2) augerMode = (Bool_t) strtof(argv[2],NULL);
+   if(argc>3) MCrecMode = (Bool_t) strtof(argv[3],NULL);
 
 
    // debugging flags
@@ -48,8 +51,7 @@ int main(int argc, char** argv) {
 
 
 
-
-   // set output file
+   // set output ROOT file
    TString outfileN;
    if(augerMode) outfileN = "outroot.root";
    else {
@@ -266,15 +268,36 @@ int main(int argc, char** argv) {
    Int_t i1,i2;
 
    Bool_t foundObservablePair;
+   Bool_t printPi0Warning = true;
    Int_t whichEle;
 
 
-   // variables for MC studies
-   Bool_t useLund = false;
+   // MC: variables
+   Bool_t MCgenMode = false;
    Bool_t printWarning = true;
    Float_t asymInject,ampInject;
    TRandom * RNG = new TRandom(14972);
    Float_t rand;
+   EventTree * genEv;
+   TString genfileN;
+   Bool_t genSuccess;
+
+   // MC: load generated MC file, for obtaining MC helicities by event matching
+   if(MCrecMode) {
+     if(augerMode) genfileN = "genfile.root";
+     else {
+       genfileN = infileN;
+       genfileN(TRegexp("^.*/")) = "outroot.MC.gen/";
+       //genfileN(TRegexp(".hipo$")) = "";
+       genfileN += ".root";
+     };
+     // TODO - helicity event matching only done for pi+pi- channel; this should
+     //        eventually be generalized...
+     printf("GENFILE = %s\n",genfileN.Data());
+     genEv = new EventTree(genfileN,EncodePairType(kPip,kPim));
+     genSuccess = genEv->BuildEvnumMap();
+     if(!genSuccess) return 0;
+   };
 
 
    // photon pair ("php") variables
@@ -361,7 +384,7 @@ int main(int argc, char** argv) {
      
      
      // reconstructed particles
-     /*
+     ///*
      particleCntAll = reader.getNParticles(); // -->tree
      if(debug) printf("reader.getNParticles() = %d\n",particleCntAll);
      for(auto & part : reader.getDetParticles()) {
@@ -374,11 +397,11 @@ int main(int argc, char** argv) {
        vertex[eY] = part->par()->getVy();
        vertex[eZ] = part->par()->getVz();
        chi2pid = part->par()->getChi2Pid();
-       */
+       //*/
        
      // MC::Lund particles
-     ///*
-     useLund = true;
+     /*
+     MCgenMode = true;
      particleCntAll = (reader.mcparts())->getRows(); // -->tree
      for(int rr=0; rr<particleCntAll; rr++) {
        pidCur = (reader.mcparts())->getPid(rr);
@@ -389,7 +412,7 @@ int main(int argc, char** argv) {
        vertex[eY] = (reader.mcparts())->getVy(rr);
        vertex[eZ] = (reader.mcparts())->getVz(rr);
        chi2pid = -10000;
-       //*/
+       */
 
        // convert PID to local particle index; if it's not defined in Constants.h, pIdx
        // will be -10000 and this particle will be ignored
@@ -482,8 +505,11 @@ int main(int argc, char** argv) {
      // trajArr, and the highest-E pi0 found here will be the one sent into the tree;
      // the user will be warned of this happening
      if(trajCnt[kPi0] > 0) {
-       fprintf(stderr,
-         "WARNING WARNING WARNING WARNING WARNING: found pi0 in paricle bank!!!\n");
+       if(printPi0Warning) {
+         fprintf(stderr,
+           "WARNING WARNING WARNING WARNING WARNING: found pi0 in paricle bank!!!\n");
+         printPi0Warning = false;
+       };
        // note that EventTree is not yet programmed to accept these pions...
      };
 
@@ -612,7 +638,7 @@ int main(int argc, char** argv) {
      
      // select highest-E electron, or 2nd highest-E electron if reading Lund file
      // (since the highest-E Lund electron will be the beam electron)
-     whichEle = useLund ? 1 : 0;
+     whichEle = MCgenMode ? 1 : 0;
 
      // first make sure there's a scattered electron
      if(trajCnt[kE] > whichEle) {
@@ -709,26 +735,37 @@ int main(int argc, char** argv) {
 
 
              // MC helicity injection
-             if(useLund) {
+             if(MCgenMode || MCrecMode) {
 
-               // compute injected asymmetry
-               ampInject = 0.03;
-               asymInject = ampInject * TMath::Sin(dih->PhiH - dih->PhiRp);
+               if(MCgenMode && MCrecMode) {
+                 fprintf(stderr,"ERROR: both MCgenMode and MCrecMode are true\n");
+                 return 0;
+               };
 
-               // helicity re-assignment:  2 = spin -   3 = spin +
-               rand = RNG->Rndm();
-               helicity = rand < 0.5*(1+asymInject) ? 3 : 2;
+               if(MCgenMode) {
+                 // compute injected asymmetry
+                 ampInject = 0.03;
+                 asymInject = ampInject * TMath::Sin(dih->PhiH - dih->PhiRp);
 
-               // print a warning (to prevent from accidentally altering the helicity of
-               // real data)
+                 // helicity re-assignment:  2 = spin -   3 = spin +
+                 rand = RNG->Rndm();
+                 helicity = rand < 0.5*(1+asymInject) ? 3 : 2;
+               };
+
+               if(MCrecMode) {
+                 // match rec event to gen event to assign helicity
+                 if(genEv->FindEvent(evnum)) helicity = genEv->helicity;
+                 else helicity = 0;
+               };
+
+               // print a warning 
+               // (to prevent from accidentally altering the helicity of real data)
                if(printWarning) {
                  fprintf(stderr,"WARNING WARNING WARNING: ");
-                 fprintf(stderr,"helicity has been altered!!!!!\n");
+                 fprintf(stderr,"helicity has been altered (likely for MC study)!!!!!\n");
                  printWarning = false;
                };
              };
-
-
 
              // fill tree
              tree->Fill();
