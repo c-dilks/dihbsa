@@ -744,7 +744,7 @@ int main(int argc, char** argv) {
 
                if(MCgenMode) {
                  // compute injected asymmetry
-                 ampInject = 0.03;
+                 ampInject = 0.1;
                  asymInject = ampInject * TMath::Sin(dih->PhiH - dih->PhiRp);
 
                  // helicity re-assignment:  2 = spin -   3 = spin +
