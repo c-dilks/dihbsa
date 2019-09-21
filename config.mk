@@ -3,7 +3,7 @@
 # 1 = MC::Lund -- for MC generated (helicity injected)
 # 2 = MC::Particle -- for MC generated (helicity injected)
 # 3 = REC::Particle -- for MC reconstructed (helicity set by event-match to MCgen)
-PARTICLE_BANK = 3
+PARTICLE_BANK = 2
 
 
 # Clas12Tool directory, relative to this config file's `pwd`
