@@ -5,26 +5,46 @@ R__LOAD_LIBRARY(DihBsa)
 #include "Tools.h"
 #include "TString.h"
 #include "TMath.h"
+#include "TTree.h"
 
 enum fenum {kGen,kRec};
 int f;
 EventTree * ev[2];
 
 void MCmatch(TString fname=
-  "out_clasdispr.00.e10.600.emn0.75tmn.09.xs80.53nb.dis.0062.nrad.dat.evio.hipo.root") {
+  "out_clasdispr.00.e10.600.emn0.75tmn.09.xs80.53nb.dis.0410.nrad.dat.evio.hipo.root"
+) {
 
   Int_t pairType = EncodePairType(kPip,kPim); // make sure ordering obeys dihHadIdx...
+  
+  TFile * outfile = new TFile(TString("match."+fname),"RECREATE");
+
+  TString mgStr[2];
+  mgStr[kGen] = "gen";
+  mgStr[kRec] = "rec";
+
 
   TString infileN[2];
-  infileN[kGen] = "outroot.MC.gen/";
-  infileN[kRec] = "outroot.MC.rec/";
   for(f=0; f<2; f++) {
-    infileN[f] += fname;
+    infileN[f] = "outroot.MC."+mgStr[f]+"/"+fname;
     ev[f] = new EventTree(infileN[f],pairType);
   };
 
+  Float_t diff_hadE[2];
+
+  TTree * mtr = new TTree("mtr","mtr");
+  mtr->Branch("evnum",&(ev[kGen]->evnum),"evnum/I");
+  for(f=0; f<2; f++) {
+    mtr->Branch(TString(mgStr[f]+"_hadE"), ev[f]->hadE,
+                TString(mgStr[f]+"_hadE[2]/F"));
+    mtr->Branch(TString(mgStr[f]+"_helicity"), &(ev[f]->helicity),
+                TString(mgStr[f]+"_helicity/I"));
+  };
+  mtr->Branch("diff_hadE",diff_hadE,"diff_hadE[2]/F");
+
   Bool_t success = ev[kRec]->BuildEvnumMap();
   if(!success) return;
+
 
   for(int i=0; i<ev[kGen]->ENT; i++) {
     ev[kGen]->GetEvent(i);
@@ -35,7 +55,20 @@ void MCmatch(TString fname=
           ev[kGen]->hadE[qA],ev[kGen]->hadE[qB]);
         printf("REC: hadE[qA]=%.3f  hadE[qB]=%.3f\n",
           ev[kRec]->hadE[qA],ev[kRec]->hadE[qB]);
+
+        for(int h=0; h<2; h++) {
+          diff_hadE[h] = 
+            TMath::Abs(ev[kGen]->hadE[h] - ev[kRec]->hadE[h]) / ev[kGen]->hadE[h]; 
+        };
+
+        printf("DIFF: diff_hadE[qA]=%.3f  diff_hadE[qB]=%.3f\n",
+          diff_hadE[qA],diff_hadE[qB]);
+        if(diff_hadE[qA]>10E10) printf("WARNING\n");
+
+        mtr->Fill();
+
       };
     };
   };
+  mtr->Write();
 };

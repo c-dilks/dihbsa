@@ -277,6 +277,7 @@ int main(int argc, char** argv) {
    EventTree * genEv;
    TString genfileN;
    Bool_t genSuccess;
+   Float_t difference[2];
 
 
    // determine MC mode, using PARTICLE_BANK macro, defined in config.mk
@@ -781,8 +782,15 @@ int main(int argc, char** argv) {
 
                if(MCrecMode) {
                  // match rec event to gen event to assign helicity
-                 if(genEv->FindEvent(evnum)) helicity = genEv->helicity;
-                 else helicity = 0;
+                 helicity = 0;
+                 if(genEv->FindEvent(evnum)) {
+                   for(int h=0; h<2; h++) {
+                     difference[h] = 
+                       TMath::Abs( hadP[h] - genEv->hadP[h] ) / genEv->hadP[h];
+                   };
+                   if(difference[qA]<0.01 && difference[qB]<0.01)
+                     helicity = genEv->helicity;
+                 };
                };
 
                // print a warning 
