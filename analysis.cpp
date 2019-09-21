@@ -29,19 +29,19 @@
 #include "EventTree.h"
 
 
+
+
 int main(int argc, char** argv) {
 
    // ARGUMENTS
    TString infileN;
    Bool_t augerMode = false;
-   Bool_t MCrecMode = false;
    if(argc<=1) {
      printf("USAGE: %s [hipo file]\n",argv[0]);
      exit(0);
    };
    if(argc>1) infileN = TString(argv[1]);
    if(argc>2) augerMode = (Bool_t) strtof(argv[2],NULL);
-   if(argc>3) MCrecMode = (Bool_t) strtof(argv[3],NULL);
 
 
    // debugging flags
@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
    else {
      outfileN = infileN;
      outfileN(TRegexp("^.*/")) = "outroot/";
-     outfileN(TRegexp("hipo$")) = "root";
+     outfileN += ".root";
    };
    printf("outfileN = %s\n",outfileN.Data());
    TFile * outfile = new TFile(outfileN,"RECREATE");
@@ -245,16 +245,14 @@ int main(int argc, char** argv) {
 
 
 
-   // define HIPO file reader and banks
+   // define HIPO file reader and banks 
    clas12::clas12reader reader(infileN.Data());
-   /*
-   printf("BEGIN TEST DICTIONARY READ\n");
+
    hipo::dictionary factory;
    reader.getReader().readDictionary(factory);
    //factory.show();
    hipo::event readerEvent;
-   hipo::bank mcLund(factory.getSchema("MC::Lund"));
-   */
+   hipo::bank mcParticle(factory.getSchema("MC::Particle"));
 
 
    // define observable variables
@@ -269,11 +267,9 @@ int main(int argc, char** argv) {
 
    Bool_t foundObservablePair;
    Bool_t printPi0Warning = true;
-   Int_t whichEle;
 
 
    // MC: variables
-   Bool_t MCgenMode = false;
    Bool_t printWarning = true;
    Float_t asymInject,ampInject;
    TRandom * RNG = new TRandom(14972);
@@ -281,6 +277,33 @@ int main(int argc, char** argv) {
    EventTree * genEv;
    TString genfileN;
    Bool_t genSuccess;
+
+
+   // determine MC mode, using PARTICLE_BANK macro, defined in config.mk
+   Bool_t MCgenMode, MCrecMode;
+   Int_t whichEle; // set to DIS electron (highest-E electron, but if reading MC::Lund,
+                   // it's the 2nd highest-E)
+#if PARTICLE_BANK == 0 // REC::Particle -- for data
+   MCgenMode = false;
+   MCrecMode = false;
+   whichEle = 0;
+#elif PARTICLE_BANK == 1 // MC::Lund -- for MC generated
+   MCgenMode = true;
+   MCrecMode = false;
+   whichEle = 1;
+#elif PARTICLE_BANK == 2 // MC::Particle -- for MC generated
+   MCgenMode = true;
+   MCrecMode = false;
+   whichEle = 0;
+#elif PARTICLE_BANK == 3 // REC::Particle -- for MC reconstructed
+   MCgenMode = false;
+   MCrecMode = true;
+   whichEle = 0;
+#else
+  fprintf(stderr,"ERROR: preprocessor macro PARTICLE_BANK=%d is undefined\n",
+    PARTICLE_BANK);
+  exit(0);
+#endif
 
    // MC: load generated MC file, for obtaining MC helicities by event matching
    if(MCrecMode) {
@@ -382,13 +405,11 @@ int main(int argc, char** argv) {
      // -- read in each particle and put them into trajArr, which will be sorted
      //    afterward
      
-     
-     // reconstructed particles
-     ///*
+
+#if PARTICLE_BANK == 0 || PARTICLE_BANK == 3 // REC::Particle for reconstructed particles
      particleCntAll = reader.getNParticles(); // -->tree
      if(debug) printf("reader.getNParticles() = %d\n",particleCntAll);
      for(auto & part : reader.getDetParticles()) {
-       // get particle PID and momentum components
        pidCur = part->getPid();
        vecObsP[eX] = part->par()->getPx();
        vecObsP[eY] = part->par()->getPy();
@@ -397,11 +418,7 @@ int main(int argc, char** argv) {
        vertex[eY] = part->par()->getVy();
        vertex[eZ] = part->par()->getVz();
        chi2pid = part->par()->getChi2Pid();
-       //*/
-       
-     // MC::Lund particles
-     /*
-     MCgenMode = true;
+#elif PARTICLE_BANK == 1 // MC::Lund for reading MC-generated particles
      particleCntAll = (reader.mcparts())->getRows(); // -->tree
      for(int rr=0; rr<particleCntAll; rr++) {
        pidCur = (reader.mcparts())->getPid(rr);
@@ -412,7 +429,20 @@ int main(int argc, char** argv) {
        vertex[eY] = (reader.mcparts())->getVy(rr);
        vertex[eZ] = (reader.mcparts())->getVz(rr);
        chi2pid = -10000;
-       */
+#elif PARTICLE_BANK == 2 // MC::Particle for reading MC-generated particles
+     reader.getReader().read(readerEvent);
+     readerEvent.getStructure(mcParticle);
+     particleCntAll = mcParticle.getRows(); // -->tree
+     for(int rr=0; rr<particleCntAll; rr++) {
+       pidCur = mcParticle.getInt("pid",rr);
+       vecObsP[eX] = mcParticle.getFloat("px",rr);
+       vecObsP[eY] = mcParticle.getFloat("py",rr);
+       vecObsP[eZ] = mcParticle.getFloat("pz",rr);
+       vertex[eX] = mcParticle.getFloat("vx",rr);
+       vertex[eY] = mcParticle.getFloat("vy",rr);
+       vertex[eZ] = mcParticle.getFloat("vz",rr);
+       chi2pid = -10000;
+#endif
 
        // convert PID to local particle index; if it's not defined in Constants.h, pIdx
        // will be -10000 and this particle will be ignored
@@ -636,9 +666,6 @@ int main(int argc, char** argv) {
      // HADRON PAIRING, and fill the tree
      // ---------------------------------------------------
      
-     // select highest-E electron, or 2nd highest-E electron if reading Lund file
-     // (since the highest-E Lund electron will be the beam electron)
-     whichEle = MCgenMode ? 1 : 0;
 
      // first make sure there's a scattered electron
      if(trajCnt[kE] > whichEle) {

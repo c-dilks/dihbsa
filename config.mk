@@ -1,3 +1,11 @@
+# specify which particle bank to read (data vs. MC)
+# 0 = REC::Particle -- for data
+# 1 = MC::Lund -- for MC generated (helicity injected)
+# 2 = MC::Particle -- for MC generated (helicity injected)
+# 3 = REC::Particle -- for MC reconstructed (helicity set by event-match to MCgen)
+PARTICLE_BANK = 3
+
+
 # Clas12Tool directory, relative to this config file's `pwd`
 CLAS12TOOLDIR = ../Clas12Tool
 
@@ -6,7 +14,7 @@ CLAS12TOOLDIR = ../Clas12Tool
 # compiler and flags
 CXX = g++ -std=c++11
 FLAGS = -g -Wno-deprecated -fPIC -m64 -fno-inline -Wno-write-strings
-#FLAGS += -DHIPO_VERSION=$(HIPO_VERSION)
+FLAGS += -DPARTICLE_BANK=$(PARTICLE_BANK)
 
 # extra flags for valgrind
 FLAGS += -O0
