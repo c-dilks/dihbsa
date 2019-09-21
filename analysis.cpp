@@ -775,7 +775,7 @@ int main(int argc, char** argv) {
                  asymInject = ampInject * TMath::Sin(dih->PhiH - dih->PhiRp);
 
                  // helicity re-assignment:  2 = spin -   3 = spin +
-                 rand = RNG->Rndm();
+                 rand = RNG->Uniform();
                  helicity = rand < 0.5*(1+asymInject) ? 3 : 2;
                };
 
