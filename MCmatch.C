@@ -50,20 +50,20 @@ void MCmatch(TString fname=
     ev[kGen]->GetEvent(i);
     if(pairType==ev[kGen]->pairType) {
       if(ev[kRec]->FindEvent(ev[kGen]->evnum)) {
-        printf("event %d\n",ev[kGen]->evnum);
-        printf("GEN: hadE[qA]=%.3f  hadE[qB]=%.3f\n",
-          ev[kGen]->hadE[qA],ev[kGen]->hadE[qB]);
-        printf("REC: hadE[qA]=%.3f  hadE[qB]=%.3f\n",
-          ev[kRec]->hadE[qA],ev[kRec]->hadE[qB]);
-
         for(int h=0; h<2; h++) {
           diff_hadE[h] = 
             TMath::Abs(ev[kGen]->hadE[h] - ev[kRec]->hadE[h]) / ev[kGen]->hadE[h]; 
         };
 
+        /*
+        printf("event %d\n",ev[kGen]->evnum);
+        printf("GEN: hadE[qA]=%.3f  hadE[qB]=%.3f\n",
+          ev[kGen]->hadE[qA],ev[kGen]->hadE[qB]);
+        printf("REC: hadE[qA]=%.3f  hadE[qB]=%.3f\n",
+          ev[kRec]->hadE[qA],ev[kRec]->hadE[qB]);
         printf("DIFF: diff_hadE[qA]=%.3f  diff_hadE[qB]=%.3f\n",
           diff_hadE[qA],diff_hadE[qB]);
-        if(diff_hadE[qA]>10E10) printf("WARNING\n");
+        */
 
         mtr->Fill();
 

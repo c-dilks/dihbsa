@@ -224,6 +224,51 @@ int main(int argc, char** argv) {
    TH2D * PhiHRvsAlpha = new TH2D("PhiHRvsAlpha",
      "#phi_{h}-#phi_{R} vs. #alpha;#alpha;#phi_{h}-#phi_{R}",
      NBINS,0,1.3,NBINS,-PIe,PIe);
+
+
+   // kinematic factor distributions
+   enum KF_enum {kfA, kfB, kfC, kfV, kfW, kfForE, kfForG, Nkf};
+   TString kfName[Nkf];
+   TString kfTitle[Nkf];
+   kfName[kfA] = "kfA"; kfTitle[kfA] = "A(y)";
+   kfName[kfB] = "kfB"; kfTitle[kfB] = "B(y)";
+   kfName[kfC] = "kfC"; kfTitle[kfC] = "C(y)";
+   kfName[kfV] = "kfV"; kfTitle[kfV] = "V(y)";
+   kfName[kfW] = "kfW"; kfTitle[kfW] = "W(y)";
+   kfName[kfForE] = "kfForE"; kfTitle[kfForE] = "W(y)/A(y)";
+   kfName[kfForG] = "kfForG"; kfTitle[kfForG] = "C(y)/A(y)";
+   Float_t kfVal[Nkf];
+   TH2D * kfVsMh[Nkf];
+   TH2D * kfVsPhPerp[Nkf];
+   TH2D * kfVsX[Nkf];
+   TH2D * kfVsZpair[Nkf];
+   TH2D * kfVsPhiR[Nkf];
+   TH2D * kfVsPhiH[Nkf];
+   TH2D * kfVsPhiHR[Nkf];
+   for(int k=0; k<Nkf; k++) {
+     kfVsMh[k] = new TH2D(TString(kfName[k]+"vsMh"),
+       TString(kfTitle[k]+" vs. M_{h}"),
+       NBINS,0,3,NBINS,0,1);
+     kfVsPhPerp[k] = new TH2D(TString(kfName[k]+"vsPhPerp"),
+       TString(kfTitle[k]+" vs. P_{h}^{perp}"),
+       NBINS,0,3,NBINS,0,1);
+     kfVsX[k] = new TH2D(TString(kfName[k]+"vsX"),
+       TString(kfTitle[k]+" vs. x"),
+       NBINS,0,1,NBINS,0,1);
+     kfVsZpair[k] = new TH2D(TString(kfName[k]+"vsZpair"),
+       TString(kfTitle[k]+" vs. z"),
+       NBINS,0,1,NBINS,0,1);
+     kfVsPhiH[k] = new TH2D(TString(kfName[k]+"vsPhiH"),
+       TString(kfTitle[k]+" vs. #phi_{h}"),
+       NBINS,-PIe,PIe,NBINS,0,1);
+     kfVsPhiR[k] = new TH2D(TString(kfName[k]+"vsPhiR"),
+       TString(kfTitle[k]+" vs. #phi_{R}"),
+       NBINS,-PIe,PIe,NBINS,0,1);
+     kfVsPhiHR[k] = new TH2D(TString(kfName[k]+"vsPhiHR"),
+       TString(kfTitle[k]+" vs. #phi_{h}-#phi_{R}"),
+       NBINS,-PIe,PIe,NBINS,0,1);
+   };
+
      
 
 
@@ -402,6 +447,25 @@ int main(int argc, char** argv) {
        PhiRvsAlpha->Fill(ev->alpha,ev->PhiR);
        PhiHRvsAlpha->Fill(ev->alpha,ev->PhiHR);
 
+      
+       kfVal[kfA] = ev->GetKinematicFactor('A');
+       kfVal[kfB] = ev->GetKinematicFactor('B');
+       kfVal[kfC] = ev->GetKinematicFactor('C');
+       kfVal[kfV] = ev->GetKinematicFactor('V');
+       kfVal[kfW] = ev->GetKinematicFactor('W');
+       kfVal[kfForE] = kfVal[kfW] / kfVal[kfA];
+       kfVal[kfForG] = kfVal[kfC] / kfVal[kfA];
+       for(int k=0; k<Nkf; k++) {
+         kfVsMh[k]->Fill(ev->Mh,kfVal[k]);
+         kfVsPhPerp[k]->Fill(ev->PhPerp,kfVal[k]);
+         kfVsX[k]->Fill(ev->x,kfVal[k]);
+         kfVsZpair[k]->Fill(ev->Zpair,kfVal[k]);
+         kfVsPhiR[k]->Fill(ev->PhiR,kfVal[k]);
+         kfVsPhiH[k]->Fill(ev->PhiH,kfVal[k]);
+         kfVsPhiHR[k]->Fill(ev->PhiHR,kfVal[k]);
+       };
+       
+
        helicityDist->Fill(ev->helicity);
        torusDist->Fill(ev->torus);
 
@@ -513,6 +577,16 @@ int main(int argc, char** argv) {
    helicityDist->Write();
 
    diphMdist->Write();
+
+   for(int k=0; k<Nkf; k++) {
+     kfVsMh[k]->Write();
+     kfVsPhPerp[k]->Write();
+     kfVsX[k]->Write();
+     kfVsZpair[k]->Write();
+     kfVsPhiR[k]->Write();
+     kfVsPhiH[k]->Write();
+     kfVsPhiHR[k]->Write();
+   };
 
    outfile->Close();
 

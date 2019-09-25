@@ -5,8 +5,12 @@
 touch match.root
 rm match.root
 
+let limiter=0
 for file in outroot.MC.gen/*.root; do
+  echo "analyze $file"
   root -b -q MCmatch.C'("'$(echo $file | sed 's/^.*\///g')'")'
+  let limiter++
+  if [ $limiter -gt 30 ]; then break; fi
 done
 
 hadd tmp.root match*.root

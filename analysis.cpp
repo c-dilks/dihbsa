@@ -689,6 +689,10 @@ int main(int argc, char** argv) {
            i1 = OI(o1);
            i2 = OI(o2);
 
+           // aqui -- loop through trajArr[i1] and trajArr[i2], analysing each pair
+           // -- fully inclusive mode: look at all the pairs
+           // -- highest-E mode: only look at the first pair
+
            if(i1==i2) {
              // if the indices are the same, and we have at least 2 of this observable,
              // set 1st hadron to the highest energy one, and 2nd to the next highest
@@ -772,6 +776,9 @@ int main(int argc, char** argv) {
 
                if(MCgenMode) {
                  // compute injected asymmetry
+                 //
+                 // TODO --- MULTIPLY THIS BY 0.86 POLARIZATION
+                 // 
                  ampInject = 0.1;
                  asymInject = ampInject * TMath::Sin(dih->PhiH - dih->PhiRp);
 

@@ -8,23 +8,28 @@
 /// Definitions from hipo 4 banks:
 
 /*
- * ECAL
- * ----
- * vCal_layer == 1
- * vCal_sector
- * vCal_lu
- * vCal_lv
- * vCal_lw
+ *
+ * EC->PCAL
+ * --------
+ * - bank: REC::Calorimeter
+ * vCal_layer==1     layer      part->cal(clas12::PCAL)->getLayer()
+ * vCal_sector       sector     part->cal(clas12::PCAL)->getSector()
+ * vCal_lu           lu         part->cal(clas12::PCAL)->getLu()
+ * vCal_lv           lv         part->cal(clas12::PCAL)->getLv()
+ * vCal_lw           lw         part->cal(clas12::PCAL)->getLw()
  *
  * DC
  * --
- * vTRK_detector == 6
- * vTRK_sector
- * vTraj_detID == {6,18,30}
- * vTraj_layerID == {6,18,30}
- * vTraj_x
- * vTraj_y
- * vTraj_z
+ * - bank: REC::Track
+ * vTRK_detector==6    detector     part->trk(clas12::DC)->getDetector() 
+ * vTRK_sector         sector       part->trk(clas12::DC)->getSector()
+ *
+ * - bank: REC::Traj
+ * vTraj_detID==6              detector    part->traj(clas12::DC,{6,18,30})->getDetector() 
+ * vTraj_layerID=={6,18,30}    layer       part->traj(clas12::DC,{6,18,30})->getLayer()
+ * vTraj_x                     x           part->traj(clas12::DC,{6,18,30})->getX()
+ * vTraj_y                     y           part->traj(clas12::DC,{6,18,30})->getY()
+ * vTraj_z                     z           part->traj(clas12::DC,{6,18,30})->getZ()
  *
  */
 

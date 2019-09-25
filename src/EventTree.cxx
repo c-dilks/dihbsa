@@ -322,6 +322,23 @@ DIS * EventTree::GetDISObj() {
 };
 
 
+
+// get y-dependent kinematic factor
+Float_t EventTree::GetKinematicFactor(Char_t kf) {
+  // source: hep-ph/0311173 eq. 43
+  // note that C(y) differs by a factor of -2 from eq 23 of hep-ph/0212300
+  if(kf=='A')      return 1 - y + y*y/2.0;
+  else if(kf=='B') return 1 - y;
+  else if(kf=='C') return y * ( y/2.0 - 1 );
+  else if(kf=='V') return 2 * (2-y) * TMath::Sqrt(1-y);
+  else if(kf=='W') return 2 * y * TMath::Sqrt(1-y);
+  else {
+    fprintf(stderr,"ERROR: unknown kinematic factor %c; returning 0\n",kf);
+    return 0;
+  };
+};
+
+
 // build map : evnum -> tree entry num
 // -- return true if successful
 Bool_t EventTree::BuildEvnumMap() {

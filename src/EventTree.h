@@ -43,6 +43,8 @@ class EventTree : public TObject
     Dihadron * GetDihadronObj();
     DIS * GetDISObj();
 
+    Float_t GetKinematicFactor(Char_t kf);
+
     Bool_t BuildEvnumMap();
     Bool_t FindEvent(Int_t evnum_);
 
