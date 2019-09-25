@@ -127,6 +127,8 @@ class Asymmetry : public TObject
     Float_t theta;
     Float_t pol;
     Int_t spinn;
+    
+    Float_t kfA,kfC,kfW;
 
     Float_t PhiTest;
 

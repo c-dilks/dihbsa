@@ -329,7 +329,8 @@ Float_t EventTree::GetKinematicFactor(Char_t kf) {
   // note that C(y) differs by a factor of -2 from eq 23 of hep-ph/0212300
   if(kf=='A')      return 1 - y + y*y/2.0;
   else if(kf=='B') return 1 - y;
-  else if(kf=='C') return y * ( y/2.0 - 1 );
+  else if(kf=='C') return y * (2-y); //hep-ph/0212300
+  //else if(kf=='C') return y * ( y/2.0 - 1 ); //hep-ph/0311173
   else if(kf=='V') return 2 * (2-y) * TMath::Sqrt(1-y);
   else if(kf=='W') return 2 * y * TMath::Sqrt(1-y);
   else {

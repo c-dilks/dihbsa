@@ -884,12 +884,30 @@ Float_t Asymmetry::EvalModulation() {
 
 
 Float_t Asymmetry::EvalWeight() {
+
+  Float_t wt;
+
+  // g1perp PhPerp/Mh weighting
   if( whichMod == weightSinPhiHR
    || whichMod == mod2dWeightSinPhiHR
-  ) {
-    return Mh>0 ? PhPerp/Mh : 0;
-  };
-  return 1;
+  ) { 
+    wt = Mh>0 ? PhPerp/Mh : 0; 
+  }
+  else wt = 1;
+
+  // kinematic factor weighting
+  switch(whichMod) {
+    case modSinPhiR:
+      wt *= kfW / kfA;
+      //wt *= kfW;
+      break;
+    case weightSinPhiHR:
+      wt *= kfC / kfA;
+      //wt *= kfC;
+      break;
+  }
+
+  return wt;
 };
 
  
@@ -903,6 +921,9 @@ void Asymmetry::ResetVars() {
   PhPerp = -10000;
   theta = -10000;
   spinn = -10000;
+  kfA = -10000;
+  kfC = -10000;
+  kfW = -10000;
   for(int d=0; d<3; d++) iv[d]=-10000;
 };
 

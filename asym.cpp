@@ -491,6 +491,11 @@ int main(int argc, char** argv) {
           // set spin state
           A->spinn = ev->SpinState();
 
+          // set kinematic factors
+          A->kfA = ev->GetKinematicFactor('A');
+          A->kfC = ev->GetKinematicFactor('C');
+          A->kfW = ev->GetKinematicFactor('W');
+
 
           // set any test modulation variables
           A->PhiTest = -10000;

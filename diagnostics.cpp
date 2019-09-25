@@ -238,6 +238,15 @@ int main(int argc, char** argv) {
    kfName[kfForE] = "kfForE"; kfTitle[kfForE] = "W(y)/A(y)";
    kfName[kfForG] = "kfForG"; kfTitle[kfForG] = "C(y)/A(y)";
    Float_t kfVal[Nkf];
+   Float_t kfRange[Nkf][2];
+   kfRange[kfA][0]=0.5; kfRange[kfA][1]=1; 
+   kfRange[kfB][0]=0; kfRange[kfB][1]=1; 
+   kfRange[kfC][0]=0; kfRange[kfC][1]=1; //hep-ph/0212300 def.
+   //kfRange[kfC][0]=-0.5; kfRange[kfC][1]=0; //hep-ph/0311173 def.
+   kfRange[kfV][0]=0; kfRange[kfV][1]=4; 
+   kfRange[kfW][0]=0; kfRange[kfW][1]=0.8; 
+   kfRange[kfForE][0]=0; kfRange[kfForE][1]=1.5; 
+   kfRange[kfForG][0]=0; kfRange[kfForG][1]=2; 
    TH2D * kfVsMh[Nkf];
    TH2D * kfVsPhPerp[Nkf];
    TH2D * kfVsX[Nkf];
@@ -248,25 +257,25 @@ int main(int argc, char** argv) {
    for(int k=0; k<Nkf; k++) {
      kfVsMh[k] = new TH2D(TString(kfName[k]+"vsMh"),
        TString(kfTitle[k]+" vs. M_{h}"),
-       NBINS,0,3,NBINS,0,1);
+       NBINS,0,3,NBINS,kfRange[k][0],kfRange[k][1]);
      kfVsPhPerp[k] = new TH2D(TString(kfName[k]+"vsPhPerp"),
        TString(kfTitle[k]+" vs. P_{h}^{perp}"),
-       NBINS,0,3,NBINS,0,1);
+       NBINS,0,3,NBINS,kfRange[k][0],kfRange[k][1]);
      kfVsX[k] = new TH2D(TString(kfName[k]+"vsX"),
        TString(kfTitle[k]+" vs. x"),
-       NBINS,0,1,NBINS,0,1);
+       NBINS,0,1,NBINS,kfRange[k][0],kfRange[k][1]);
      kfVsZpair[k] = new TH2D(TString(kfName[k]+"vsZpair"),
        TString(kfTitle[k]+" vs. z"),
-       NBINS,0,1,NBINS,0,1);
+       NBINS,0,1,NBINS,kfRange[k][0],kfRange[k][1]);
      kfVsPhiH[k] = new TH2D(TString(kfName[k]+"vsPhiH"),
        TString(kfTitle[k]+" vs. #phi_{h}"),
-       NBINS,-PIe,PIe,NBINS,0,1);
+       NBINS,-PIe,PIe,NBINS,kfRange[k][0],kfRange[k][1]);
      kfVsPhiR[k] = new TH2D(TString(kfName[k]+"vsPhiR"),
        TString(kfTitle[k]+" vs. #phi_{R}"),
-       NBINS,-PIe,PIe,NBINS,0,1);
+       NBINS,-PIe,PIe,NBINS,kfRange[k][0],kfRange[k][1]);
      kfVsPhiHR[k] = new TH2D(TString(kfName[k]+"vsPhiHR"),
        TString(kfTitle[k]+" vs. #phi_{h}-#phi_{R}"),
-       NBINS,-PIe,PIe,NBINS,0,1);
+       NBINS,-PIe,PIe,NBINS,kfRange[k][0],kfRange[k][1]);
    };
 
      
