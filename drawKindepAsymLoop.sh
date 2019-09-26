@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# loop through some spinFinal*.root files and print
+# asymmetry canvases to png files
+
 pushd forCompareKFweights
 
 cat > tmp.C << 'EOF'

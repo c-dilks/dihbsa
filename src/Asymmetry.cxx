@@ -899,11 +899,9 @@ Float_t Asymmetry::EvalWeight() {
   switch(whichMod) {
     case modSinPhiR:
       wt *= kfW / kfA;
-      //wt *= kfW;
       break;
     case weightSinPhiHR:
       wt *= kfC / kfA;
-      //wt *= kfC;
       break;
   }
 

@@ -265,13 +265,13 @@ int main(int argc, char** argv) {
    Int_t pidCur,pIdx;
    Int_t i1,i2;
 
-   Bool_t foundObservablePair;
+   Bool_t pairsExist;
    Bool_t printPi0Warning = true;
 
 
    // MC: variables
    Bool_t printWarning = true;
-   Float_t asymInject,ampInject;
+   Float_t asymInject,ampInject,polInject;
    TRandom * RNG = new TRandom(14972);
    Float_t rand;
    EventTree * genEv;
@@ -340,6 +340,7 @@ int main(int argc, char** argv) {
    // event and pair counters
    Int_t evCount = 0;
 
+   int end1,end2;
 
 
    // ----------------------------------------------------
@@ -619,6 +620,9 @@ int main(int argc, char** argv) {
                // if it's the highest-E one in a dihadron with 1 or 2 diphotons, or the
                // second highest-E one in a dihadron with 2 diphotons, set diPhot
                // to this pair and increment diphCnt
+               //
+               // aqui - TODO - this will need to be made more inclusive
+               //
                if(trajCnt[kDiph]==0 || trajCnt[kDiph]==1) {
                  diPhot[trajCnt[kDiph]]->SetEvent(phot[0],phot[1]);
                  diphCnt++;
@@ -683,141 +687,160 @@ int main(int argc, char** argv) {
        for(Int_t o1=0; o1<nObservables; o1++) {
          for(Int_t o2=o1; o2<nObservables; o2++) {
 
-           foundObservablePair = false;
 
            // convert observable index to particle index
            i1 = OI(o1);
            i2 = OI(o2);
+           for(int h=0; h<2; h++) hadIdx[h] = dihHadIdx(i1,i2,h); // -->tree
+           pairType = EncodePairType(hadIdx[qA],hadIdx[qB]); // -->tree
 
-           // aqui -- loop through trajArr[i1] and trajArr[i2], analysing each pair
-           // -- fully inclusive mode: look at all the pairs
-           // -- highest-E mode: only look at the first pair
 
-           if(i1==i2) {
-             // if the indices are the same, and we have at least 2 of this observable,
-             // set 1st hadron to the highest energy one, and 2nd to the next highest
-             if( trajCnt[i1] >=2 ) {
-               for(int h=0; h<2; h++) {
-                 hadIdx[h] = i1; // -->tree
-                 had[h] = (Trajectory*) trajArr[i1]->At(h);
-               };
-               foundObservablePair = true;
-             };
 
-           } else {
-             // if the indices are different, set hadrons according to dihHadIdx
-             // (see Constants.h; higher charge comes first, and if charges are
-             // equal, higher mass comes first)
-             if( trajCnt[i1] >= 1 && trajCnt[i2] >= 1 ) {
-               for(int h=0; h<2; h++) {
-                 hadIdx[h] = dihHadIdx(i1,i2,h); // -->tree
-                 had[h] = (Trajectory*) trajArr[hadIdx[h]]->At(0);
-               };
-               foundObservablePair = true;
-             };
+           // HADRON PAIRING ALGORITHM
+           // ---------------------------------------
+
+           // define loop ends:
+           // - consider lists of hadrons (p1,p2,p3) and (q1,q2,q3) (ordered by energy)
+           // - if the hadron species are different, loop through each list completely
+           //   so that every possible pair is considered
+           //   -> the above lists pair as p1q1, p1q2, p1q3
+           //                              p2q1, p2q2, p2q3
+           //                              p3q1, p3q2, p3q3
+           //   -> if leadingDihOnly==true, only take p1q1
+           //   -> outer loop and inner loop both begin at 0
+           //   -> outer loop and inner loop both end at trajCnt
+           // - if the hadron species are the same, loop such that pairs aren't
+           //   double-counted; the folowing matrix is the same as above, but
+           //   with reduntant pairs replaced by xxxx:
+           //   ->                         xxxx, p1p2, p1p3
+           //                              xxxx, xxxx, p2p3
+           //                              xxxx, xxxx, xxxx
+           //   -> if leadingDihOnly==true, only take p1p2
+           //   -> outer loop begins at 0;
+           //      inner loop begins at outer loop iterator+1 (first column is all xxxx)
+           //   -> outer loop ends at trajCnt-1 (last row is all xxxx),
+           //      inner loop ends at trajCnt
+           //   
+           //
+           if(i1!=i2) {
+             end1 = leadingDihOnly ? 1 : trajCnt[i1];
+             end2 = leadingDihOnly ? 1 : trajCnt[i2];
+             pairsExist = trajCnt[i1]>=1 && trajCnt[i2]>=1;
+           }
+           else {
+             end1 = leadingDihOnly ? 1 : trajCnt[i1] - 1;
+             end2 = leadingDihOnly ? 2 : trajCnt[i2];
+             pairsExist = trajCnt[i1]>=2;
            };
 
-
-           // if a hadron pair was found, proceed with kinematics calculations
-           // and fill the tree
-           if(foundObservablePair) {
-
-             if(debug) printf(">>> BEGIN DIHADRON EVENT %s\n",PairName(i1,i2).Data());
-
-             // get hadron kinematics
-             pairType = EncodePairType(hadIdx[qA],hadIdx[qB]); // -->tree
-             for(int h=0; h<2; h++) {
-               hadE[h] = (had[h]->Vec).E(); // -->tree
-               hadP[h] = (had[h]->Vec).P(); // -->tree
-               hadPt[h] = (had[h]->Vec).Pt(); // -->tree
-               hadPtq[h] = had[h]->Ptq(disEv->vecQ); // -->tree
-
-               if(hadE[h]>0 && hadPt[h]>0) {
-                 hadEta[h] = (had[h]->Vec).Eta(); // -->tree
-                 hadPhi[h] = (had[h]->Vec).Phi(); // -->tree
-               } else {
-                 hadEta[h] = -10000;
-                 hadPhi[h] = -10000;
-               };
-
-               if(debug) {
-                 printf("[+] %s 4-momentum:\n",(had[h]->Title()).Data());
-                 (had[h]->Vec).Print();
-               };
-             };
+           // aqui -- add order parameter
 
 
-             // compute dihadron kinematics
-             //dih->debugTheta = pairType==0x34 ? true : false;
-             //if(dih->debugTheta) printf("\nevnum = %d\n",evnum);
-             dih->SetEvent(had[qA],had[qB],disEv); // -->tree
-             dihBr->SetEvent(had[qA],had[qB],disEv); // -->tree
+           if(pairsExist) {
+             // outer loop, for hadron qA (0)
+             for(int hh1=0; hh1<end1; hh1++) {
+               // inner loop, for hadron qB (1)
+               for(int hh2=( i1==i2 ? hh1+1 : 0 ); hh2<end2; hh2++) {
 
-             // set diphCnt_tr to corrected diphCnt, for filling diphoton branches
-             // -- this solves a subtle case: assume we have a pi+ and two diphotons;
-             // this will resolve to two dihadrons: A=(pi+,diphoton) and
-             // B=(diphoton,diphoton), but diphCnt=2 for this event. We thus need to
-             // force diphCnt to 1 for dihadron A, and to 2 for dihadron B
-             diphCnt_tr = 0; // -->tree
-             if(diphCnt>0) {
-               if(hadIdx[qA]==kDiph || hadIdx[qB]==kDiph) diphCnt_tr = 1; // -->tree
-               if(hadIdx[qA]==kDiph && hadIdx[qB]==kDiph) diphCnt_tr = 2; // -->tree
-             };
+                 if(debug) printf(">>> BEGIN DIHADRON EVENT %s\n",PairName(i1,i2).Data());
 
 
+                 // get hadron kinematics
+                 had[qA] = (Trajectory*) trajArr[hadIdx[qA]]->At(hh1);
+                 had[qB] = (Trajectory*) trajArr[hadIdx[qB]]->At(hh2);
 
-             // MC helicity injection
-             if(MCgenMode || MCrecMode) {
+                 for(int h=0; h<2; h++) {
+                   hadE[h] = (had[h]->Vec).E(); // -->tree
+                   hadP[h] = (had[h]->Vec).P(); // -->tree
+                   hadPt[h] = (had[h]->Vec).Pt(); // -->tree
+                   hadPtq[h] = had[h]->Ptq(disEv->vecQ); // -->tree
 
-               if(MCgenMode && MCrecMode) {
-                 fprintf(stderr,"ERROR: both MCgenMode and MCrecMode are true\n");
-                 return 0;
-               };
-
-               if(MCgenMode) {
-                 // compute injected asymmetry
-                 //
-                 // TODO --- MULTIPLY THIS BY 0.86 POLARIZATION
-                 // 
-                 ampInject = 0.1;
-                 asymInject = ampInject * TMath::Sin(dih->PhiH - dih->PhiRp);
-
-                 // helicity re-assignment:  2 = spin -   3 = spin +
-                 rand = RNG->Uniform();
-                 helicity = rand < 0.5*(1+asymInject) ? 3 : 2;
-               };
-
-               if(MCrecMode) {
-                 // match rec event to gen event to assign helicity
-                 helicity = 0;
-                 if(genEv->FindEvent(evnum)) {
-                   for(int h=0; h<2; h++) {
-                     difference[h] = 
-                       TMath::Abs( hadP[h] - genEv->hadP[h] ) / genEv->hadP[h];
+                   if(hadE[h]>0 && hadPt[h]>0) {
+                     hadEta[h] = (had[h]->Vec).Eta(); // -->tree
+                     hadPhi[h] = (had[h]->Vec).Phi(); // -->tree
+                   } else {
+                     hadEta[h] = -10000;
+                     hadPhi[h] = -10000;
                    };
-                   if(difference[qA]<0.01 && difference[qB]<0.01)
-                     helicity = genEv->helicity;
+
+                   if(debug) {
+                     printf("[+] %s 4-momentum:\n",(had[h]->Title()).Data());
+                     (had[h]->Vec).Print();
+                   };
                  };
-               };
-
-               // print a warning 
-               // (to prevent from accidentally altering the helicity of real data)
-               if(printWarning) {
-                 fprintf(stderr,"WARNING WARNING WARNING: ");
-                 fprintf(stderr,"helicity has been altered (likely for MC study)!!!!!\n");
-                 printWarning = false;
-               };
-             };
-
-             // fill tree
-             tree->Fill();
-
-             // increment event counter
-             evCount++;
-             if(evCount%100000==0) printf("[---] %d dihadron events found\n",evCount);
 
 
-           }; // eo if foundObservablePair
+                 // compute dihadron kinematics
+                 //dih->debugTheta = pairType==0x34 ? true : false;
+                 //if(dih->debugTheta) printf("\nevnum = %d\n",evnum);
+                 dih->SetEvent(had[qA],had[qB],disEv); // -->tree
+                 dihBr->SetEvent(had[qA],had[qB],disEv); // -->tree
+
+                 // set diphCnt_tr to corrected diphCnt, for filling diphoton branches
+                 // -- this solves a subtle case: assume we have a pi+ and two
+                 // diphotons; this will resolve to two dihadrons: A=(pi+,diphoton) and
+                 // B=(diphoton,diphoton), but diphCnt=2 for this event for both. We
+                 // thus need to force diphCnt to 1 for dihadron A, and to 2 for
+                 // dihadron B
+                 diphCnt_tr = 0; // -->tree
+                 if(diphCnt>0) {
+                   if(hadIdx[qA]==kDiph || hadIdx[qB]==kDiph) diphCnt_tr = 1; // -->tree
+                   if(hadIdx[qA]==kDiph && hadIdx[qB]==kDiph) diphCnt_tr = 2; // -->tree
+                 };
+
+
+
+                 // MC helicity injection
+                 if(MCgenMode || MCrecMode) {
+
+                   if(MCgenMode && MCrecMode) {
+                     fprintf(stderr,"ERROR: both MCgenMode and MCrecMode are true\n");
+                     return 0;
+                   };
+
+                   if(MCgenMode) {
+                     // compute injected asymmetry
+                     ampInject = 0.1;
+                     polInject = 0.86;
+                     asymInject = polInject * ampInject * TMath::Sin(dih->PhiH - dih->PhiRp);
+
+                     // helicity re-assignment:  2 = spin -   3 = spin +
+                     rand = RNG->Uniform();
+                     helicity = rand < 0.5*(1+asymInject) ? 3 : 2;
+                   };
+
+                   if(MCrecMode) {
+                     // match rec event to gen event to assign helicity
+                     helicity = 0;
+                     if(genEv->FindEvent(evnum)) {
+                       for(int h=0; h<2; h++) {
+                         difference[h] = 
+                           TMath::Abs( hadP[h] - genEv->hadP[h] ) / genEv->hadP[h];
+                       };
+                       if(difference[qA]<0.01 && difference[qB]<0.01)
+                         helicity = genEv->helicity;
+                     };
+                   };
+
+                   // print a warning 
+                   // (to prevent from accidentally altering the helicity of real data)
+                   if(printWarning) {
+                     fprintf(stderr,"WARNING WARNING WARNING: ");
+                     fprintf(stderr,"helicity has been altered (likely for MC study)!!!!!\n");
+                     printWarning = false;
+                   };
+                 };
+
+                 // fill tree
+                 tree->Fill();
+
+                 // increment event counter
+                 evCount++;
+                 if(evCount%100000==0) printf("[---] %d dihadron events found\n",evCount);
+
+               }; // eo hadron pairing inner loop (iterator hh2)
+             }; // eo hadron pairing outer loop (iterator hh1)
+           }; // eo if pairsExist
 
 
          }; // eo for o2
