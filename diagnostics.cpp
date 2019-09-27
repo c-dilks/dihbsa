@@ -296,6 +296,8 @@ int main(int argc, char** argv) {
    // multiplicities
    TH1D * partMultiplicity = new TH1D("partMultiplicity",
      "overall particle multiplicities (DIS cuts only)",nParticles,0,nParticles);
+   TH1D * numDihadrons = new TH1D("numDihadrons",
+     "number of dihadrons per event (DIS cuts only)",20,0,20);
    TH1D * obsMultiplicity = new TH1D("obsMultiplicity",
      "dihadrons' particle multiplicities",nObservables,0,nObservables);
    for(int p=0; p<nParticles; p++) 
@@ -331,11 +333,12 @@ int main(int argc, char** argv) {
 
      // fill multiplicity plots
      //------------------------
-     // fill overall particle multiplicity
+     // fill overall particle multiplicity and number of dihadrons in the event
      if(ev->cutDIS) {
        for(int p=0; p<nParticles; p++) {
          if(ev->particleCnt[p]>0) partMultiplicity->Fill(p,ev->particleCnt[p]);
        };
+       numDihadrons->Fill(ev->hadOrder);
      };
      if(ev->cutDIS && ev->cutDihadronKinematics && ev->cutDiph[qA] && ev->cutDiph[qB]) {
 
@@ -486,6 +489,23 @@ int main(int argc, char** argv) {
    }; // eo event loop
 
 
+   // correct numDihadrons distribution
+   // - up until now it is filled with hadOrder, for each event (with DIS cuts passed);
+   //   if hadOrder=N, then bins 1 through N are each filled, thus to get the true
+   //   distribution of number of hadrons per event, we need to subtract a count from bins
+   //   1 through N-1
+   // - let N be the highest bin number; if bin N has K counts, subtract K counts from
+   //   bins 1 through N-1; repeat procedure for bin N-1 for all N>1
+   Double_t bc,sub;
+   for(int bn=numDihadrons->GetNbinsX(); bn>1; bn--) {
+     sub = numDihadrons->GetBinContent(bn);
+     for(int bi=bn-1; bi>=1; bi--) {
+       bc = numDihadrons->GetBinContent(bi);
+       numDihadrons->SetBinContent( bi, bc-sub );
+     };
+   };
+
+
    WDist->Write();
    XDist->Write();
    Q2vsW->Write();
@@ -504,6 +524,7 @@ int main(int argc, char** argv) {
 
 
    partMultiplicity->Write();
+   numDihadrons->Write();
    obsMultiplicity->Write();
    hadTypeMatrix->Write();
 

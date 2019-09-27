@@ -244,6 +244,7 @@ enum pair_enum { qA, qB };
 
 // return the ordered hadron particle index within the dihadron pair, where "idx"
 // represents either the first or second hadron (idx==qA or qB, respectively); 
+// example: dihHadIdx(kPim,kPip,qA) returns kPip
 static Int_t dihHadIdx(Int_t p1, Int_t p2, Int_t idx) {
   if(p1==p2) {
     switch(idx) {

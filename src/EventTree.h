@@ -60,6 +60,7 @@ class EventTree : public TObject
 
     // hadron kinematics
     Int_t pairType;
+    Int_t hadOrder;
     Int_t hadIdx[2];
     Float_t hadE[2];
     Float_t hadP[2];
@@ -131,14 +132,14 @@ class EventTree : public TObject
     ///////////////////////////
     //   EventCuts
     ///////////////////////////
-   Bool_t cutQ2,cutW,cutY,cutDIS;
-   Bool_t cutDihadronKinematics;
-   Bool_t cutDihadron;
-   Bool_t cutDiphKinematics[2];
-   Bool_t cutDiph[2];
-   Bool_t cutCrossCheck;
+    Bool_t cutQ2,cutW,cutY,cutDIS;
+    Bool_t cutDihadronKinematics;
+    Bool_t cutDihadron;
+    Bool_t cutDiphKinematics[2];
+    Bool_t cutDiph[2];
+    Bool_t cutCrossCheck;
 
-   Bool_t useDiphBG;
+    Bool_t useDiphBG;
     
   private:
     TChain * chain;

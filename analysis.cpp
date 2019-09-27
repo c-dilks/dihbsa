@@ -42,6 +42,12 @@ int main(int argc, char** argv) {
    };
    if(argc>1) infileN = TString(argv[1]);
    if(argc>2) augerMode = (Bool_t) strtof(argv[2],NULL);
+   
+
+   // if true, will only analyze the leading-E hadrons
+   // -- should be set to false, so theorists can interpret it
+   //    as that is more 'inclusive'
+   bool leadingDihOnly = false;
 
 
    // debugging flags
@@ -145,6 +151,7 @@ int main(int argc, char** argv) {
 
    // hadron branches // [ordered such that first hadron has higher charge than second]
    Int_t pairType;
+   Int_t hadOrder;
    Int_t hadIdx[2]; // particle Idx of each hadron in the pair
    Float_t hadE[2];
    Float_t hadP[2];
@@ -153,6 +160,7 @@ int main(int argc, char** argv) {
    Float_t hadEta[2];
    Float_t hadPhi[2];
    tree->Branch("pairType",&pairType,"pairType/I"); // pair type number
+   tree->Branch("hadOrder",&hadOrder,"hadOrder/I"); // (see hadron pairing algorithm)
    tree->Branch("hadIdx",hadIdx,"hadIdx[2]/I");
    tree->Branch("hadE",hadE,"hadE[2]/F");
    tree->Branch("hadP",hadP,"hadP[2]/F");
@@ -503,7 +511,7 @@ int main(int argc, char** argv) {
      // -- sort each list of each type of observable by E; trajArr will 
      //    be the sorted trajectory array and the 0th entry will be the 
      //    highest energy trajectory 
-     if(debug) printf(">>\n");
+     if(debug) Tools::PrintSeparator(30,">");
      for(int p=0; p<nParticles; p++) { 
        if(trajCnt[p]>0) {
 
@@ -664,6 +672,11 @@ int main(int argc, char** argv) {
        };
      };
 
+     if(debug) {
+       printf("sorted list: %s cnt=%d\n",PartName(kDiph).Data(),trajCnt[kDiph]);
+       for(int t=0; t<trajCnt[kDiph]; t++)
+         ((Trajectory*)(trajArr[kDiph]->At(t)))->Vec.Print();
+     };
 
      
 
@@ -683,168 +696,217 @@ int main(int argc, char** argv) {
 
        // look for "observable pairs" -- these are pairs that are used to form
        // form dihadrons; only the desired observables are paired (see observable_enum
-       // in Constants.h)
+       // in src/Constants.h)
        for(Int_t o1=0; o1<nObservables; o1++) {
-         for(Int_t o2=o1; o2<nObservables; o2++) {
+         for(Int_t o2=0; o2<nObservables; o2++) {
+
+           // each dihadron channel has a specific order, e.g., pi+pi- and pi-pi+ are
+           // the same channel, but the order pi+pi- is preferred. There are two tools
+           // in src/Constants.h that help acheive this: dihHadIdx and IterPair
+           // - dihHadIdx takes two particle indexes, along with 'h' = qA or qB, and 
+           //   returns the particle index that should be associated with 'h'
+           //   -> example: dihHadIdx(kPip,kPim,qA) returns kPip
+           //               dihHadIdx(kPip,kPim,qB) returns kPim
+           //          also dihHadIdx(kPim,kPip,qA) returns kPip
+           // - IterPair takes a pair of observable indices (here o1 and o2), and
+           //   returns 'true' if this pair is in the proper order; it also converts
+           //   o1 and o2 to particle indices 
+           //   -> example: 
+           //      IterPair(sPip,sPim,i1,i2) returns true,  with i1=kPip and i2=kPim
+           //      IterPair(sPim,sPip,i1,i2) returns false, with i1=kPim and i2=kPip
+           //   -> the return value of IterPair is useful within this loop over o1 and
+           //      o2 to ensure we only look at unique pairs (and don't double count pi+pi-
+           //      with pi-pi+)
 
 
-           // convert observable index to particle index
-           i1 = OI(o1);
-           i2 = OI(o2);
-           for(int h=0; h<2; h++) hadIdx[h] = dihHadIdx(i1,i2,h); // -->tree
-           pairType = EncodePairType(hadIdx[qA],hadIdx[qB]); // -->tree
+           // convert observable index to particle index;
+           // IterPair returns true if o1 and o2 follow conventional dihadron ordering
+           // (see above for wall of text for details)
+           if(IterPair(o1,o2,i1,i2)) {
+
+             // now i1 is set to Constants::OI(o1), and likewise for i2
+
+
+             for(int h=0; h<2; h++) hadIdx[h] = dihHadIdx(i1,i2,h); // -->tree
+             pairType = EncodePairType(hadIdx[qA],hadIdx[qB]); // -->tree
 
 
 
-           // HADRON PAIRING ALGORITHM
-           // ---------------------------------------
+             // HADRON PAIRING ALGORITHM
+             // ---------------------------------------
+             // for this dihadron channel, denoted (p,q), we must pair up all the p's
+             // with all the q's; this is acheived by another nested loop
 
-           // define loop ends:
-           // - consider lists of hadrons (p1,p2,p3) and (q1,q2,q3) (ordered by energy)
-           // - if the hadron species are different, loop through each list completely
-           //   so that every possible pair is considered
-           //   -> the above lists pair as p1q1, p1q2, p1q3
-           //                              p2q1, p2q2, p2q3
-           //                              p3q1, p3q2, p3q3
-           //   -> if leadingDihOnly==true, only take p1q1
-           //   -> outer loop and inner loop both begin at 0
-           //   -> outer loop and inner loop both end at trajCnt
-           // - if the hadron species are the same, loop such that pairs aren't
-           //   double-counted; the folowing matrix is the same as above, but
-           //   with reduntant pairs replaced by xxxx:
-           //   ->                         xxxx, p1p2, p1p3
-           //                              xxxx, xxxx, p2p3
-           //                              xxxx, xxxx, xxxx
-           //   -> if leadingDihOnly==true, only take p1p2
-           //   -> outer loop begins at 0;
-           //      inner loop begins at outer loop iterator+1 (first column is all xxxx)
-           //   -> outer loop ends at trajCnt-1 (last row is all xxxx),
-           //      inner loop ends at trajCnt
-           //   
-           //
-           if(i1!=i2) {
-             end1 = leadingDihOnly ? 1 : trajCnt[i1];
-             end2 = leadingDihOnly ? 1 : trajCnt[i2];
-             pairsExist = trajCnt[i1]>=1 && trajCnt[i2]>=1;
-           }
-           else {
-             end1 = leadingDihOnly ? 1 : trajCnt[i1] - 1;
-             end2 = leadingDihOnly ? 2 : trajCnt[i2];
-             pairsExist = trajCnt[i1]>=2;
-           };
+             // define loop ends:
+             // - consider lists of hadrons (p1,p2,p3) and (q1,q2,q3) (ordered by energy)
+             // - if the hadron species are different, loop through each list completely
+             //   so that every possible pair is considered
+             //   -> the above lists pair as p1q1, p1q2, p1q3
+             //                              p2q1, p2q2, p2q3
+             //                              p3q1, p3q2, p3q3
+             //   -> if leadingDihOnly==true, only take p1q1
+             //   -> outer loop and inner loop both begin at 0
+             //   -> outer loop and inner loop both end at trajCnt
+             // - if the hadron species are the same, loop such that pairs aren't
+             //   double-counted; the folowing matrix is the same as above, but
+             //   with reduntant pairs replaced by xxxx:
+             //   ->                         xxxx, p1p2, p1p3
+             //                              xxxx, xxxx, p2p3
+             //                              xxxx, xxxx, xxxx
+             //   -> if leadingDihOnly==true, only take p1p2
+             //   -> outer loop begins at 0;
+             //      inner loop begins at outer loop iterator+1 (first column is all xxxx)
+             //   -> outer loop ends at trajCnt-1 (last row is all xxxx),
+             //      inner loop ends at trajCnt
+             //   
+             // - hadOrder: this is a number that iterates for each hadron pair
+             //   - if hadOrder==0, you can safely assume this is the leading hadron pair
+             //   - for hadOrder>0, it is just an iterator for the nested outer/inner
+             //     loops, so the remaining dihadrons are not ordered by energy, but
+             //     instead by how they are paired
+             //   
+             //
+             if(i1!=i2) {
+               end1 = leadingDihOnly ? 1 : trajCnt[i1];
+               end2 = leadingDihOnly ? 1 : trajCnt[i2];
+               pairsExist = trajCnt[i1]>=1 && trajCnt[i2]>=1;
+             }
+             else {
+               end1 = leadingDihOnly ? 1 : trajCnt[i1] - 1;
+               end2 = leadingDihOnly ? 2 : trajCnt[i2];
+               pairsExist = trajCnt[i1]>=2;
+             };
 
-           // aqui -- add order parameter
-
-
-           if(pairsExist) {
-             // outer loop, for hadron qA (0)
-             for(int hh1=0; hh1<end1; hh1++) {
-               // inner loop, for hadron qB (1)
-               for(int hh2=( i1==i2 ? hh1+1 : 0 ); hh2<end2; hh2++) {
-
-                 if(debug) printf(">>> BEGIN DIHADRON EVENT %s\n",PairName(i1,i2).Data());
+             hadOrder = 0;
 
 
-                 // get hadron kinematics
-                 had[qA] = (Trajectory*) trajArr[hadIdx[qA]]->At(hh1);
-                 had[qB] = (Trajectory*) trajArr[hadIdx[qB]]->At(hh2);
-
-                 for(int h=0; h<2; h++) {
-                   hadE[h] = (had[h]->Vec).E(); // -->tree
-                   hadP[h] = (had[h]->Vec).P(); // -->tree
-                   hadPt[h] = (had[h]->Vec).Pt(); // -->tree
-                   hadPtq[h] = had[h]->Ptq(disEv->vecQ); // -->tree
-
-                   if(hadE[h]>0 && hadPt[h]>0) {
-                     hadEta[h] = (had[h]->Vec).Eta(); // -->tree
-                     hadPhi[h] = (had[h]->Vec).Phi(); // -->tree
-                   } else {
-                     hadEta[h] = -10000;
-                     hadPhi[h] = -10000;
-                   };
+             if(pairsExist) {
+               // outer loop, for hadron qA (0)
+               for(int hh1=0; hh1<end1; hh1++) {
+                 // inner loop, for hadron qB (1)
+                 for(int hh2=( i1==i2 ? hh1+1 : 0 ); hh2<end2; hh2++) {
 
                    if(debug) {
-                     printf("[+] %s 4-momentum:\n",(had[h]->Title()).Data());
-                     (had[h]->Vec).Print();
-                   };
-                 };
-
-
-                 // compute dihadron kinematics
-                 //dih->debugTheta = pairType==0x34 ? true : false;
-                 //if(dih->debugTheta) printf("\nevnum = %d\n",evnum);
-                 dih->SetEvent(had[qA],had[qB],disEv); // -->tree
-                 dihBr->SetEvent(had[qA],had[qB],disEv); // -->tree
-
-                 // set diphCnt_tr to corrected diphCnt, for filling diphoton branches
-                 // -- this solves a subtle case: assume we have a pi+ and two
-                 // diphotons; this will resolve to two dihadrons: A=(pi+,diphoton) and
-                 // B=(diphoton,diphoton), but diphCnt=2 for this event for both. We
-                 // thus need to force diphCnt to 1 for dihadron A, and to 2 for
-                 // dihadron B
-                 diphCnt_tr = 0; // -->tree
-                 if(diphCnt>0) {
-                   if(hadIdx[qA]==kDiph || hadIdx[qB]==kDiph) diphCnt_tr = 1; // -->tree
-                   if(hadIdx[qA]==kDiph && hadIdx[qB]==kDiph) diphCnt_tr = 2; // -->tree
-                 };
-
-
-
-                 // MC helicity injection
-                 if(MCgenMode || MCrecMode) {
-
-                   if(MCgenMode && MCrecMode) {
-                     fprintf(stderr,"ERROR: both MCgenMode and MCrecMode are true\n");
-                     return 0;
+                     printf("\n>>> BEGIN DIHADRON EVENT %s\n",PairName(i1,i2).Data());
+                     printf("    hadOrder = %d\n",hadOrder);
                    };
 
-                   if(MCgenMode) {
-                     // compute injected asymmetry
-                     ampInject = 0.1;
-                     polInject = 0.86;
-                     asymInject = polInject * ampInject * TMath::Sin(dih->PhiH - dih->PhiRp);
 
-                     // helicity re-assignment:  2 = spin -   3 = spin +
-                     rand = RNG->Uniform();
-                     helicity = rand < 0.5*(1+asymInject) ? 3 : 2;
-                   };
 
-                   if(MCrecMode) {
-                     // match rec event to gen event to assign helicity
-                     helicity = 0;
-                     if(genEv->FindEvent(evnum)) {
-                       for(int h=0; h<2; h++) {
-                         difference[h] = 
-                           TMath::Abs( hadP[h] - genEv->hadP[h] ) / genEv->hadP[h];
-                       };
-                       if(difference[qA]<0.01 && difference[qB]<0.01)
-                         helicity = genEv->helicity;
+                   // get hadron kinematics
+                   had[qA] = (Trajectory*) trajArr[hadIdx[qA]]->At(hh1);
+                   had[qB] = (Trajectory*) trajArr[hadIdx[qB]]->At(hh2);
+
+                   for(int h=0; h<2; h++) {
+                     hadE[h] = (had[h]->Vec).E(); // -->tree
+                     hadP[h] = (had[h]->Vec).P(); // -->tree
+                     hadPt[h] = (had[h]->Vec).Pt(); // -->tree
+                     hadPtq[h] = had[h]->Ptq(disEv->vecQ); // -->tree
+
+                     if(hadE[h]>0 && hadPt[h]>0) {
+                       hadEta[h] = (had[h]->Vec).Eta(); // -->tree
+                       hadPhi[h] = (had[h]->Vec).Phi(); // -->tree
+                     } else {
+                       hadEta[h] = -10000;
+                       hadPhi[h] = -10000;
+                     };
+
+                     if(debug) {
+                       printf("[+] %s 4-momentum:\n",(had[h]->Title()).Data());
+                       (had[h]->Vec).Print();
                      };
                    };
 
-                   // print a warning 
-                   // (to prevent from accidentally altering the helicity of real data)
-                   if(printWarning) {
-                     fprintf(stderr,"WARNING WARNING WARNING: ");
-                     fprintf(stderr,"helicity has been altered (likely for MC study)!!!!!\n");
-                     printWarning = false;
+                   /*
+                   dih->debugTheta = pairType==0x34 ? true : false;
+                   if(dih->debugTheta) printf("\nevnum = %d\n",evnum);
+                   */
+
+                   // compute dihadron kinematics
+                   dih->SetEvent(had[qA],had[qB],disEv); // -->tree
+                   dihBr->SetEvent(had[qA],had[qB],disEv); // -->tree
+
+                   // set diphCnt_tr to corrected diphCnt, for filling diphoton branches
+                   // -- aqui - TODO - fix this too!
+                   // -- this solves a subtle case: assume we have a pi+ and two
+                   // diphotons; this will resolve to two dihadrons: A=(pi+,diphoton) and
+                   // B=(diphoton,diphoton), but diphCnt=2 for this event for both. We
+                   // thus need to force diphCnt to 1 for dihadron A, and to 2 for
+                   // dihadron B
+                   diphCnt_tr = 0; // -->tree
+                   if(diphCnt>0) {
+                     if(hadIdx[qA]==kDiph || hadIdx[qB]==kDiph) diphCnt_tr = 1; // -->tree
+                     if(hadIdx[qA]==kDiph && hadIdx[qB]==kDiph) diphCnt_tr = 2; // -->tree
                    };
-                 };
-
-                 // fill tree
-                 tree->Fill();
-
-                 // increment event counter
-                 evCount++;
-                 if(evCount%100000==0) printf("[---] %d dihadron events found\n",evCount);
-
-               }; // eo hadron pairing inner loop (iterator hh2)
-             }; // eo hadron pairing outer loop (iterator hh1)
-           }; // eo if pairsExist
 
 
+
+                   // MC helicity injection
+                   if(MCgenMode || MCrecMode) {
+
+                     if(MCgenMode && MCrecMode) {
+                       fprintf(stderr,"ERROR: both MCgenMode and MCrecMode are true\n");
+                       return 0;
+                     };
+
+                     if(MCgenMode) {
+                       // compute injected asymmetry
+                       ampInject = 0.1;
+                       polInject = 0.86;
+                       asymInject = polInject * ampInject * TMath::Sin(dih->PhiH - dih->PhiRp);
+
+                       // helicity re-assignment:  2 = spin -   3 = spin +
+                       rand = RNG->Uniform();
+                       helicity = rand < 0.5*(1+asymInject) ? 3 : 2;
+                     };
+
+                     if(MCrecMode) {
+                       // match rec event to gen event to assign helicity
+                       helicity = 0;
+                       if(genEv->FindEvent(evnum)) {
+                         for(int h=0; h<2; h++) {
+                           difference[h] = 
+                             TMath::Abs( hadP[h] - genEv->hadP[h] ) / genEv->hadP[h];
+                         };
+                         if(difference[qA]<0.01 && difference[qB]<0.01)
+                           helicity = genEv->helicity;
+                       };
+                     };
+
+                     // print a warning 
+                     // (to prevent from accidentally altering the helicity of real data)
+                     if(printWarning) {
+                       fprintf(stderr,"WARNING WARNING WARNING: ");
+                       fprintf(stderr,"helicity has been altered (likely for MC study)!!!!!\n");
+                       printWarning = false;
+                     };
+                   };
+
+                   // fill tree
+                   // aqui - TODO - if there's a diphoton, the tree will not fill unless
+                   // it's the leading-E diphoton (because at the moment we cannot trust
+                   // the kinematics for subleading-E diphotons)
+                   if( diphCnt_tr==0 || (diphCnt_tr==1 && hadOrder==0) ) {
+                     tree->Fill();
+                     if(debug) printf("write to tree\n");
+                   };
+
+                   // increment event counter
+                   evCount++;
+                   if(evCount%100000==0) printf("[---] %d dihadron events found\n",evCount);
+
+                   // increment hadOrder iterator
+                   hadOrder++; //-->tree
+
+                 }; // eo hadron pairing inner loop (iterator hh2)
+               }; // eo hadron pairing outer loop (iterator hh1)
+             }; // eo if pairsExist
+             if(debug && !pairsExist) 
+               printf("no %s dihadrons.\n",PairName(i1,i2).Data());
+           }; // eo if(IterPair)
          }; // eo for o2
        }; // eo for o1
+       if(debug) printf("\n");
      }; // eo if #electrons > 0
 
 

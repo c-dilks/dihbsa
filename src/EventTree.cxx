@@ -37,6 +37,8 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
 
   chain->SetBranchAddress("pairType",&pairType);
   chain->SetBranchAddress("hadIdx",hadIdx);
+  if(chain->GetBranch("hadOrder")) chain->SetBranchAddress("hadOrder",&hadOrder);
+  else hadOrder = -10000;
   chain->SetBranchAddress("hadE",hadE);
   chain->SetBranchAddress("hadP",hadP);
   chain->SetBranchAddress("hadPt",hadPt);
