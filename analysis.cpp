@@ -454,6 +454,10 @@ int main(int argc, char** argv) {
        chi2pid = -10000;
 #endif
 
+
+
+       
+
        // convert PID to local particle index; if it's not defined in Constants.h, pIdx
        // will be -10000 and this particle will be ignored
        pIdx = PIDtoIdx(pidCur);
@@ -473,12 +477,40 @@ int main(int argc, char** argv) {
            // (sometimes photons in dnp2018 skim files don't...)
            if( !isnan(vecObsP[eX]) && !isnan(vecObsP[eY]) && !isnan(vecObsP[eZ]) ) {
 
-             // set tr to allocated Trajectory instance and add it to the unsorted array
+             // set tr to allocated Trajectory instance
              tr = traj[pIdx][trajCnt[pIdx]]; 
+
+             // set tr kinematics
              vecObs.SetXYZM(vecObsP[eX],vecObsP[eY],vecObsP[eZ],PartMass(pIdx));
              tr->SetVec(vecObs);
              tr->SetVertex(vertex[eX],vertex[eY],vertex[eZ]);
              tr->chi2pid = chi2pid;
+             
+             // set tr FiducialCuts info (note: Trajectory derives from FiducialCuts)
+#if PARTICLE_BANK == 0 || PARTICLE_BANK == 3
+             // -- PCAL from REC::Calorimeter
+             tr->pcalSec = part->cal(clas12::PCAL)->getSector();
+             tr->pcalLayer = part->cal(clas12::PCAL)->getLayer();
+             tr->pcalL[FiducialCuts::u] = part->cal(clas12::PCAL)->getLu();
+             tr->pcalL[FiducialCuts::v] = part->cal(clas12::PCAL)->getLv();
+             tr->pcalL[FiducialCuts::w] = part->cal(clas12::PCAL)->getLw();
+             // -- DC from REC::Track
+             tr->dcTrackDetector = part->trk(clas12::DC)->getDetector();
+             tr->dcSec = part->trk(clas12::DC)->getSector();
+             // -- DC from REC::Traj
+             for(int r=0; r<FiducialCuts::nReg; r++) {
+               tr->dcTrajDetector[r] = 
+                 part->traj(clas12::DC,FiducialCuts::regLayer[r])->getDetector();
+               tr->dcTrajLayer[r] = 
+                 part->traj(clas12::DC,FiducialCuts::regLayer[r])->getLayer();
+               tr->dcTraj[r][FiducialCuts::x] = 
+                 part->traj(clas12::DC,FiducialCuts::regLayer[r])->getX();
+               tr->dcTraj[r][FiducialCuts::y] = 
+                 part->traj(clas12::DC,FiducialCuts::regLayer[r])->getY();
+               tr->dcTraj[r][FiducialCuts::z] = 
+                 part->traj(clas12::DC,FiducialCuts::regLayer[r])->getZ();
+             };
+#endif
 
              trajArrUS[pIdx]->AddLast(tr);
 

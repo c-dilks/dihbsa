@@ -1,10 +1,32 @@
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/// fiducial volume cut functions
-///
-/// Stefan Diehl (sdiehl@jlab.org)
-///
+#include "FiducialCuts.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// dihbsa implementation of Stefan Diehl's fiducial volume cut functions
+
+
+  //////////////////////////////////
+  //
+  // VARIABLES WHICH MUST BE DEFINED
+  //
+  // PCAL
+  // ----
+  // pcalSec
+  // pcalLayer
+  // pcalL[u,v,w]
+  //
+  // DC 
+  // --
+  // dcSec
+  // dcTrackDetector
+  // dcTrajDetector
+  // dcTraj[r1,r2,r3][x,y,z]
+  //
+  // OTHER
+  // -----
+  // torus
+  //
+  //////////////////////////////////
+
+
 /// Definitions from hipo 4 banks:
 
 /*
@@ -12,84 +34,91 @@
  * EC->PCAL
  * --------
  * - bank: REC::Calorimeter
- * vCal_layer==1     layer      part->cal(clas12::PCAL)->getLayer()
- * vCal_sector       sector     part->cal(clas12::PCAL)->getSector()
- * vCal_lu           lu         part->cal(clas12::PCAL)->getLu()
- * vCal_lv           lv         part->cal(clas12::PCAL)->getLv()
- * vCal_lw           lw         part->cal(clas12::PCAL)->getLw()
+ * vCal_layer==1     layer      part->cal(clas12::PCAL)->getLayer()  pcalLayer
+ * vCal_sector       sector     part->cal(clas12::PCAL)->getSector()     pcalSec
+ * vCal_lu           lu         part->cal(clas12::PCAL)->getLu()         pcalL
+ * vCal_lv           lv         part->cal(clas12::PCAL)->getLv()         
+ * vCal_lw           lw         part->cal(clas12::PCAL)->getLw()         
  *
  * DC
  * --
  * - bank: REC::Track
- * vTRK_detector==6    detector     part->trk(clas12::DC)->getDetector() 
- * vTRK_sector         sector       part->trk(clas12::DC)->getSector()
+ * vTRK_detector==6    detector     part->trk(clas12::DC)->getDetector() dcTrackDetector
+ * vTRK_sector         sector       part->trk(clas12::DC)->getSector()   dcSec
  *
  * - bank: REC::Traj
- * vTraj_detID==6              detector    part->traj(clas12::DC,{6,18,30})->getDetector() 
- * vTraj_layerID=={6,18,30}    layer       part->traj(clas12::DC,{6,18,30})->getLayer()
- * vTraj_x                     x           part->traj(clas12::DC,{6,18,30})->getX()
+ * vTraj_detID==6              detector    part->traj(clas12::DC,{6,18,30})->getDetector() dcTrajDetector
+ * vTraj_layerID=={6,18,30}    layer       part->traj(clas12::DC,{6,18,30})->getLayer() dcTrajLayer
+ * vTraj_x                     x           part->traj(clas12::DC,{6,18,30})->getX() dcTraj[] 
  * vTraj_y                     y           part->traj(clas12::DC,{6,18,30})->getY()
  * vTraj_z                     z           part->traj(clas12::DC,{6,18,30})->getZ()
+ *   for(r=0; r<3; r++) {
+ *     tr->dcTraj[r][FiducialCuts::x] = part->traj(clas12::DC,FidcualCuts::regLayer[r])->getX();
+ *     tr->dcTraj[r][FiducialCuts::y] = part->traj(clas12::DC,FidcualCuts::regLayer[r])->getY();
+ *     tr->dcTraj[r][FiducialCuts::z] = part->traj(clas12::DC,FidcualCuts::regLayer[r])->getZ();
+ *   }
  *
+ * set inbending = true
+ * set outbending = false
  */
 
-  // Calorimeter bank (layer: PCAL = 1)
 
-    for(int i = 0; i < Cal_Nentries; i++){
-      if(vCal_pindex->at(i) >= 0 && vCal_pindex->at(i) < BUFFER && vCal_layer->at(i) == 1){
-        part_Cal_PCAL_sector[vCal_pindex->at(i)] = vCal_sector->at(i); 
-        part_Cal_PCAL_lu[vCal_pindex->at(i)] = vCal_lu->at(i);
-        part_Cal_PCAL_lv[vCal_pindex->at(i)] = vCal_lv->at(i);
-        part_Cal_PCAL_lw[vCal_pindex->at(i)] = vCal_lw->at(i);
-      }
-    }
-  
-  // tracking banks  (detectors: DC = 6) 
 
-    for(int i = 0; i < TRK_Nentries; i++){
-      if(vTRK_pindex->at(i) < BUFFER && vTRK_detector->at(i) == 6){
-        part_DC_sector[vTRK_pindex->at(i)] = vTRK_sector->at(i);
-      }
-    }
+ClassImp(FiducialCuts)
 
-  // trajectory crosses  (layer: 6 = DC region 1 start,  18 = DC region 2 start,  30 = DC region 3 start ) 
 
-  if(Traj_Nentries > 0){
-    for(int i = 0; i < Traj_Nentries; i++){
-      if(vTraj_pindex->at(i) >= 0 && vTraj_pindex->at(i) < BUFFER && vTraj_detID->at(i) == 6 && vTraj_layerID->at(i) == 6){    
-          part_DC_c1x[vTraj_pindex->at(i)] = vTraj_x->at(i);
-          part_DC_c1y[vTraj_pindex->at(i)] = vTraj_y->at(i);
-          part_DC_c1z[vTraj_pindex->at(i)] = vTraj_z->at(i);
-      }
-      if(vTraj_pindex->at(i) >= 0 && vTraj_pindex->at(i) < BUFFER && vTraj_detID->at(i) == 6 && vTraj_layerID->at(i) == 18){  
-          part_DC_c2x[vTraj_pindex->at(i)] = vTraj_x->at(i);
-          part_DC_c2y[vTraj_pindex->at(i)] = vTraj_y->at(i);
-          part_DC_c2z[vTraj_pindex->at(i)] = vTraj_z->at(i);
-      }
-      if(vTraj_pindex->at(i) >= 0 && vTraj_pindex->at(i) < BUFFER && vTraj_detID->at(i) == 6 && vTraj_layerID->at(i) == 30){  
-          part_DC_c3x[vTraj_pindex->at(i)] = vTraj_x->at(i);
-          part_DC_c3y[vTraj_pindex->at(i)] = vTraj_y->at(i);
-          part_DC_c3z[vTraj_pindex->at(i)] = vTraj_z->at(i);
-      }
-    }
-  }
+FiducialCuts::FiducialCuts() {};
+FiducialCuts::~FiducialCuts() {};
+
+
+bool FiducialCuts::SetSwitches(int lev) {
+
+  // set cut level
+  tight=medium=loose=false;
+  switch(lev) {
+    case cutTight: tight=true; break;
+    case cutMedium: medium=true; break;
+    case cutLoose: loose=true; break;
+    default: return ErrPrint("level unknown");
+  };
+
+  // set torus setting
+  inbending=outbending=false;
+  switch(torus) {
+    case -1: inbending=true; break;
+    case  1: outbending=true; break;
+    default: return ErrPrint("torus unknown");
+  };
+
+  // check detector IDs etc.
+  if(pcalLayer!=1) return ErrPrint("pcalLayer unknown");
+  if(dcTrackDetector!=6) return ErrPrint("dcTrackDetector unknown");
+  if(kcTrajDetector!=6) return ErrPrint("dcTrajDetector unknown");
+  for(int r=0; r<nReg; r++) {
+    if(dcTrajLayer[r]!=regLayer[r]) {
+      sprintf(msg,"dcTrajLayer[r%d]=%f is not correct",r+1,dcTrajLayer[r]);
+      return ErrPrint(msg);
+    };
+  };
+
+  return true;
+};
+
 
 
 /// PCAL fiducial cuts:
 
-bool EC_hit_position_fiducial_cut(int j){
+bool FiducialCuts::EC_hit_position_fiducial_cut(int level){
 
-  ///////////////////////////
-  bool tight = false;
-  bool medium = true;
-  bool loose = false;
-  //////////////////////////
+  //
+  //////////////////////////////////
+  
+  success = this->SetSwitches(level);
+  if(!success) return false;
+
 
 // Cut using the natural directions of the scintillator bars/ fibers:
 
-  double u = part_Cal_PCAL_lu[j];
-  double v = part_Cal_PCAL_lv[j];
-  double w = part_Cal_PCAL_lw[j];
    
   /// v + w is going from the side to the back end of the PCAL, u is going from side to side
   /// 1 scintillator bar is 4.5 cm wide. In the outer regions (back) double bars are used.
@@ -166,7 +195,7 @@ bool EC_hit_position_fiducial_cut(int j){
   double min_u = 0; double max_u = 0; double min_v = 0; double max_v = 0; double min_w = 0; double max_w = 0;  
 
   for(Int_t k = 0; k < 6; k++){  
-    if(part_Cal_PCAL_sector[j]-1 == k && inbending == true){
+    if(pcalSec-1 == k && inbending == true){
       if(tight == true){
         min_u = min_u_tight_inb[k]; max_u = max_u_tight_inb[k];
         min_v = min_v_tight_inb[k]; max_v = max_v_tight_inb[k];
@@ -183,7 +212,7 @@ bool EC_hit_position_fiducial_cut(int j){
         min_w = min_w_loose_inb[k]; max_w = max_w_loose_inb[k];
       }
     }
-    if(part_Cal_PCAL_sector[j]-1 == k && outbending == true){
+    if(pcalSec-1 == k && outbending == true){
       if(tight == true){
         min_u = min_u_tight_out[k]; max_u = max_u_tight_out[k];
         min_v = min_v_tight_out[k]; max_v = max_v_tight_out[k];
@@ -202,7 +231,7 @@ bool EC_hit_position_fiducial_cut(int j){
     }
   }
 
-  if(v > min_v && v < max_v && w > min_w && w < max_w) return true;
+  if(pcalL[v] > min_v && pcalL[v] < max_v && pcalL[w] > min_w && pcalL[w] < max_w) return true;
   else return false;
 }
 
@@ -210,13 +239,12 @@ bool EC_hit_position_fiducial_cut(int j){
 
 // DC fiducial cuts for the 3 regions
 
-bool DC_hit_position_region1_fiducial_cut_triangle(int j){
+bool FiducialCuts::DC_hit_position_region1_fiducial_cut_triangle(int level){
 
-  ///////////////////////////
-  bool tight = false;
-  bool medium = true;
-  bool loose = false;
-  //////////////////////////
+  
+  success = this->SetSwitches(level);
+  if(!success) return false;
+
 
   double add = 0;  // value in cm added to the height and radius of the cut
   if(tight == true){  add = 1.0; }
@@ -230,7 +258,7 @@ bool DC_hit_position_region1_fiducial_cut_triangle(int j){
   double height_inb[]  = {27, 22, 22, 27, 22, 22};
   double height_outb[] = {15, 15, 15, 15, 15, 15};
 
-  int sec = part_DC_sector[j]-1;   
+  int sec = dcSec-1;   
 
   for(Int_t k = 0; k < 6; k++){  
     if(sec == k && inbending == true){
@@ -243,8 +271,8 @@ bool DC_hit_position_region1_fiducial_cut_triangle(int j){
     }
   }
 
-  double x1_rot = part_DC_c1y[j] * sin(sec*60.0*Pival/180) + part_DC_c1x[j] * cos(sec*60.0*Pival/180);
-  double y1_rot = part_DC_c1y[j] * cos(sec*60.0*Pival/180) - part_DC_c1x[j] * sin(sec*60.0*Pival/180);
+  double x1_rot = dcTraj[r1][y] * sin(sec*60.0*Pival/180) + dcTraj[r1][x] * cos(sec*60.0*Pival/180);
+  double y1_rot = dcTraj[r1][y] * cos(sec*60.0*Pival/180) - dcTraj[r1][x] * sin(sec*60.0*Pival/180);
 
   double slope = 1/tan(0.5*angle*Pival/180);
   double left  = (height - slope * y1_rot);
@@ -258,13 +286,11 @@ bool DC_hit_position_region1_fiducial_cut_triangle(int j){
 }
 
 
-bool DC_hit_position_region2_fiducial_cut_triangle(int j){
+bool FiducialCuts::DC_hit_position_region2_fiducial_cut_triangle(int level){
 
-  ///////////////////////////
-  bool tight = false;
-  bool medium = true;
-  bool loose = false;
-  //////////////////////////
+  success = this->SetSwitches(level);
+  if(!success) return false;
+
 
   double add = 0;  // value in cm added to the height and radius of the cut
   if(tight == true){  add = 2.0; }
@@ -278,7 +304,7 @@ bool DC_hit_position_region2_fiducial_cut_triangle(int j){
   double height_inb[]  = {40, 34, 34, 40, 34, 34};
   double height_outb[] = {25, 25, 25, 25, 25, 25};
 
-  int sec = part_DC_sector[j]-1;
+  int sec = dcSec-1;
 
   for(Int_t k = 0; k < 6; k++){  
     if(sec == k && inbending == true){
@@ -291,8 +317,8 @@ bool DC_hit_position_region2_fiducial_cut_triangle(int j){
     }
   }
     
-  double x2_rot = part_DC_c2y[j] * sin(sec*60.0*Pival/180) + part_DC_c2x[j] * cos(sec*60.0*Pival/180);
-  double y2_rot = part_DC_c2y[j] * cos(sec*60.0*Pival/180) - part_DC_c2x[j] * sin(sec*60.0*Pival/180);
+  double x2_rot = dcTraj[r2][y] * sin(sec*60.0*Pival/180) + dcTraj[r2][x] * cos(sec*60.0*Pival/180);
+  double y2_rot = dcTraj[r2][y] * cos(sec*60.0*Pival/180) - dcTraj[r2][x] * sin(sec*60.0*Pival/180);
 
   double slope = 1/tan(0.5*angle*Pival/180);
   double left  = (height - slope * y2_rot);
@@ -307,13 +333,11 @@ bool DC_hit_position_region2_fiducial_cut_triangle(int j){
 }
 
 
-bool DC_hit_position_region3_fiducial_cut_triangle(int j){
+bool FiducialCuts::DC_hit_position_region3_fiducial_cut_triangle(int level){
 
-  ///////////////////////////
-  bool tight = false;
-  bool medium = true;
-  bool loose = false;
-  //////////////////////////
+  success = this->SetSwitches(level);
+  if(!success) return false;
+
 
   double add = 0;  // value in cm added to the height and radius of the cut
   if(tight == true){  add = 3.0; }
@@ -327,7 +351,7 @@ bool DC_hit_position_region3_fiducial_cut_triangle(int j){
   double height_inb[]  = {47, 39, 39, 47, 39, 39};
   double height_outb[] = {48, 48, 48, 48, 48, 48};
 
-  int sec = part_DC_sector[j]-1;
+  int sec = dcSec-1;
 
   for(Int_t k = 0; k < 6; k++){  
     if(sec == k && inbending == true){
@@ -340,8 +364,8 @@ bool DC_hit_position_region3_fiducial_cut_triangle(int j){
     }
   }
 
-  double x3_rot = part_DC_c3y[j] * sin(sec*60.0*Pival/180) + part_DC_c3x[j] * cos(sec*60.0*Pival/180);
-  double y3_rot = part_DC_c3y[j] * cos(sec*60.0*Pival/180) - part_DC_c3x[j] * sin(sec*60.0*Pival/180);
+  double x3_rot = dcTraj[r3][y] * sin(sec*60.0*Pival/180) + dcTraj[r3][x] * cos(sec*60.0*Pival/180);
+  double y3_rot = dcTraj[r3][y] * cos(sec*60.0*Pival/180) - dcTraj[r3][x] * sin(sec*60.0*Pival/180);
 
   double slope = 1/tan(0.5*angle*Pival/180);
   double left  = (height - slope * y3_rot);
@@ -358,13 +382,11 @@ bool DC_hit_position_region3_fiducial_cut_triangle(int j){
 
 // DC fiducial cuts for the 3 regions based on 90% level of teh hit distribution
 
-bool DC_hit_position_region1_fiducial_cut(int j){
+bool FiducialCuts::DC_hit_position_region1_fiducial_cut(int level){
 
-  ///////////////////////////
-  bool tight = false;
-  bool medium = true;
-  bool loose = false;
-  //////////////////////////
+  success = this->SetSwitches(level);
+  if(!success) return false;
+
 
   double add = 0;  // value in cm added to the height and radius of the cut
   if(tight == true){  add = 0.5; }
@@ -373,17 +395,17 @@ bool DC_hit_position_region1_fiducial_cut(int j){
 
   // calculate theta and phi local:
 
-  double theta_DCr1 = 180/Pival * acos(part_DC_c1z[j]/sqrt(pow(part_DC_c1x[j], 2) + pow(part_DC_c1y[j], 2) + pow(part_DC_c1z[j],2)));
-  double phi_DCr1_raw = 180/Pival * atan2(part_DC_c1y[j]/sqrt(pow(part_DC_c1x[j], 2) + pow(part_DC_c1y[j], 2) + pow(part_DC_c1z[j],2)), 
-                                            part_DC_c1x[j]/sqrt(pow(part_DC_c1x[j], 2) + pow(part_DC_c1y[j], 2) + pow(part_DC_c1z[j],2)));
+  double theta_DCr1 = 180/Pival * acos(dcTraj[r1][z]/sqrt(pow(dcTraj[r1][x], 2) + pow(dcTraj[r1][y], 2) + pow(dcTraj[r1][z],2)));
+  double phi_DCr1_raw = 180/Pival * atan2(dcTraj[r1][y]/sqrt(pow(dcTraj[r1][x], 2) + pow(dcTraj[r1][y], 2) + pow(dcTraj[r1][z],2)), 
+                                            dcTraj[r1][x]/sqrt(pow(dcTraj[r1][x], 2) + pow(dcTraj[r1][y], 2) + pow(dcTraj[r1][z],2)));
   double phi_DCr1 = 0;
-  if(part_DC_sector[j] == 1) phi_DCr1 = phi_DCr1_raw;
-  if(part_DC_sector[j] == 2) phi_DCr1 = phi_DCr1_raw - 60;
-  if(part_DC_sector[j] == 3) phi_DCr1 = phi_DCr1_raw - 120;
-  if(part_DC_sector[j] == 4 && phi_DCr1_raw > 0) phi_DCr1 = phi_DCr1_raw - 180;
-  if(part_DC_sector[j] == 4 && phi_DCr1_raw < 0) phi_DCr1 = phi_DCr1_raw + 180;
-  if(part_DC_sector[j] == 5) phi_DCr1 = phi_DCr1_raw + 120;
-  if(part_DC_sector[j] == 6) phi_DCr1 = phi_DCr1_raw + 60;
+  if(dcSec == 1) phi_DCr1 = phi_DCr1_raw;
+  if(dcSec == 2) phi_DCr1 = phi_DCr1_raw - 60;
+  if(dcSec == 3) phi_DCr1 = phi_DCr1_raw - 120;
+  if(dcSec == 4 && phi_DCr1_raw > 0) phi_DCr1 = phi_DCr1_raw - 180;
+  if(dcSec == 4 && phi_DCr1_raw < 0) phi_DCr1 = phi_DCr1_raw + 180;
+  if(dcSec == 5) phi_DCr1 = phi_DCr1_raw + 120;
+  if(dcSec == 6) phi_DCr1 = phi_DCr1_raw + 60;
 
   // calculate cut borders
 
@@ -411,7 +433,7 @@ bool DC_hit_position_region1_fiducial_cut(int j){
   double p0_max = 0; double p1_max = 0; double p2_max = 0; double p3_max = 0;
 
   for(Int_t k = 0; k < 6; k++){  
-    if(part_DC_sector[j]-1 == k && inbending == true){
+    if(dcSec-1 == k && inbending == true){
       p0_min = p0_reg1_min_inb[k];
       p1_min = p1_reg1_min_inb[k];
       p2_min = p2_reg1_min_inb[k];
@@ -421,7 +443,7 @@ bool DC_hit_position_region1_fiducial_cut(int j){
       p2_max = p2_reg1_max_inb[k];
       p3_max = p3_reg1_max_inb[k];
     }
-    if(part_DC_sector[j]-1 == k && outbending == true){
+    if(dcSec-1 == k && outbending == true){
       p0_min = p0_reg1_min_out[k];
       p1_min = p1_reg1_min_out[k];
       p2_min = p2_reg1_min_out[k];
@@ -450,13 +472,11 @@ bool DC_hit_position_region1_fiducial_cut(int j){
 }
 
 
-bool DC_hit_position_region2_fiducial_cut(int j){
+bool FiducialCuts::DC_hit_position_region2_fiducial_cut(int level){
 
-  ///////////////////////////
-  bool tight = false;
-  bool medium = true;
-  bool loose = false;
-  //////////////////////////
+  success = this->SetSwitches(level);
+  if(!success) return false;
+
 
   double add = 0;  // value in cm added to the height and radius of the cut
   if(tight == true){  add = 0.5; }
@@ -465,17 +485,17 @@ bool DC_hit_position_region2_fiducial_cut(int j){
 
   // calculate theta and phi local:
 
-  double theta_DCr2 = 180/Pival * acos(part_DC_c2z[j]/sqrt(pow(part_DC_c2x[j], 2) + pow(part_DC_c2y[j], 2) + pow(part_DC_c2z[j],2)));
-  double phi_DCr2_raw = 180/Pival * atan2(part_DC_c2y[j]/sqrt(pow(part_DC_c2x[j], 2) + pow(part_DC_c2y[j], 2) + pow(part_DC_c2z[j],2)), 
-                                            part_DC_c2x[j]/sqrt(pow(part_DC_c2x[j], 2) + pow(part_DC_c2y[j], 2) + pow(part_DC_c2z[j],2)));
+  double theta_DCr2 = 180/Pival * acos(dcTraj[r2][z]/sqrt(pow(dcTraj[r2][x], 2) + pow(dcTraj[r2][y], 2) + pow(dcTraj[r2][z],2)));
+  double phi_DCr2_raw = 180/Pival * atan2(dcTraj[r2][y]/sqrt(pow(dcTraj[r2][x], 2) + pow(dcTraj[r2][y], 2) + pow(dcTraj[r2][z],2)), 
+                                            dcTraj[r2][x]/sqrt(pow(dcTraj[r2][x], 2) + pow(dcTraj[r2][y], 2) + pow(dcTraj[r2][z],2)));
   double phi_DCr2 = 0;
-  if(part_DC_sector[j] == 1) phi_DCr2 = phi_DCr2_raw;
-  if(part_DC_sector[j] == 2) phi_DCr2 = phi_DCr2_raw - 60;
-  if(part_DC_sector[j] == 3) phi_DCr2 = phi_DCr2_raw - 120;
-  if(part_DC_sector[j] == 4 && phi_DCr2_raw > 0) phi_DCr2 = phi_DCr2_raw - 180;
-  if(part_DC_sector[j] == 4 && phi_DCr2_raw < 0) phi_DCr2 = phi_DCr2_raw + 180;
-  if(part_DC_sector[j] == 5) phi_DCr2 = phi_DCr2_raw + 120;
-  if(part_DC_sector[j] == 6) phi_DCr2 = phi_DCr2_raw + 60;
+  if(dcSec == 1) phi_DCr2 = phi_DCr2_raw;
+  if(dcSec == 2) phi_DCr2 = phi_DCr2_raw - 60;
+  if(dcSec == 3) phi_DCr2 = phi_DCr2_raw - 120;
+  if(dcSec == 4 && phi_DCr2_raw > 0) phi_DCr2 = phi_DCr2_raw - 180;
+  if(dcSec == 4 && phi_DCr2_raw < 0) phi_DCr2 = phi_DCr2_raw + 180;
+  if(dcSec == 5) phi_DCr2 = phi_DCr2_raw + 120;
+  if(dcSec == 6) phi_DCr2 = phi_DCr2_raw + 60;
 
   // calculate cut borders
 
@@ -503,7 +523,7 @@ bool DC_hit_position_region2_fiducial_cut(int j){
   double p0_max = 0; double p1_max = 0; double p2_max = 0; double p3_max = 0;
 
   for(Int_t k = 0; k < 6; k++){  
-    if(part_DC_sector[j]-1 == k && inbending == true){
+    if(dcSec-1 == k && inbending == true){
       p0_min = p0_reg2_min_inb[k];
       p1_min = p1_reg2_min_inb[k];
       p2_min = p2_reg2_min_inb[k];
@@ -513,7 +533,7 @@ bool DC_hit_position_region2_fiducial_cut(int j){
       p2_max = p2_reg2_max_inb[k];
       p3_max = p3_reg2_max_inb[k];
     }
-    if(part_DC_sector[j]-1 == k && outbending == true){
+    if(dcSec-1 == k && outbending == true){
       p0_min = p0_reg2_min_out[k];
       p1_min = p1_reg2_min_out[k];
       p2_min = p2_reg2_min_out[k];
@@ -541,13 +561,11 @@ bool DC_hit_position_region2_fiducial_cut(int j){
 }
 
 
-bool DC_hit_position_region3_fiducial_cut(int j){
+bool FiducialCuts::DC_hit_position_region3_fiducial_cut(int level){
 
-  ///////////////////////////
-  bool tight = false;
-  bool medium = true;
-  bool loose = false;
-  //////////////////////////
+  success = this->SetSwitches(level);
+  if(!success) return false;
+
 
   double add = 0;  // value in cm added to the height and radius of the cut
   if(tight == true){  add = 0.5; }
@@ -556,17 +574,17 @@ bool DC_hit_position_region3_fiducial_cut(int j){
 
   // calculate theta and phi local:
 
-  double theta_DCr3 = 180/Pival * acos(part_DC_c3z[j]/sqrt(pow(part_DC_c3x[j], 2) + pow(part_DC_c3y[j], 2) + pow(part_DC_c3z[j],2)));
-  double phi_DCr3_raw = 180/Pival * atan2(part_DC_c3y[j]/sqrt(pow(part_DC_c3x[j], 2) + pow(part_DC_c3y[j], 2) + pow(part_DC_c3z[j],2)), 
-                                            part_DC_c3x[j]/sqrt(pow(part_DC_c3x[j], 2) + pow(part_DC_c3y[j], 2) + pow(part_DC_c3z[j],2)));
+  double theta_DCr3 = 180/Pival * acos(dcTraj[r3][z]/sqrt(pow(dcTraj[r3][x], 2) + pow(dcTraj[r3][y], 2) + pow(dcTraj[r3][z],2)));
+  double phi_DCr3_raw = 180/Pival * atan2(dcTraj[r3][y]/sqrt(pow(dcTraj[r3][x], 2) + pow(dcTraj[r3][y], 2) + pow(dcTraj[r3][z],2)), 
+                                            dcTraj[r3][x]/sqrt(pow(dcTraj[r3][x], 2) + pow(dcTraj[r3][y], 2) + pow(dcTraj[r3][z],2)));
   double phi_DCr3 = 0;
-  if(part_DC_sector[j] == 1) phi_DCr3 = phi_DCr3_raw;
-  if(part_DC_sector[j] == 2) phi_DCr3 = phi_DCr3_raw - 60;
-  if(part_DC_sector[j] == 3) phi_DCr3 = phi_DCr3_raw - 120;
-  if(part_DC_sector[j] == 4 && phi_DCr3_raw > 0) phi_DCr3 = phi_DCr3_raw - 180;
-  if(part_DC_sector[j] == 4 && phi_DCr3_raw < 0) phi_DCr3 = phi_DCr3_raw + 180;
-  if(part_DC_sector[j] == 5) phi_DCr3 = phi_DCr3_raw + 120;
-  if(part_DC_sector[j] == 6) phi_DCr3 = phi_DCr3_raw + 60;
+  if(dcSec == 1) phi_DCr3 = phi_DCr3_raw;
+  if(dcSec == 2) phi_DCr3 = phi_DCr3_raw - 60;
+  if(dcSec == 3) phi_DCr3 = phi_DCr3_raw - 120;
+  if(dcSec == 4 && phi_DCr3_raw > 0) phi_DCr3 = phi_DCr3_raw - 180;
+  if(dcSec == 4 && phi_DCr3_raw < 0) phi_DCr3 = phi_DCr3_raw + 180;
+  if(dcSec == 5) phi_DCr3 = phi_DCr3_raw + 120;
+  if(dcSec == 6) phi_DCr3 = phi_DCr3_raw + 60;
 
   // calculate cut borders
 
@@ -594,7 +612,7 @@ bool DC_hit_position_region3_fiducial_cut(int j){
   double p0_max = 0; double p1_max = 0; double p2_max = 0; double p3_max = 0;
 
   for(Int_t k = 0; k < 6; k++){  
-    if(part_DC_sector[j]-1 == k && inbending == true){
+    if(dcSec-1 == k && inbending == true){
       p0_min = p0_reg3_min_inb[k];
       p1_min = p1_reg3_min_inb[k];
       p2_min = p2_reg3_min_inb[k];
@@ -604,7 +622,7 @@ bool DC_hit_position_region3_fiducial_cut(int j){
       p2_max = p2_reg3_max_inb[k];
       p3_max = p3_reg3_max_inb[k];
     }
-    if(part_DC_sector[j]-1 == k && outbending == true){
+    if(dcSec-1 == k && outbending == true){
       p0_min = p0_reg3_min_out[k];
       p1_min = p1_reg3_min_out[k];
       p2_min = p2_reg3_min_out[k];
@@ -629,8 +647,3 @@ bool DC_hit_position_region3_fiducial_cut(int j){
   if(phi_DCr3 > phi_DCr3_min && phi_DCr3 < phi_DCr3_max) return true;
   else return false;
 }
-
-
-
-
-
