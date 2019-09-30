@@ -34,6 +34,11 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("elePt",&elePt);
   chain->SetBranchAddress("eleEta",&eleEta);
   chain->SetBranchAddress("elePhi",&elePhi);
+  if(chain->GetBranch("eleFidPCAL")) chain->SetBranchAddress("eleFidPCAL",&eleFidPCAL);
+  else eleFidPCAL=false;
+  if(chain->GetBranch("eleFidDC")) chain->SetBranchAddress("eleFidDC",&eleFidDC);
+  else eleFidDC=false;
+
 
   chain->SetBranchAddress("pairType",&pairType);
   chain->SetBranchAddress("hadIdx",hadIdx);
@@ -44,6 +49,11 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("hadPt",hadPt);
   chain->SetBranchAddress("hadEta",hadEta);
   chain->SetBranchAddress("hadPhi",hadPhi);
+  Bool_t hadFidPCAL[2], hadFidDC[2];
+  if(chain->GetBranch("hadFidPCAL")) chain->SetBranchAddress("hadFidPCAL",hadFidPCAL);
+  else { for(int h=0; h<2; h++) hadFidPCAL[h]=false; };
+  if(chain->GetBranch("hadFidDC")) chain->SetBranchAddress("hadFidDC",hadFidDC);
+  else { for(int h=0; h<2; h++) hadFidDC[h]=false; };
 
   // (these branches, which were added for cross-checking, 
   //  aren't yet in current ROOT files)

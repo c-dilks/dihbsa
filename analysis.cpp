@@ -24,6 +24,7 @@
 #include "Constants.h"
 #include "DIS.h"
 #include "Trajectory.h"
+#include "FiducialCuts.h"
 #include "Dihadron.h"
 #include "Diphoton.h"
 #include "EventTree.h"
@@ -353,6 +354,7 @@ int main(int argc, char** argv) {
 
    // event and pair counters
    Int_t evCount = 0;
+   Int_t itCount = 0;
 
    int end1,end2;
 
@@ -363,7 +365,10 @@ int main(int argc, char** argv) {
    printf("begin event loop...\n");
 
    while(reader.next()==true) {
-     //if(evCount>1e6) { fprintf(stderr,"BREAKING LOOP HERE!!!\n"); break; };
+
+     //if(evCount>100) { fprintf(stderr,"BREAKING LOOP HERE!!!\n\n"); break; };
+     //itCount++; if(itCount>10) { fprintf(stderr,"BREAKING LOOP HERE!!!\n\n"); break; };
+
      bench.resume();
 
 
@@ -395,8 +400,10 @@ int main(int argc, char** argv) {
      solenoid = reader.runconfig()->getSolenoid(); // -->tree
      //printf("schema name = %s\n",reader.head()->getSchema().getName().data());
 
-     if(debug) Tools::PrintSeparator(30);
-     //if(debug) particleBank.show(); // causes segfault!
+     if(debug) {
+       Tools::PrintSeparator(30);
+       printf("EVNUM = %d\n",evnum);
+     };
 
 
      // reset trajectory-sorting data structures "trajArr" and "trajE"
@@ -468,7 +475,7 @@ int main(int argc, char** argv) {
        // will be -10000 and this particle will be ignored
        pIdx = PIDtoIdx(pidCur);
        if(pIdx==kP || pIdx==kN) pIdx=-10000; // also skip protons and neutrons
-       if(debug) printf(" pid=%d  pIdx=%d\n",pidCur,pIdx);
+       if(debug) printf("\nNEXT PARTICLE: --> pid=%d  pIdx=%d\n",pidCur,pIdx);
 
 
        if(pIdx>-10000) {
@@ -494,29 +501,34 @@ int main(int argc, char** argv) {
              
              // set tr FiducialCuts info (note: Trajectory derives from FiducialCuts)
 #if PARTICLE_BANK == 0 || PARTICLE_BANK == 3
-             tr->eneableFiducialCut = true; // (default enableFiducialCut is false)
+             tr->enableFiducialCut = true; // (default enableFiducialCut is false)
+             tr->torus = torus;
              // -- PCAL from REC::Calorimeter
              tr->pcalSec = part->cal(clas12::PCAL)->getSector();
              tr->pcalLayer = part->cal(clas12::PCAL)->getLayer();
              tr->pcalL[FiducialCuts::u] = part->cal(clas12::PCAL)->getLu();
              tr->pcalL[FiducialCuts::v] = part->cal(clas12::PCAL)->getLv();
              tr->pcalL[FiducialCuts::w] = part->cal(clas12::PCAL)->getLw();
+             // note: needed to add getLw implmentation in Clas12Tool's
+             //       clas12::calorimeter, it was missing in my current version
              // -- DC from REC::Track
              tr->dcTrackDetector = part->trk(clas12::DC)->getDetector();
              tr->dcSec = part->trk(clas12::DC)->getSector();
              // -- DC from REC::Traj
              for(int r=0; r<FiducialCuts::nReg; r++) {
                tr->dcTrajDetector[r] = 
-                 part->traj(clas12::DC,FiducialCuts::regLayer[r])->getDetector();
+                 part->traj(clas12::DC,FiducialCuts::regLayer(r))->getDetector();
                tr->dcTrajLayer[r] = 
-                 part->traj(clas12::DC,FiducialCuts::regLayer[r])->getLayer();
+                 part->traj(clas12::DC,FiducialCuts::regLayer(r))->getLayer();
                tr->dcTraj[r][FiducialCuts::x] = 
-                 part->traj(clas12::DC,FiducialCuts::regLayer[r])->getX();
+                 part->traj(clas12::DC,FiducialCuts::regLayer(r))->getX();
                tr->dcTraj[r][FiducialCuts::y] = 
-                 part->traj(clas12::DC,FiducialCuts::regLayer[r])->getY();
+                 part->traj(clas12::DC,FiducialCuts::regLayer(r))->getY();
                tr->dcTraj[r][FiducialCuts::z] = 
-                 part->traj(clas12::DC,FiducialCuts::regLayer[r])->getZ();
+                 part->traj(clas12::DC,FiducialCuts::regLayer(r))->getZ();
              };
+             // -- print
+             if(debug) tr->PrintFiducialCuts(FiducialCuts::cutMedium);
 #endif
 
              // add tr to unsorted Trajectory array, and energy to the energy array
@@ -730,8 +742,8 @@ int main(int argc, char** argv) {
        disEv->SetElectron(ele);
        disEv->Analyse(); // -->tree
 
-       eleFidPCAL = ele->FidPCAL(FiducialCut::cutMedium); // -->tree
-       eleFidDC = ele->FidDC(FiducialCut::cutMedium); // -->tree
+       eleFidPCAL = ele->FidPCAL(FiducialCuts::cutMedium); // -->tree
+       eleFidDC = ele->FidDC(FiducialCuts::cutMedium); // -->tree
        
 
 
@@ -852,8 +864,8 @@ int main(int argc, char** argv) {
                        hadPhi[h] = -10000;
                      };
 
-                     hadFidPCAL[h] = had[h]->FidPCAL(FiducialCut::cutMedium); // -->tree
-                     hadFidDC[h] = had[h]->FidDC(FiducialCut::cutMedium); // -->tree
+                     hadFidPCAL[h] = had[h]->FidPCAL(FiducialCuts::cutMedium); // -->tree
+                     hadFidDC[h] = had[h]->FidDC(FiducialCuts::cutMedium); // -->tree
 
                      if(debug) {
                        printf("[+] %s 4-momentum:\n",(had[h]->Title()).Data());

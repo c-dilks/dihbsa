@@ -8,6 +8,7 @@ ClassImp(FiducialCuts)
 
 FiducialCuts::FiducialCuts() {
   enableFiducialCut = false; 
+  debug = true;
 };
 
 FiducialCuts::~FiducialCuts() {};
@@ -32,21 +33,23 @@ bool FiducialCuts::SetSwitches(int lev) {
     default: return ErrPrint("torus unknown");
   };
 
-  // check detector IDs etc.
-  if(pcalLayer!=1) return ErrPrint("pcalLayer unknown");
-  if(dcTrackDetector!=6) return ErrPrint("dcTrackDetector unknown");
-  if(kcTrajDetector!=6) return ErrPrint("dcTrajDetector unknown");
-  for(int r=0; r<nReg; r++) {
-    if(dcTrajLayer[r]!=regLayer[r]) {
-      sprintf(msg,"dcTrajLayer[r%d]=%f is not correct",r+1,dcTrajLayer[r]);
-      return ErrPrint(msg);
-    };
-  };
 
   return true;
 };
 
 
+// check detector IDs for DC
+bool FiducialCuts::CheckDCid() {
+  if(dcTrackDetector!=6) return false;/*ErrPrint("dcTrackDetector unknown");*/
+  for(int r=0; r<nReg; r++) {
+    if(dcTrajDetector[r]!=6) return false;/*ErrPrint("dcTrajDetector unknown");*/
+    if(dcTrajLayer[r]!=regLayer(r)) {
+      sprintf(msg,"dcTrajLayer[r%d]=%d is not correct",r+1,dcTrajLayer[r]);
+      return false;/*ErrPrint(msg);*/
+    };
+  };
+  return true;
+};
 
 /// PCAL fiducial cuts:
 
@@ -54,6 +57,7 @@ bool FiducialCuts::EC_hit_position_fiducial_cut(int level){
 
   success = this->SetSwitches(level);
   if(!success) return false;
+  if(pcalLayer!=1) return false;/*ErrPrint("pcalLayer unknown");*/
 
 
 // Cut using the natural directions of the scintillator bars/ fibers:
@@ -180,7 +184,7 @@ bool FiducialCuts::EC_hit_position_fiducial_cut(int level){
 
 bool FiducialCuts::DC_hit_position_region1_fiducial_cut_triangle(int level){
   
-  success = this->SetSwitches(level);
+  success = this->SetSwitches(level) && this->CheckDCid();
   if(!success) return false;
 
 
@@ -209,10 +213,10 @@ bool FiducialCuts::DC_hit_position_region1_fiducial_cut_triangle(int level){
     }
   }
 
-  double x1_rot = dcTraj[r1][y] * sin(sec*60.0*Pival/180) + dcTraj[r1][x] * cos(sec*60.0*Pival/180);
-  double y1_rot = dcTraj[r1][y] * cos(sec*60.0*Pival/180) - dcTraj[r1][x] * sin(sec*60.0*Pival/180);
+  double x1_rot = dcTraj[r1][y] * sin(sec*60.0*PI/180) + dcTraj[r1][x] * cos(sec*60.0*PI/180);
+  double y1_rot = dcTraj[r1][y] * cos(sec*60.0*PI/180) - dcTraj[r1][x] * sin(sec*60.0*PI/180);
 
-  double slope = 1/tan(0.5*angle*Pival/180);
+  double slope = 1/tan(0.5*angle*PI/180);
   double left  = (height - slope * y1_rot);
   double right = (height + slope * y1_rot);
 
@@ -226,7 +230,7 @@ bool FiducialCuts::DC_hit_position_region1_fiducial_cut_triangle(int level){
 
 bool FiducialCuts::DC_hit_position_region2_fiducial_cut_triangle(int level){
 
-  success = this->SetSwitches(level);
+  success = this->SetSwitches(level) && this->CheckDCid();
   if(!success) return false;
 
 
@@ -255,10 +259,10 @@ bool FiducialCuts::DC_hit_position_region2_fiducial_cut_triangle(int level){
     }
   }
     
-  double x2_rot = dcTraj[r2][y] * sin(sec*60.0*Pival/180) + dcTraj[r2][x] * cos(sec*60.0*Pival/180);
-  double y2_rot = dcTraj[r2][y] * cos(sec*60.0*Pival/180) - dcTraj[r2][x] * sin(sec*60.0*Pival/180);
+  double x2_rot = dcTraj[r2][y] * sin(sec*60.0*PI/180) + dcTraj[r2][x] * cos(sec*60.0*PI/180);
+  double y2_rot = dcTraj[r2][y] * cos(sec*60.0*PI/180) - dcTraj[r2][x] * sin(sec*60.0*PI/180);
 
-  double slope = 1/tan(0.5*angle*Pival/180);
+  double slope = 1/tan(0.5*angle*PI/180);
   double left  = (height - slope * y2_rot);
   double right = (height + slope * y2_rot);
 
@@ -273,7 +277,7 @@ bool FiducialCuts::DC_hit_position_region2_fiducial_cut_triangle(int level){
 
 bool FiducialCuts::DC_hit_position_region3_fiducial_cut_triangle(int level){
 
-  success = this->SetSwitches(level);
+  success = this->SetSwitches(level) && this->CheckDCid();
   if(!success) return false;
 
 
@@ -302,10 +306,10 @@ bool FiducialCuts::DC_hit_position_region3_fiducial_cut_triangle(int level){
     }
   }
 
-  double x3_rot = dcTraj[r3][y] * sin(sec*60.0*Pival/180) + dcTraj[r3][x] * cos(sec*60.0*Pival/180);
-  double y3_rot = dcTraj[r3][y] * cos(sec*60.0*Pival/180) - dcTraj[r3][x] * sin(sec*60.0*Pival/180);
+  double x3_rot = dcTraj[r3][y] * sin(sec*60.0*PI/180) + dcTraj[r3][x] * cos(sec*60.0*PI/180);
+  double y3_rot = dcTraj[r3][y] * cos(sec*60.0*PI/180) - dcTraj[r3][x] * sin(sec*60.0*PI/180);
 
-  double slope = 1/tan(0.5*angle*Pival/180);
+  double slope = 1/tan(0.5*angle*PI/180);
   double left  = (height - slope * y3_rot);
   double right = (height + slope * y3_rot);
 
@@ -322,7 +326,7 @@ bool FiducialCuts::DC_hit_position_region3_fiducial_cut_triangle(int level){
 
 bool FiducialCuts::DC_hit_position_region1_fiducial_cut(int level){
 
-  success = this->SetSwitches(level);
+  success = this->SetSwitches(level) && this->CheckDCid();
   if(!success) return false;
 
 
@@ -333,8 +337,8 @@ bool FiducialCuts::DC_hit_position_region1_fiducial_cut(int level){
 
   // calculate theta and phi local:
 
-  double theta_DCr1 = 180/Pival * acos(dcTraj[r1][z]/sqrt(pow(dcTraj[r1][x], 2) + pow(dcTraj[r1][y], 2) + pow(dcTraj[r1][z],2)));
-  double phi_DCr1_raw = 180/Pival * atan2(dcTraj[r1][y]/sqrt(pow(dcTraj[r1][x], 2) + pow(dcTraj[r1][y], 2) + pow(dcTraj[r1][z],2)), 
+  double theta_DCr1 = 180/PI * acos(dcTraj[r1][z]/sqrt(pow(dcTraj[r1][x], 2) + pow(dcTraj[r1][y], 2) + pow(dcTraj[r1][z],2)));
+  double phi_DCr1_raw = 180/PI * atan2(dcTraj[r1][y]/sqrt(pow(dcTraj[r1][x], 2) + pow(dcTraj[r1][y], 2) + pow(dcTraj[r1][z],2)), 
                                             dcTraj[r1][x]/sqrt(pow(dcTraj[r1][x], 2) + pow(dcTraj[r1][y], 2) + pow(dcTraj[r1][z],2)));
   double phi_DCr1 = 0;
   if(dcSec == 1) phi_DCr1 = phi_DCr1_raw;
@@ -412,7 +416,7 @@ bool FiducialCuts::DC_hit_position_region1_fiducial_cut(int level){
 
 bool FiducialCuts::DC_hit_position_region2_fiducial_cut(int level){
 
-  success = this->SetSwitches(level);
+  success = this->SetSwitches(level) && this->CheckDCid();
   if(!success) return false;
 
 
@@ -423,8 +427,8 @@ bool FiducialCuts::DC_hit_position_region2_fiducial_cut(int level){
 
   // calculate theta and phi local:
 
-  double theta_DCr2 = 180/Pival * acos(dcTraj[r2][z]/sqrt(pow(dcTraj[r2][x], 2) + pow(dcTraj[r2][y], 2) + pow(dcTraj[r2][z],2)));
-  double phi_DCr2_raw = 180/Pival * atan2(dcTraj[r2][y]/sqrt(pow(dcTraj[r2][x], 2) + pow(dcTraj[r2][y], 2) + pow(dcTraj[r2][z],2)), 
+  double theta_DCr2 = 180/PI * acos(dcTraj[r2][z]/sqrt(pow(dcTraj[r2][x], 2) + pow(dcTraj[r2][y], 2) + pow(dcTraj[r2][z],2)));
+  double phi_DCr2_raw = 180/PI * atan2(dcTraj[r2][y]/sqrt(pow(dcTraj[r2][x], 2) + pow(dcTraj[r2][y], 2) + pow(dcTraj[r2][z],2)), 
                                             dcTraj[r2][x]/sqrt(pow(dcTraj[r2][x], 2) + pow(dcTraj[r2][y], 2) + pow(dcTraj[r2][z],2)));
   double phi_DCr2 = 0;
   if(dcSec == 1) phi_DCr2 = phi_DCr2_raw;
@@ -501,7 +505,7 @@ bool FiducialCuts::DC_hit_position_region2_fiducial_cut(int level){
 
 bool FiducialCuts::DC_hit_position_region3_fiducial_cut(int level){
 
-  success = this->SetSwitches(level);
+  success = this->SetSwitches(level) && this->CheckDCid();
   if(!success) return false;
 
 
@@ -512,8 +516,8 @@ bool FiducialCuts::DC_hit_position_region3_fiducial_cut(int level){
 
   // calculate theta and phi local:
 
-  double theta_DCr3 = 180/Pival * acos(dcTraj[r3][z]/sqrt(pow(dcTraj[r3][x], 2) + pow(dcTraj[r3][y], 2) + pow(dcTraj[r3][z],2)));
-  double phi_DCr3_raw = 180/Pival * atan2(dcTraj[r3][y]/sqrt(pow(dcTraj[r3][x], 2) + pow(dcTraj[r3][y], 2) + pow(dcTraj[r3][z],2)), 
+  double theta_DCr3 = 180/PI * acos(dcTraj[r3][z]/sqrt(pow(dcTraj[r3][x], 2) + pow(dcTraj[r3][y], 2) + pow(dcTraj[r3][z],2)));
+  double phi_DCr3_raw = 180/PI * atan2(dcTraj[r3][y]/sqrt(pow(dcTraj[r3][x], 2) + pow(dcTraj[r3][y], 2) + pow(dcTraj[r3][z],2)), 
                                             dcTraj[r3][x]/sqrt(pow(dcTraj[r3][x], 2) + pow(dcTraj[r3][y], 2) + pow(dcTraj[r3][z],2)));
   double phi_DCr3 = 0;
   if(dcSec == 1) phi_DCr3 = phi_DCr3_raw;
@@ -585,3 +589,50 @@ bool FiducialCuts::DC_hit_position_region3_fiducial_cut(int level){
   if(phi_DCr3 > phi_DCr3_min && phi_DCr3 < phi_DCr3_max) return true;
   else return false;
 }
+
+
+void FiducialCuts::PrintFiducialCuts(int lev) {
+  printf("----- FIDUCIAL CUTS -----\n");
+  // PCAL
+  printf("pcalSec=%d ",pcalSec);
+  printf("pcalLayer=%d ",pcalLayer);
+  printf("pcalL[u]=%.2f ",pcalL[u]);
+  printf("pcalL[v]=%.2f ",pcalL[v]);
+  printf("pcalL[w]=%.2f ",pcalL[w]);
+  printf("\n");
+  // DC tracks
+  printf("dcSec=%d ",dcSec);
+  printf("dcTrackDetector=%d ",dcTrackDetector);
+  printf("\n");
+  // DC trajectories
+  for(int r=0; r<nReg; r++) {
+    printf("dcTrajDetector[r%d]=%d ",r+1,dcTrajDetector[r]);
+    printf("dcTrajLayer[r%d]=%d ",r+1,dcTrajLayer[r]);
+    printf("dcTraj[r%d][x]=%.2f ",r+1,dcTraj[r][x]);
+    printf("dcTraj[r%d][y]=%.2f ",r+1,dcTraj[r][y]);
+    printf("dcTraj[r%d][z]=%.2f ",r+1,dcTraj[r][z]);
+    printf("\n");
+  };
+  printf("---\n");
+  // Stefan's cut booleans
+  printf("EC_hit_position_fiducial_cut=%d\n",
+          EC_hit_position_fiducial_cut(lev));
+  printf("DC_hit_position_region1_fiducial_cut_triangle=%d\n",
+          DC_hit_position_region1_fiducial_cut_triangle(lev));
+  printf("DC_hit_position_region2_fiducial_cut_triangle=%d\n",
+          DC_hit_position_region2_fiducial_cut_triangle(lev));
+  printf("DC_hit_position_region3_fiducial_cut_triangle=%d\n",
+          DC_hit_position_region3_fiducial_cut_triangle(lev));
+  printf("DC_hit_position_region1_fiducial_cut=%d\n",
+          DC_hit_position_region1_fiducial_cut(lev));
+  printf("DC_hit_position_region2_fiducial_cut=%d\n",
+          DC_hit_position_region2_fiducial_cut(lev));
+  printf("DC_hit_position_region3_fiducial_cut=%d\n",
+          DC_hit_position_region3_fiducial_cut(lev));
+  printf("---\n");
+  // full cut booleans
+  printf("FidPCAL=%d\n",FidPCAL(lev));
+  printf("FidDC=%d\n",FidDC(lev));
+  printf("-------------------------\n");
+};
+

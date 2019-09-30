@@ -1,6 +1,11 @@
 #ifndef FiducialCuts_
 #define FiducialCuts_
 
+#include <math.h>
+
+#include "TObject.h"
+#include "Constants.h"
+
 // dihbsa implementation of Stefan Diehl's fiducial volume cut functions
 
 /*
@@ -32,7 +37,7 @@
     
 
 
-class FiducialCuts
+class FiducialCuts : public TObject
 {
   public:
     FiducialCuts();
@@ -41,12 +46,13 @@ class FiducialCuts
     
     enum levelEnum { cutTight, cutMedium, cutLoose }; // cut levels
     bool enableFiducialCut; // if false, cuts will return false
+    bool debug;
 
 
     // PCAL cuts
     bool FidPCAL(int level) {
       if(!enableFiducialCut) return false;
-      return EC_hit_position_fiducial_cut(level)
+      return EC_hit_position_fiducial_cut(level);
     };
     // PCAL variables
     int pcalSec;
@@ -75,11 +81,21 @@ class FiducialCuts
     int dcTrackDetector;
     // - trajectories
     enum dcRegEnum {r1,r2,r3,nReg};
-    const int regLayer[nReg] = {6,18,30};
     int dcTrajDetector[nReg];
     int dcTrajLayer[nReg];
     enum dcDirEnum {x,y,z,nDir};
-    double dcTraj[nRej][nDir];
+    double dcTraj[nReg][nDir];
+
+    static int regLayer(int rr) {
+      switch(rr) {
+        case r1: return 6; break;
+        case r2: return 18; break;
+        case r3: return 30; break;
+        default: 
+          fprintf(stderr,"ERROR: unknown FiducialCuts::regLayer");
+          return -1;
+      };
+    };
 
     
     // torus B-field (-1=inbending, +1=outbending)
@@ -90,6 +106,7 @@ class FiducialCuts
       fprintf(stderr,"ERROR: FiducialCuts::%s\n",str);
       return false;
     };
+    void PrintFiducialCuts(int lev);
 
 
   protected:
@@ -103,12 +120,15 @@ class FiducialCuts
     bool DC_hit_position_region3_fiducial_cut(int level);
 
     bool SetSwitches(int lev);
+    bool CheckDCid();
 
     bool inbending,outbending;
     bool tight,medium,loose;
+    bool success;
 
     char msg[256];
 
+  private:
   ClassDef(FiducialCuts,1);
 };
 

@@ -12,7 +12,7 @@
 // ROOT
 #include "TSystem.h"
 #include "TObject.h"
-#include "FiducialCuts.h
+#include "FiducialCuts.h"
 #include "TTree.h"
 #include "TFile.h"
 #include "TLorentzVector.h"
@@ -25,7 +25,7 @@
 
 
 
-class Trajectory : public FiducialCuts, public TObject
+class Trajectory : public FiducialCuts
 {
   public:
     Trajectory(Int_t particle_index);

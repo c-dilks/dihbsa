@@ -76,7 +76,7 @@ class EventTree : public TObject
     Float_t elePt;
     Float_t eleEta;
     Float_t elePhi;
-
+    Bool_t eleFidPCAL, eleFidDC;
 
     // dihadron kinematics
     Int_t particleCnt[nParticles];
