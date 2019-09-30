@@ -244,12 +244,14 @@ int main(int argc, char** argv) {
    kfRange[kfC][0]=0; kfRange[kfC][1]=1; //hep-ph/0212300 def.
    //kfRange[kfC][0]=-0.5; kfRange[kfC][1]=0; //hep-ph/0311173 def.
    kfRange[kfV][0]=0; kfRange[kfV][1]=4; 
-   kfRange[kfW][0]=0; kfRange[kfW][1]=0.8; 
-   kfRange[kfForE][0]=0; kfRange[kfForE][1]=1.5; 
+   kfRange[kfW][0]=0; kfRange[kfW][1]=0.8;
+   kfRange[kfForE][0]=0; kfRange[kfForE][1]=1.5;
    kfRange[kfForG][0]=0; kfRange[kfForG][1]=2; 
    TH2D * kfVsMh[Nkf];
    TH2D * kfVsPhPerp[Nkf];
    TH2D * kfVsX[Nkf];
+   TH2D * kfVsQ2[Nkf];
+   TH2D * kfVsMmiss[Nkf];
    TH2D * kfVsZpair[Nkf];
    TH2D * kfVsPhiR[Nkf];
    TH2D * kfVsPhiH[Nkf];
@@ -264,6 +266,12 @@ int main(int argc, char** argv) {
      kfVsX[k] = new TH2D(TString(kfName[k]+"vsX"),
        TString(kfTitle[k]+" vs. x"),
        NBINS,0,1,NBINS,kfRange[k][0],kfRange[k][1]);
+     kfVsQ2[k] = new TH2D(TString(kfName[k]+"vsQ2"),
+       TString(kfTitle[k]+" vs. Q^{2}"),
+       NBINS,0,12,NBINS,kfRange[k][0],kfRange[k][1]);
+     kfVsMmiss[k] = new TH2D(TString(kfName[k]+"vsMmiss"),
+       TString(kfTitle[k]+" vs. M_{X}"),
+       NBINS,-2,6,NBINS,kfRange[k][0],kfRange[k][1]);
      kfVsZpair[k] = new TH2D(TString(kfName[k]+"vsZpair"),
        TString(kfTitle[k]+" vs. z"),
        NBINS,0,1,NBINS,kfRange[k][0],kfRange[k][1]);
@@ -471,6 +479,8 @@ int main(int argc, char** argv) {
          kfVsMh[k]->Fill(ev->Mh,kfVal[k]);
          kfVsPhPerp[k]->Fill(ev->PhPerp,kfVal[k]);
          kfVsX[k]->Fill(ev->x,kfVal[k]);
+         kfVsQ2[k]->Fill(ev->Q2,kfVal[k]);
+         kfVsMmiss[k]->Fill(ev->Mmiss,kfVal[k]);
          kfVsZpair[k]->Fill(ev->Zpair,kfVal[k]);
          kfVsPhiR[k]->Fill(ev->PhiR,kfVal[k]);
          kfVsPhiH[k]->Fill(ev->PhiH,kfVal[k]);
@@ -612,6 +622,8 @@ int main(int argc, char** argv) {
      kfVsMh[k]->Write();
      kfVsPhPerp[k]->Write();
      kfVsX[k]->Write();
+     kfVsQ2[k]->Write();
+     kfVsMmiss[k]->Write();
      kfVsZpair[k]->Write();
      kfVsPhiR[k]->Write();
      kfVsPhiH[k]->Write();

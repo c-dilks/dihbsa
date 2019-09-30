@@ -81,6 +81,7 @@ class Asymmetry : public TObject
     Bool_t AddEvent();
     Float_t EvalModulation();
     Float_t EvalWeight();
+    Float_t EvalKinematicFactor();
     Int_t SpinState(Int_t spin_);
     Bool_t KickEvent(TString reason,Float_t badValue);
 
@@ -143,6 +144,7 @@ class Asymmetry : public TObject
     Float_t modMaxDefault;
     Float_t modMax,aziMax;
     Float_t weight;
+    Float_t kf;
 
 
     // "iv dist": finely-binned IV distribution (for each whichDim)
@@ -173,6 +175,9 @@ class Asymmetry : public TObject
 
     // yield dist (for computing rellum)
     TH1D * yieldDist;
+
+    // kf dist (for computing <K(y)>)
+    TH1D * kfDist;
 
     // asymmetry vs. azimuthal modulation bin
     TGraphErrors * asymGr;
@@ -265,6 +270,7 @@ class Asymmetry : public TObject
     TString objName,appName;
 
     Int_t nThreads;
+    Float_t kfUB,kfLB;
 
 
 

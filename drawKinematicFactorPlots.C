@@ -18,6 +18,8 @@ void drawKinematicFactorPlots() {
   kfName[kfForG] = "kfForG"; kfTitle[kfForG] = "C(y)/A(y)";
 
   TH2D * kfVsMh[Nkf];
+  TH2D * kfVsQ2[Nkf];
+  TH2D * kfVsMmiss[Nkf];
   TH2D * kfVsPhPerp[Nkf];
   TH2D * kfVsX[Nkf];
   TH2D * kfVsZpair[Nkf];
@@ -26,6 +28,8 @@ void drawKinematicFactorPlots() {
   TH2D * kfVsPhiHR[Nkf];
 
   TProfile * kfVsMh_pf[Nkf];
+  TProfile * kfVsQ2_pf[Nkf];
+  TProfile * kfVsMmiss_pf[Nkf];
   TProfile * kfVsPhPerp_pf[Nkf];
   TProfile * kfVsX_pf[Nkf];
   TProfile * kfVsZpair_pf[Nkf];
@@ -35,6 +39,8 @@ void drawKinematicFactorPlots() {
 
   for(int k=0; k<Nkf; k++) {
     kfVsMh[k] = (TH2D*) infile->Get(TString(kfName[k]+"vsMh"));
+    kfVsQ2[k] = (TH2D*) infile->Get(TString(kfName[k]+"vsQ2"));
+    kfVsMmiss[k] = (TH2D*) infile->Get(TString(kfName[k]+"vsMmiss"));
     kfVsPhPerp[k] = (TH2D*) infile->Get(TString(kfName[k]+"vsPhPerp"));
     kfVsX[k] = (TH2D*) infile->Get(TString(kfName[k]+"vsX"));
     kfVsZpair[k] = (TH2D*) infile->Get(TString(kfName[k]+"vsZpair"));
@@ -45,6 +51,8 @@ void drawKinematicFactorPlots() {
 
   for(int k=0; k<Nkf; k++) {
     kfVsMh_pf[k] = kfVsMh[k]->ProfileX();
+    kfVsQ2_pf[k] = kfVsQ2[k]->ProfileX();
+    kfVsMmiss_pf[k] = kfVsMmiss[k]->ProfileX();
     kfVsPhPerp_pf[k] = kfVsPhPerp[k]->ProfileX();
     kfVsX_pf[k] = kfVsX[k]->ProfileX();
     kfVsZpair_pf[k] = kfVsZpair[k]->ProfileX();
@@ -55,6 +63,8 @@ void drawKinematicFactorPlots() {
 
   for(int k=0; k<Nkf; k++) {
     kfVsMh_pf[k]->SetLineColor(kBlack);
+    kfVsQ2_pf[k]->SetLineColor(kBlack);
+    kfVsMmiss_pf[k]->SetLineColor(kBlack);
     kfVsPhPerp_pf[k]->SetLineColor(kBlack);
     kfVsX_pf[k]->SetLineColor(kBlack);
     kfVsZpair_pf[k]->SetLineColor(kBlack);
@@ -65,6 +75,8 @@ void drawKinematicFactorPlots() {
 
   for(int k=0; k<Nkf; k++) {
     kfVsMh_pf[k]->SetLineWidth(3);
+    kfVsQ2_pf[k]->SetLineWidth(3);
+    kfVsMmiss_pf[k]->SetLineWidth(3);
     kfVsPhPerp_pf[k]->SetLineWidth(3);
     kfVsX_pf[k]->SetLineWidth(3);
     kfVsZpair_pf[k]->SetLineWidth(3);
@@ -78,26 +90,36 @@ void drawKinematicFactorPlots() {
     canv[k] = new TCanvas(
       TString("canv_"+kfName[k]),TString("canv_"+kfName[k]),1000,1000);
     canv[k]->Divide(4,2);
+
+    for(int p=1; p<=8; p++) canv[k]->GetPad(p)->SetLogz();
+
     canv[k]->cd(1);
-    kfVsMh[k]->Draw("colz");
-    kfVsMh_pf[k]->Draw("same");
-    canv[k]->cd(2);
-    kfVsPhPerp[k]->Draw("colz");
-    kfVsPhPerp_pf[k]->Draw("same");
-    canv[k]->cd(3);
     kfVsX[k]->Draw("colz");
     kfVsX_pf[k]->Draw("same");
-    canv[k]->cd(4);
+    canv[k]->cd(2);
+    kfVsQ2[k]->Draw("colz");
+    kfVsQ2_pf[k]->Draw("same");
+    canv[k]->cd(3);
     kfVsZpair[k]->Draw("colz");
     kfVsZpair_pf[k]->Draw("same");
-    canv[k]->cd(5);
-    kfVsPhiR[k]->Draw("colz");
-    kfVsPhiR_pf[k]->Draw("same");
-    canv[k]->cd(6);
+    canv[k]->cd(4);
     kfVsPhiH[k]->Draw("colz");
     kfVsPhiH_pf[k]->Draw("same");
+    canv[k]->cd(5);
+    kfVsPhPerp[k]->Draw("colz");
+    kfVsPhPerp_pf[k]->Draw("same");
+    canv[k]->cd(6);
+    kfVsMmiss[k]->Draw("colz");
+    kfVsMmiss_pf[k]->Draw("same");
     canv[k]->cd(7);
+    kfVsMh[k]->Draw("colz");
+    kfVsMh_pf[k]->Draw("same");
+    canv[k]->cd(8);
+    kfVsPhiR[k]->Draw("colz");
+    kfVsPhiR_pf[k]->Draw("same");
+    /*
     kfVsPhiHR[k]->Draw("colz");
     kfVsPhiHR_pf[k]->Draw("same");
+    */
   };
 };

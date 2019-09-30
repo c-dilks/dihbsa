@@ -280,9 +280,17 @@ Asymmetry::Asymmetry(
   // yieldDist
   yieldDist = new TH1D(
     TString("yieldDist"+binN),
-    TString("yield for each helicity :: "+binT),
+    TString("yield distribution :: "+binT),
     2,0,2
   );
+
+  // kfDist
+  kfLB = 0;
+  kfUB = 2;
+  kfDist = new TH1D(
+    TString("kfDist"+binN),
+    TString("K(y) distribution :: "+binT),
+    300,kfLB,kfUB);
 
 
   // asymGr
@@ -390,15 +398,20 @@ Bool_t Asymmetry::AddEvent() {
   if(PhPerp<-8000) return KickEvent("PhPerp out of range",PhPerp);
   if(theta<-0.1 || theta>PIe) return KickEvent("theta out of range",theta);
 
+
   // check spin state, which was set by EventTree
   if(spinn<0 || spinn>=nSpin) return false;
 
+  // get kinematic factor
+  kf = EvalKinematicFactor();
+  if(kf<kfLB || kf>kfUB) return KickEvent("KF out of range",kf);
 
   // evaluate modulation 
   modulation = EvalModulation(); // (if asym2d==true, modulation=-10000, i.e., not used)
 
-  // set weight (it's just 1, unless whichMod is set to do a weighted analysis)
+  // set weight (returns 1, unless weighting for G1perp)
   weight = EvalWeight();
+  // weight *= kf; // weight events with kinematic factor
 
   // set RooFit vars
   rfPhiH->setVal(PhiH);
@@ -453,6 +466,7 @@ Bool_t Asymmetry::AddEvent() {
 
 
   yieldDist->Fill(spinn);
+  kfDist->Fill(kf);
   
   // increment event counter
   nEvents++;
@@ -883,29 +897,29 @@ Float_t Asymmetry::EvalModulation() {
 };
 
 
+// g1perp PhPerp/Mh weighting
 Float_t Asymmetry::EvalWeight() {
-
   Float_t wt;
-
-  // g1perp PhPerp/Mh weighting
   if( whichMod == weightSinPhiHR
    || whichMod == mod2dWeightSinPhiHR
   ) { 
     wt = Mh>0 ? PhPerp/Mh : 0; 
   }
   else wt = 1;
-
-  // kinematic factor weighting
-  switch(whichMod) {
-    case modSinPhiR:
-      wt *= kfW / kfA;
-      break;
-    case weightSinPhiHR:
-      wt *= kfC / kfA;
-      break;
-  }
-
   return wt;
+};
+
+
+// if e(x) modulation, return W(y)/A(y)
+// if G1perp modulation, return C(y)/A(y)
+// see EventTree::GetKinematicFactor() for definitions
+Float_t Asymmetry::EvalKinematicFactor() {
+  switch(whichMod) {
+    case modSinPhiR: return kfW / kfA; break;
+    case modSinPhiHR: return kfC / kfA; break;
+    case weightSinPhiHR: return kfC / kfA; break;
+    default: return 1;
+  }
 };
 
  
@@ -982,6 +996,7 @@ void Asymmetry::StreamData(TFile * tf) {
   };
 
   objName = appName + yieldDist->GetName(); yieldDist->Write(objName);
+  objName = appName + kfDist->GetName(); kfDist->Write(objName);
 
   objName = appName + rfData->GetName(); rfData->Write(objName);
 
@@ -1058,6 +1073,10 @@ void Asymmetry::AppendData(TFile * tf) {
   objName = appName + yieldDist->GetName(); 
   appDist1 = (TH1D*) tf->Get(objName);
   yieldDist->Add(appDist1);
+
+  objName = appName + kfDist->GetName(); 
+  appDist1 = (TH1D*) tf->Get(objName);
+  kfDist->Add(appDist1);
 
   objName = appName + rfData->GetName();
   appRooDataSet = (RooDataSet*) tf->Get(objName);
