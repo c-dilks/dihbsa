@@ -135,6 +135,9 @@ int main(int argc, char** argv) {
    tree->Branch("elePhi",&(disEv->elePhi),"elePhi/F");
    tree->Branch("eleVertex",disEv->eleVertex,"eleVertex[3]/F");
    tree->Branch("eleChi2pid",&(disEv->eleChi2pid),"eleChi2pid/F");
+   Bool_t eleFidPCAL, eleFidDC;
+   tree->Branch("eleFidPCAL",&eleFidPCAL,"eleFidPCAL/O");
+   tree->Branch("eleFidDC",&eleFidDC,"eleFidDC/O");
 
 
    // miscellaneous branches for classifying the type of observables
@@ -171,6 +174,9 @@ int main(int argc, char** argv) {
    tree->Branch("hadXF",dih->hadXF,"hadXF[2]/F");
    tree->Branch("hadVertex",dih->hadVertex,"hadVertex[2][3]/F");
    tree->Branch("hadChi2pid",dih->hadChi2pid,"hadChi2pid[2]/F");
+   Bool_t hadFidPCAL[2], hadFidDC[2];
+   tree->Branch("hadFidPCAL",hadFidPCAL,"hadFidPCAL[2]/O");
+   tree->Branch("hadFidDC",hadFidDC,"hadFidDC[2]/O");
 
    // dihadron branches
    tree->Branch("Mh",&(dih->Mh),"Mh/F");
@@ -488,6 +494,7 @@ int main(int argc, char** argv) {
              
              // set tr FiducialCuts info (note: Trajectory derives from FiducialCuts)
 #if PARTICLE_BANK == 0 || PARTICLE_BANK == 3
+             tr->eneableFiducialCut = true; // (default enableFiducialCut is false)
              // -- PCAL from REC::Calorimeter
              tr->pcalSec = part->cal(clas12::PCAL)->getSector();
              tr->pcalLayer = part->cal(clas12::PCAL)->getLayer();
@@ -512,10 +519,8 @@ int main(int argc, char** argv) {
              };
 #endif
 
+             // add tr to unsorted Trajectory array, and energy to the energy array
              trajArrUS[pIdx]->AddLast(tr);
-
-
-             // add this trajectory's energy to the energy array
              trajE[pIdx][trajCnt[pIdx]] = vecObs.E();
 
              // increment the trajectory counter
@@ -725,6 +730,10 @@ int main(int argc, char** argv) {
        disEv->SetElectron(ele);
        disEv->Analyse(); // -->tree
 
+       eleFidPCAL = ele->FidPCAL(FiducialCut::cutMedium); // -->tree
+       eleFidDC = ele->FidDC(FiducialCut::cutMedium); // -->tree
+       
+
 
        // look for "observable pairs" -- these are pairs that are used to form
        // form dihadrons; only the desired observables are paired (see observable_enum
@@ -842,6 +851,9 @@ int main(int argc, char** argv) {
                        hadEta[h] = -10000;
                        hadPhi[h] = -10000;
                      };
+
+                     hadFidPCAL[h] = had[h]->FidPCAL(FiducialCut::cutMedium); // -->tree
+                     hadFidDC[h] = had[h]->FidDC(FiducialCut::cutMedium); // -->tree
 
                      if(debug) {
                        printf("[+] %s 4-momentum:\n",(had[h]->Title()).Data());
