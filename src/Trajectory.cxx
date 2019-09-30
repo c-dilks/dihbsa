@@ -18,6 +18,7 @@ Trajectory::Trajectory(Int_t particle_index) {
 
   Vertex.SetXYZ(-10000,-10000,-10000);
   chi2pid = -10000;
+  Status = -10000;
 
   if(debug) printf("Trajectory instantiated\n");
 };

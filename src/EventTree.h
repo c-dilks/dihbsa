@@ -22,6 +22,7 @@
 // dihbsa
 #include "Constants.h"
 #include "Trajectory.h"
+#include "FiducialCuts.h"
 #include "DIS.h"
 #include "Dihadron.h"
 #include "Tools.h"
@@ -69,6 +70,8 @@ class EventTree : public TObject
     Float_t hadEta[2];
     Float_t hadPhi[2];
     Float_t hadXF[2];
+    Float_t hadVertex[2][3];
+    //Bool_t hadFidPCAL[2], hadFidDC[2];
 
     // electron kinematics
     Float_t eleE;
@@ -76,7 +79,10 @@ class EventTree : public TObject
     Float_t elePt;
     Float_t eleEta;
     Float_t elePhi;
-    Bool_t eleFidPCAL, eleFidDC;
+    Float_t eleVertex[3];
+    Bool_t eleFidPCAL[FiducialCuts::nLevel];
+    Bool_t eleFidDC[FiducialCuts::nLevel];
+
 
     // dihadron kinematics
     Int_t particleCnt[nParticles];
@@ -132,12 +138,13 @@ class EventTree : public TObject
     ///////////////////////////
     //   EventCuts
     ///////////////////////////
-    Bool_t cutQ2,cutW,cutY,cutDIS;
+    Bool_t cutQ2,cutW,cutY,cutEle,cutDIS;
     Bool_t cutDihadronKinematics;
     Bool_t cutDihadron;
     Bool_t cutDiphKinematics[2];
     Bool_t cutDiph[2];
     Bool_t cutCrossCheck;
+    Bool_t cutVertex;
 
     Bool_t useDiphBG;
     

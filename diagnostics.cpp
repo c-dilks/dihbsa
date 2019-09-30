@@ -81,6 +81,7 @@ int main(int argc, char** argv) {
      NBINS,-PIe,PIe,NBINS,0,12);
    TH2D * elePtVsPhi = new TH2D("elePtvsPhi","e^{-} p_{T} vs #phi;#phi;#p_{T}",
      NBINS,-PIe,PIe,NBINS,0,4);
+   TH1D * eleVzDist = new TH1D("eleVzDist","e^{-} V_{z} distribution",NBINS,-20,20);
 
    // dihadron's hadron kinematic correlations
    TH2D * hadECorr = new TH2D("hadECorr",corrTitle("E"),NBINS,0,10,NBINS,0,10);
@@ -98,6 +99,7 @@ int main(int argc, char** argv) {
    TH1D * hadEtaDist[2];
    TH1D * hadPhiDist[2];
    TH1D * hadZDist[2];
+   TH1D * hadVzDist[2];
    TH2D * hadEtaVsPhi[2];
    TH2D * hadEVsPhi[2];
    TH2D * hadPtVsPhi[2];
@@ -114,6 +116,8 @@ int main(int argc, char** argv) {
        NBINS,-PIe,PIe);
      hadZDist[h] = new TH1D(TString(hadName[h]+"hadZDist"),distTitle("z"),
        NBINS,0,1);
+     hadVzDist[h] = new TH1D(TString(hadName[h]+"hadVzDist"),distTitle("V_{z}"),
+       NBINS,-20,20);
 
      hadEtaVsPhi[h] = new TH2D(
        TString(hadName[h]+"hadEtaVsPhi"),dist2Title(hadTitle[h],"#phi","#eta"),
@@ -371,12 +375,12 @@ int main(int argc, char** argv) {
 
        //ev->PrintEvent();
 
-       if(ev->cutQ2 && ev->cutY) {
+       if(ev->cutQ2 && ev->cutY && ev->cutEle) {
          WDist->Fill(ev->W);
          Q2vsW->Fill(ev->W,ev->Q2);
        };
 
-       if(ev->cutQ2 && ev->cutW) {
+       if(ev->cutQ2 && ev->cutW && ev->cutEle) {
          YDist->Fill(ev->y);
        };
      };
@@ -393,6 +397,7 @@ int main(int argc, char** argv) {
        eleEtaVsPhi->Fill(ev->elePhi,ev->eleEta);
        eleEVsPhi->Fill(ev->elePhi,ev->eleE);
        elePtVsPhi->Fill(ev->elePhi,ev->elePt);
+       eleVzDist->Fill(ev->eleVertex[eZ]);
 
        if(Tools::PhiFiducialCut(ev->elePhi)) fiducialPhiMask->Fill(ev->elePhi);
 
@@ -415,6 +420,7 @@ int main(int argc, char** argv) {
          hadEtaDist[h]->Fill(ev->hadEta[h]);
          hadPhiDist[h]->Fill(ev->hadPhi[h]);
          hadZDist[h]->Fill(ev->Z[h]);
+         hadVzDist[h]->Fill(ev->hadVertex[h][eZ]);
 
          hadEtaVsPhi[h]->Fill(ev->hadPhi[h],ev->hadEta[h]);
          hadEVsPhi[h]->Fill(ev->hadPhi[h],ev->hadE[h]);
@@ -526,6 +532,8 @@ int main(int argc, char** argv) {
    elePtDist->Write();
    eleEtaDist->Write();
    elePhiDist->Write();
+   eleVzDist->Write();
+
    eleEtaVsPhi->Write();
    eleEVsPhi->Write();
    elePtVsPhi->Write();
@@ -568,6 +576,9 @@ int main(int argc, char** argv) {
    hadEtaVsPhiCanv->Write();
    hadEVsPhiCanv->Write();
    hadPtVsPhiCanv->Write();
+
+   hadVzDist[qA]->Write();
+   hadVzDist[qB]->Write();
 
 
    deltaPhiDist->Write();

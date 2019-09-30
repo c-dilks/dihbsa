@@ -17,7 +17,9 @@ FiducialCuts::~FiducialCuts() {};
 bool FiducialCuts::SetSwitches(int lev) {
 
   // set cut level
-  tight=medium=loose=false;
+  tight=false;
+  medium=false;
+  loose=false;
   switch(lev) {
     case cutTight: tight=true; break;
     case cutMedium: medium=true; break;
@@ -26,7 +28,8 @@ bool FiducialCuts::SetSwitches(int lev) {
   };
 
   // set torus setting
-  inbending=outbending=false;
+  inbending=false;
+  outbending=false;
   switch(torus) {
     case -1: inbending=true; break;
     case  1: outbending=true; break;

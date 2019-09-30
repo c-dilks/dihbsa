@@ -44,7 +44,7 @@ class FiducialCuts : public TObject
     ~FiducialCuts();
 
     
-    enum levelEnum { cutTight, cutMedium, cutLoose }; // cut levels
+    enum levelEnum { cutTight, cutMedium, cutLoose, nLevel }; // cut levels
     bool enableFiducialCut; // if false, cuts will return false
     bool debug;
 
@@ -70,6 +70,7 @@ class FiducialCuts : public TObject
              DC_hit_position_region3_fiducial_cut(level);
              //*/
       /*
+      // old cuts
       return DC_hit_position_region1_fiducial_cut_triangle(level) && 
              DC_hit_position_region2_fiducial_cut_triangle(level) &&
              DC_hit_position_region2_fiducial_cut_triangle(level);

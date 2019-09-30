@@ -34,10 +34,12 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("elePt",&elePt);
   chain->SetBranchAddress("eleEta",&eleEta);
   chain->SetBranchAddress("elePhi",&elePhi);
-  if(chain->GetBranch("eleFidPCAL")) chain->SetBranchAddress("eleFidPCAL",&eleFidPCAL);
-  else eleFidPCAL=false;
-  if(chain->GetBranch("eleFidDC")) chain->SetBranchAddress("eleFidDC",&eleFidDC);
-  else eleFidDC=false;
+  if(chain->GetBranch("eleVertex")) chain->SetBranchAddress("eleVertex",eleVertex);
+  else { for(int d=0; d<3; d++) eleVertex[d]=-10000; };
+  if(chain->GetBranch("eleFidPCAL")) chain->SetBranchAddress("eleFidPCAL",eleFidPCAL);
+  else { for(int l=0; l<FiducialCuts::nLevel; l++) eleFidPCAL[l]=false; };
+  if(chain->GetBranch("eleFidDC")) chain->SetBranchAddress("eleFidDC",eleFidDC);
+  else { for(int l=0; l<FiducialCuts::nLevel; l++) eleFidDC[l]=false; };
 
 
   chain->SetBranchAddress("pairType",&pairType);
@@ -49,11 +51,14 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("hadPt",hadPt);
   chain->SetBranchAddress("hadEta",hadEta);
   chain->SetBranchAddress("hadPhi",hadPhi);
-  Bool_t hadFidPCAL[2], hadFidDC[2];
+  if(chain->GetBranch("hadVertex")) chain->SetBranchAddress("hadVertex",hadVertex);
+  else { for(int h=0; h<2; h++) for(int d=0; d<3; d++) hadVertex[h][d]=-10000; };
+  /*
   if(chain->GetBranch("hadFidPCAL")) chain->SetBranchAddress("hadFidPCAL",hadFidPCAL);
   else { for(int h=0; h<2; h++) hadFidPCAL[h]=false; };
   if(chain->GetBranch("hadFidDC")) chain->SetBranchAddress("hadFidDC",hadFidDC);
   else { for(int h=0; h<2; h++) hadFidDC[h]=false; };
+  */
 
   // (these branches, which were added for cross-checking, 
   //  aren't yet in current ROOT files)
@@ -143,7 +148,8 @@ void EventTree::GetEvent(Int_t i) {
   cutQ2 = Q2 > 1.0;
   cutW = W > 2.0;
   cutY = y < 0.8;
-  cutDIS = cutQ2 && cutW && cutY;
+  cutEle = eleP > 2.0;
+  cutDIS = cutQ2 && cutW && cutY && cutEle;
 
 
 
@@ -194,7 +200,7 @@ void EventTree::GetEvent(Int_t i) {
     Zpair < 0.95 &&
     Mmiss > 1.05 &&
     xF > 0 &&
-    hadP[qA] > 1.0 && hadP[qB] > 1.0;
+    hadP[qA] > 1.25 && hadP[qB] > 1.25;
 
   // cutDihadron is the full dihadron cut
   cutDihadron = 
@@ -214,6 +220,12 @@ void EventTree::GetEvent(Int_t i) {
     Tools::EMtoP(eleE,PartMass(kE)) > 2.0 &&
     */
     Q2>1 && W>2;
+
+
+  // vertex cuts
+  cutVertex = eleVertex[eZ]     > -8  &&  eleVertex[eZ]     < 3  &&
+              hadVertex[qA][eZ] > -8  &&  hadVertex[qA][eZ] < 3  &&
+              hadVertex[qB][eZ] > -8  &&  hadVertex[qB][eZ] < 3;
     
 
   // set preferred PhiR definition
@@ -228,7 +240,7 @@ void EventTree::GetEvent(Int_t i) {
 
 
 Bool_t EventTree::Valid() {
-  return cutDIS && cutDihadron;
+  return cutDIS && cutDihadron && cutVertex;
 };
 
 

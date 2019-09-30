@@ -135,10 +135,14 @@ int main(int argc, char** argv) {
    tree->Branch("eleEta",&(disEv->eleEta),"eleEta/F");
    tree->Branch("elePhi",&(disEv->elePhi),"elePhi/F");
    tree->Branch("eleVertex",disEv->eleVertex,"eleVertex[3]/F");
+   Int_t eleStatus;
+   tree->Branch("eleStatus",&eleStatus,"eleStatus/I");
    tree->Branch("eleChi2pid",&(disEv->eleChi2pid),"eleChi2pid/F");
-   Bool_t eleFidPCAL, eleFidDC;
-   tree->Branch("eleFidPCAL",&eleFidPCAL,"eleFidPCAL/O");
-   tree->Branch("eleFidDC",&eleFidDC,"eleFidDC/O");
+   Bool_t eleFidPCAL[FiducialCuts::nLevel];
+   Bool_t eleFidDC[FiducialCuts::nLevel];
+   TString brsuffix = Form("[%d]",FiducialCuts::nLevel);
+   tree->Branch("eleFidPCAL",eleFidPCAL,TString("eleFidPCAL"+brsuffix+"/O"));
+   tree->Branch("eleFidDC",eleFidDC,TString("eleFidDC"+brsuffix+"/O"));
 
 
    // miscellaneous branches for classifying the type of observables
@@ -174,10 +178,14 @@ int main(int argc, char** argv) {
    tree->Branch("hadPhi",hadPhi,"hadPhi[2]/F");
    tree->Branch("hadXF",dih->hadXF,"hadXF[2]/F");
    tree->Branch("hadVertex",dih->hadVertex,"hadVertex[2][3]/F");
+   Int_t hadStatus[2];
+   tree->Branch("hadStatus",hadStatus,"hadStatus[2]/I");
    tree->Branch("hadChi2pid",dih->hadChi2pid,"hadChi2pid[2]/F");
+   /*
    Bool_t hadFidPCAL[2], hadFidDC[2];
    tree->Branch("hadFidPCAL",hadFidPCAL,"hadFidPCAL[2]/O");
    tree->Branch("hadFidDC",hadFidDC,"hadFidDC[2]/O");
+   */
 
    // dihadron branches
    tree->Branch("Mh",&(dih->Mh),"Mh/F");
@@ -275,6 +283,7 @@ int main(int argc, char** argv) {
    Float_t vecObsP[3];
    Float_t vertex[3];
    Float_t chi2pid;
+   Int_t status;
 
 
    Int_t pidCur,pIdx;
@@ -441,6 +450,7 @@ int main(int argc, char** argv) {
        vertex[eY] = part->par()->getVy();
        vertex[eZ] = part->par()->getVz();
        chi2pid = part->par()->getChi2Pid();
+       status = part->par()->getStatus();
 #elif PARTICLE_BANK == 1 // MC::Lund for reading MC-generated particles
      particleCntAll = (reader.mcparts())->getRows(); // -->tree
      for(int rr=0; rr<particleCntAll; rr++) {
@@ -452,6 +462,7 @@ int main(int argc, char** argv) {
        vertex[eY] = (reader.mcparts())->getVy(rr);
        vertex[eZ] = (reader.mcparts())->getVz(rr);
        chi2pid = -10000;
+       status = -10000;
 #elif PARTICLE_BANK == 2 // MC::Particle for reading MC-generated particles
      reader.getReader().read(readerEvent);
      readerEvent.getStructure(mcParticle);
@@ -465,6 +476,7 @@ int main(int argc, char** argv) {
        vertex[eY] = mcParticle.getFloat("vy",rr);
        vertex[eZ] = mcParticle.getFloat("vz",rr);
        chi2pid = -10000;
+       status = -10000;
 #endif
 
 
@@ -498,6 +510,7 @@ int main(int argc, char** argv) {
              tr->SetVec(vecObs);
              tr->SetVertex(vertex[eX],vertex[eY],vertex[eZ]);
              tr->chi2pid = chi2pid;
+             tr->Status = status;
              
              // set tr FiducialCuts info (note: Trajectory derives from FiducialCuts)
 #if PARTICLE_BANK == 0 || PARTICLE_BANK == 3
@@ -742,9 +755,13 @@ int main(int argc, char** argv) {
        disEv->SetElectron(ele);
        disEv->Analyse(); // -->tree
 
-       eleFidPCAL = ele->FidPCAL(FiducialCuts::cutMedium); // -->tree
-       eleFidDC = ele->FidDC(FiducialCuts::cutMedium); // -->tree
-       
+       // evaluate fiducial cuts for electron
+       for(int l=0; l<FiducialCuts::nLevel; l++) {
+         eleFidPCAL[l] = ele->FidPCAL(l); // -->tree
+         eleFidDC[l] = ele->FidDC(l); // -->tree
+       };
+
+       eleStatus = ele->Status; // -->tree
 
 
        // look for "observable pairs" -- these are pairs that are used to form
@@ -864,8 +881,12 @@ int main(int argc, char** argv) {
                        hadPhi[h] = -10000;
                      };
 
+                     /*
                      hadFidPCAL[h] = had[h]->FidPCAL(FiducialCuts::cutMedium); // -->tree
                      hadFidDC[h] = had[h]->FidDC(FiducialCuts::cutMedium); // -->tree
+                     */
+
+                     hadStatus[h] = had[h]->Status; // -->tree
 
                      if(debug) {
                        printf("[+] %s 4-momentum:\n",(had[h]->Title()).Data());
