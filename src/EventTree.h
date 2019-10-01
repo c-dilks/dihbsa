@@ -46,8 +46,8 @@ class EventTree : public TObject
 
     Float_t GetKinematicFactor(Char_t kf);
 
-    Bool_t BuildEvnumMap();
-    Bool_t FindEvent(Int_t evnum_);
+    Bool_t BuildEventMatchTable();
+    Bool_t FindEvent(Int_t evnum_, Float_t P1, Float_t P2);
 
     Bool_t debug;
     Long64_t ENT;
@@ -163,9 +163,11 @@ class EventTree : public TObject
     TLorentzVector hadMom[2];
     TLorentzVector eleMom;
 
-    std::map<Int_t,Int_t> evnumMap;
+    std::map<Int_t,std::vector<Int_t>> evnumMap;
+    std::vector<Int_t>iList;
     bool inserted;
-    std::map<Int_t,Int_t>::iterator foundIt;
+    std::map<Int_t,Int_t>::iterator evnumMapIT;
+    Int_t evnumTmp;
 
 
   ClassDef(EventTree,1);

@@ -240,7 +240,7 @@ void EventTree::GetEvent(Int_t i) {
 
 
 Bool_t EventTree::Valid() {
-  return cutDIS && cutDihadron && cutVertex;
+  return cutDIS && cutDihadron/* && cutVertex*/;
 };
 
 
@@ -364,30 +364,65 @@ Float_t EventTree::GetKinematicFactor(Char_t kf) {
 };
 
 
-// build map : evnum -> tree entry num
+// build map  evnumMap : evnum -> vector of corresponding tree entries
 // -- return true if successful
-Bool_t EventTree::BuildEvnumMap() {
-  printf("building evnumMap...\n");
+Bool_t EventTree::BuildEventMatchTable() {
+  printf("building EventTree event matching table...\n");
+
   for(int i=0; i<ENT; i++) {
+
     chain->GetEntry(i);
-    if(Tools::PairSame(hadIdx[qA],hadIdx[qB],whichHad[qA],whichHad[qB])) {
-      inserted = evnumMap.insert(std::pair<Int_t,Int_t>(evnum,i)).second;
+
+    if(i==0) {
+      evnumTmp = evnum;
+      iList.clear();
+    };
+
+    if(evnum!=evnumTmp || i+1==ENT) {
+      inserted = 
+        evnumMap.insert(std::pair<Int_t,std::vector<Int_t>>(evnum,iList)).second;
       if(!inserted) {
-        fprintf(stderr,"ERROR: BuildEvnumMap found duplicate event %d (i=%d)\n",evnum,i);
+        fprintf(stderr,"ERROR: BuildEventMatchTable failed\n");
         return false;
       };
+      iList.clear();
+      evnumTmp = evnum;
+    };
+
+    if(Tools::PairSame(hadIdx[qA],hadIdx[qB],whichHad[qA],whichHad[qB])) {
+      iList.push_back(i);
     };
   };
   return true;
 };
 
-// find event using evnumMap; BuildEvnumMap MUST be (successfully) called before using this
-Bool_t EventTree::FindEvent(Int_t evnum_) {
-  foundIt = evnumMap.find(evnum_);
-  if(foundIt!=evnumMap.end()) {
-    this->GetEvent(foundIt->second);
-    return true;
-  } else return false;
+// find event using evnumMap; BuildEventMatchTable MUST be (successfully) called before
+// using this
+// - loops through vector of dihadrons, and looks for matches based on how closer the
+// hadrons' momenta are to P1 and P2
+Bool_t EventTree::FindEvent(Int_t evnum_, Float_t P1, Float_t P2) {
+
+  const Int_t nThresh = 3;
+  Float_t matchThresh[nThresh] = { 0.02, 0.05, 0.10 };
+  Float_t D1,D2;
+
+  auto evnumMapIT = evnumMap.find(evnum_); // evnumMapIT.second is vector of tree entries
+  if(evnumMapIT!=evnumMap.end()) {
+
+    // loop through list of match thresholds (each iteration the threshold gets looser)
+    for(int t=0; t<nThresh; t++) {
+      // loop through list of tree entries for this evnum; if a match was found,
+      // all of `this`'s variables will be already set and 'true` is returned;
+      // otherwise eventually false is returned
+      for(auto ii : evnumMapIT->second) {
+        this->GetEvent(ii);
+        D1 = TMath::Abs( P1 - hadP[qA] ) / P1;
+        D2 = TMath::Abs( P2 - hadP[qB] ) / P2;
+        if(D1<matchThresh[t] && D2<matchThresh[t]) return true;
+      };
+    };
+  };
+  return false;
 };
 
 
