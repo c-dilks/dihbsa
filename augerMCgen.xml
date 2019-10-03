@@ -516,7 +516,7 @@ out_clasdispr.00.e10.600.emn0.75tmn.09.xs80.53nb.dis.0499.nrad.dat.evio.hipo
 
   <ForEach list="hipoFile">
     <Job>
-      <TimeLimit unit="minutes" time="80" />
+      <TimeLimit unit="minutes" time="240" />
       <DiskSpace space="4" unit="GB" />
       <Memory space="3" unit="GB" />
 

@@ -8,5 +8,6 @@ fi
 
 echo "[+] compiling jsrc..."
 javac simpleAnalyze.java
+javac bankDump.java
 
 echo "[+] done"

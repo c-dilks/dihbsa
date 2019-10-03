@@ -17,3 +17,5 @@ spinweb*/
 *.dat
 outroot
 *.bat
+outroot.MC.gen
+outroot.MC.rec
