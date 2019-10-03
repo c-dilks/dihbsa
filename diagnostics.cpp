@@ -65,6 +65,7 @@ int main(int argc, char** argv) {
    // DIS kinematics
    TH1D * WDist = new TH1D("WDist","W distribution (w/o W cut);W",NBINS,0,6);
    TH1D * XDist = new TH1D("XDist","x distribution;x",NBINS,0,1);
+   TH1D * Q2Dist = new TH1D("Q2Dist","Q^{2} distribution;Q^{2}",NBINS,0,12);
    TH2D * Q2vsW = new TH2D("Q2vsW","Q^{2} vs. W (w/o W cut);W;Q^{2}",
                                    NBINS,0,6,NBINS,0,12);
    TH2D * Q2vsX = new TH2D("Q2vsX","Q^{2} vs. x;x;Q^{2}",NBINS,0,1,NBINS,0,12);
@@ -404,6 +405,7 @@ int main(int argc, char** argv) {
 
        Q2vsX->Fill(ev->x,ev->Q2);
        XDist->Fill(ev->x);
+       Q2Dist->Fill(ev->Q2);
 
 
        hadECorr->Fill(ev->hadE[qB],ev->hadE[qA]);
@@ -524,6 +526,7 @@ int main(int argc, char** argv) {
 
    WDist->Write();
    XDist->Write();
+   Q2Dist->Write();
    Q2vsW->Write();
    Q2vsX->Write();
    YDist->Write();

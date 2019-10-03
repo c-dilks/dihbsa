@@ -983,6 +983,10 @@ int main(int argc, char** argv) {
         binNum = HashBinNum(A->B[0], A->B[1], A->B[2]);
         kindepGr = kindepMap.at(binNum);
         kindepGr->Write();
+        for(int aa=0; aa<N_AMP; aa++) {
+          RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
+          RFkindepGr[aa]->Write();
+        };
         multiGr = multiMap.at(binNum);
         multiGr->Write();
       };

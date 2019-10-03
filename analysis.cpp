@@ -462,7 +462,7 @@ int main(int argc, char** argv) {
        vertex[eY] = (reader.mcparts())->getVy(rr);
        vertex[eZ] = (reader.mcparts())->getVz(rr);
        chi2pid = -10000;
-       status = -10000;
+       status = 0;
 #elif PARTICLE_BANK == 2 // MC::Particle for reading MC-generated particles
      reader.getReader().read(readerEvent);
      readerEvent.getStructure(mcParticle);
@@ -476,7 +476,7 @@ int main(int argc, char** argv) {
        vertex[eY] = mcParticle.getFloat("vy",rr);
        vertex[eZ] = mcParticle.getFloat("vz",rr);
        chi2pid = -10000;
-       status = -10000;
+       status = 0;
 #endif
 
 
@@ -528,6 +528,8 @@ int main(int argc, char** argv) {
              tr->dcTrackDetector = part->trk(clas12::DC)->getDetector();
              tr->dcSec = part->trk(clas12::DC)->getSector();
              // -- DC from REC::Traj
+             //    'r' loops over three regions (layers 6,18,30)
+             //    regLayer({0,1,2}) returns {6,18,30}
              for(int r=0; r<FiducialCuts::nReg; r++) {
                tr->dcTrajDetector[r] = 
                  part->traj(clas12::DC,FiducialCuts::regLayer(r))->getDetector();
@@ -755,11 +757,20 @@ int main(int argc, char** argv) {
        disEv->SetElectron(ele);
        disEv->Analyse(); // -->tree
 
+
        // evaluate fiducial cuts for electron
+       // (force them to be true for MC-generated particles)
+#if PARTICLE_BANK == 0 || PARTICLE_BANK == 3 // REC::Particle (data or MC)
        for(int l=0; l<FiducialCuts::nLevel; l++) {
          eleFidPCAL[l] = ele->FidPCAL(l); // -->tree
          eleFidDC[l] = ele->FidDC(l); // -->tree
        };
+#elif PARTICLE_BANK == 1 || PARTICLE_BANK == 2 // MC generated banks
+       for(int l=0; l<FiducialCuts::nLevel; l++) {
+         eleFidPCAL[l] = true; // -->tree
+         eleFidDC[l] = true; // -->tree
+       };
+#endif
 
        eleStatus = ele->Status; // -->tree
 

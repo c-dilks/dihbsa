@@ -1,3 +1,54 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// fiducial volume cut functions
+///
+/// Stefan Diehl (sdiehl@jlab.org)
+///
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Definitions from hipo 4 banks:
+
+  // Calorimeter bank (layer: PCAL = 1)
+
+    for(int i = 0; i < Cal_Nentries; i++){
+      if(vCal_pindex->at(i) >= 0 && vCal_pindex->at(i) < BUFFER && vCal_layer->at(i) == 1){
+        part_Cal_PCAL_sector[vCal_pindex->at(i)] = vCal_sector->at(i); 
+        part_Cal_PCAL_lu[vCal_pindex->at(i)] = vCal_lu->at(i);
+        part_Cal_PCAL_lv[vCal_pindex->at(i)] = vCal_lv->at(i);
+        part_Cal_PCAL_lw[vCal_pindex->at(i)] = vCal_lw->at(i);
+      }
+    }
+  
+  // tracking banks  (detectors: DC = 6) 
+
+    for(int i = 0; i < TRK_Nentries; i++){
+      if(vTRK_pindex->at(i) < BUFFER && vTRK_detector->at(i) == 6){
+        part_DC_sector[vTRK_pindex->at(i)] = vTRK_sector->at(i);
+      }
+    }
+
+  // trajectory crosses  (layer: 6 = DC region 1 start,  18 = DC region 2 start,  30 = DC region 3 start ) 
+
+  if(Traj_Nentries > 0){
+    for(int i = 0; i < Traj_Nentries; i++){
+      if(vTraj_pindex->at(i) >= 0 && vTraj_pindex->at(i) < BUFFER && vTraj_detID->at(i) == 6 && vTraj_layerID->at(i) == 6){    
+          part_DC_c1x[vTraj_pindex->at(i)] = vTraj_x->at(i);
+          part_DC_c1y[vTraj_pindex->at(i)] = vTraj_y->at(i);
+          part_DC_c1z[vTraj_pindex->at(i)] = vTraj_z->at(i);
+      }
+      if(vTraj_pindex->at(i) >= 0 && vTraj_pindex->at(i) < BUFFER && vTraj_detID->at(i) == 6 && vTraj_layerID->at(i) == 18){  
+          part_DC_c2x[vTraj_pindex->at(i)] = vTraj_x->at(i);
+          part_DC_c2y[vTraj_pindex->at(i)] = vTraj_y->at(i);
+          part_DC_c2z[vTraj_pindex->at(i)] = vTraj_z->at(i);
+      }
+      if(vTraj_pindex->at(i) >= 0 && vTraj_pindex->at(i) < BUFFER && vTraj_detID->at(i) == 6 && vTraj_layerID->at(i) == 30){  
+          part_DC_c3x[vTraj_pindex->at(i)] = vTraj_x->at(i);
+          part_DC_c3y[vTraj_pindex->at(i)] = vTraj_y->at(i);
+          part_DC_c3z[vTraj_pindex->at(i)] = vTraj_z->at(i);
+      }
+    }
+  }
+
+
 /// PCAL fiducial cuts:
 
 bool EC_hit_position_fiducial_cut(int j){

@@ -13,7 +13,7 @@ Binning::Binning(Int_t pairType_) {
   numKaons = 0;
   for(int h=0; h<2; h++) { if(whichHad[h]==kKp || whichHad[h]==kKm) numKaons++; };
 
-  // set up dnp2018 binning
+  // binning
   minIV[vM] = 0;   maxIV[vM] = 3;
   minIV[vX] = 0;   maxIV[vX] = 1;
   minIV[vZ] = 0;   maxIV[vZ] = 1;
@@ -23,9 +23,16 @@ Binning::Binning(Int_t pairType_) {
   AddBinBound(vM,minIV[vM]);
   if(numKaons==0) {
     ///*
+    // 5 quantiles (from GetQuantiles.C)
+    AddBinBound(vM,0.53);
+    AddBinBound(vM,0.71);
+    AddBinBound(vM,0.84);
+    AddBinBound(vM,1.03);
+    //*/
+    /*
     AddBinBound(vM,0.4);
     AddBinBound(vM,0.8);
-    //*/
+    */
     /*
     AddBinBound(vM,0.4);
     AddBinBound(vM,0.6);
@@ -37,6 +44,17 @@ Binning::Binning(Int_t pairType_) {
     /*
     AddBinBound(vM,0.77); // rho mass
     */
+    // Timothy's DNP 2019 bounds
+    /*
+    AddBinBound(vM,0.431);
+    AddBinBound(vM,0.550);
+    AddBinBound(vM,0.662);
+    AddBinBound(vM,0.750);
+    AddBinBound(vM,0.819);
+    AddBinBound(vM,0.906);
+    AddBinBound(vM,1.019);
+    AddBinBound(vM,1.194);
+    */
   } else if(numKaons==1) {
     AddBinBound(vM,0.85);
     AddBinBound(vM,1.1);
@@ -47,8 +65,28 @@ Binning::Binning(Int_t pairType_) {
   // -- x
   AddBinBound(vX,minIV[vX]);
   if(numKaons==0) {
+    ///*
+    // 5 quantiles (from GetQuantiles.C)
+    AddBinBound(vX,0.22);
+    AddBinBound(vX,0.26);
+    AddBinBound(vX,0.32);
+    AddBinBound(vX,0.39);
+    //*/
+    /*
     AddBinBound(vX,0.2);
     AddBinBound(vX,0.4);
+    */
+    // Timothy's DNP 2019 bounds
+    /*
+    AddBinBound(vX,0.140);
+    AddBinBound(vX,0.168);
+    AddBinBound(vX,0.193);
+    AddBinBound(vX,0.220);
+    AddBinBound(vX,0.248);
+    AddBinBound(vX,0.283);
+    AddBinBound(vX,0.328);
+    AddBinBound(vX,0.398);
+    */
   } else {
     AddBinBound(vX,0.2);
     AddBinBound(vX,0.3);
@@ -57,8 +95,28 @@ Binning::Binning(Int_t pairType_) {
   // -- z
   AddBinBound(vZ,minIV[vZ]);
   if(numKaons==0) {
+    ///*
+    // 5 quantiles (from GetQuantiles.C)
+    AddBinBound(vZ,0.47);
+    AddBinBound(vZ,0.55);
+    AddBinBound(vZ,0.63);
+    AddBinBound(vZ,0.73);
+    //*/
+    /*
     AddBinBound(vZ,0.4);
     AddBinBound(vZ,0.6);
+    */
+    // Timothy's DNP 2019 bounds
+    /*
+    AddBinBound(vZ,0.433);
+    AddBinBound(vZ,0.483);
+    AddBinBound(vZ,0.528);
+    AddBinBound(vZ,0.570);
+    AddBinBound(vZ,0.615);
+    AddBinBound(vZ,0.663);
+    AddBinBound(vZ,0.718);
+    AddBinBound(vZ,0.788);
+    */
   } else {
     AddBinBound(vZ,0.5);
     AddBinBound(vZ,0.7);

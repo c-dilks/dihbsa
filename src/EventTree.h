@@ -143,14 +143,16 @@ class EventTree : public TObject
     Bool_t cutDihadron;
     Bool_t cutDiphKinematics[2];
     Bool_t cutDiph[2];
-    Bool_t cutCrossCheck;
+    //Bool_t cutCrossCheck;
     Bool_t cutVertex;
+    Bool_t cutFiducial;
 
     Bool_t useDiphBG;
     
   private:
     TChain * chain;
     Int_t whichHad[2];
+    Int_t whichLevel;
 
     TRandom * RNG;
 
@@ -166,7 +168,6 @@ class EventTree : public TObject
     std::map<Int_t,std::vector<Int_t>> evnumMap;
     std::vector<Int_t>iList;
     bool inserted;
-    std::map<Int_t,Int_t>::iterator evnumMapIT;
     Int_t evnumTmp;
 
 

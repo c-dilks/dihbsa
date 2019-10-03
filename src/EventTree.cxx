@@ -209,23 +209,28 @@ void EventTree::GetEvent(Int_t i) {
     cutDiph[qA] && cutDiph[qB];
 
   
-  // cut for doing cross-checks
-  // -- tim's cuts
-  cutCrossCheck = 
-    Tools::PairSame(hadIdx[qA],hadIdx[qB],kPip,kPim) &&
-    /*
-    particleCnt[kPip]==1 && particleCnt[kPim]==1 &&
-    Tools::EMtoP(hadE[qA],PartMass(kPip)) > 1.0 &&
-    Tools::EMtoP(hadE[qB],PartMass(kPim)) > 1.0 &&
-    Tools::EMtoP(eleE,PartMass(kE)) > 2.0 &&
-    */
-    Q2>1 && W>2;
+  //// cut for doing cross-checks - deprecated
+  //// -- tim's cuts
+  //cutCrossCheck = 
+    //Tools::PairSame(hadIdx[qA],hadIdx[qB],kPip,kPim) &&
+    ///*
+    //particleCnt[kPip]==1 && particleCnt[kPim]==1 &&
+    //Tools::EMtoP(hadE[qA],PartMass(kPip)) > 1.0 &&
+    //Tools::EMtoP(hadE[qB],PartMass(kPim)) > 1.0 &&
+    //Tools::EMtoP(eleE,PartMass(kE)) > 2.0 &&
+    //*/
+    //Q2>1 && W>2;
 
 
   // vertex cuts
   cutVertex = eleVertex[eZ]     > -8  &&  eleVertex[eZ]     < 3  &&
               hadVertex[qA][eZ] > -8  &&  hadVertex[qA][eZ] < 3  &&
               hadVertex[qB][eZ] > -8  &&  hadVertex[qB][eZ] < 3;
+
+  // fiducial cuts
+  whichLevel = FiducialCuts::cutMedium;
+  cutFiducial = eleFidPCAL[whichLevel] && eleFidDC[whichLevel];
+  //cutFiducial = true; // override
     
 
   // set preferred PhiR definition
@@ -240,7 +245,7 @@ void EventTree::GetEvent(Int_t i) {
 
 
 Bool_t EventTree::Valid() {
-  return cutDIS && cutDihadron/* && cutVertex*/;
+  return cutDIS && cutDihadron && cutVertex && cutFiducial;
 };
 
 
