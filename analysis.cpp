@@ -343,7 +343,7 @@ int main(int argc, char** argv) {
      //        eventually be generalized...
      printf("GENFILE = %s\n",genfileN.Data());
      genEv = new EventTree(genfileN,EncodePairType(kPip,kPim));
-     genSuccess = genEv->BuildEventMatchTable();
+     genSuccess = genEv->BuildMatchTable();
      if(!genSuccess) return 0;
    };
 
@@ -952,12 +952,7 @@ int main(int argc, char** argv) {
                        // match rec event to gen event to assign helicity
                        helicity = 0;
                        if(genEv->FindEvent(evnum,hadP[qA],hadP[qB])) {
-                         for(int h=0; h<2; h++) {
-                           difference[h] = 
-                             TMath::Abs( hadP[h] - genEv->hadP[h] ) / genEv->hadP[h];
-                         };
-                         if(difference[qA]<0.01 && difference[qB]<0.01)
-                           helicity = genEv->helicity;
+                         helicity = genEv->helicity;
                        };
                      };
 

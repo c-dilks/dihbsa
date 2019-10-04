@@ -34,25 +34,21 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("elePt",&elePt);
   chain->SetBranchAddress("eleEta",&eleEta);
   chain->SetBranchAddress("elePhi",&elePhi);
-  if(chain->GetBranch("eleVertex")) chain->SetBranchAddress("eleVertex",eleVertex);
-  else { for(int d=0; d<3; d++) eleVertex[d]=-10000; };
-  if(chain->GetBranch("eleFidPCAL")) chain->SetBranchAddress("eleFidPCAL",eleFidPCAL);
-  else { for(int l=0; l<FiducialCuts::nLevel; l++) eleFidPCAL[l]=false; };
-  if(chain->GetBranch("eleFidDC")) chain->SetBranchAddress("eleFidDC",eleFidDC);
-  else { for(int l=0; l<FiducialCuts::nLevel; l++) eleFidDC[l]=false; };
+  chain->SetBranchAddress("eleVertex",eleVertex);
+  chain->SetBranchAddress("eleFidPCAL",eleFidPCAL);
+  chain->SetBranchAddress("eleFidDC",eleFidDC);
 
 
   chain->SetBranchAddress("pairType",&pairType);
   chain->SetBranchAddress("hadIdx",hadIdx);
-  if(chain->GetBranch("hadOrder")) chain->SetBranchAddress("hadOrder",&hadOrder);
-  else hadOrder = -10000;
+  chain->SetBranchAddress("hadOrder",&hadOrder);
   chain->SetBranchAddress("hadE",hadE);
   chain->SetBranchAddress("hadP",hadP);
   chain->SetBranchAddress("hadPt",hadPt);
   chain->SetBranchAddress("hadEta",hadEta);
   chain->SetBranchAddress("hadPhi",hadPhi);
-  if(chain->GetBranch("hadVertex")) chain->SetBranchAddress("hadVertex",hadVertex);
-  else { for(int h=0; h<2; h++) for(int d=0; d<3; d++) hadVertex[h][d]=-10000; };
+  chain->SetBranchAddress("hadVertex",hadVertex);
+  chain->SetBranchAddress("hadStatus",hadStatus);
   /*
   if(chain->GetBranch("hadFidPCAL")) chain->SetBranchAddress("hadFidPCAL",hadFidPCAL);
   else { for(int h=0; h<2; h++) hadFidPCAL[h]=false; };
@@ -231,6 +227,12 @@ void EventTree::GetEvent(Int_t i) {
   whichLevel = FiducialCuts::cutMedium;
   cutFiducial = eleFidPCAL[whichLevel] && eleFidDC[whichLevel];
   //cutFiducial = true; // override
+  
+  // require hadrons observed in forward detectors
+  cutDihadronStatus = 
+    ( TMath::Abs(hadStatus[qA])<4000 || TMath::Abs(hadStatus[qA])>=5000 ) &&
+    ( TMath::Abs(hadStatus[qB])<4000 || TMath::Abs(hadStatus[qB])>=5000 );
+
     
 
   // set preferred PhiR definition
@@ -244,9 +246,13 @@ void EventTree::GetEvent(Int_t i) {
 };
 
 
+/////////////////////////////////////////////////////////
+// MAIN ANALYSIS CUT
 Bool_t EventTree::Valid() {
-  return cutDIS && cutDihadron && cutVertex && cutFiducial;
+  return cutDIS && cutDihadron && 
+         cutVertex && cutFiducial && cutDihadronStatus;
 };
+/////////////////////////////////////////////////////////
 
 
 Int_t EventTree::SpinState() {
@@ -369,9 +375,9 @@ Float_t EventTree::GetKinematicFactor(Char_t kf) {
 };
 
 
-// build map  evnumMap : evnum -> vector of corresponding tree entries
+// build map `evnumMap : evnum -> vector of corresponding tree entries`
 // -- return true if successful
-Bool_t EventTree::BuildEventMatchTable() {
+Bool_t EventTree::BuildMatchTable() {
   printf("building EventTree event matching table...\n");
 
   for(int i=0; i<ENT; i++) {
@@ -385,9 +391,9 @@ Bool_t EventTree::BuildEventMatchTable() {
 
     if(evnum!=evnumTmp || i+1==ENT) {
       inserted = 
-        evnumMap.insert(std::pair<Int_t,std::vector<Int_t>>(evnum,iList)).second;
+        evnumMap.insert(std::pair<Int_t,std::vector<Int_t>>(evnumTmp,iList)).second;
       if(!inserted) {
-        fprintf(stderr,"ERROR: BuildEventMatchTable failed\n");
+        fprintf(stderr,"ERROR: BuildMatchTable failed\n");
         return false;
       };
       iList.clear();
@@ -401,14 +407,17 @@ Bool_t EventTree::BuildEventMatchTable() {
   return true;
 };
 
-// find event using evnumMap; BuildEventMatchTable MUST be (successfully) called before
+
+// DIHADRON EVENT MATCHING ALGORITHM
+// ---------------------------------
+// find event using evnumMap; BuildMatchTable MUST be (successfully) called before
 // using this
 // - loops through vector of dihadrons, and looks for matches based on how closer the
 // hadrons' momenta are to P1 and P2
 Bool_t EventTree::FindEvent(Int_t evnum_, Float_t P1, Float_t P2) {
 
   const Int_t nThresh = 3;
-  Float_t matchThresh[nThresh] = { 0.02, 0.05, 0.10 };
+  Float_t matchThresh[nThresh] = { 0.01, 0.03, 0.08 };
   Float_t D1,D2;
 
   auto evnumMapIT = evnumMap.find(evnum_); // evnumMapIT.second is vector of tree entries
@@ -421,8 +430,8 @@ Bool_t EventTree::FindEvent(Int_t evnum_, Float_t P1, Float_t P2) {
       // otherwise eventually false is returned
       for(auto ii : evnumMapIT->second) {
         this->GetEvent(ii);
-        D1 = TMath::Abs( P1 - hadP[qA] ) / P1;
-        D2 = TMath::Abs( P2 - hadP[qB] ) / P2;
+        D1 = TMath::Abs( hadP[qA] - P1 ) / P1;
+        D2 = TMath::Abs( hadP[qB] - P2 ) / P2;
         if(D1<matchThresh[t] && D2<matchThresh[t]) return true;
       };
     };

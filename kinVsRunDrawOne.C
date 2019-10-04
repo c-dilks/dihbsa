@@ -16,8 +16,10 @@ void kinVsRunDrawOne(Int_t runnum=5032, TString infileN="vsRun.main.root") {
   gStyle->SetOptStat(0); // do not show num. entries
 
   TFile * infile = new TFile(infileN,"READ");
-  TCanvas * canv1 = new TCanvas("canv1","canv1",1000,1000); canv1->Divide(4,2);
-  TCanvas * canv2 = new TCanvas("canv2","canv2",1000,1000); canv2->Divide(3,1);
+  TCanvas * canv1 = new TCanvas("canv1","canv1",1200,800); canv1->Divide(4,2);
+  TCanvas * canv2 = new TCanvas("canv2","canv2",1200,500); canv2->Divide(3,1);
+  TString pngname1 = Form("vsrunset/canv1.%d.png",runnum);
+  TString pngname2 = Form("vsrunset/canv2.%d.png",runnum);
   
   TString runstr = Form("_run%d",runnum);
 
@@ -52,5 +54,8 @@ void kinVsRunDrawOne(Int_t runnum=5032, TString infileN="vsRun.main.root") {
   canv2->cd(1); elePhiDist->Draw();
   canv2->cd(2); hadPhiDist[qA]->Draw();
   canv2->cd(3); hadPhiDist[qB]->Draw();
+
+  canv1->Print(pngname1,"png");
+  canv2->Print(pngname2,"png");
 
 };

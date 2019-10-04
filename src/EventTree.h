@@ -46,7 +46,7 @@ class EventTree : public TObject
 
     Float_t GetKinematicFactor(Char_t kf);
 
-    Bool_t BuildEventMatchTable();
+    Bool_t BuildMatchTable();
     Bool_t FindEvent(Int_t evnum_, Float_t P1, Float_t P2);
 
     Bool_t debug;
@@ -71,6 +71,7 @@ class EventTree : public TObject
     Float_t hadPhi[2];
     Float_t hadXF[2];
     Float_t hadVertex[2][3];
+    Int_t hadStatus[2];
     //Bool_t hadFidPCAL[2], hadFidDC[2];
 
     // electron kinematics
@@ -146,6 +147,7 @@ class EventTree : public TObject
     //Bool_t cutCrossCheck;
     Bool_t cutVertex;
     Bool_t cutFiducial;
+    Bool_t cutDihadronStatus;
 
     Bool_t useDiphBG;
     

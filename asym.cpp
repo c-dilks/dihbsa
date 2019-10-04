@@ -175,6 +175,20 @@ int main(int argc, char** argv) {
 
   // check IV enumerators and get number of bins for each IV
   BS = new Binning(pairType); // instantiate binning scheme 
+
+  // DNP2019 shorctut: interested in z-dependence above and below rho mass
+  // - override binning scheme, if we requested z-dependence in mass bins
+  Int_t vvm = Binning::vM;
+  if(ivType==32) {
+    BS->nBins[vvm] = -1;
+    BS->bound[vvm].clear();
+    BS->AddBinBound(vvm,BS->minIV[vvm]);
+    BS->AddBinBound(vvm,0.77);
+    BS->AddBinBound(vvm,BS->maxIV[vvm]);
+    BS->PrintBinBounds();
+  };
+  //// END shortcut
+
   Int_t NB[3]; // # of bins for each IV
   for(int d=0; d<dimensions; d++) {
     if(!(BS->ValidIV(ivVar[d]))) {
@@ -1273,7 +1287,7 @@ TGraphErrors * ShiftGraph(TGraphErrors * gr, Int_t nShift) {
   };
 
   switch(nShift) {
-    case 1: retGr->SetLineColor(kGreen+1); break;
+    case 1: retGr->SetLineColor(N_AMP==1?kGray+3:kGreen+1); break;
     case 2: retGr->SetLineColor(kRed); break;
     case 3: retGr->SetLineColor(kBlue); break;
     case 4: retGr->SetLineColor(kMagenta); break;
