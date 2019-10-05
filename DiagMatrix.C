@@ -6,21 +6,22 @@ void DiagMatrix() {
 
   gStyle->SetOptStat(0);
 
-  Int_t dim = 1;
+  //Int_t dim = 1;
   //TString plotName = "ZpairDist";
   //TString plotName = "XDist";
   //TString plotName = "MhDist";
   //TString plotName = "thetaDist";
-  TString plotName = "PhiHDist";
+  //TString plotName = "PhiHDist";
   //TString plotName = "PhiRDist";
   //TString plotName = "PhiHRDist";
-  //Int_t dim = 2;
-  //TString plotName = "PhiHvsPhiR";
+  Int_t dim = 2;
+  TString plotName = "PhiHvsPhiR";
 
 
   TString canvName = "matrix_" + plotName;
   TCanvas * matrix = new TCanvas(canvName,canvName,1000,1000);
-  matrix->Divide(nObservables,nObservables);
+  //matrix->Divide(nObservables,nObservables);
+  matrix->Divide(nObservables,nObservables-1); // +++ cut off top row of plots
 
   TFile * infile[nObservables][nObservables];
   TH1D * dist1[nObservables][nObservables];
@@ -41,6 +42,7 @@ void DiagMatrix() {
       pairT = PairTitle(pa,pb);
 
       pad = (nObservables-1-o1)*nObservables + o2 + 1;
+      pad -= nObservables; if(pad<1) continue; // +++ cutoff top row of plots
 
       printf("obs(%d,%d) = (%s,%s) = \"%s\"   pad=%d\n",
         o1,o2,
@@ -62,8 +64,8 @@ void DiagMatrix() {
           maxim = 1.1 * dist1[o1][o2]->GetMaximum();
           //dist1[o1][o2]->GetXaxis()->SetRangeUser(-PI,PI);
           dist1[o1][o2]->GetYaxis()->SetRangeUser(0,maxim);
-          dist1[o1][o2]->GetXaxis()->SetLabelSize(0.08);
-          dist1[o1][o2]->GetYaxis()->SetLabelSize(0.08);
+          dist1[o1][o2]->GetXaxis()->SetLabelSize(0.04);
+          dist1[o1][o2]->GetYaxis()->SetLabelSize(0.04);
           dist1[o1][o2]->Draw();
           break;
         case 2:
@@ -74,8 +76,8 @@ void DiagMatrix() {
           dist2[o1][o2]->SetTitle(titleTmp);
           //dist2[o1][o2]->GetXaxis()->SetRangeUser(-PI,PI);
           //dist2[o1][o2]->GetYaxis()->SetRangeUser(-PI,PI);
-          dist2[o1][o2]->GetXaxis()->SetLabelSize(0.08);
-          dist2[o1][o2]->GetYaxis()->SetLabelSize(0.08);
+          dist2[o1][o2]->GetXaxis()->SetLabelSize(0.04);
+          dist2[o1][o2]->GetYaxis()->SetLabelSize(0.04);
           dist2[o1][o2]->Draw("colz");
           break;
       };

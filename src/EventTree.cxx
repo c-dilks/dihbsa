@@ -222,6 +222,17 @@ void EventTree::GetEvent(Int_t i) {
   cutVertex = eleVertex[eZ]     > -8  &&  eleVertex[eZ]     < 3  &&
               hadVertex[qA][eZ] > -8  &&  hadVertex[qA][eZ] < 3  &&
               hadVertex[qB][eZ] > -8  &&  hadVertex[qB][eZ] < 3;
+  if(diphCnt>0) { // diphotons don't yet have a vertex! TODO
+    if(hadIdx[qA]==kDiph && hadIdx[qB]==kDiph) 
+      cutVertex = eleVertex[eZ] > -8  &&  eleVertex[eZ] < 3;
+    else if(hadIdx[qA]==kDiph) 
+      cutVertex = eleVertex[eZ]     > -8  &&  eleVertex[eZ]     < 3  &&
+                  hadVertex[qB][eZ] > -8  &&  hadVertex[qB][eZ] < 3;
+    else if(hadIdx[qB]==kDiph) 
+      cutVertex = eleVertex[eZ]     > -8  &&  eleVertex[eZ]     < 3  &&
+                  hadVertex[qA][eZ] > -8  &&  hadVertex[qA][eZ] < 3;
+  };
+
 
   // fiducial cuts
   whichLevel = FiducialCuts::cutMedium;

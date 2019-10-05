@@ -2,7 +2,7 @@
 
 root -b -q PrintEnumerators.C
 
-dir="outroot.dnp2018"
+dir="outroot.fall18.someMore"
 
 mkdir -p diagset
 

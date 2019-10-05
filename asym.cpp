@@ -276,10 +276,10 @@ int main(int argc, char** argv) {
   // single-digit bin number [dimension]
   std::map<Int_t, Asymmetry*> asymMap; // map to Asymmetry pointers
   std::map<Int_t, TGraphErrors*> kindepMap; // map to kindep plots
+  std::map<Int_t, TGraphErrors*> RFkindepMap[Asymmetry::nAmp]; 
   std::map<Int_t, TMultiGraph*> multiMap; // map to multiGr
   std::map<Int_t, TGraphErrors*> chindfMap; // map to chindfGr
   std::map<Int_t, TGraphErrors*> rellumMap; // map to rellumGr
-  std::map<Int_t, TGraphErrors*> RFkindepMap[Asymmetry::nAmp]; 
   // map to MLM amplitudes [for each param]
 
   TGraphErrors * kindepGr;
@@ -610,6 +610,9 @@ int main(int argc, char** argv) {
 
   // compute asymmetries
   Float_t asymValue,asymError;
+  Float_t RFasymValue[Asymmetry::nAmp];
+  Float_t RFasymError[Asymmetry::nAmp];
+  Float_t meanKF;
   Float_t kinValue,kinError;
   Float_t chisq,ndf;
   printf("--- calculate asymmetries\n");
@@ -628,6 +631,19 @@ int main(int argc, char** argv) {
         asymValue = A->fitFunc2->GetParameter(0);
         asymError = A->fitFunc2->GetParError(0);
       };
+      for(int aa=0; aa<N_AMP; aa++) {
+        RFasymValue[aa] = A->rfA[aa]->getVal();
+        RFasymError[aa] = A->rfA[aa]->getError();
+      };
+
+
+      // divide out mean kinematic factor
+      /*
+      meanKF = A->kfDist->GetMean();
+      asymValue /= meanKF;
+      for(int aa=0; aa<N_AMP; aa++) RFasymValue[aa] /= meanKF;
+      */
+
 
 
       // IV value and uncertainty
@@ -664,8 +680,8 @@ int main(int argc, char** argv) {
 
       for(int aa=0; aa<N_AMP; aa++) {
         RFkindepGr[aa] = RFkindepMap[aa].at(bn);
-        RFkindepGr[aa]->SetPoint(A->B[0],kinValue,A->rfA[aa]->getVal());
-        RFkindepGr[aa]->SetPointError(A->B[0],kinError,A->rfA[aa]->getError());
+        RFkindepGr[aa]->SetPoint(A->B[0],kinValue,RFasymValue[aa]);
+        RFkindepGr[aa]->SetPointError(A->B[0],kinError,RFasymError[aa]);
       };
 
       chindfGr = chindfMap.at(bn);
@@ -1040,6 +1056,7 @@ int main(int argc, char** argv) {
       };
       printf("\n");
 
+      printf("fit parameter results:\n");
       for(int aa=0; aa<N_AMP; aa++) {
         printf(" >> A%d = %.3f +/- %.3f\n",
             aa, A->rfA[aa]->getVal(), A->rfA[aa]->getError() );
