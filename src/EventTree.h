@@ -102,7 +102,7 @@ class EventTree : public TObject
     Float_t torus;
     Long64_t triggerBits;
     Int_t helicity;
-    static const Int_t NhelicityMC = 10; // prefer to be == nINJECT in analysis.cpp
+    static const Int_t NhelicityMC = 11; // prefer to be == nINJECT in analysis.cpp
     Int_t helicityMC[NhelicityMC];
 
     // PhiR 

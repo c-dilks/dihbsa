@@ -353,7 +353,7 @@ int main(int argc, char** argv) {
    Int_t helicityMC[nINJECT];
    TString brStr;
    if(MCrecMode || MCgenMode) {
-     brStr = Form("helicity[%d]/I",nINJECT);
+     brStr = Form("helicityMC[%d]/I",nINJECT);
      tree->Branch("helicityMC",helicityMC,brStr);
    };
 
