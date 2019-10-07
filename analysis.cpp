@@ -30,6 +30,11 @@
 #include "EventTree.h"
 
 
+// methods / vars for MC
+Int_t generateHelicity(Int_t idx, Float_t phiH, Float_t phiR); // for MC
+Float_t modu(Int_t par, Float_t ph, Float_t pr); // for MC
+TRandom * RNG; 
+//
 
 
 int main(int argc, char** argv) {
@@ -295,13 +300,10 @@ int main(int argc, char** argv) {
 
    // MC: variables
    Bool_t printWarning = true;
-   Float_t asymInject,ampInject,polInject;
-   TRandom * RNG = new TRandom(14972);
-   Float_t rand;
+   RNG = new TRandom(14972);
    EventTree * genEv;
    TString genfileN;
-   Bool_t genSuccess;
-   Float_t difference[2];
+   Bool_t genSuccess,foundMatch;
 
 
    // determine MC mode, using PARTICLE_BANK macro, defined in config.mk
@@ -345,6 +347,14 @@ int main(int argc, char** argv) {
      genEv = new EventTree(genfileN,EncodePairType(kPip,kPim));
      genSuccess = genEv->BuildMatchTable();
      if(!genSuccess) return 0;
+   };
+
+   const Int_t nINJECT = 11; // number of helicities to inject for MC
+   Int_t helicityMC[nINJECT];
+   TString brStr;
+   if(MCrecMode || MCgenMode) {
+     brStr = Form("helicity[%d]/I",nINJECT);
+     tree->Branch("helicityMC",helicityMC,brStr);
    };
 
 
@@ -765,7 +775,7 @@ int main(int argc, char** argv) {
          eleFidPCAL[l] = ele->FidPCAL(l); // -->tree
          eleFidDC[l] = ele->FidDC(l); // -->tree
        };
-#elif PARTICLE_BANK == 1 || PARTICLE_BANK == 2 // MC generated banks
+#elif PARTICLE_BANK == 1 || PARTICLE_BANK == 2 // MC generated banks: just set to true
        for(int l=0; l<FiducialCuts::nLevel; l++) {
          eleFidPCAL[l] = true; // -->tree
          eleFidDC[l] = true; // -->tree
@@ -937,26 +947,24 @@ int main(int argc, char** argv) {
                        return 0;
                      };
 
+
                      if(MCgenMode) {
                        // compute injected asymmetry
-                       ampInject = 0.1;
-                       polInject = 0.86;
-                       asymInject = polInject * ampInject * TMath::Sin(dih->PhiH - dih->PhiRp);
-
-                       // helicity re-assignment:  2 = spin -   3 = spin +
-                       rand = RNG->Uniform();
-                       helicity = rand < 0.5*(1+asymInject) ? 3 : 2;
+                       for(int hh=0; hh<nINJECT; hh++) {
+                         helicityMC[hh] = generateHelicity(hh,dih->PhiH,dih->PhiR);
+                       };
                      };
 
                      if(MCrecMode) {
                        // match rec event to gen event to assign helicity
-                       helicity = 0;
-                       if(genEv->FindEvent(evnum,hadP[qA],hadP[qB])) {
-                         helicity = genEv->helicity;
+                       foundMatch = genEv->FindEvent(evnum,hadP[qA],hadP[qB]);
+                       for(int hh=0; hh<nINJECT; hh++) {
+                         helicityMC[hh] = foundMatch ? genEv->helicityMC[hh] : 0;
                        };
                      };
 
-                     // print a warning 
+                     helicity = 0; // set data helicity to zero
+                     // ... and print a warning 
                      // (to prevent from accidentally altering the helicity of real data)
                      if(printWarning) {
                        fprintf(stderr,"WARNING WARNING WARNING: ");
@@ -1031,4 +1039,47 @@ int main(int argc, char** argv) {
 
    // close the output ROOT file
    outfile->Close();
+};
+
+
+Int_t generateHelicity(Int_t idx, Float_t phiH, Float_t phiR) {
+
+  Float_t amp = 0.10;
+  Float_t asym;
+
+  switch(idx) {
+    case 0: asym = 0; break;
+
+    case 1: asym = amp*modu(1,phiH,phiR); break;
+    case 2: asym = amp*modu(2,phiH,phiR); break;
+    case 3: asym = amp*modu(3,phiH,phiR); break;
+    case 4: asym = amp*modu(4,phiH,phiR); break;
+
+    case 5: asym = amp*modu(1,phiH,phiR) + (amp+0.02)*modu(3,phiH,phiR); break;
+    case 6: asym = amp*modu(2,phiH,phiR) + (amp+0.02)*modu(3,phiH,phiR); break;
+    case 7: asym = amp*modu(3,phiH,phiR) + (amp+0.02)*modu(3,phiH,phiR); break;
+    case 8: asym = amp*modu(4,phiH,phiR) + (amp+0.02)*modu(3,phiH,phiR); break;
+
+    case 9:  asym = amp*modu(1,phiH,phiR) - amp*modu(2,phiH,phiR); break;
+    case 10: asym = amp*modu(1,phiH,phiR) - amp*modu(2,phiH,phiR) + (amp+0.02)*modu(3,phiH,phiR); break;
+    /* nINJECT must equal the number of cases */
+    default: fprintf(stderr,"generateHelicity undefined for idx=%d\n",idx); return 0;
+  };
+
+  asym *= 0.86; // polarization factor
+
+  // generate random number in [0,1]
+  Float_t rn = RNG->Uniform();
+
+  // return helicity assignment:  2 = spin -   3 = spin +
+  return ( rn < 0.5*(1+asym) )  ?  3 : 2;
+};
+Float_t modu(Int_t par, Float_t ph, Float_t pr) {
+  switch(par) {
+    case 1: return TMath::Sin(pr); break;
+    case 2: return TMath::Sin(ph-pr); break;
+    case 3: return TMath::Sin(ph); break;
+    case 4: return TMath::Sin(ph+pr); break;
+    default: fprintf(stderr,"modu unknown\n"); return 0;
+  };
 };

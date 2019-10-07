@@ -99,9 +99,11 @@ class EventTree : public TObject
 
     // event-level branches
     Int_t evnum,runnum;
-    Int_t helicity;
     Float_t torus;
     Long64_t triggerBits;
+    Int_t helicity;
+    static const Int_t NhelicityMC = 10; // prefer to be == nINJECT in analysis.cpp
+    Int_t helicityMC[NhelicityMC];
 
     // PhiR 
     Float_t PhiR; // set to the preferred one

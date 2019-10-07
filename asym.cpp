@@ -124,6 +124,12 @@ int main(int argc, char** argv) {
   printf("flowControl = %d\n",flowControl);
   printf("\n");
 
+  // pi0pi0 not yet functional TODO
+  if(pairType==0x99) {
+    fprintf(stderr,"ERROR: pi0 pi0 channel is under construction\n");
+    return 0;
+  };
+
 
   // set dihadron name / title
   DecodePairType(pairType,whichHad[qA],whichHad[qB]);

@@ -249,6 +249,9 @@ void Dihadron::ComputeAngles() {
 
   // equation 9 in 1408.5721 (gliske, bacchetta, radici)
   PhiRp_g = PlaneAngle(pQ,pL,pQ,pR_T_byProj);
+
+  // set preferred PhiR definition
+  PhiR = PhiRp;
 };
 
 

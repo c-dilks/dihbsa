@@ -246,12 +246,11 @@ int main(int argc, char** argv) {
    Float_t kfRange[Nkf][2];
    kfRange[kfA][0]=0.5; kfRange[kfA][1]=1; 
    kfRange[kfB][0]=0; kfRange[kfB][1]=1; 
-   kfRange[kfC][0]=0; kfRange[kfC][1]=1; //hep-ph/0212300 def.
-   //kfRange[kfC][0]=-0.5; kfRange[kfC][1]=0; //hep-ph/0311173 def.
-   kfRange[kfV][0]=0; kfRange[kfV][1]=4; 
-   kfRange[kfW][0]=0; kfRange[kfW][1]=0.8;
-   kfRange[kfForE][0]=0; kfRange[kfForE][1]=1.5;
-   kfRange[kfForG][0]=0; kfRange[kfForG][1]=2; 
+   kfRange[kfC][0]=0; kfRange[kfC][1]=0.5;
+   kfRange[kfV][0]=0; kfRange[kfV][1]=2; 
+   kfRange[kfW][0]=0; kfRange[kfW][1]=0.5;
+   kfRange[kfForE][0]=0; kfRange[kfForE][1]=1;
+   kfRange[kfForG][0]=0; kfRange[kfForG][1]=1; 
    TH2D * kfVsMh[Nkf];
    TH2D * kfVsPhPerp[Nkf];
    TH2D * kfVsX[Nkf];

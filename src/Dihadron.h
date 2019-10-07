@@ -113,6 +113,8 @@ class Dihadron : public TObject
 
     Float_t PhiRp_g; // use R_T computed by projection operator "g_T", following
     // equation 9 in 1408.5721 (gliske, bacchetta, radici)
+
+    Float_t PhiR; // preferred definition
     
     //
     ///////////////////////////////////////////////////

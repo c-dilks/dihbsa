@@ -12,6 +12,7 @@ void drawPrelim(
   TIter nextKey(gDirectory->GetListOfKeys());
   TString keyname;
   TCanvas * canv;
+  TCanvas * canv2;
   TMultiGraph * gr;
   TString grT;
 
@@ -20,7 +21,6 @@ void drawPrelim(
 
     //if( keyname.Contains(TRegexp("^RF_.*_kindep_")) ) {
     if( keyname.Contains(TRegexp("^multiGr")) ) {
-      cout << "found: " << keyname << endl;
       gr = (TMultiGraph*) k->ReadObj();
       
       grT = TString(gr->GetTitle());
@@ -36,6 +36,14 @@ void drawPrelim(
       //gr->GetYaxis()->UnZoom(); gr->Draw("LAPE");
       canv->Print(TString(pngName+keyname+".png"),"png");
       canv->Print(TString(pdfName+keyname+".pdf"),"pdf");
+    };
+
+    if( keyname.Contains(TRegexp("^chindfCanv")) ||
+        keyname.Contains(TRegexp("^rellumCanv"))
+      ) {
+      canv2 = (TCanvas*) k->ReadObj();
+      canv2->Print(TString(pdfName+keyname+".pdf"),"pdf");
+      canv2->Print(TString(pngName+keyname+".png"),"png");
     };
 
   };
