@@ -6,6 +6,7 @@ R__LOAD_LIBRARY(DihBsa)
 #include "TString.h"
 #include "TMath.h"
 #include "TTree.h"
+#include "TH1.h"
 
 enum fenum {kGen,kRec};
 int f;
@@ -51,6 +52,23 @@ void MCmatch(TString fname=
   mtr->Branch("diff_PhiH",&diff_PhiH,"diff_PhiH/F");
   mtr->Branch("diff_PhiR",&diff_PhiR,"diff_PhiR/F");
 
+  TH1D * MhMF[2];
+  TH1D * XMF[2];
+  TH1D * ZMF[2];
+  TString mStr[2];
+  mStr[0] = "All";
+  mStr[1] = "Matched";
+  Int_t NBINS = 7;
+  for(int m=0; m<2; m++) {
+    MhMF[m] = new TH1D(TString("MhMF"+mStr[m]),"Matching Fraction vs. M_{h}",NBINS,0,3);
+    XMF[m] = new TH1D(TString("XMF"+mStr[m]),"Matching Fraction vs. x",NBINS,0,1);
+    ZMF[m] = new TH1D(TString("ZMF"+mStr[m]),"Matching Fraction vs. z_{pair}",NBINS,0,1);
+    MhMF[m]->Sumw2();
+    XMF[m]->Sumw2();
+    ZMF[m]->Sumw2();
+  };
+
+
   Bool_t success = ev[kGen]->BuildMatchTable();
   if(!success) return;
 
@@ -60,7 +78,8 @@ void MCmatch(TString fname=
 
   for(int i=0; i<ev[kRec]->ENT; i++) {
     ev[kRec]->GetEvent(i);
-    if(pairType==ev[kRec]->pairType) {
+    //if(pairType==ev[kRec]->pairType) {
+    if(pairType==ev[kRec]->pairType && ev[kRec]->Valid()) {
 
       nTotal++;
 
@@ -77,10 +96,27 @@ void MCmatch(TString fname=
         diff_PhiR = Tools::AdjAngle(ev[kGen]->PhiR - ev[kRec]->PhiR) / ev[kRec]->PhiR;
 
         mtr->Fill();
+        MhMF[1]->Fill(ev[kRec]->Mh);
+        XMF[1]->Fill(ev[kRec]->x);
+        ZMF[1]->Fill(ev[kRec]->Zpair);
 
       };
+
+      MhMF[0]->Fill(ev[kRec]->Mh);
+      XMF[0]->Fill(ev[kRec]->x);
+      ZMF[0]->Fill(ev[kRec]->Zpair);
+
     };
   };
+
+
+  //MhMF[1]->Divide(MhMF[0]);
+  //XMF[1]->Divide(XMF[0]);
+  //ZMF[1]->Divide(ZMF[0]);
+  for(int m=0; m<2; m++) MhMF[m]->Write();
+  for(int m=0; m<2; m++) XMF[m]->Write();
+  for(int m=0; m<2; m++) ZMF[m]->Write();
+
   mtr->Write();
 
   new TCanvas();

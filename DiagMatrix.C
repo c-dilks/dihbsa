@@ -15,7 +15,8 @@ void DiagMatrix() {
   //TString plotName = "PhiRDist";
   //TString plotName = "PhiHRDist";
   Int_t dim = 2;
-  TString plotName = "PhiHvsPhiR";
+  //TString plotName = "PhiHvsPhiR";
+  TString plotName = "g1perpWeightVsMod";
 
 
   TString canvName = "matrix_" + plotName;
@@ -26,6 +27,7 @@ void DiagMatrix() {
   TFile * infile[nObservables][nObservables];
   TH1D * dist1[nObservables][nObservables];
   TH2D * dist2[nObservables][nObservables];
+  TProfile * prof[nObservables][nObservables];
 
   Double_t maxim;
 
@@ -70,6 +72,7 @@ void DiagMatrix() {
           break;
         case 2:
           matrix->GetPad(pad)->SetGrid(1,1);
+          matrix->GetPad(pad)->SetLogz();
           dist2[o1][o2] = (TH2D*) infile[o1][o2]->Get(plotName);
           titleTmp = dist2[o1][o2]->GetTitle();
           titleTmp = pairT + " " + titleTmp;
@@ -79,6 +82,13 @@ void DiagMatrix() {
           dist2[o1][o2]->GetXaxis()->SetLabelSize(0.04);
           dist2[o1][o2]->GetYaxis()->SetLabelSize(0.04);
           dist2[o1][o2]->Draw("colz");
+
+          if(plotName=="g1perpWeightVsMod") {
+            prof[o1][o2] = dist2[o1][o2]->ProfileX();
+            prof[o1][o2]->SetLineColor(kBlack);
+            prof[o1][o2]->SetLineWidth(3);
+            prof[o1][o2]->Draw("same");
+          };
           break;
       };
     };

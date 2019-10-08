@@ -350,6 +350,7 @@ int main(int argc, char** argv) {
    };
 
    const Int_t nINJECT = 11; // number of helicities to inject for MC
+                    // !!!!! if nINJECT is changed, change NhelicityMC in EventTree too
    Int_t helicityMC[nINJECT];
    TString brStr;
    if(MCrecMode || MCgenMode) {

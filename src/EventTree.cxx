@@ -146,8 +146,7 @@ void EventTree::GetEvent(Int_t i) {
   cutQ2 = Q2 > 1.0;
   cutW = W > 2.0;
   cutY = y < 0.8;
-  cutEle = eleP > 2.0;
-  cutDIS = cutQ2 && cutW && cutY && cutEle;
+  cutDIS = cutQ2 && cutW && cutY;
 
 
 
@@ -288,6 +287,7 @@ Int_t EventTree::SpinState() {
   }
   else if(runnum==11) {
     // MC convention (from injected asymmetries)
+    helicity = helicityMC[10]; ///////////////////////////// which helicityMC ///////
     switch(helicity) {
       case 2: return sM;
       case 3: return sP;

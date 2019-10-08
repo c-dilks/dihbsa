@@ -41,7 +41,7 @@ Asymmetry::Asymmetry(
       aziMax = modMaxDefault;
       break;
     case weightSinPhiHR:
-      ModulationTitle = "p_{T}/M_{h} sin(#phi_{h}-#phi_{R})";
+      ModulationTitle = "sin(#phi_{h}-#phi_{R})";
       ModulationName = "sinPhiHRweight";
       modMax = modMaxDefault;
       aziMax = modMaxDefault;
@@ -624,7 +624,7 @@ Bool_t Asymmetry::InitRooFit() {
   pwUnpolDiff = "1+D0*"+legendre[1]+"+D1*"+legendre[2];
 
   // -- build formula with modulation and PW amplitudes
-  Int_t whichFormu = 0; //  <-- <-- <-- <-- <-- <-- <-- <-- <-- <-- <--
+  Int_t whichFormu = 6; //  <-- <-- <-- <-- <-- <-- <-- <-- <-- <-- <--
   switch(whichFormu) {
     case 0: // test whichMod modulation
       asymExpansion = 

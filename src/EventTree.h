@@ -141,7 +141,7 @@ class EventTree : public TObject
     ///////////////////////////
     //   EventCuts
     ///////////////////////////
-    Bool_t cutQ2,cutW,cutY,cutEle,cutDIS;
+    Bool_t cutQ2,cutW,cutY,cutDIS;
     Bool_t cutDihadronKinematics;
     Bool_t cutDihadron;
     Bool_t cutDiphKinematics[2];

@@ -375,12 +375,12 @@ int main(int argc, char** argv) {
 
        //ev->PrintEvent();
 
-       if(ev->cutQ2 && ev->cutY && ev->cutEle) {
+       if(ev->cutQ2 && ev->cutY) {
          WDist->Fill(ev->W);
          Q2vsW->Fill(ev->W,ev->Q2);
        };
 
-       if(ev->cutQ2 && ev->cutW && ev->cutEle) {
+       if(ev->cutQ2 && ev->cutW) {
          YDist->Fill(ev->y);
        };
      };

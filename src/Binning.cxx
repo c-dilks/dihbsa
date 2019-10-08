@@ -22,14 +22,15 @@ Binning::Binning(Int_t pairType_) {
   // -- mass
   AddBinBound(vM,minIV[vM]);
   if(numKaons==0) {
-    ///*
+    /*
     // 5 quantiles (from GetQuantiles.C)
     AddBinBound(vM,0.53);
     AddBinBound(vM,0.71);
     AddBinBound(vM,0.84);
     AddBinBound(vM,1.03);
-    //*/
+    */
     /*
+    // old binning from DNP 2018
     AddBinBound(vM,0.4);
     AddBinBound(vM,0.8);
     */
@@ -41,9 +42,9 @@ Binning::Binning(Int_t pairType_) {
     AddBinBound(vM,1.2);
     AddBinBound(vM,1.5);
     */
-    /*
+    ///*
     AddBinBound(vM,0.77); // rho mass
-    */
+    //*/
     // Timothy's DNP 2019 bounds
     /*
     AddBinBound(vM,0.431);

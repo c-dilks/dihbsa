@@ -31,7 +31,8 @@ void drawPrelim(
       canv = new TCanvas("canv","canv",800,800);
       canv->SetGrid(0,1);
       gr->Draw("LAPE");
-      gr->GetYaxis()->SetRangeUser(-0.11,0.11);
+      //gr->GetYaxis()->SetRangeUser(-0.11,0.11);
+      gr->GetYaxis()->SetRangeUser(-0.3,0.3);
       gr->Draw("LAPE");
       //gr->GetYaxis()->UnZoom(); gr->Draw("LAPE");
       canv->Print(TString(pngName+keyname+".png"),"png");
