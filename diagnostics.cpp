@@ -143,6 +143,12 @@ int main(int argc, char** argv) {
    TH1D * zetaDist = new TH1D("zetaDist","#zeta distribution;#zeta",NBINS,-1,1);
    TH1D * xFDist = new TH1D("xFDist","x_{F} distribution;x_{F}",NBINS,-2,2);
    TH1D * MmissDist = new TH1D("MmissDist","M_{X} distribution;M_{X}",NBINS,-2,6);
+
+   TH1D * MmissDistZoom = new TH1D("MmissDistZoom","M_{X} distribution;M_{X}",
+     2*NBINS,0.5,3);
+   TH2D * MmissVsMh = new TH2D("MmissVsMh","M_{X} vs. M_{h};M_{h};M_{X}",
+     NBINS,0,2.5,
+     NBINS,0.5,3);
    
    TH1D * PhiHDist = new TH1D("PhiHDist","#phi_{h} distribution;#phi_{h}",
      NBINS,-PIe,PIe);
@@ -436,6 +442,8 @@ int main(int argc, char** argv) {
        zetaDist->Fill(ev->zeta);
        xFDist->Fill(ev->xF);
        MmissDist->Fill(ev->Mmiss);
+       MmissDistZoom->Fill(ev->Mmiss);
+       MmissVsMh->Fill(ev->Mh,ev->Mmiss);
 
        PhiHDist->Fill(ev->PhiH);
        PhiRDist->Fill(ev->PhiR);
@@ -590,6 +598,8 @@ int main(int argc, char** argv) {
    zetaDist->Write();
    xFDist->Write();
    MmissDist->Write();
+   MmissDistZoom->Write();
+   MmissVsMh->Write();
 
    PhiHDist->Write();
    PhiRDist->Write();
