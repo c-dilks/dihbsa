@@ -85,6 +85,8 @@ void drawKinematicFactorPlots() {
     kfVsPhiHR_pf[k]->SetLineWidth(3);
   };
 
+
+  ///*
   TCanvas * canv[Nkf];
   for(int k=0; k<Nkf; k++) {
     canv[k] = new TCanvas(
@@ -117,9 +119,29 @@ void drawKinematicFactorPlots() {
     canv[k]->cd(8);
     kfVsPhiR[k]->Draw("colz");
     kfVsPhiR_pf[k]->Draw("same");
-    /*
-    kfVsPhiHR[k]->Draw("colz");
-    kfVsPhiHR_pf[k]->Draw("same");
-    */
+    //kfVsPhiHR[k]->Draw("colz");
+    //kfVsPhiHR_pf[k]->Draw("same");
   };
+  //*/
+
+  /*
+  TCanvas * canv[Nkf];
+  for(int k=0; k<Nkf; k++) {
+    canv[k] = new TCanvas(
+      TString("canv_"+kfName[k]),TString("canv_"+kfName[k]),1000,1000);
+    canv[k]->Divide(3,1);
+
+    for(int p=1; p<=3; p++) canv[k]->GetPad(p)->SetLogz();
+
+    canv[k]->cd(1);
+    kfVsX[k]->Draw("colz");
+    kfVsX_pf[k]->Draw("same");
+    canv[k]->cd(2);
+    kfVsMh[k]->Draw("colz");
+    kfVsMh_pf[k]->Draw("same");
+    canv[k]->cd(3);
+    kfVsZpair[k]->Draw("colz");
+    kfVsZpair_pf[k]->Draw("same");
+  };
+  */
 };

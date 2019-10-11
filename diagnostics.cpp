@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
 
    TFile * outfile = new TFile("plots.root","RECREATE");
 
-   const Int_t NBINS = 100;
+   const Int_t NBINS = 150;
    Float_t deltaPhi;
 
 

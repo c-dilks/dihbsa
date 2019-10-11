@@ -56,7 +56,7 @@ void MCcompare(TString fGen="plots.gen.root",
   gStyle->SetOptStat(0);
 
   plotColor[kGen] = kRed;
-  plotColor[kRec] = kCyan+1;
+  plotColor[kRec] = kBlue;
   plotColor[kData] = kMagenta;
   plotColor[kRecGen] = kBlack;
   plotColor[kRecData] = kBlack;
@@ -104,7 +104,7 @@ void Acceptance(TH1D ** dists_) {
     dists_[f]->SetMarkerSize(0.7);
     dists_[f]->SetLineColor(plotColor[f]);
     dists_[f]->SetMarkerColor(plotColor[f]);
-    dists_[f]->SetMarkerStyle(kFullCircle);
+    dists_[f]->SetMarkerStyle(f==kRec?kOpenCircle:kFullCircle);
   };
 
   TLegend * leg[NR];

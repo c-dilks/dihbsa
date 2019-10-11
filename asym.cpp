@@ -779,8 +779,7 @@ int main(int argc, char** argv) {
     DrawKinDepGraph(kindepGr,BS,ivVar[0]);
 
     multiGr = multiMap.at(binNum);
-    multiGr->Add(kindepGr);
-
+    // multiGr->Add(kindepGr); // do not include linear fit in multiGr
     for(int aa=0; aa<N_AMP; aa++) {
       RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
       RFkindepCanv[aa]->cd();
@@ -822,7 +821,7 @@ int main(int argc, char** argv) {
       DrawKinDepGraph(kindepGr,BS,ivVar[0]);
 
       multiGr = multiMap.at(binNum);
-      multiGr->Add(kindepGr);
+      //multiGr->Add(kindepGr);
 
       for(int aa=0; aa<N_AMP; aa++) {
         RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
@@ -867,7 +866,7 @@ int main(int argc, char** argv) {
         DrawKinDepGraph(kindepGr,BS,ivVar[0]);
 
         multiGr = multiMap.at(binNum);
-        multiGr->Add(kindepGr);
+        //multiGr->Add(kindepGr);
 
         for(int aa=0; aa<N_AMP; aa++) {
           RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
@@ -1305,23 +1304,37 @@ TGraphErrors * ShiftGraph(TGraphErrors * gr, Int_t nShift) {
   Double_t * grEX = gr->GetEX();
   Double_t * grEY = gr->GetEY();
   for(int nn=0; nn<gr->GetN(); nn++) {
-    retGr->SetPoint(nn, grX[nn]+nShift*0.01, grY[nn]);
+    //retGr->SetPoint(nn, grX[nn]+nShift*0.01, grY[nn]); // shifting enabled
+    retGr->SetPoint(nn, grX[nn], grY[nn]); // shifting disabled
     retGr->SetPointError(nn, grEX[nn], grEY[nn]);
   };
 
   switch(nShift) {
-    case 1: retGr->SetLineColor(N_AMP==1?kGray+3:kGreen+1); break;
-    case 2: retGr->SetLineColor(kRed); break;
-    case 3: retGr->SetLineColor(kBlue); break;
-    case 4: retGr->SetLineColor(kMagenta); break;
+    case 1:
+      retGr->SetLineColor(N_AMP==1?kGray+3:kGreen+3); 
+      retGr->SetLineStyle(2);
+      retGr->SetMarkerStyle(22);
+      break;
+    case 2:
+      retGr->SetLineColor(kRed); 
+      retGr->SetLineStyle(1);
+      retGr->SetMarkerStyle(kFullCircle);
+      break;
+    case 3:
+      retGr->SetLineColor(kBlue);
+      retGr->SetLineStyle(3);
+      retGr->SetMarkerStyle(23);
+      break;
+    case 4:
+      retGr->SetLineColor(kMagenta);
+      retGr->SetMarkerStyle(kFullCircle);
+      break;
     default: retGr->SetLineColor(kGray);
   };
   
 
-  retGr->SetLineWidth(2);
-
-  retGr->SetMarkerStyle(kCircle);
   retGr->SetMarkerColor(kBlack);
+  retGr->SetLineWidth(2);
   retGr->SetMarkerSize(1.3);
 
   return retGr;
