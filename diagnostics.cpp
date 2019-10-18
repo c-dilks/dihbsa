@@ -155,7 +155,7 @@ int main(int argc, char** argv) {
    TH1D * PhiRDist = new TH1D("PhiRDist","#phi_{R} distribution;#phi_{R}",
      NBINS,-PIe,PIe);
    TH2D * PhiHvsPhiR = new TH2D("PhiHvsPhiR","#phi_{h} vs. #phi_{R};#phi_{R};#phi_{h}",
-     NBINS,-PIe,PIe,NBINS,-PIe,PIe);
+     NBINS,-PI,PI,NBINS,-PI,PI);
    TH1D * PhiHRDist = new TH1D("PhiHRDist",
      "#phi_{h}-#phi_{R} distribution;#phi_{h}-#phi_{R}",
      NBINS,-PIe,PIe);
