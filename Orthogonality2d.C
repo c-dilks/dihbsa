@@ -3,7 +3,7 @@ R__LOAD_LIBRARY(DihBsa)
 #include "Constants.h"
 
 
-void Orthogonality(Bool_t uniformData=0, TString infileN="ortho.root") {
+void Orthogonality2d(Bool_t uniformData=0, TString infileN="ortho.root") {
   // open data hist
   TFile * infile = new TFile(infileN,"READ");
   TH2D * dataDist = (TH2D*) infile->Get("d2");
