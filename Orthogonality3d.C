@@ -3,6 +3,7 @@ R__LOAD_LIBRARY(DihBsa)
 #include "Constants.h"
 
 Bool_t disableLegendre;
+void Draw3d(TH3D * dd, Int_t whichProj);
 Double_t Azimod(Int_t twist_, Int_t m_, Float_t phiH_, Float_t phiR_);
 Double_t Legendre(Int_t l_, Int_t m_, Float_t theta_);
 
@@ -16,7 +17,7 @@ void Orthogonality3d(Int_t weightSetting=0, TString infileN="ortho.root") {
   
   // OPTIONS
   ///////////////////
-  disableLegendre = 1;
+  disableLegendre = 0;
   Int_t LMAX = 2;
   ///////////////////
 
@@ -24,6 +25,7 @@ void Orthogonality3d(Int_t weightSetting=0, TString infileN="ortho.root") {
   // open data hist
   TFile * infile = new TFile(infileN,"READ");
   TH3D * dataDist = (TH3D*) infile->Get("d3");
+  dataDist->SetTitle("data distribution");
 
   int f,g,h,r,t;
 
@@ -115,10 +117,14 @@ void Orthogonality3d(Int_t weightSetting=0, TString infileN="ortho.root") {
 
   // calculate <fg>
   TH3D * intDist[NF][NF];
+  TH2D * modDist_hr[NF];
+  TH1D * modDist_t[NF];
   Float_t phiH,phiR,theta;
-  Double_t dataWeight,evalF,evalG,product,integral;
+  Double_t dataWeight,legF,legG,aziF,aziG,product,integral;
   TString intDistN,intDistT;
+  TString modDistN,modDistT;
   Double_t weightedNorm[NF];
+  Double_t valF,valG;
   for(f=0; f<NF; f++) {
     for(g=0; g<NF; g++) {
 
@@ -126,9 +132,17 @@ void Orthogonality3d(Int_t weightSetting=0, TString infileN="ortho.root") {
       intDistN = Form("intDist_f%d_g%d",f,g);
       intDistT = "f: " + funcT[f] + ",  g: " + funcT[g];
       intDist[f][g] = new TH3D(intDistN,intDistT,
-        nbinsR,minR,maxR,
-        nbinsH,minH,maxH,
-        nbinsT,minT,maxT);
+        nbinsR,minR,maxR, nbinsH,minH,maxH, nbinsT,minT,maxT);
+      if(f==g) {
+        modDistN = Form("modDist_hr_f%d",f);
+        modDistT = funcT[f] + 
+          " -- #Phi(#phi_{h},#phi_{R}) -- #phi_{h} vs. #phi_{R};#phi_{R};#phi_{h}";
+        modDist_hr[f] = new TH2D(modDistN,modDistT,nbinsR,minR,maxR, nbinsH,minH,maxH);
+        modDistN = Form("modDist_t_f%d",f);
+        modDistT = funcT[f] + " -- P(cos#theta) -- #theta;#theta";
+        modDist_t[f] = new TH1D(modDistN,modDistT,nbinsT,minT,maxT);
+      };
+
 
       // loop over bins
       for(r=1; r<=nbinsR; r++) {
@@ -138,17 +152,24 @@ void Orthogonality3d(Int_t weightSetting=0, TString infileN="ortho.root") {
             phiH = intDist[f][g]->GetYaxis()->GetBinCenter(h);
             theta = intDist[f][g]->GetZaxis()->GetBinCenter(t);
 
-            evalF = Legendre( idx[f][kL], idx[f][kM], theta);
-            evalG = Legendre( idx[g][kL], idx[g][kM], theta);
+            legF = Legendre( idx[f][kL], idx[f][kM], theta);
+            legG = Legendre( idx[g][kL], idx[g][kM], theta);
 
-            evalF *= Azimod( idx[f][kTwist], idx[f][kM], phiH, phiR);
-            evalG *= Azimod( idx[g][kTwist], idx[g][kM], phiH, phiR);
+            aziF = Azimod( idx[f][kTwist], idx[f][kM], phiH, phiR);
+            aziG = Azimod( idx[g][kTwist], idx[g][kM], phiH, phiR);
 
             dataWeight = dataDist->GetBinContent(r,h,t);
 
-            product = dataWeight * evalF * evalG;
+            product = dataWeight * legF*aziF * legG*aziG;
 
             intDist[f][g]->SetBinContent(r,h,t,product);
+
+            if(r==1&&h==1) {
+              if(f==g) modDist_t[f]->SetBinContent(t,legF);
+            };
+            if(t==1) {
+              if(f==g) modDist_hr[f]->SetBinContent(r,h,aziF);
+            };
           };
         };
       };
@@ -183,7 +204,53 @@ void Orthogonality3d(Int_t weightSetting=0, TString infileN="ortho.root") {
   TCanvas * matCanv = new TCanvas("matCanv","matCanv",1000,1000);
   orthMatrix->Draw("colztext");
 
+
+
+
+  // EXTRA PLOTS
+  TCanvas * dataCanv = new TCanvas("dataCanv","dataCanv",800,800);
+  dataCanv->Divide(1,2);
+  dataCanv->cd(1); Draw3d(dataDist,1);
+  dataCanv->cd(2); Draw3d(dataDist,2);
+
+  TCanvas * modCanv = new TCanvas("modCanv","modCanv",800,800);
+  modCanv->Divide(5,2*((NF+5)/5));
+  for(f=0; f<NF; f++) {
+    //intDist[1][1]->Draw();
+    ///*
+    modCanv->cd(5*(f/5)+f+1); modDist_hr[f]->Draw("colz");
+    modCanv->cd(5*(f/5)+5+f+1); modDist_t[f]->Draw();
+    //*/
+    //modCanv->cd(f+1); Draw3d(intDist[f][f],1);
+    //modCanv->cd(f+1); intDist[f][f]->Draw();
+    //modCanv->cd(NF+f+1); Draw3d(intDist[f][f],2);
+  };
+
 };
+
+void Draw3d(TH3D * dd, Int_t whichProj) {
+  TString ddN = dd->GetName();
+  TString ddT = dd->GetTitle();
+
+  TH2D * dd_yx;
+  TH1D * dd_z;
+
+  switch(whichProj) {
+    case 1:
+      dd_yx = (TH2D*) dd->Project3D("yx");
+      dd_yx->SetTitle(TString(ddT+" -- #phi_{h} vs. #phi_{R} projection;#phi_{R};#phi_{h}"));
+      dd_yx->Draw("colz"); 
+      break;
+    case 2:
+      //dd_z = (TH1D*) dd->Project3D("z");
+      dd_z = (TH1D*) dd->ProjectionZ();
+      dd_z->SetTitle(TString(ddT+" -- #theta projection;#theta"));
+      dd_z->Draw();
+      break;
+    default: return;
+  };
+};
+
 
 
 Double_t Azimod(Int_t twist_, Int_t m_, Float_t phiH_, Float_t phiR_) {

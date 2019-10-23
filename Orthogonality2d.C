@@ -29,15 +29,14 @@ void Orthogonality2d(Bool_t uniformData=0, TString infileN="ortho.root") {
     };
   };
 
-  // normalization: product of ranges / integral of data hist
-  Double_t normalization = rangeH*rangeR / dataDist->Integral();
-
 
   // MODULATIONS
   ////////////////////
   const Int_t NF = 8;
   TString funcT[NF];
   TString norm[NF];
+  Double_t weightedNorm[NF];
+
   int ff=0;
   funcT[ff]="1";  norm[ff]="1/(2*PI)"; ff++;
   funcT[ff]="sin(#phi_{h}-#phi_{R})";  norm[ff]="1/(sqrt(2)*PI)"; ff++;
@@ -108,15 +107,27 @@ void Orthogonality2d(Bool_t uniformData=0, TString infileN="ortho.root") {
           evalG = func[g]->Eval(phiR,phiH);
           dataWeight = dataDist->GetBinContent(r,h);
 
-          product = normalization * dataWeight * evalF * evalG;
+          product = dataWeight * evalF * evalG;
 
           intDist[f][g]->SetBinContent(r,h,product);
           if(f==g) modDist[f]->SetBinContent(r,h,evalF);
         };
       };
 
+      // computed weighted normalization for function f as 1/sqrt(<ff>)
+      if(f==g) {
+        integral = TMath::Abs( intDist[f][g]->Integral("width") );
+        weightedNorm[f] = 1 / TMath::Sqrt(integral);
+      };
+    };
+  };
+
+  for(f=0; f<NF; f++) {
+    for(g=0; g<NF; g++) {
+      // normalize data*f*g by 1/sqrt(<ff><gg>)
+      intDist[f][g]->Scale(weightedNorm[f]*weightedNorm[g]);
       // sum data*f*g over all bins
-      integral = TMath::Abs( intDist[f][g]->Integral() );
+      integral = TMath::Abs( intDist[f][g]->Integral("width") );
       orthMatrix->SetBinContent(f+1,g+1,integral);
     };
   };
@@ -147,7 +158,9 @@ void Orthogonality2d(Bool_t uniformData=0, TString infileN="ortho.root") {
   TCanvas * intCanv = new TCanvas("intCanv","intCanv",1000,1000);
   TCanvas * modCanv = new TCanvas("modCanv","modCanv",1000,1000);
   Int_t pad;
-  gStyle->SetOptStat(0/*1000000*/);
+  gStyle->SetOptStat(0);
+  gStyle->SetPalette(kBird);
+  gStyle->SetPaintTextFormat(".3f");
   intCanv->Divide(NF,NF);
   modCanv->Divide(NF,NF);
   for(f=0; f<NF; f++) {

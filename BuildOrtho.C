@@ -3,8 +3,8 @@ R__LOAD_LIBRARY(DihBsa)
 #include "Constants.h"
 #include "EventTree.h"
 
-void BuildOrtho(TString inDir="outroot.fall18.some") {
-  const Int_t NBINS = 100;
+void BuildOrtho(TString inDir="outroot.fall18.someMore") {
+  const Int_t NBINS = 50;
   TFile * outfile = new TFile("ortho.root","RECREATE");
   TH2D * d2 = new TH2D("d2","d2",NBINS,-PI,PI,NBINS,-PI,PI);
   TH3D * d3 = new TH3D("d3","d3",NBINS,-PI,PI,NBINS,-PI,PI,NBINS,0,PI);
