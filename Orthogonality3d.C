@@ -17,7 +17,7 @@ void Orthogonality3d(Int_t weightSetting=0, TString infileN="ortho.root") {
   
   // OPTIONS
   ///////////////////
-  disableLegendre = 0;
+  disableLegendre = 1;
   Int_t LMAX = 2;
   ///////////////////
 
@@ -101,7 +101,7 @@ void Orthogonality3d(Int_t weightSetting=0, TString infileN="ortho.root") {
 
 
   // |<fg>| matrix
-  TH2D * orthMatrix = new TH2D("orthMatrix","|<fg>|",NF,0,NF,NF,0,NF);
+  TH2D * orthMatrix = new TH2D("orthMatrix","<fg> matrix",NF,0,NF,NF,0,NF);
   TString funcT[NF];
   for(f=0; f<NF; f++) { 
     if(!disableLegendre) 
@@ -176,7 +176,7 @@ void Orthogonality3d(Int_t weightSetting=0, TString infileN="ortho.root") {
 
       // computed weighted normalization for function f as 1/sqrt(<ff>)
       if(f==g) {
-        integral = TMath::Abs( intDist[f][g]->Integral("width") );
+        integral = intDist[f][g]->Integral("width");
         weightedNorm[f] = 1 / TMath::Sqrt(integral);
       };
     };
@@ -192,17 +192,20 @@ void Orthogonality3d(Int_t weightSetting=0, TString infileN="ortho.root") {
       intDist[f][g]->Scale(weightedNorm[f]*weightedNorm[g]);
 
       // sum data*f*g over all bins
-      integral = TMath::Abs( intDist[f][g]->Integral("width") );
+      //integral = TMath::Abs( intDist[f][g]->Integral("width") );
+      integral = intDist[f][g]->Integral("width");
       orthMatrix->SetBinContent(f+1,g+1,integral);
     };
   };
 
   // draw
   gStyle->SetOptStat(0);
-  gStyle->SetPalette(kBird);
+  //gStyle->SetPalette(kBird);
   gStyle->SetPaintTextFormat(".3f");
   TCanvas * matCanv = new TCanvas("matCanv","matCanv",1000,1000);
-  orthMatrix->Draw("colztext");
+  orthMatrix->SetMinimum(-1);
+  orthMatrix->SetMaximum(1);
+  orthMatrix->Draw("boxtext");
 
 
 
@@ -225,6 +228,19 @@ void Orthogonality3d(Int_t weightSetting=0, TString infileN="ortho.root") {
     //modCanv->cd(f+1); intDist[f][f]->Draw();
     //modCanv->cd(NF+f+1); Draw3d(intDist[f][f],2);
   };
+
+
+
+  // print <fg> matrix (mathematica syntax)
+  printf("A={\n");
+  for(f=0; f<NF; f++) {
+    printf("{");
+    for(g=0; g<NF; g++) 
+      printf("%.3f%s",orthMatrix->GetBinContent(f+1,g+1),g+1==NF?"":",");
+    printf("}%s\n",f+1==NF?"":",");
+  };
+  printf("};\n\n");
+
 
 };
 

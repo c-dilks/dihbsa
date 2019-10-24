@@ -27,6 +27,8 @@ Orthonormality of Modulations
 }
 \end{center}
 
+\subsection*{Testing Orthonormality under Acceptance Constraints}
+
 
 The goal is to assess the orthogonality of the various modulations of the beam
 spin asymmetry; let $S$ be the set of such modulation functions, dependent on
@@ -46,12 +48,13 @@ $\ell$ and $m$ are the angular momentum eigenvalues and $t$ is the twist:
 azimuthal modulations, which depend on $m$ and twist $t$; note that $\Phi_2^0=0$ and
 $\Phi_2^{-m}=-\Phi_2^{m}$.
   \begin{itemize}
-  \item $\Phi_2^m=\sin\left[m\left(\phi_h-\phi_R\right)\right]$
-  \item $\Phi_3^m=\sin\left[\left(1-m\right)\phi_h+m\phi_R\right]$
+  \item twist 2: $\Phi_2^m=\sin\left[m\left(\phi_h-\phi_R\right)\right]$
+  \item twist 3: $\Phi_3^m=\sin\left[\left(1-m\right)\phi_h+m\phi_R\right]$
   \end{itemize}
 \item $P_{\ell}^{m}\left(\cos\theta\right)$:
 associated Legendre polynomials, which depend on the angular momentum
-eigenstate; note that $P_{\ell}^{-m}=P_{\ell}^{m}$.
+eigenstate; note that $P_{\ell}^{-m}=P_{\ell}^{m}$ is assumed. This is the
+partial wave expansion of the DiFFs in $\cos\theta$.
 \end{enumerate}
 The functions for $\ell\in\{0,1,2\}$ are (up to normalization factors):
 \begin{center}
@@ -99,7 +102,7 @@ limitations.  Let $D$ represent a histogram of the yield in bins of $\phi_h$,
 $\phi_R$, and $\theta$.  The contents of each bin $h$ of $\phi_h$, $r$ of
 $\phi_R$ and $t$ of $\theta$ is denoted $D_{hrt}$. Let $w_h,w_r,w_t$ be the bin
 widths.  The above inner product can be weighted by the yield, expressing
-$\langle fg\rangle$ with the $\phi_h$, $\phi_R$,g and $\theta$ domains
+$\langle fg\rangle$ with the $\phi_h$, $\phi_R$, and $\theta$ domains
 discretized:
 \begin{equation}
 \displaystyle
@@ -117,7 +120,56 @@ N_f=
 w_hw_rw_tD_{hrt}f_{hrt}f_{hrt}
 \right]^{-1/2}
 \end{equation}
-to ensure $\langle ff\rangle=1$.
+to ensure $\langle ff\rangle=1$. The sums run over all the bins in the
+discretized space.
+
+\subsection*{Impact of non-orthogonal modulations on asymmetry amplitudes}
+An asymmetry $A$ can be expanded in terms of functions of $S$, i.e., amplitudes
+$A_k$ of modulations $f_k\in S$, as
+\begin{equation}
+A=\sum_k{A_kf_k}
+\end{equation}
+But since the $f_k$ are not linearly independent, each $f_k$ can be expanded
+as 
+\begin{equation}
+f_k=\sum_i{\langle f_if_k\rangle f_i}
+\end{equation}
+where in general $\langle f_if_k\rangle=\delta_{ik}+\left(1-\delta_{ik}\right)c$
+for some $c\in(-1,1)$. The asymmetry thus
+expands as
+\begin{equation}
+A=\sum_k{A_k\sum_i{\langle f_if_k\rangle f_i}}
+\end{equation}
+Pulling out the $i=k$ terms gives
+\begin{equation}
+A=\sum_k\left[A_kf_k+\sum_{i\neq k}{A_k\langle f_if_k\rangle f_i}
+\right]
+\end{equation}
+which can be rearranged to
+\begin{equation}
+A=\sum_k\left[A_k+\sum_{i\neq k}{A_i\langle f_kf_i\rangle}
+\right]f_k
+\end{equation}
+
+Consider the example of two modulations $f_1$ and $f_2$.
+If $f_1$ and $f_2$ are orthogonal, then the amplitude of $f_1$ is $A_1$ and the
+amplitude of $f_2$ is $A_2$.  If they are not orthogonal, 
+the amplitude of $f_1$ is shifted to $A_1+\langle f_1f_2\rangle A_2$,
+and vice versa for the amplitude of $f_2$.
+
+Let $\left\{A_k'\right\}$ be the set of true physics amplitudes (or injected
+amplitudes in the Monte Carlo).  The amplitudes $\left\{A_k\right\}$ that will result
+from a fit should be 
+\begin{equation}
+A_k=A_k'+\sum_{i\neq k}{A_i'\langle f_kf_i\rangle}
+\label{eqM}
+\end{equation}
+These two sets $\left\{A_k'\right\}$ and $\left\{A_k\right\}$ of amplitudes can
+respectively be written as vectors $A'$ and $A$. Let $O$ be the matrix with
+elements $O_{ij}=\langle f_if_j\rangle$. Then equation \ref{eqM} can be written
+as $A=OA'$. Assuming $O$ is invertible, the true asymmetry amplitudes are thus
+$A'=O^{-1}A$.
+
 
 
 
