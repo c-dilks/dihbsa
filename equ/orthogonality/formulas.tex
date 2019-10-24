@@ -1,0 +1,126 @@
+\documentclass[12pt]{article}
+\usepackage{setspace} % double space
+\onehalfspacing % 1.5 space
+\usepackage[left=1in,top=1in,right=1in,bottom=1in,nohead,nofoot]{geometry} %margins
+\setlength\footskip{0.25in} % separate page number from last line
+\setlength\parindent{0.5in} % indent paragraphs; first paragraphs are not indented
+\usepackage{epstopdf}
+
+% begin upright mu (\umu) definition
+%\usepackage{lmodern}
+%\usepackage{textcomp}
+%\DeclareFontFamily{U}{euc}{}
+%\DeclareFontShape{U}{euc}{m}{n}{<-6>eurm5<6-8>eurm7<8->eurm10}{}
+%\DeclareSymbolFont{AMSc}{U}{euc}{m}{n}
+%\DeclareMathSymbol{\umu}{\mathord}{AMSc}{"16}
+% end upright mu
+
+
+\usepackage{amssymb}
+%\usepackage{MnSymbol} % this must be defined after \umu (upright mu)
+
+\begin{document}
+
+\begin{center}
+{\LARGE 
+Orthonormality of Modulations
+}
+\end{center}
+
+
+The goal is to assess the orthogonality of the various modulations of the beam
+spin asymmetry; let $S$ be the set of such modulation functions, dependent on
+$\phi_h$, $\phi_R$, and $\theta$. The functions in $S$ are preferred to be
+mutually orthogonal, since the measurement of an amplitude of one modulation $f$
+can be impacted by the amplitudes of other modulations which are not orthogonal
+to $f$.  If the yield data do not cover the full $\phi_h,\phi_R,\theta$ range,
+the orthogonality of the functions of $S$ can be impacted, as the integration
+ranges will be limited by the acceptance. 
+
+The functions of $S$ are written as the product of two functions, 
+$P_{\ell}^m\Phi_t^m$, which depend
+on the angular momentum state $|\ell,m\rangle_t$ of the dihadron system, where
+$\ell$ and $m$ are the angular momentum eigenvalues and $t$ is the twist:
+\begin{enumerate}
+\item $\Phi_t^m\left(\phi_h,\phi_R\right)$: 
+azimuthal modulations, which depend on $m$ and twist $t$; note that $\Phi_2^0=0$ and
+$\Phi_2^{-m}=-\Phi_2^{m}$.
+  \begin{itemize}
+  \item $\Phi_2^m=\sin\left[m\left(\phi_h-\phi_R\right)\right]$
+  \item $\Phi_3^m=\sin\left[\left(1-m\right)\phi_h+m\phi_R\right]$
+  \end{itemize}
+\item $P_{\ell}^{m}\left(\cos\theta\right)$:
+associated Legendre polynomials, which depend on the angular momentum
+eigenstate; note that $P_{\ell}^{-m}=P_{\ell}^{m}$.
+\end{enumerate}
+The functions for $\ell\in\{0,1,2\}$ are (up to normalization factors):
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+$|\ell,m\rangle$ & twist-2 & twist-3 \\\hline\hline
+$|0,0\rangle$ & 0 & $\sin\phi_h$ \\\hline
+\end{tabular}
+~ ~ ~
+\begin{tabular}{|c|c|c|}
+\hline
+$|\ell,m\rangle$ & twist-2 & twist-3 \\\hline\hline
+$|1,1\rangle$ & $\sin\theta\sin\left(\phi_h-\phi_R\right)$ & $\sin\theta\sin\phi_R$ \\\hline
+$|1,0\rangle$ & 0 & $\cos\theta\sin\phi_h$ \\\hline
+$|1,-1\rangle$ & $~$ & $\sin\theta\sin\left(2\phi_h-\phi_R\right)$ \\\hline
+\end{tabular}
+~\\~\\~\\
+\begin{tabular}{|c|c|c|}
+\hline
+$|\ell,m\rangle$ & twist-2 & twist-3 \\\hline\hline
+$|2,2\rangle$ & $\sin^2\theta\sin\left(2\phi_h-2\phi_R\right)$ & $\sin^2\theta\sin\left(-\phi_h+2\phi_R\right)$ \\\hline
+$|2,1\rangle$ & $\sin\theta\cos\theta\sin\left(\phi_h-\phi_R\right)$ & $\sin\theta\cos\theta\sin\phi_R$ \\\hline
+$|2,0\rangle$ & 0 & $\left(3\cos^2\theta-1\right)\sin\phi_h$ \\\hline
+$|2,-1\rangle$ & $~$ & $\sin\theta\cos\theta\sin\left(2\phi_h-\phi_R\right)$ \\\hline
+$|2,-2\rangle$ & $~$ & $\sin^2\theta\sin\left(3\phi_h-2\phi_R\right)$ \\\hline
+\end{tabular}
+~\\~\\
+\end{center}
+The inner product of two functions $f,g\in S$ is
+\begin{equation}
+\langle fg\rangle=
+\int_{-\pi}^{\pi}d\phi_h
+\int_{-\pi}^{\pi}d\phi_R
+\int_{0}^{\pi}d\theta
+f\left(\phi_h,\phi_R,\theta\right)
+g\left(\phi_h,\phi_R,\theta\right)
+\end{equation}
+If $\langle fg\rangle=0$, then $f$ is orthogonal to $g$. Normalization of the
+functions can be obtained by $f\mapsto f/\sqrt{\langle ff\rangle}$, which
+ensures $\langle ff\rangle=1$.  
+
+This inner product can be weighted by the yield data, to see how the
+orthogonality between each $f$ and $g\in S$ is affected by acceptance
+limitations.  Let $D$ represent a histogram of the yield in bins of $\phi_h$,
+$\phi_R$, and $\theta$.  The contents of each bin $h$ of $\phi_h$, $r$ of
+$\phi_R$ and $t$ of $\theta$ is denoted $D_{hrt}$. Let $w_h,w_r,w_t$ be the bin
+widths.  The above inner product can be weighted by the yield, expressing
+$\langle fg\rangle$ with the $\phi_h$, $\phi_R$,g and $\theta$ domains
+discretized:
+\begin{equation}
+\displaystyle
+\langle fg\rangle=
+%\frac{1}{\sqrt{\langle ff\rangle\langle gg\rangle}}
+N_fN_g
+\sum_h\sum_r\sum_t
+w_hw_rw_tD_{hrt}f_{hrt}g_{hrt}
+\end{equation}
+where the normalization factors $N_f$ for $f\in S$ are given by
+\begin{equation}
+N_f=
+\left[
+\sum_h\sum_r\sum_t
+w_hw_rw_tD_{hrt}f_{hrt}f_{hrt}
+\right]^{-1/2}
+\end{equation}
+to ensure $\langle ff\rangle=1$.
+
+
+
+
+
+\end{document} 
