@@ -1,4 +1,5 @@
-void drawPrelim(
+// draw preliminary plots for DNP2019
+void drawDNP2019(
   TString infileN = "forPrelim/m2.0x34.i2.three.root"
 ) {
 

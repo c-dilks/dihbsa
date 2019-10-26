@@ -1,3 +1,6 @@
+// builds ortho.root, which contains yield distributions needed for modulation
+// orthogonalty studies (see Orthogonality*.C)
+
 R__LOAD_LIBRARY(DihBsa)
 
 #include "Constants.h"

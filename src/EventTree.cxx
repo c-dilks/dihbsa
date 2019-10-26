@@ -128,6 +128,7 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   for(int h=0; h<2; h++) {
     trHad[h] = new Trajectory(dihHadIdx(whichHad[qA],whichHad[qB],h));
   };
+  whichHelicityMC = 0;
 };
 
 
@@ -287,7 +288,7 @@ Int_t EventTree::SpinState() {
   }
   else if(runnum==11) {
     // MC convention (from injected asymmetries)
-    helicity = helicityMC[10]; ///////////////////////////// which helicityMC ///////
+    helicity = helicityMC[whichHelicityMC];
     switch(helicity) {
       case 2: return sM;
       case 3: return sP;

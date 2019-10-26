@@ -1,3 +1,5 @@
+// compare theta definitions
+
 R__LOAD_LIBRARY(DihBsa)
 
 #include "Constants.h"

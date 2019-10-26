@@ -1,3 +1,5 @@
+// test the various definitions of PhiR
+
 #include <cstdlib>
 #include <iostream>
 

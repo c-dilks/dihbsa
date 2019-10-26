@@ -1,5 +1,5 @@
-// reads plots.root and draws the kinematic factor plots
-//
+// reads plots.root and draws the kinematic factor plots, with profiles on them
+
 void drawKinematicFactorPlots() {
   gStyle->SetOptStat(0);
 

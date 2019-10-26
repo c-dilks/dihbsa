@@ -49,6 +49,7 @@ Int_t pairType;
 Int_t whichModulation;
 Int_t ivType;
 Int_t flowControl;
+Int_t whichHelicityMC;
 
 // other global variables
 Int_t dimensions;
@@ -81,7 +82,7 @@ int main(int argc, char** argv) {
   // read options
   int opt;
   Int_t inputType = 0; // 1=singleFile, 2=directory
-  while( (opt=getopt(argc,argv,"f:d:p:m:i:c:")) != -1 ) {
+  while( (opt=getopt(argc,argv,"f:d:p:m:i:c:h:")) != -1 ) {
     switch(opt) {
       case 'f': /* input file */
         if(inputType>0) return PrintUsage();
@@ -105,6 +106,9 @@ int main(int argc, char** argv) {
       case 'c': /* flow control */
         flowControl = (Int_t) strtof(optarg,NULL);
         break;
+      case 'h': /* which helicityMC */
+        whichHelicityMC = (Int_t) strtof(optarg,NULL);
+        break;
       default: return PrintUsage();
     };
   };
@@ -122,6 +126,7 @@ int main(int argc, char** argv) {
   printf("whichModulation = %d\n",whichModulation);
   printf("ivType = %d\n",ivType);
   printf("flowControl = %d\n",flowControl);
+  printf("whichHelicityMC = %d\n",whichHelicityMC);
   printf("\n");
 
   // pi0pi0 not yet functional TODO
@@ -235,6 +240,7 @@ int main(int argc, char** argv) {
       return 0;
     };
   };
+  ev->whichHelicityMC = whichHelicityMC;
 
 
   // set output file names 
@@ -1348,6 +1354,7 @@ void SetDefaultArgs() {
   whichModulation = Asymmetry::modSinPhiR;
   ivType = Binning::vM + 1;
   flowControl = fSerial;
+  whichHelicityMC = 0;
 
   DecodePairType(pairType,whichHad[qA],whichHad[qB]);
   dihTitle = PairTitle(whichHad[qA],whichHad[qB]);
@@ -1398,6 +1405,8 @@ int PrintUsage() {
   printf("   \t 1 = rename output spin.root rootfile and prints pngs\n");
   printf("   \t 2,3 = for parallel processing\n");
   printf("   \tdefault = %d\n\n",flowControl);
+
+  printf(" -g\t (for MC) - select which helicityMC to use\n\n");
 
   return 0;
 };

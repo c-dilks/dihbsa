@@ -1,3 +1,6 @@
+// plots asymmetry modulation versus various other kinematics, to get an overall sense
+// of the acceptance from the data
+
 R__LOAD_LIBRARY(DihBsa)
 
 #include "Constants.h"

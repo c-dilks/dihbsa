@@ -151,7 +151,9 @@ class EventTree : public TObject
     Bool_t cutFiducial;
     Bool_t cutDihadronStatus;
 
+    // OTHER VARIABLES
     Bool_t useDiphBG;
+    Int_t whichHelicityMC;
     
   private:
     TChain * chain;

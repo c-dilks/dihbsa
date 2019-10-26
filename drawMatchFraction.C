@@ -1,3 +1,5 @@
+// draws matching fractions (called from loopMatchMC.sh)
+
 void drawMatchFraction(TString fN = "match.root") {
   TFile * f = new TFile(fN,"READ");
 
