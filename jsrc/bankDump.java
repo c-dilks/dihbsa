@@ -19,6 +19,10 @@ public class bankDump{
     HipoReader reader = new HipoReader();
     reader.open(args[0]);
 
+    int whichEv = 0;
+    if(args.length == 2) whichEv = Integer.parseInt(args[1]);
+
+
     Event ev = new Event();
     Bank recBank = new Bank(reader.getSchemaFactory().getSchema("REC::Particle"));
     Bank genBank = new Bank(reader.getSchemaFactory().getSchema("MC::Particle"));
@@ -27,33 +31,56 @@ public class bankDump{
 
     reader.getEvent(ev,0); // init
 
-    int pid = -211;
+    int evnum;
+    int npart;
 
     while(reader.hasNext()==true) {
 
       reader.nextEvent(ev);
 
       ev.read(runconfigBank);
-      System.out.println("\n-----");
-      System.out.println("EVNUM = "+runconfigBank.getInt("event",0));
+      evnum = runconfigBank.getInt("event",0);
 
-      System.out.print("REC::Particle\t");
-      ev.read(recBank);
-      recBank.show();
-      //for(int k=0; k<recBank.getRows(); k++) { if(recBank.getInt("pid",k)==pid) System.out.print(recBank.getFloat("pz",k)+" "); };
-      System.out.println("");
+      if(whichEv==0 || whichEv==evnum) {
+        System.out.println("\n-----");
+        System.out.println("EVNUM = "+evnum);
 
-      System.out.print("MC::Particle\t");
-      ev.read(genBank);
-      genBank.show();
-      //for(int k=0; k<genBank.getRows(); k++) { if(genBank.getInt("pid",k)==pid) System.out.print(genBank.getFloat("pz",k)+" "); };
-      System.out.println("");
+        System.out.print("REC::Particle\t");
+        ev.read(recBank);
+        recBank.show();
+        printPions(recBank);
+        System.out.println("");
 
-      System.out.print("MC::Lund\t");
-      ev.read(lundBank);
-      lundBank.show();
-      //for(int k=0; k<lundBank.getRows(); k++) { if(lundBank.getInt("pid",k)==pid) System.out.print(lundBank.getFloat("pz",k)+" "); };
-      System.out.println("");
+        System.out.print("MC::Particle\t");
+        ev.read(genBank);
+        genBank.show();
+        printPions(genBank);
+        System.out.println("");
+
+        System.out.print("MC::Lund\t");
+        ev.read(lundBank);
+        lundBank.show();
+        printPions(lundBank);
+        System.out.println("");
+      };
     };
   };
+
+  public static void printPions(Bank b) {
+    Float px,py,pz;
+
+    for(int k=0; k<b.getRows(); k++) { 
+      if(b.getInt("pid",k)==211 || b.getInt("pid",k)==-211) {
+        px = b.getFloat("px",k); 
+        py = b.getFloat("py",k); 
+        pz = b.getFloat("pz",k); 
+        System.out.print(b.getInt("pid",k)+" "+
+          Math.sqrt( Math.pow(px,2) + Math.pow(py,2) + 
+                     Math.pow(pz,2) + Math.pow(0.139571,2) ) +" "+
+          Math.sqrt( Math.pow(px,2) + Math.pow(py,2) ) +"\n"
+        );
+      };
+    };
+  };
+    
 };

@@ -25,8 +25,13 @@ public class simpleAnalyze{
     reader.open(args[0]);
 
     Event ev = new Event();
-    Bank particleBank = new Bank(reader.getSchemaFactory().getSchema("REC::Particle"));
+    //Bank particleBank = new Bank(reader.getSchemaFactory().getSchema("REC::Particle"));
+    Bank particleBank = new Bank(reader.getSchemaFactory().getSchema("MC::Particle"));
     Bank runconfigBank = new Bank(reader.getSchemaFactory().getSchema("RUN::config"));
+
+    int nFound=0;
+    int nTotal=0;
+
 
     int hadrons[] = {kP,kM};
     double En[] = new double[N];
@@ -62,6 +67,11 @@ public class simpleAnalyze{
 
       reader.getEvent(ev,0); // init
       while(reader.hasNext()==true) {
+        
+        for(h=0; h<N; h++) {
+          En[h] = -1;
+          found[h] = false;
+        };
 
         reader.nextEvent(ev);
 
@@ -71,59 +81,54 @@ public class simpleAnalyze{
         ev.read(particleBank);
         npart = particleBank.getRows();
 
-        if(npart>0) {
+        for(i=0; i<npart; i++) {
 
+          pid = particleBank.getInt("pid",i);
           for(h=0; h<N; h++) {
-            En[h] = -1;
-            found[h] = false;
-          };
+            if(pid == PartPid[h]) {
+              idx = h;
 
-          for(i=0; i<npart; i++) {
+              PxTmp[idx] = particleBank.getFloat("px",i);
+              PyTmp[idx] = particleBank.getFloat("py",i);
+              PzTmp[idx] = particleBank.getFloat("pz",i);
 
-            pid = particleBank.getInt("pid",i);
-            for(h=0; h<N; h++) {
-              if(pid == PartPid[h]) {
-                idx = h;
+              EnTmp[idx] = Math.sqrt( Math.pow(PxTmp[idx],2)
+                                    + Math.pow(PyTmp[idx],2)
+                                    + Math.pow(PzTmp[idx],2)
+                                    + Math.pow(PartMass[idx],2)
+                                    );
 
-                PxTmp[idx] = particleBank.getFloat("px",i);
-                PyTmp[idx] = particleBank.getFloat("py",i);
-                PzTmp[idx] = particleBank.getFloat("pz",i);
-
-                EnTmp[idx] = Math.sqrt( Math.pow(PxTmp[idx],2)
-                                      + Math.pow(PyTmp[idx],2)
-                                      + Math.pow(PzTmp[idx],2)
-                                      + Math.pow(PartMass[idx],2)
-                                      );
-
-                if(EnTmp[idx] > En[idx]) {
-                  En[idx] = EnTmp[idx];
-                  Px[idx] = PxTmp[idx];
-                  Py[idx] = PyTmp[idx];
-                  Pz[idx] = PzTmp[idx];
-                  Pt[idx] = Math.sqrt( Math.pow(Px[idx],2) + Math.pow(Py[idx],2) );
-                  found[idx] = true;
-                };
-
+              if(EnTmp[idx] > En[idx]) {
+                En[idx] = EnTmp[idx];
+                Px[idx] = PxTmp[idx];
+                Py[idx] = PyTmp[idx];
+                Pz[idx] = PzTmp[idx];
+                Pt[idx] = Math.sqrt( Math.pow(Px[idx],2) + Math.pow(Py[idx],2) );
+                found[idx] = true;
               };
 
             };
-          };
 
-          if( found[kE] && found[kP] && found[kM] ) {
-            outstr = Integer.toString(evnum);
-            for(int j : hadrons) {
-              outstr += String.format(" %.2f %.2f %.2f",Px[j],Py[j],Pz[j]);
-              outstr += String.format(" %.2f %.2f",En[j],Pt[j]);
-            };
-            outstr += "\n";
-            outfile.write(outstr);
-            System.out.println(outstr);
           };
         };
+
+        if( found[kE] && found[kP] && found[kM] ) {
+          outstr = Integer.toString(evnum);
+          for(int j : hadrons) {
+            //outstr += String.format(" %.2f %.2f %.2f",Px[j],Py[j],Pz[j]);
+            outstr += String.format(" %.2f %.2f",En[j],Pt[j]);
+          };
+          outstr += "\n";
+          outfile.write(outstr);
+          System.out.println(outstr);
+          nFound++;
+        };
+        nTotal++;
       };
 
       outfile.close();
       System.out.println(outfileName + " created.");
     } catch(IOException e) { e.printStackTrace(); };
+    System.out.println(nFound+" / "+nTotal+" events have e-,pi+,pi-\n");
   };
 };

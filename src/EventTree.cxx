@@ -262,7 +262,7 @@ void EventTree::GetEvent(Int_t i) {
 /////////////////////////////////////////////////////////
 // MAIN ANALYSIS CUT
 Bool_t EventTree::Valid() {
-  return cutDIS && cutDihadron && 
+  return cutDIS && cutDihadron &&
          cutVertex && cutFiducial && cutDihadronStatus;
 };
 /////////////////////////////////////////////////////////

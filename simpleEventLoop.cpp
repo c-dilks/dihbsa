@@ -78,11 +78,24 @@ int main(int argc, char** argv) {
 
    // EVENT LOOP ----------------------------------------------
    clas12::clas12reader reader(infileN.Data());
+
+
+   //////
+   // (for accessing MC bank)
+   hipo::dictionary factory; 
+   reader.getReader().readDictionary(factory);
+   hipo::event readerEvent;
+   hipo::bank mcParticle(factory.getSchema("MC::Particle"));
+   //
+   //////
+
+
    printf("begin event loop...\n");
-   Int_t evCount=0;
+   Int_t nTotal=0;
+   Int_t nFound=0;
    Int_t lim = (Int_t) 1e6;
    while(reader.next()==true) {
-     if(evCount>lim) { fprintf(stderr,"--- stopping loop at %d events\n",lim); break; };
+     //if(nTotal>lim) { fprintf(stderr,"--- stopping loop at %d events\n",lim); break; };
 
      for(h=0; h<N; h++) {
        En[h] = -1;
@@ -94,6 +107,10 @@ int main(int argc, char** argv) {
      helicity = reader.event()->getHelicity();
 
      for(h=0; h<N; h++) {
+
+
+       // REC::Particle
+       /*
        for(auto & part : reader.getByID(partPid[h])) {
          pv.SetXYZM(
            part->par()->getPx(),
@@ -110,6 +127,31 @@ int main(int argc, char** argv) {
            found[h] = true;
          };
        };
+       */
+
+       // MC::Particle
+       ///*
+       reader.getReader().read(readerEvent);
+       readerEvent.getStructure(mcParticle);
+       for(int rr=0; rr<mcParticle.getRows(); rr++) {
+         pv.SetXYZM(
+           mcParticle.getFloat("px",rr),
+           mcParticle.getFloat("py",rr),
+           mcParticle.getFloat("pz",rr),
+           partMass[h]
+         );
+         if(pv.E() > En[h]) {
+           En[h] = pv.E();
+           Pt[h] = pv.Pt();
+           Px[h] = pv.Px();
+           Py[h] = pv.Py();
+           Pz[h] = pv.Pz();
+           found[h] = true;
+         };
+       };
+       //*/
+
+
      };
 
 
@@ -127,9 +169,10 @@ int main(int argc, char** argv) {
          printf("\n");
          gSystem->RedirectOutput(0);
        };
+       nFound++;
      };
 
-     evCount++;
+     nTotal++;
 
    };
    // END EVENT LOOP ------------------------------------------
@@ -141,4 +184,6 @@ int main(int argc, char** argv) {
    printf("tree written\n");
    outfile->Close();
    printf("\n%s written\n\n",outfileN.Data());
+
+   printf("%d / %d events had a e,pi+,pi-\n",nFound,nTotal);
 };

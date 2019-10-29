@@ -16,7 +16,7 @@ int f;
 EventTree * ev[2];
 
 void MCmatch(TString fname=
-  "out_clasdispr.00.e10.600.emn0.75tmn.09.xs80.53nb.dis.0410.nrad.dat.evio.hipo.root"
+"clasdispr.00.e10.600.emn0.75tmn.09.xs81.61nb.dis.0410.dat.hipo.root"
 ) {
 
   Int_t pairType = EncodePairType(kPip,kPim); // make sure ordering obeys dihHadIdx...
@@ -27,7 +27,7 @@ void MCmatch(TString fname=
   mgStr[kGen] = "gen";
   mgStr[kRec] = "rec";
 
-
+  // instantiate EventTree
   TString infileN[2];
   for(f=0; f<2; f++) {
     infileN[f] = "outroot.MC."+mgStr[f]+"/"+fname;
@@ -39,6 +39,7 @@ void MCmatch(TString fname=
   Float_t diff_PhiH;
   Float_t diff_PhiR;
 
+  // define output tree 'mtr'
   TTree * mtr = new TTree("mtr","mtr");
   mtr->Branch("evnum",&(ev[kRec]->evnum),"evnum/I");
   for(f=0; f<2; f++) {
@@ -55,6 +56,11 @@ void MCmatch(TString fname=
   mtr->Branch("diff_PhiH",&diff_PhiH,"diff_PhiH/F");
   mtr->Branch("diff_PhiR",&diff_PhiR,"diff_PhiR/F");
 
+  // define matching fraction histos
+  // -- in a single execution of MCmatch.C, these histograms are just distributions
+  //    of the kinematics; they aren't yet the matching fractions
+  // -- to get matching fractions, call loopMCmatch.sh, which then calls
+  //    drawMatchFraction.C, which draws the plots
   TH1D * MhMF[2];
   TH1D * XMF[2];
   TH1D * ZMF[2];
@@ -72,6 +78,7 @@ void MCmatch(TString fname=
   };
 
 
+  // build match table
   Bool_t success = ev[kGen]->BuildMatchTable();
   if(!success) return;
 
@@ -79,18 +86,23 @@ void MCmatch(TString fname=
   Int_t nMatches=0;
 
 
+  // loop through MCrec events
   for(int i=0; i<ev[kRec]->ENT; i++) {
     ev[kRec]->GetEvent(i);
+
+    // check dihadron cuts
     //if(pairType==ev[kRec]->pairType) {
     if(pairType==ev[kRec]->pairType && ev[kRec]->Valid()) {
 
       nTotal++;
 
+      // look for matching MCgen dihadron
       if( ev[kGen]->FindEvent( ev[kRec]->evnum,
                                ev[kRec]->hadP[qA],
                                ev[kRec]->hadP[qB]) ) {
         nMatches++;
 
+        // fill plots and mtr
         for(int h=0; h<2; h++) {
           diff_hadE[h] = (ev[kGen]->hadE[h] - ev[kRec]->hadE[h]) / ev[kRec]->hadE[h]; 
           diff_hadP[h] = (ev[kGen]->hadP[h] - ev[kRec]->hadP[h]) / ev[kRec]->hadP[h]; 
@@ -99,13 +111,14 @@ void MCmatch(TString fname=
         diff_PhiR = Tools::AdjAngle(ev[kGen]->PhiR - ev[kRec]->PhiR) / ev[kRec]->PhiR;
 
         mtr->Fill();
-        MhMF[1]->Fill(ev[kRec]->Mh);
+
+        MhMF[1]->Fill(ev[kRec]->Mh); // fill "matched" distribution (MF numerator)
         XMF[1]->Fill(ev[kRec]->x);
         ZMF[1]->Fill(ev[kRec]->Zpair);
 
       };
 
-      MhMF[0]->Fill(ev[kRec]->Mh);
+      MhMF[0]->Fill(ev[kRec]->Mh); // fill "all" distribution (MF denominator)
       XMF[0]->Fill(ev[kRec]->x);
       ZMF[0]->Fill(ev[kRec]->Zpair);
 
