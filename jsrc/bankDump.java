@@ -8,6 +8,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 public class bankDump{
+  
+  static int evnum;
 
   public static void main(String[] args) {
 
@@ -31,7 +33,6 @@ public class bankDump{
 
     reader.getEvent(ev,0); // init
 
-    int evnum;
     int npart;
 
     while(reader.hasNext()==true) {
@@ -45,21 +46,21 @@ public class bankDump{
         System.out.println("\n-----");
         System.out.println("EVNUM = "+evnum);
 
-        System.out.print("REC::Particle\t");
+        System.out.print("REC::Particle\n");
         ev.read(recBank);
-        recBank.show();
+        //recBank.show();
         printPions(recBank);
         System.out.println("");
 
-        System.out.print("MC::Particle\t");
+        System.out.print("MC::Particle\n");
         ev.read(genBank);
-        genBank.show();
+        //genBank.show();
         printPions(genBank);
         System.out.println("");
 
-        System.out.print("MC::Lund\t");
+        System.out.print("MC::Lund\n");
         ev.read(lundBank);
-        lundBank.show();
+        //lundBank.show();
         printPions(lundBank);
         System.out.println("");
       };
@@ -67,18 +68,33 @@ public class bankDump{
   };
 
   public static void printPions(Bank b) {
-    Float px,py,pz;
+    float px,py,pz;
+    int pid;
+    boolean found;
+
 
     for(int k=0; k<b.getRows(); k++) { 
-      if(b.getInt("pid",k)==211 || b.getInt("pid",k)==-211) {
+      pid = b.getInt("pid",k);
+      found = false;
+      if(Math.abs(pid)==211) found=true; // pions
+      if(pid==113 || Math.abs(pid)==213) found=true; // rhos
+      if(Math.abs(pid)==130) found=true; // K-long
+      if(Math.abs(pid)==310) found=true; // K-short
+      if(Math.abs(pid)==311 || Math.abs(pid)==321) found=true; // K0,K+,K-
+
+
+      if(found) {
         px = b.getFloat("px",k); 
         py = b.getFloat("py",k); 
         pz = b.getFloat("pz",k); 
-        System.out.print(b.getInt("pid",k)+" "+
+        /*
+        System.out.print(evnum+" "+pid+" "+
           Math.sqrt( Math.pow(px,2) + Math.pow(py,2) + 
                      Math.pow(pz,2) + Math.pow(0.139571,2) ) +" "+
           Math.sqrt( Math.pow(px,2) + Math.pow(py,2) ) +"\n"
         );
+        */
+        System.out.print(evnum+" "+pid+" "+px+" "+py+" "+pz+"\n");
       };
     };
   };

@@ -76,26 +76,26 @@ int main(int argc, char** argv) {
 
 
 
-   // EVENT LOOP ----------------------------------------------
+   // define clas12reader instance
    clas12::clas12reader reader(infileN.Data());
 
-
-   //////
-   // (for accessing MC bank)
+   // define extra stuff to access MC banks
    hipo::dictionary factory; 
    reader.getReader().readDictionary(factory);
    hipo::event readerEvent;
    hipo::bank mcParticle(factory.getSchema("MC::Particle"));
-   //
-   //////
+
+   ///////////////////////
+   Bool_t useMC = 1; // if true, use MC bank instead of REC::Particle bank
+   ///////////////////////
 
 
+   // EVENT LOOP ----------------------------------------------
    printf("begin event loop...\n");
    Int_t nTotal=0;
    Int_t nFound=0;
-   Int_t lim = (Int_t) 1e6;
    while(reader.next()==true) {
-     //if(nTotal>lim) { fprintf(stderr,"--- stopping loop at %d events\n",lim); break; };
+     //if(nTotal>1e5) { fprintf(stderr,"--- stop loop at %d events\n",nTotal); break; };
 
      for(h=0; h<N; h++) {
        En[h] = -1;
@@ -106,52 +106,52 @@ int main(int argc, char** argv) {
      evnum = reader.runconfig()->getEvent();
      helicity = reader.event()->getHelicity();
 
-     for(h=0; h<N; h++) {
-
-
-       // REC::Particle
-       /*
-       for(auto & part : reader.getByID(partPid[h])) {
-         pv.SetXYZM(
-           part->par()->getPx(),
-           part->par()->getPy(),
-           part->par()->getPz(),
-           partMass[h]
-         );
-         if(pv.E() > En[h]) {
-           En[h] = pv.E();
-           Pt[h] = pv.Pt();
-           Px[h] = pv.Px();
-           Py[h] = pv.Py();
-           Pz[h] = pv.Pz();
-           found[h] = true;
+     // REC::Particle
+     if(!useMC) {
+       for(h=0; h<N; h++) {
+         for(auto & part : reader.getByID(partPid[h])) {
+           pv.SetXYZM(
+             part->par()->getPx(),
+             part->par()->getPy(),
+             part->par()->getPz(),
+             partMass[h]
+           );
+           if(pv.E() > En[h]) {
+             En[h] = pv.E();
+             Pt[h] = pv.Pt();
+             Px[h] = pv.Px();
+             Py[h] = pv.Py();
+             Pz[h] = pv.Pz();
+             found[h] = true;
+           };
          };
        };
-       */
+     }
 
-       // MC::Particle
-       ///*
+     // MC::Particle
+     else if(useMC) {
        reader.getReader().read(readerEvent);
        readerEvent.getStructure(mcParticle);
        for(int rr=0; rr<mcParticle.getRows(); rr++) {
-         pv.SetXYZM(
-           mcParticle.getFloat("px",rr),
-           mcParticle.getFloat("py",rr),
-           mcParticle.getFloat("pz",rr),
-           partMass[h]
-         );
-         if(pv.E() > En[h]) {
-           En[h] = pv.E();
-           Pt[h] = pv.Pt();
-           Px[h] = pv.Px();
-           Py[h] = pv.Py();
-           Pz[h] = pv.Pz();
-           found[h] = true;
+         for(h=0; h<N; h++) {
+           if(mcParticle.getInt("pid",rr) == partPid[h]) {
+             pv.SetXYZM(
+               mcParticle.getFloat("px",rr),
+               mcParticle.getFloat("py",rr),
+               mcParticle.getFloat("pz",rr),
+               partMass[h]
+             );
+             if(pv.E() > En[h]) {
+               En[h] = pv.E();
+               Pt[h] = pv.Pt();
+               Px[h] = pv.Px();
+               Py[h] = pv.Py();
+               Pz[h] = pv.Pz();
+               found[h] = true;
+             };
+           };
          };
        };
-       //*/
-
-
      };
 
 

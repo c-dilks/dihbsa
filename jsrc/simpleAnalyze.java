@@ -44,7 +44,7 @@ public class simpleAnalyze{
     double PzTmp[] = new double[N];
     double Pt[] = new double[N];
     boolean found[] = new boolean[N];
-    int pid,idx,evnum,npart;
+    int pid,evnum,npart;
     int h,i;
 
     double PartMass[] = new double[N];
@@ -86,25 +86,24 @@ public class simpleAnalyze{
           pid = particleBank.getInt("pid",i);
           for(h=0; h<N; h++) {
             if(pid == PartPid[h]) {
-              idx = h;
 
-              PxTmp[idx] = particleBank.getFloat("px",i);
-              PyTmp[idx] = particleBank.getFloat("py",i);
-              PzTmp[idx] = particleBank.getFloat("pz",i);
+              PxTmp[h] = particleBank.getFloat("px",i);
+              PyTmp[h] = particleBank.getFloat("py",i);
+              PzTmp[h] = particleBank.getFloat("pz",i);
 
-              EnTmp[idx] = Math.sqrt( Math.pow(PxTmp[idx],2)
-                                    + Math.pow(PyTmp[idx],2)
-                                    + Math.pow(PzTmp[idx],2)
-                                    + Math.pow(PartMass[idx],2)
+              EnTmp[h] = Math.sqrt( Math.pow(PxTmp[h],2)
+                                    + Math.pow(PyTmp[h],2)
+                                    + Math.pow(PzTmp[h],2)
+                                    + Math.pow(PartMass[h],2)
                                     );
 
-              if(EnTmp[idx] > En[idx]) {
-                En[idx] = EnTmp[idx];
-                Px[idx] = PxTmp[idx];
-                Py[idx] = PyTmp[idx];
-                Pz[idx] = PzTmp[idx];
-                Pt[idx] = Math.sqrt( Math.pow(Px[idx],2) + Math.pow(Py[idx],2) );
-                found[idx] = true;
+              if(EnTmp[h] > En[h]) {
+                En[h] = EnTmp[h];
+                Px[h] = PxTmp[h];
+                Py[h] = PyTmp[h];
+                Pz[h] = PzTmp[h];
+                Pt[h] = Math.sqrt( Math.pow(Px[h],2) + Math.pow(Py[h],2) );
+                found[h] = true;
               };
 
             };
