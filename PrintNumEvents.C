@@ -12,10 +12,10 @@ R__LOAD_LIBRARY(DihBsa)
 Int_t nTotal;
 void PrintFraction(Int_t n, TString s);
 
-void PrintNumEvents(TString dir="outroot.MC.rec") {
+void PrintNumEvents(TString dir="outroot.MC.rec", Bool_t singleFile=false) {
 
   Int_t pairType = EncodePairType(kPip,kPim); // make sure ordering obeys dihHadIdx...
-  EventTree * ev = new EventTree(TString(dir+"/*.root"),pairType);
+  EventTree * ev = new EventTree(singleFile?dir:TString(dir+"/*.root"),pairType);
 
   nTotal = 0;
   Int_t nValid = 0;

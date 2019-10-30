@@ -5,6 +5,7 @@ R__LOAD_LIBRARY(DihBsa)
 
 #include "Constants.h"
 #include "EventTree.h"
+#include "Dihadron.h"
 #include "Tools.h"
 #include "TString.h"
 #include "TMath.h"
@@ -34,8 +35,8 @@ void MCmatch(TString fname=
     ev[f] = new EventTree(infileN[f],pairType);
   };
 
-  Float_t diff_hadE[2];
-  Float_t diff_hadP[2];
+  Float_t delta_hadE[2];
+  Float_t delta_hadP[2];
   Float_t diff_PhiH;
   Float_t diff_PhiR;
 
@@ -47,14 +48,14 @@ void MCmatch(TString fname=
                 TString(mgStr[f]+"_hadE[2]/F"));
     mtr->Branch(TString(mgStr[f]+"_hadP"), ev[f]->hadP,
                 TString(mgStr[f]+"_hadP[2]/F"));
-    mtr->Branch(TString(mgStr[f]+"_helicity"), &(ev[f]->helicity),
-                TString(mgStr[f]+"_helicity/I"));
     mtr->Branch(TString(mgStr[f]+"_hadOrder"), &(ev[f]->hadOrder),
                 TString(mgStr[f]+"_hadOrder/I"));
   };
-  mtr->Branch("diff_hadP",diff_hadP,"diff_hadP[2]/F");
+  mtr->Branch("delta_hadP",delta_hadP,"delta_hadP[2]/F");
+  mtr->Branch("delta_hadE",delta_hadE,"delta_hadE[2]/F");
   mtr->Branch("diff_PhiH",&diff_PhiH,"diff_PhiH/F");
   mtr->Branch("diff_PhiR",&diff_PhiR,"diff_PhiR/F");
+  mtr->Branch("matchDiff",&(ev[kGen]->matchDiff),"matchDiff/F");
 
   // define matching fraction histos
   // -- in a single execution of MCmatch.C, these histograms are just distributions
@@ -78,12 +79,19 @@ void MCmatch(TString fname=
   };
 
 
-  // build match table
+  // build match table of MCgen events
   Bool_t success = ev[kGen]->BuildMatchTable();
   if(!success) return;
+  Bool_t matchFound;
 
   Int_t nTotal=0;
   Int_t nMatches=0;
+
+  Float_t matchDiff;
+  TH1D * matchDiffDist = new TH1D("matchDiffDist",
+    "D distribution (no D cut)",300,0,2);
+  TH2D * matchDiffVsPdiff = new TH2D("matchDiffVsPdiff",
+    "D vs. #Delta P_{h} (no D cut);#Delta P_{h};D",300,-0.3,0.3,300,0,2);
 
 
   // loop through MCrec events
@@ -91,24 +99,30 @@ void MCmatch(TString fname=
     ev[kRec]->GetEvent(i);
 
     // check dihadron cuts
-    //if(pairType==ev[kRec]->pairType) {
-    if(pairType==ev[kRec]->pairType && ev[kRec]->Valid()) {
+    if(pairType==ev[kRec]->pairType) {
+    //if(pairType==ev[kRec]->pairType && ev[kRec]->Valid()) {
 
       nTotal++;
 
       // look for matching MCgen dihadron
-      if( ev[kGen]->FindEvent( ev[kRec]->evnum,
-                               ev[kRec]->hadP[qA],
-                               ev[kRec]->hadP[qB]) ) {
+      matchFound = ev[kGen]->FindEvent( ev[kRec]->evnum, ev[kRec]->GetDihadronObj() );
+      if(ev[kGen]->matchDiff<1e6) {
+        matchDiffDist->Fill(ev[kGen]->matchDiff);
+        matchDiffVsPdiff->Fill( 
+          (ev[kGen]->Ph - ev[kRec]->Ph) / ev[kRec]->Ph, 
+          ev[kGen]->matchDiff );
+      };
+
+      if(matchFound) {
         nMatches++;
 
         // fill plots and mtr
         for(int h=0; h<2; h++) {
-          diff_hadE[h] = (ev[kGen]->hadE[h] - ev[kRec]->hadE[h]) / ev[kRec]->hadE[h]; 
-          diff_hadP[h] = (ev[kGen]->hadP[h] - ev[kRec]->hadP[h]) / ev[kRec]->hadP[h]; 
+          delta_hadE[h] = (ev[kGen]->hadE[h] - ev[kRec]->hadE[h]) / ev[kRec]->hadE[h]; 
+          delta_hadP[h] = (ev[kGen]->hadP[h] - ev[kRec]->hadP[h]) / ev[kRec]->hadP[h]; 
         };
-        diff_PhiH = Tools::AdjAngle(ev[kGen]->PhiH - ev[kRec]->PhiH) / ev[kRec]->PhiH;
-        diff_PhiR = Tools::AdjAngle(ev[kGen]->PhiR - ev[kRec]->PhiR) / ev[kRec]->PhiR;
+        diff_PhiH = Tools::AdjAngle(ev[kGen]->PhiH - ev[kRec]->PhiH);
+        diff_PhiR = Tools::AdjAngle(ev[kGen]->PhiR - ev[kRec]->PhiR);
 
         mtr->Fill();
 
@@ -132,6 +146,8 @@ void MCmatch(TString fname=
   for(int m=0; m<2; m++) MhMF[m]->Write();
   for(int m=0; m<2; m++) XMF[m]->Write();
   for(int m=0; m<2; m++) ZMF[m]->Write();
+  matchDiffDist->Write();
+  matchDiffVsPdiff->Write();
 
   mtr->Write();
 
@@ -140,7 +156,7 @@ void MCmatch(TString fname=
   Float_t drawLim = 0.1;
   TString drawStr;
   drawStr = Form(">>d(%d,%f,%f,%d,%f,%f)",nbins,-drawLim,drawLim,nbins,-drawLim,drawLim);
-  mtr->Draw(TString("diff_hadP[0]:diff_hadP[1]"+drawStr),"","colz");
+  mtr->Draw(TString("delta_hadP[0]:delta_hadP[1]"+drawStr),"","colz");
 
   new TCanvas();
   drawLim = 1;

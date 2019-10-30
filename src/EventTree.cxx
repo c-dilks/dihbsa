@@ -123,6 +123,7 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
 
   // instantiate useful objects
   objDihadron = new Dihadron();
+  candDih= new Dihadron();
   objDIS = new DIS();
   trEle = new Trajectory(kE);
   for(int h=0; h<2; h++) {
@@ -422,33 +423,47 @@ Bool_t EventTree::BuildMatchTable() {
 
 // DIHADRON EVENT MATCHING ALGORITHM
 // ---------------------------------
-// find event using evnumMap; BuildMatchTable MUST be (successfully) called before
-// using this
-// - loops through vector of dihadrons, and looks for matches based on how closer the
-// hadrons' momenta are to P1 and P2
-Bool_t EventTree::FindEvent(Int_t evnum_, Float_t P1, Float_t P2) {
+// find event in `this` which matches the event in `queryEv`
+// - this->BuildMatchTable MUST be (successfully) called before using this
+// - loops through vector of dihadrons, and looks for matches based on how close the
+//   hadrons' kinematics are 
+// - returns true if a match is found
+Bool_t EventTree::FindEvent(Int_t evnum_, Dihadron * queryDih) {
 
-  const Int_t nThresh = 3;
-  Float_t matchThresh[nThresh] = { 0.01, 0.03, 0.08 };
-  Float_t D1,D2;
+  Float_t matchDiffMin = 1e6;
+  Int_t iiFound = -1;
 
   auto evnumMapIT = evnumMap.find(evnum_); // evnumMapIT.second is vector of tree entries
   if(evnumMapIT!=evnumMap.end()) {
+    for(auto ii : evnumMapIT->second) {
+      this->GetEvent(ii);
+      candDih= this->GetDihadronObj(); // get candidate match kinematics
 
-    // loop through list of match thresholds (each iteration the threshold gets looser)
-    for(int t=0; t<nThresh; t++) {
-      // loop through list of tree entries for this evnum; if a match was found,
-      // all of `this`'s variables will be already set and 'true` is returned;
-      // otherwise eventually false is returned
-      for(auto ii : evnumMapIT->second) {
-        this->GetEvent(ii);
-        D1 = TMath::Abs( hadP[qA] - P1 ) / P1;
-        D2 = TMath::Abs( hadP[qB] - P2 ) / P2;
-        if(D1<matchThresh[t] && D2<matchThresh[t]) return true;
+      // calculate euclidean distance between query and candidate dihadrons' kinematics
+      matchDiff = TMath::Sqrt(
+        TMath::Power( (queryDih->vecHad[qA]).Eta() - (candDih->vecHad[qA]).Eta(), 2) +
+        TMath::Power( (queryDih->vecHad[qB]).Eta() - (candDih->vecHad[qB]).Eta(), 2) +
+        TMath::Power( (queryDih->vecHad[qA]).Phi() - (candDih->vecHad[qA]).Phi(), 2) +
+        TMath::Power( (queryDih->vecHad[qB]).Phi() - (candDih->vecHad[qB]).Phi(), 2) );
+
+      // check if this is the smallest matchDiff
+      if(matchDiff < matchDiffMin) {
+        matchDiffMin = matchDiff;
+        iiFound = ii;
       };
     };
   };
-  return false;
+
+  if(iiFound>=0) {
+    this->GetEvent(iiFound);
+    matchDiff = matchDiffMin;
+    return matchDiff < 0.03; // matchDiff MATCHING CUT
+  }
+  else {
+    matchDiff = 1e6;
+    return false;
+  };
+  
 };
 
 

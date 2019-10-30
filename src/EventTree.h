@@ -47,7 +47,7 @@ class EventTree : public TObject
     Float_t GetKinematicFactor(Char_t kf);
 
     Bool_t BuildMatchTable();
-    Bool_t FindEvent(Int_t evnum_, Float_t P1, Float_t P2);
+    Bool_t FindEvent(Int_t evnum_, Dihadron * queryDih);
 
     Bool_t debug;
     Long64_t ENT;
@@ -154,6 +154,9 @@ class EventTree : public TObject
     // OTHER VARIABLES
     Bool_t useDiphBG;
     Int_t whichHelicityMC;
+
+    // variables used for matching events (MCrec and MCgen matching)
+    Float_t matchDiff;
     
   private:
     TChain * chain;
@@ -163,6 +166,7 @@ class EventTree : public TObject
     TRandom * RNG;
 
     Dihadron * objDihadron;
+    Dihadron * candDih;
     DIS * objDIS;
     Trajectory * trEle;
     Trajectory * trHad[2];

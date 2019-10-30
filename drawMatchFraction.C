@@ -21,8 +21,11 @@ void drawMatchFraction(TString fN = "match.root") {
 
   new TCanvas();
   MhMF[1]->Draw("E");
+  MhMF[1]->Fit("pol0","","",0,3);
   new TCanvas();
   XMF[1]->Draw("E");
+  XMF[1]->Fit("pol0","","",0,1);
   new TCanvas();
   ZMF[1]->Draw("E");
+  ZMF[1]->Fit("pol0","","",0,1);
 };
