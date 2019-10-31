@@ -102,7 +102,7 @@ class EventTree : public TObject
     Float_t torus;
     Long64_t triggerBits;
     Int_t helicity;
-    static const Int_t NhelicityMC = 11; // prefer to be == nINJECT in analysis.cpp
+    static const Int_t NhelicityMC = 11;
     Int_t helicityMC[NhelicityMC];
 
     // PhiR 
@@ -155,8 +155,20 @@ class EventTree : public TObject
     Bool_t useDiphBG;
     Int_t whichHelicityMC;
 
-    // variables used for matching events (MCrec and MCgen matching)
+    // variables used for matching events in FindEvent()  (for MCrec and MCgen matching)
+    Float_t MD,MDmin;
+    Int_t iiFound;
+    Float_t queryTheta[2];
+    Float_t queryPhi[2];
+    Float_t candTheta[2];
+    Float_t candPhi[2];
+
+    // tree banches used for matching MCgen event
     Float_t matchDiff;
+    Float_t gen_hadE[2]; // kinematics for matching MCgen hadron
+    Float_t gen_hadPt[2];
+    Float_t gen_hadEta[2];
+    Float_t gen_hadPhi[2];
     
   private:
     TChain * chain;

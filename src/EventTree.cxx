@@ -102,8 +102,24 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("torus",&torus);
   chain->SetBranchAddress("triggerBits",&triggerBits);
   chain->SetBranchAddress("helicity",&helicity);
+
   if(chain->GetBranch("helicityMC")) chain->SetBranchAddress("helicityMC",helicityMC);
   else { for(int hh=0; hh<NhelicityMC; hh++) helicityMC[hh]=-10000; };
+  if(chain->GetBranch("matchDiff")) {
+    chain->SetBranchAddress("matchDiff",&matchDiff);
+    chain->SetBranchAddress("gen_hadE",gen_hadE);
+    chain->SetBranchAddress("gen_hadPt",gen_hadPt);
+    chain->SetBranchAddress("gen_hadEta",gen_hadEta);
+    chain->SetBranchAddress("gen_hadPhi",gen_hadPhi);
+  } else { 
+    matchDiff=1000; 
+    for(int h=0; h<2; h++) {
+      gen_hadE[h] = -10000;
+      gen_hadPt[h] = -10000;
+      gen_hadEta[h] = -10000;
+      gen_hadPhi[h] = -10000;
+    };
+  };
 
   chain->SetBranchAddress("diphCnt",&diphCnt);
   chain->SetBranchAddress("diphPhotE",diphPhotE);
@@ -430,37 +446,58 @@ Bool_t EventTree::BuildMatchTable() {
 // - returns true if a match is found
 Bool_t EventTree::FindEvent(Int_t evnum_, Dihadron * queryDih) {
 
-  Float_t matchDiffMin = 1e6;
-  Int_t iiFound = -1;
+  // reset vars
+  MDmin = 1e6;
+  MD = 1e6;
+  iiFound = -1;
 
-  auto evnumMapIT = evnumMap.find(evnum_); // evnumMapIT.second is vector of tree entries
+  // find the event
+  auto evnumMapIT = evnumMap.find(evnum_); 
   if(evnumMapIT!=evnumMap.end()) {
+
+    // loop through vector of dihadron tree indices within the found event
     for(auto ii : evnumMapIT->second) {
       this->GetEvent(ii);
-      candDih= this->GetDihadronObj(); // get candidate match kinematics
+
+      // get candidate match kinematics
+      candDih = this->GetDihadronObj();
+      for(int h=0; h<2; h++) {
+        queryTheta[h] = (queryDih->vecHad[h]).Theta();
+        candTheta[h] = (candDih->vecHad[h]).Theta();
+        queryPhi[h] = (queryDih->vecHad[h]).Phi();
+        candPhi[h] = (candDih->vecHad[h]).Phi();
+      };
 
       // calculate euclidean distance between query and candidate dihadrons' kinematics
-      matchDiff = TMath::Sqrt(
-        TMath::Power( (queryDih->vecHad[qA]).Eta() - (candDih->vecHad[qA]).Eta(), 2) +
-        TMath::Power( (queryDih->vecHad[qB]).Eta() - (candDih->vecHad[qB]).Eta(), 2) +
-        TMath::Power( (queryDih->vecHad[qA]).Phi() - (candDih->vecHad[qA]).Phi(), 2) +
-        TMath::Power( (queryDih->vecHad[qB]).Phi() - (candDih->vecHad[qB]).Phi(), 2) );
+      MD = TMath::Sqrt(
+        TMath::Power( queryTheta[qA] - candTheta[qA], 2) +
+        TMath::Power( queryTheta[qB] - candTheta[qB], 2) +
+        TMath::Power( queryPhi[qA] - candPhi[qA], 2) +
+        TMath::Power( queryPhi[qB] - candPhi[qB], 2) );
 
-      // check if this is the smallest matchDiff
-      if(matchDiff < matchDiffMin) {
-        matchDiffMin = matchDiff;
+      // check if this is the smallest MD
+      if(MD < MDmin) {
+        MDmin = MD;
         iiFound = ii;
       };
     };
   };
 
+  // if a match is found, set branch variables to the matching dihadron;
+  // if not, set MD to a high value and set hadron kinematics to -10000
   if(iiFound>=0) {
     this->GetEvent(iiFound);
-    matchDiff = matchDiffMin;
-    return matchDiff < 0.03; // matchDiff MATCHING CUT
+    MD = MDmin;
+    return true;
   }
   else {
-    matchDiff = 1e6;
+    MD = 1000;
+    for(int h=0; h<2; h++) {
+      hadE[h] = -10000;
+      hadPt[h] = -10000;
+      hadEta[h] = -10000;
+      hadPhi[h] = -10000;
+    };
     return false;
   };
   

@@ -355,13 +355,19 @@ int main(int argc, char** argv) {
      if(!genSuccess) return 0;
    };
 
-   const Int_t nINJECT = 11; // number of helicities to inject for MC
-                    // !!!!! if nINJECT is changed, change NhelicityMC in EventTree too
-   Int_t helicityMC[nINJECT];
+   // MC branches
+   Int_t helicityMC[EventTree::NhelicityMC];
    TString brStr;
    if(MCrecMode || MCgenMode) {
-     brStr = Form("helicityMC[%d]/I",nINJECT);
+     brStr = Form("helicityMC[%d]/I",EventTree::NhelicityMC);
      tree->Branch("helicityMC",helicityMC,brStr);
+   };
+   if(MCrecMode) {
+     tree->Branch("matchDiff",&(genEv->MD),"matchDiff/F");
+     tree->Branch("gen_hadE",genEv->hadE,"gen_hadE[2]/F");
+     tree->Branch("gen_hadPt",genEv->hadPt,"gen_hadPt[2]/F");
+     tree->Branch("gen_hadEta",genEv->hadEta,"gen_hadEta[2]/F");
+     tree->Branch("gen_hadPhi",genEv->hadPhi,"gen_hadPhi[2]/F");
    };
 
 
@@ -978,7 +984,7 @@ int main(int argc, char** argv) {
 
                      if(MCgenMode) {
                        // compute injected asymmetry
-                       for(int hh=0; hh<nINJECT; hh++) {
+                       for(int hh=0; hh<EventTree::NhelicityMC; hh++) {
                          helicityMC[hh] = generateHelicity(hh,dih->PhiH,dih->PhiR);
                        };
                      };
@@ -986,7 +992,7 @@ int main(int argc, char** argv) {
                      if(MCrecMode) {
                        // match rec event to gen event to assign helicity
                        foundMatch = genEv->FindEvent(evnum,dih);
-                       for(int hh=0; hh<nINJECT; hh++) {
+                       for(int hh=0; hh<EventTree::NhelicityMC; hh++) {
                          helicityMC[hh] = foundMatch ? genEv->helicityMC[hh] : 0;
                        };
                      };
@@ -1090,7 +1096,7 @@ Int_t generateHelicity(Int_t idx, Float_t phiH, Float_t phiR) {
 
     case 9:  asym = amp*modu(1,phiH,phiR) - amp*modu(2,phiH,phiR); break;
     case 10: asym = amp*modu(1,phiH,phiR) - amp*modu(2,phiH,phiR) + (amp+0.02)*modu(3,phiH,phiR); break;
-    /* nINJECT must equal the number of cases */
+    /* EventTree::NhelicityMC must equal the number of cases */
     default: fprintf(stderr,"generateHelicity undefined for idx=%d\n",idx); return 0;
   };
 
