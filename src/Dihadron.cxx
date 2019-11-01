@@ -107,6 +107,7 @@ void Dihadron::SetEvent(
     hadVertex[h][eY] = (hadron[h]->Vertex).Y();
     hadVertex[h][eZ] = (hadron[h]->Vertex).Z();
     hadChi2pid[h] = hadron[h]->chi2pid;
+    hadStatus[h] = hadron[h]->Status;
   };
 
 
@@ -308,6 +309,7 @@ void Dihadron::ResetVars() {
   for(h=0; h<2; h++) {
     hadXF[h] = -10000;
     hadChi2pid[h] = -10000;
+    hadStatus[h] = -10000;
     for(int c=0; c<3; c++) hadVertex[h][c] = -10000;
   };
   alpha = -10000;

@@ -83,6 +83,7 @@ class Dihadron : public TObject
     Float_t hadXF[2]; // feynman-x for each hadron
     Float_t hadVertex[2][3]; // vertex
     Float_t hadChi2pid[2]; // chi2 of PID
+    Int_t hadStatus[2]; // status variable
 
     Float_t alpha; // dihadron opening angle
     Float_t zeta; // lab-frame energy sharing

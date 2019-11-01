@@ -457,11 +457,11 @@ void GetEventTreeVars(Int_t ff, Int_t ii) {
       hadE[ff][hh] = ev[ff]->hadE[hh];
       hadP[ff][hh] = ev[ff]->hadP[hh];
       hadPt[ff][hh] = ev[ff]->hadPt[hh];
-      hadPtq[ff][hh] = ev[ff]->hadPtq[hh];
+      hadPtq[ff][hh] = ev[ff]->hadPtq[hh]; // deprecated
       hadTheta[ff][hh] = Tools::EtaToTheta(ev[ff]->hadEta[hh]);
       hadPhi[ff][hh] = ev[ff]->hadPhi[hh];
       hadZ[ff][hh] = ev[ff]->Z[hh];
-      hadXF[ff][hh] = ev[ff]->hadXF[hh];
+      hadXF[ff][hh] = ev[ff]->hadXF[hh]; // deprecated
     };
   };
 };

@@ -78,7 +78,6 @@ int main(int argc, char** argv) {
    // load libs
    DIS * disEv = new DIS();
    Dihadron * dih = new Dihadron(); dih->useBreit = false;
-   Dihadron * dihBr = new Dihadron(); dihBr->useBreit = true;
    Diphoton * diPhot[2];
    for(int h=0; h<2; h++) diPhot[h] = new Diphoton();
 
@@ -120,7 +119,6 @@ int main(int argc, char** argv) {
    // debugging flags
    disEv->debug = 0;
    dih->debug = 0;
-   dihBr->debug = 0;
 
 
    // define tree
@@ -140,9 +138,10 @@ int main(int argc, char** argv) {
    tree->Branch("eleEta",&(disEv->eleEta),"eleEta/F");
    tree->Branch("elePhi",&(disEv->elePhi),"elePhi/F");
    tree->Branch("eleVertex",disEv->eleVertex,"eleVertex[3]/F");
-   Int_t eleStatus;
-   tree->Branch("eleStatus",&eleStatus,"eleStatus/I");
+   tree->Branch("eleStatus",&(disEv->eleStatus),"eleStatus/I");
    tree->Branch("eleChi2pid",&(disEv->eleChi2pid),"eleChi2pid/F");
+   
+   // electron fiducial cuts branches
    Bool_t eleFidPCAL[FiducialCuts::nLevel];
    Bool_t eleFidDC[FiducialCuts::nLevel];
    TString brsuffix = Form("[%d]",FiducialCuts::nLevel);
@@ -150,7 +149,7 @@ int main(int argc, char** argv) {
    tree->Branch("eleFidDC",eleFidDC,TString("eleFidDC"+brsuffix+"/O"));
 
 
-   // miscellaneous branches for classifying the type of observables
+   // multiplicity branches
    Int_t particleCntAll;
    TString particleCntStr = Form("particleCnt[%d]/I",nParticles);
    tree->Branch("particleCnt",trajCnt,particleCntStr); // number of each type of particle
@@ -178,13 +177,10 @@ int main(int argc, char** argv) {
    tree->Branch("hadE",hadE,"hadE[2]/F");
    tree->Branch("hadP",hadP,"hadP[2]/F");
    tree->Branch("hadPt",hadPt,"hadPt[2]/F");
-   tree->Branch("hadPtq",hadPtq,"hadPtq[2]/F");
    tree->Branch("hadEta",hadEta,"hadEta[2]/F");
    tree->Branch("hadPhi",hadPhi,"hadPhi[2]/F");
-   tree->Branch("hadXF",dih->hadXF,"hadXF[2]/F");
    tree->Branch("hadVertex",dih->hadVertex,"hadVertex[2][3]/F");
-   Int_t hadStatus[2];
-   tree->Branch("hadStatus",hadStatus,"hadStatus[2]/I");
+   tree->Branch("hadStatus",dih->hadStatus,"hadStatus[2]/I");
    tree->Branch("hadChi2pid",dih->hadChi2pid,"hadChi2pid[2]/F");
    /*
    Bool_t hadFidPCAL[2], hadFidDC[2];
@@ -200,6 +196,7 @@ int main(int argc, char** argv) {
    tree->Branch("xF",&(dih->xF),"xF/F");
    tree->Branch("alpha",&(dih->alpha),"alpha/F");
    tree->Branch("theta",&(dih->theta),"theta/F");
+   tree->Branch("zeta",&(dih->zeta),"zeta/F");
 
    tree->Branch("Ph",&(dih->PhMag),"Ph/F");
    tree->Branch("PhPerp",&(dih->PhPerpMag),"PhPerp/F");
@@ -215,23 +212,6 @@ int main(int argc, char** argv) {
    tree->Branch("PhiRp_r",&(dih->PhiRp_r),"PhiRp_r/F"); // via R_T (frame-dependent)
    tree->Branch("PhiRp_g",&(dih->PhiRp_g),"PhiRp_g/F"); // via eq. 9 in 1408.5721
 
-   // breit frame dihadron branches
-   /*
-   tree->Branch("b_alpha",&(dihBr->alpha),"b_alpha/F");
-   tree->Branch("b_Ph",&(dihBr->PhMag),"b_Ph/F");
-   tree->Branch("b_PhPerp",&(dihBr->PhPerpMag),"b_PhPerp/F");
-   tree->Branch("b_PhEta",&(dihBr->PhEta),"b_PhEta/F");
-   tree->Branch("b_PhPhi",&(dihBr->PhPhi),"b_PhPhi/F");
-   tree->Branch("b_R",&(dihBr->RMag),"b_R/F");
-   tree->Branch("b_RPerp",&(dihBr->RPerpMag),"b_RPerp/F");
-   tree->Branch("b_RT",&(dihBr->RTMag),"b_RT/F");
-   tree->Branch("b_PhiH",&(dihBr->PhiH),"b_PhiH/F");
-   // -- phiR angles
-   tree->Branch("b_PhiRq",&(dihBr->PhiRq),"b_PhiRq/F"); // via R_perp
-   tree->Branch("b_PhiRp",&(dihBr->PhiRp),"b_PhiRp/F"); // via R_T
-   tree->Branch("b_PhiRp_r",&(dihBr->PhiRp_r),"b_PhiRp_r/F"); // via R_T (frame-dependent)
-   tree->Branch("b_PhiRp_g",&(dihBr->PhiRp_g),"b_PhiRp_g/F"); // via eq. 9 in 1408.5721
-   */
 
    // pi0 (diphoton) branches
    // -- they are arrays of length diphCnt; there are three cases:
@@ -364,6 +344,10 @@ int main(int argc, char** argv) {
    };
    if(MCrecMode) {
      tree->Branch("matchDiff",&(genEv->MD),"matchDiff/F");
+     tree->Branch("gen_eleE",&(genEv->eleE),"gen_eleE/F");
+     tree->Branch("gen_elePt",&(genEv->elePt),"gen_elePt/F");
+     tree->Branch("gen_eleEta",&(genEv->eleEta),"gen_eleEta/F");
+     tree->Branch("gen_elePhi",&(genEv->elePhi),"gen_elePhi/F");
      tree->Branch("gen_hadE",genEv->hadE,"gen_hadE[2]/F");
      tree->Branch("gen_hadPt",genEv->hadPt,"gen_hadPt[2]/F");
      tree->Branch("gen_hadEta",genEv->hadEta,"gen_hadEta[2]/F");
@@ -407,7 +391,6 @@ int main(int argc, char** argv) {
      // reset branches
      disEv->ResetVars();
      dih->ResetVars();
-     dihBr->ResetVars();
      for(int h=0; h<2; h++) {
        hadIdx[h] = -10000;
        hadE[h] = -10000;
@@ -816,8 +799,6 @@ int main(int argc, char** argv) {
        };
 #endif
 
-       eleStatus = ele->Status; // -->tree
-
 
        // look for "observable pairs" -- these are pairs that are used to form
        // form dihadrons; only the desired observables are paired (see observable_enum
@@ -941,8 +922,6 @@ int main(int argc, char** argv) {
                      hadFidDC[h] = had[h]->FidDC(FiducialCuts::cutMedium); // -->tree
                      */
 
-                     hadStatus[h] = had[h]->Status; // -->tree
-
                      if(debug) {
                        printf("[+] %s 4-momentum:\n",(had[h]->Title()).Data());
                        (had[h]->Vec).Print();
@@ -956,7 +935,6 @@ int main(int argc, char** argv) {
 
                    // compute dihadron kinematics
                    dih->SetEvent(had[qA],had[qB],disEv); // -->tree
-                   dihBr->SetEvent(had[qA],had[qB],disEv); // -->tree
 
                    // set diphCnt_tr to corrected diphCnt, for filling diphoton branches
                    // -- aqui - TODO - fix this too!

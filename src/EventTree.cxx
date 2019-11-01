@@ -35,13 +35,15 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("eleEta",&eleEta);
   chain->SetBranchAddress("elePhi",&elePhi);
   chain->SetBranchAddress("eleVertex",eleVertex);
+  chain->SetBranchAddress("eleStatus",&eleStatus);
+  chain->SetBranchAddress("eleChi2pid",&eleChi2pid);
   chain->SetBranchAddress("eleFidPCAL",eleFidPCAL);
   chain->SetBranchAddress("eleFidDC",eleFidDC);
 
 
   chain->SetBranchAddress("pairType",&pairType);
-  chain->SetBranchAddress("hadIdx",hadIdx);
   chain->SetBranchAddress("hadOrder",&hadOrder);
+  chain->SetBranchAddress("hadIdx",hadIdx);
   chain->SetBranchAddress("hadE",hadE);
   chain->SetBranchAddress("hadP",hadP);
   chain->SetBranchAddress("hadPt",hadPt);
@@ -49,6 +51,7 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("hadPhi",hadPhi);
   chain->SetBranchAddress("hadVertex",hadVertex);
   chain->SetBranchAddress("hadStatus",hadStatus);
+  chain->SetBranchAddress("hadChi2pid",hadChi2pid);
   /*
   if(chain->GetBranch("hadFidPCAL")) chain->SetBranchAddress("hadFidPCAL",hadFidPCAL);
   else { for(int h=0; h<2; h++) hadFidPCAL[h]=false; };
@@ -56,8 +59,7 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   else { for(int h=0; h<2; h++) hadFidDC[h]=false; };
   */
 
-  // (these branches, which were added for cross-checking, 
-  //  aren't yet in current ROOT files)
+  // these branches were temporarily used for early crosscheck studies
   if(chain->GetBranch("hadPtq")) chain->SetBranchAddress("hadPtq",hadPtq);
   else { for(int h=0; h<2; h++) hadPtq[h]=-10000; };
   if(chain->GetBranch("hadXF")) chain->SetBranchAddress("hadXF",hadXF);
@@ -74,6 +76,8 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("xF",&xF);
   chain->SetBranchAddress("alpha",&alpha);
   chain->SetBranchAddress("theta",&theta);
+  if(chain->GetBranch("zeta")) chain->SetBranchAddress("zeta",&zeta);
+  else zeta = -10000;
 
   chain->SetBranchAddress("Ph",&Ph);
   chain->SetBranchAddress("PhPerp",&PhPerp);
@@ -90,13 +94,6 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("PhiRp_r",&PhiRp_r);
   chain->SetBranchAddress("PhiRp_g",&PhiRp_g);
 
-  /*
-  chain->SetBranchAddress("b_PhiRq",&b_PhiRq);
-  chain->SetBranchAddress("b_PhiRp",&b_PhiRp);
-  chain->SetBranchAddress("b_PhiRp_r",&b_PhiRp_r);
-  chain->SetBranchAddress("b_PhiRp_g",&b_PhiRp_g);
-  */
-
   chain->SetBranchAddress("runnum",&runnum);
   chain->SetBranchAddress("evnum",&evnum);
   chain->SetBranchAddress("torus",&torus);
@@ -107,12 +104,20 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   else { for(int hh=0; hh<NhelicityMC; hh++) helicityMC[hh]=-10000; };
   if(chain->GetBranch("matchDiff")) {
     chain->SetBranchAddress("matchDiff",&matchDiff);
+    chain->SetBranchAddress("gen_eleE",&gen_eleE);
+    chain->SetBranchAddress("gen_elePt",&gen_elePt);
+    chain->SetBranchAddress("gen_eleEta",&gen_eleEta);
+    chain->SetBranchAddress("gen_elePhi",&gen_elePhi);
     chain->SetBranchAddress("gen_hadE",gen_hadE);
     chain->SetBranchAddress("gen_hadPt",gen_hadPt);
     chain->SetBranchAddress("gen_hadEta",gen_hadEta);
     chain->SetBranchAddress("gen_hadPhi",gen_hadPhi);
   } else { 
     matchDiff=1000; 
+    gen_eleE = -10000;
+    gen_elePt = -10000;
+    gen_eleEta = -10000;
+    gen_elePhi = -10000;
     for(int h=0; h<2; h++) {
       gen_hadE[h] = -10000;
       gen_hadPt[h] = -10000;
@@ -153,6 +158,48 @@ void EventTree::GetEvent(Int_t i) {
   if(i%10000==0) printf("[+] %.2f%%\n",100*(float)i/((float)ENT));
 
   chain->GetEntry(i);
+
+  /* 
+   * // CODE TO BE USED FOR MC GEN READING
+   *
+  // calculate DIS and Dihadron kinematics (GetDihadronObj calls GetDISObj,
+  // so that both `objDihadron` and `objDIS` will contain all the kinematics we want)
+  this->GetDihadronObj();
+
+  // set kinematic variables
+  // -- DIS kinematics
+  W = objDIS->W;
+  Q2 = objDIS->Q2;
+  Nu = objDIS->Nu;
+  x = objDIS->x;
+  y = objDIS->y;
+  // -- dihadron kinematics
+  Mh = objDihadron->Mh;
+  Mmiss = objDihadron->Mmiss;
+  for(int h=0; h<2; h++) Z[h] = objDihadron->z[h];
+  Zpair = objDihadron->zpair;
+  zeta = objDihadron->zeta;
+  xF = objDihadron->xF;
+  alpha = objDihadron->alpha;
+  theta = objDihadron->theta;
+  Ph = objDihadron->PhMag;
+  PhPerp = objDihadron->PhPerpMag;
+  PhEta = objDihadron->PhEta;
+  PhPhi = objDihadron->PhPhi;
+  R = objDihadron->RMag;
+  RPerp = objDihadron->RPerpMag;
+  RT = objDihadron->RTMag;
+  PhiH = objDihadron->PhiH;
+  // -- phiR angles
+  PhiRq = objDihadron->PhiRq; // via R_perp
+  PhiRp = objDihadron->PhiRp; // via R_T
+  PhiRp_r = objDihadron->PhiRp_r; // via R_T (frame-dependent)
+  PhiRp_g = objDihadron->PhiRp_g; // via eq. 9 in 1408.5721
+  */
+
+  // set preferred PhiR angle
+  PhiR = PhiRp; // preferred definition by Bacchetta (see Dihadron.cxx)
+  PhiHR = Tools::AdjAngle( PhiH - PhiR );
 
   // theta symmetrization tests
   //theta = fabs( fabs(theta-PI/2.0) - PI/2.0 ); // HERMES symmetrization
@@ -263,16 +310,6 @@ void EventTree::GetEvent(Int_t i) {
     ( TMath::Abs(hadStatus[qA])<4000 || TMath::Abs(hadStatus[qA])>=5000 ) &&
     ( TMath::Abs(hadStatus[qB])<4000 || TMath::Abs(hadStatus[qB])>=5000 );
 
-    
-
-  // set preferred PhiR definition
-  PhiR = PhiRp; // preferred definition by Bacchetta (see Dihadron.cxx)
-
-  PhiHR = Tools::AdjAngle( PhiH - PhiR );
-
-  // calculate zeta
-  zeta = ( Z[qA] - Z[qB] ) / Zpair;
-
 };
 
 
@@ -371,6 +408,9 @@ Dihadron * EventTree::GetDihadronObj() {
   for(int h=0; h<2; h++) {
     hadMom[h].SetPtEtaPhiE(hadPt[h],hadEta[h],hadPhi[h],hadE[h]);
     trHad[h]->SetVec(hadMom[h]);
+    trHad[h]->Status = hadStatus[h];
+    trHad[h]->chi2pid = hadChi2pid[h];
+    trHad[h]->SetVertex(hadVertex[h][eX],hadVertex[h][eY],hadVertex[h][eZ]);
   };
   this->GetDISObj();
   objDihadron->SetEvent(trHad[qA],trHad[qB],objDIS);
@@ -380,8 +420,13 @@ Dihadron * EventTree::GetDihadronObj() {
 // use electron kinematics to reconstruct DIS object
 DIS * EventTree::GetDISObj() {
   objDIS->ResetVars();
+
   eleMom.SetPtEtaPhiE(elePt,eleEta,elePhi,eleE);
   trEle->SetVec(eleMom);
+  trEle->Status = eleStatus;
+  trEle->chi2pid = eleChi2pid;
+  trEle->SetVertex(eleVertex[eX],eleVertex[eY],eleVertex[eZ]);
+
   objDIS->SetElectron(trEle);
   objDIS->Analyse();
   return objDIS;

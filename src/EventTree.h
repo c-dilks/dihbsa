@@ -72,6 +72,7 @@ class EventTree : public TObject
     Float_t hadXF[2];
     Float_t hadVertex[2][3];
     Int_t hadStatus[2];
+    Float_t hadChi2pid[2];
     //Bool_t hadFidPCAL[2], hadFidDC[2];
 
     // electron kinematics
@@ -81,6 +82,8 @@ class EventTree : public TObject
     Float_t eleEta;
     Float_t elePhi;
     Float_t eleVertex[3];
+    Int_t eleStatus;
+    Float_t eleChi2pid;
     Bool_t eleFidPCAL[FiducialCuts::nLevel];
     Bool_t eleFidDC[FiducialCuts::nLevel];
 
@@ -165,6 +168,10 @@ class EventTree : public TObject
 
     // tree banches used for matching MCgen event
     Float_t matchDiff;
+    Float_t gen_eleE;
+    Float_t gen_elePt;
+    Float_t gen_eleEta;
+    Float_t gen_elePhi;
     Float_t gen_hadE[2]; // kinematics for matching MCgen hadron
     Float_t gen_hadPt[2];
     Float_t gen_hadEta[2];

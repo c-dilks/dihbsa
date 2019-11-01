@@ -47,6 +47,7 @@ class DIS : public TObject
     Float_t eleE,eleP,elePt,eleEta,elePhi;
     Float_t eleVertex[3];
     Float_t eleChi2pid;
+    Int_t eleStatus;
 
 
     TVector3 BreitBoost;
