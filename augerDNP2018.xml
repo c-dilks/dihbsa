@@ -46,8 +46,8 @@
 4078_4
   </List>
 
-  <Variable name="workDir" value="/w/hallb-scifs17exp/clas12/dilks/dihbsa" />
-  <Variable name="volDir" value="/volatile/clas12/dilks" />
+  <Variable name="workDir" value="/w/hallb-scifs17exp/clas12/users/dilks/dihbsa" />
+  <Variable name="volDir" value="/volatile/clas12/users/dilks" />
   <Variable name="homeDir" value="/u/home/dilks" />
 
   <Variable name="hipoDir" value="/mss/clas12/rg-a/production/trains/dnp2018/v0/skim4_inclusive" />

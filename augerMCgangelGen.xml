@@ -1009,8 +1009,8 @@ clasdispr.00.e10.600.emn0.75tmn.09.xs81.61nb.dis.0999.dat.hipo
 
 
   <Variable name="hipoDir" value="/w/hallb-scifs17exp/clas12/gangel/Simu_DNP19/T-1.00_S-1.0/F18/Fixed1" />
-  <Variable name="workDir" value="/w/hallb-scifs17exp/clas12/dilks/dihbsa" />
-  <Variable name="volDir" value="/volatile/clas12/dilks" />
+  <Variable name="workDir" value="/w/hallb-scifs17exp/clas12/users/dilks/dihbsa" />
+  <Variable name="volDir" value="/volatile/clas12/users/dilks" />
   <Variable name="homeDir" value="/u/home/dilks" />
 
   <ForEach list="hipoFile">

@@ -510,8 +510,8 @@ out_clasdispr.00.e10.600.emn0.75tmn.09.xs80.53nb.dis.0499.nrad.dat.evio.hipo
 
 
   <Variable name="hipoDir" value="/w/hallb-scifs17exp/clas12/avakian/mc/mcaugust2019/T-1.00_S-1.0/clasdis/cooked631" />
-  <Variable name="workDir" value="/w/hallb-scifs17exp/clas12/dilks/dihbsa" />
-  <Variable name="volDir" value="/volatile/clas12/dilks" />
+  <Variable name="workDir" value="/w/hallb-scifs17exp/clas12/users/dilks/dihbsa" />
+  <Variable name="volDir" value="/volatile/clas12/users/dilks" />
   <Variable name="homeDir" value="/u/home/dilks" />
 
   <ForEach list="hipoFile">
