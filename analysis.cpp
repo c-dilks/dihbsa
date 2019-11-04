@@ -170,6 +170,7 @@ int main(int argc, char** argv) {
    Float_t hadPt[2]; 
    Float_t hadPtq[2];
    Float_t hadEta[2];
+   Float_t hadTheta[2];
    Float_t hadPhi[2];
    tree->Branch("pairType",&pairType,"pairType/I"); // pair type number
    tree->Branch("hadOrder",&hadOrder,"hadOrder/I"); // (see hadron pairing algorithm)
@@ -287,9 +288,21 @@ int main(int argc, char** argv) {
    // MC: variables
    Bool_t printWarning = true;
    RNG = new TRandom(14972);
-   EventTree * genEv;
+   //EventTree * genEv;
    TString genfileN;
    Bool_t genSuccess,foundMatch;
+   Int_t genPID;
+   Float_t hadMD[2];
+   Float_t hadMDmin[2];
+   Float_t genEleP, genElePmax;
+   TLorentzVector genHadVec[2];
+   TLorentzVector genHadVecTmp;
+   TLorentzVector genEleVecTmp, genEleVec;
+   Trajectory * genEleTraj = new Trajectory(kE);
+   Trajectory * genHadTraj[2];
+   for(int h=0; h<2; h++) genHadTraj[h] = new Trajectory(kPhoton); // (Idx is unimportant)
+   DIS * genDIS = new DIS();
+   Dihadron * genDih = new Dihadron();
 
 
    // determine MC mode, using PARTICLE_BANK macro, defined in config.mk
@@ -319,40 +332,47 @@ int main(int argc, char** argv) {
 #endif
 
    // MC: load generated MC file, for obtaining MC helicities by event matching
-   if(MCrecMode) {
-     if(augerMode) genfileN = "genfile.root";
-     else {
-       genfileN = infileN;
-       genfileN(TRegexp("^.*/")) = "outroot.MC.gen/";
-       //genfileN(TRegexp(".hipo$")) = "";
-       genfileN += ".root";
-     };
-     // TODO - helicity event matching only done for pi+pi- channel; this should
-     //        eventually be generalized...
-     printf("GENFILE = %s\n",genfileN.Data());
-     genEv = new EventTree(genfileN,EncodePairType(kPip,kPim));
-     genSuccess = genEv->BuildMatchTable();
-     if(!genSuccess) return 0;
-   };
+   //if(MCrecMode) {
+     //if(augerMode) genfileN = "genfile.root";
+     //else {
+       //genfileN = infileN;
+       //genfileN(TRegexp("^.*/")) = "outroot.MC.gen/";
+       ////genfileN(TRegexp(".hipo$")) = "";
+       //genfileN += ".root";
+     //};
+     //// TODO - helicity event matching only done for pi+pi- channel; this should
+     ////        eventually be generalized...
+     //printf("GENFILE = %s\n",genfileN.Data());
+     //genEv = new EventTree(genfileN,EncodePairType(kPip,kPim));
+     //genSuccess = genEv->BuildMatchTable();
+     //if(!genSuccess) return 0;
+   //};
 
    // MC branches
    Int_t helicityMC[EventTree::NhelicityMC];
    TString brStr;
+   Float_t MD;
+   Float_t gen_eleE, gen_elePt, gen_eleEta, gen_elePhi;
+   Float_t gen_hadE[2];
+   Float_t gen_hadPt[2];
+   Float_t gen_hadEta[2];
+   Float_t gen_hadPhi[2];
    if(MCrecMode || MCgenMode) {
      brStr = Form("helicityMC[%d]/I",EventTree::NhelicityMC);
      tree->Branch("helicityMC",helicityMC,brStr);
    };
    if(MCrecMode) {
-     tree->Branch("matchDiff",&(genEv->MD),"matchDiff/F");
-     tree->Branch("gen_eleE",&(genEv->eleE),"gen_eleE/F");
-     tree->Branch("gen_elePt",&(genEv->elePt),"gen_elePt/F");
-     tree->Branch("gen_eleEta",&(genEv->eleEta),"gen_eleEta/F");
-     tree->Branch("gen_elePhi",&(genEv->elePhi),"gen_elePhi/F");
-     tree->Branch("gen_hadE",genEv->hadE,"gen_hadE[2]/F");
-     tree->Branch("gen_hadPt",genEv->hadPt,"gen_hadPt[2]/F");
-     tree->Branch("gen_hadEta",genEv->hadEta,"gen_hadEta[2]/F");
-     tree->Branch("gen_hadPhi",genEv->hadPhi,"gen_hadPhi[2]/F");
+     tree->Branch("matchDiff",&MD,"matchDiff/F");
+     tree->Branch("gen_eleE",&gen_eleE,"gen_eleE/F");
+     tree->Branch("gen_elePt",&gen_elePt,"gen_elePt/F");
+     tree->Branch("gen_eleEta",&gen_eleEta,"gen_eleEta/F");
+     tree->Branch("gen_elePhi",&gen_elePhi,"gen_elePhi/F");
+     tree->Branch("gen_hadE",gen_hadE,"gen_hadE[2]/F");
+     tree->Branch("gen_hadPt",gen_hadPt,"gen_hadPt[2]/F");
+     tree->Branch("gen_hadEta",gen_hadEta,"gen_hadEta[2]/F");
+     tree->Branch("gen_hadPhi",gen_hadPhi,"gen_hadPhi[2]/F");
    };
+
 
 
    // photon pair ("php") variables
@@ -392,15 +412,16 @@ int main(int argc, char** argv) {
      disEv->ResetVars();
      dih->ResetVars();
      for(int h=0; h<2; h++) {
-       hadIdx[h] = -10000;
-       hadE[h] = -10000;
-       hadP[h] = -10000;
-       hadPt[h] = -10000;
-       hadPtq[h] = -10000;
-       hadEta[h] = -10000;
-       hadPhi[h] = -10000;
+       hadIdx[h] = UNDEF;
+       hadE[h] = UNDEF;
+       hadP[h] = UNDEF;
+       hadPt[h] = UNDEF;
+       hadPtq[h] = UNDEF;
+       hadEta[h] = UNDEF;
+       hadTheta[h] = UNDEF;
+       hadPhi[h] = UNDEF;
      };
-     pairType = -10000;
+     pairType = UNDEF;
      for(int h=0; h<2; h++) diPhot[h]->ResetVars();
      for(int php=0; php<phpCntMax; php++) diPhotTmp[php]->ResetVars();
      diphCnt = 0;
@@ -465,7 +486,7 @@ int main(int argc, char** argv) {
      //    afterward
      
 
-#if PARTICLE_BANK == 0 || PARTICLE_BANK == 3 // REC::Particle for reconstructed particles
+#if PARTICLE_BANK == 0 // REC::Particle for reconstructed particles from data
      particleCntAll = reader.getNParticles(); // -->tree
      if(debug) printf("reader.getNParticles() = %d\n",particleCntAll);
      for(auto & part : reader.getDetParticles()) {
@@ -488,7 +509,7 @@ int main(int argc, char** argv) {
        vertex[eX] = (reader.mcparts())->getVx(rr);
        vertex[eY] = (reader.mcparts())->getVy(rr);
        vertex[eZ] = (reader.mcparts())->getVz(rr);
-       chi2pid = -10000;
+       chi2pid = UNDEF;
        status = 0;
 #elif PARTICLE_BANK == 2 // MC::Particle for reading MC-generated particles
      reader.getReader().read(readerEvent);
@@ -502,8 +523,23 @@ int main(int argc, char** argv) {
        vertex[eX] = mcParticle.getFloat("vx",rr);
        vertex[eY] = mcParticle.getFloat("vy",rr);
        vertex[eZ] = mcParticle.getFloat("vz",rr);
-       chi2pid = -10000;
+       chi2pid = UNDEF;
        status = 0;
+#elif PARTICLE_BANK == 3 // REC::Particle for reconstructed particles from MC
+     reader.getReader().read(readerEvent);
+     readerEvent.getStructure(mcParticle); // for matching to MCgen
+     particleCntAll = reader.getNParticles(); // -->tree
+     if(debug) printf("reader.getNParticles() = %d\n",particleCntAll);
+     for(auto & part : reader.getDetParticles()) {
+       pidCur = part->getPid();
+       vecObsP[eX] = part->par()->getPx();
+       vecObsP[eY] = part->par()->getPy();
+       vecObsP[eZ] = part->par()->getPz();
+       vertex[eX] = part->par()->getVx();
+       vertex[eY] = part->par()->getVy();
+       vertex[eZ] = part->par()->getVz();
+       chi2pid = part->par()->getChi2Pid();
+       status = part->par()->getStatus();
 #endif
 
 
@@ -511,13 +547,13 @@ int main(int argc, char** argv) {
        
 
        // convert PID to local particle index; if it's not defined in Constants.h, pIdx
-       // will be -10000 and this particle will be ignored
+       // will be UNDEF and this particle will be ignored
        pIdx = PIDtoIdx(pidCur);
-       if(pIdx==kP || pIdx==kN) pIdx=-10000; // also skip protons and neutrons
+       if(pIdx==kP || pIdx==kN) pIdx=UNDEF; // also skip protons and neutrons
        if(debug) printf("\nNEXT PARTICLE: --> pid=%d  pIdx=%d\n",pidCur,pIdx);
 
 
-       if(pIdx>-10000) {
+       if(pIdx>UNDEF) {
 
          // set Trajectory pointer tr to proper allocated Trajectory instance; if there
          // are more instances of this observable than we allocated for, (this max
@@ -911,10 +947,12 @@ int main(int argc, char** argv) {
 
                      if(hadE[h]>0 && hadPt[h]>0) {
                        hadEta[h] = (had[h]->Vec).Eta(); // -->tree
+                       hadTheta[h] = (had[h]->Vec).Theta();
                        hadPhi[h] = (had[h]->Vec).Phi(); // -->tree
                      } else {
-                       hadEta[h] = -10000;
-                       hadPhi[h] = -10000;
+                       hadEta[h] = UNDEF;
+                       hadTheta[h] = UNDEF;
+                       hadPhi[h] = UNDEF;
                      };
 
                      /*
@@ -961,18 +999,154 @@ int main(int argc, char** argv) {
 
 
                      if(MCgenMode) {
-                       // compute injected asymmetry
+                       // generate helicity based on injected asymmetry
                        for(int hh=0; hh<EventTree::NhelicityMC; hh++) {
                          helicityMC[hh] = generateHelicity(hh,dih->PhiH,dih->PhiR);
                        };
                      };
 
                      if(MCrecMode) {
-                       // match rec event to gen event to assign helicity
+
+                       // reset variables used for generated hadron matching
+                       for(int hp=0; hp<2; hp++) {
+                         genHadVec[hp].SetXYZM(0.0,0.0,0.0,0.0);
+                         genDIS->ResetVars();
+                         genDih->ResetVars();
+                         hadMDmin[hp] = 1e6;
+                       };
+                       genEleVec.SetXYZM(0.0,0.0,0.0,0.0);
+                       genElePmax = 0;
+
+                       // loop through MC::Particle and find closest matching hadrons
+                       // as well as the generated scattered electron
+                       for(int mp=0; mp<mcParticle.getRows(); mp++) {
+                         genPID = mcParticle.getInt("pid",mp);
+                         
+                         // generated scattered electron
+                         if(genPID==PartPID(kE)) {
+                           genEleVecTmp.SetXYZM(
+                             mcParticle.getFloat("px",mp),
+                             mcParticle.getFloat("py",mp),
+                             mcParticle.getFloat("pz",mp),
+                             PartMass(kE)
+                           );
+                           genEleP = genEleVecTmp.P();
+                           if(genEleP > genElePmax) {
+                             genElePmax = genEleP;
+                             genEleVec.SetXYZM(
+                               genEleVecTmp.Px(),
+                               genEleVecTmp.Py(),
+                               genEleVecTmp.Pz(),
+                               genEleVecTmp.M()
+                             );
+                           };
+                         }
+                         
+                         // generated hadrons
+                         else {
+                           for(int hp=0; hp<2; hp++) {
+                             if(genPID==PartPID(hadIdx[hp])) {
+
+                               genHadVecTmp.SetXYZM(
+                                 mcParticle.getFloat("px",mp),
+                                 mcParticle.getFloat("py",mp),
+                                 mcParticle.getFloat("pz",mp),
+                                 PartMass(hadIdx[hp])
+                               );
+
+                               // calculate 2-dim Euclidean distance ("matchDiff", or
+                               // "MD") between MCrec and MCgen hadrons; the smallest MD
+                               // is taken as the "best matched" hadron; we can cut on
+                               // MD later on in order to select only the matches we
+                               // have confidence in
+                               hadMD[hp] = TMath::Sqrt(
+                                 TMath::Power( hadTheta[hp] - genHadVecTmp.Theta(), 2) +
+                                 TMath::Power( hadPhi[hp] - genHadVecTmp.Phi(), 2)
+                               );
+
+                               if(hadMD[hp] < hadMDmin[hp]) {
+                                 hadMDmin[hp] = hadMD[hp];
+                                 genHadVec[hp].SetXYZM(
+                                   genHadVecTmp.Px(),
+                                   genHadVecTmp.Py(),
+                                   genHadVecTmp.Pz(),
+                                   genHadVecTmp.M()
+                                 );
+                               };
+
+                             };
+                           };
+                         };
+                       };
+                       
+                       // if we found a generated scattered electron and dihadron,
+                       // compute kinematics and assign helicities
+                       if(genElePmax>0 && hadMDmin[qA]<10 && hadMDmin[qB]<10) {
+                         genEleTraj->SetVec(genEleVec);
+                         for(int hp=0; hp<2; hp++) {
+                           genHadTraj[hp]->SetVec(genHadVec[hp]);
+                           genHadTraj[hp]->SetIdx(hadIdx[hp]);
+                         };
+                         genDIS->SetElectron(genEleTraj);
+                         genDIS->Analyse();
+                         genDih->SetEvent(genHadTraj[qA],genHadTraj[qB],genDIS);
+
+                         // generate helicity based on injected asymmetry
+                         // - this uses the generated dihadron kinematics
+                         for(int hh=0; hh<EventTree::NhelicityMC; hh++) {
+                           helicityMC[hh] = generateHelicity(
+                             hh, genDih->PhiH, genDih->PhiR );
+                         };
+
+                         // set MCgenMatched branches
+                         MD = TMath::Sqrt(
+                           TMath::Power(hadMDmin[qA],2) +
+                           TMath::Power(hadMDmin[qB],2) ); // 4-dim. matchDiff
+                         gen_eleE = (genEleTraj->Vec).E();
+                         gen_elePt = (genEleTraj->Vec).Pt();
+                         gen_eleEta = (genEleTraj->Vec).Eta();
+                         gen_elePhi = (genEleTraj->Vec).Phi();
+                         for(int hp=0; hp<2; hp++) {
+                           gen_hadE[hp] = (genHadVec[hp]).E();
+                           gen_hadPt[hp] = (genHadVec[hp]).Pt();
+                           gen_hadEta[hp] = (genHadVec[hp]).Eta();
+                           gen_hadPhi[hp] = (genHadVec[hp]).Phi();
+                         };
+                       } else {
+                         // if no match candidate was found, set everything to undefined
+                         for(int hh=0; hh<EventTree::NhelicityMC; hh++) helicityMC[hh]=0;
+                         MD = UNDEF;
+                         gen_eleE = UNDEF;
+                         gen_elePt = UNDEF;
+                         gen_eleEta = UNDEF;
+                         gen_elePhi = UNDEF;
+                         for(int hp=0; hp<2; hp++) {
+                           gen_hadE[hp] = UNDEF;
+                           gen_hadPt[hp] = UNDEF;
+                           gen_hadEta[hp] = UNDEF;
+                           gen_hadPhi[hp] = UNDEF;
+                         };
+                       };
+
+
+                       // -- match to MCgen ROOT file (DEPRECATED)
+                       /*
                        foundMatch = genEv->FindEvent(evnum,dih);
                        for(int hh=0; hh<EventTree::NhelicityMC; hh++) {
                          helicityMC[hh] = foundMatch ? genEv->helicityMC[hh] : 0;
                        };
+                       MD = genEv->MD;
+                       gen_eleE = genEv->eleE;
+                       gen_elePt = genEv->elePt;
+                       gen_eleEta = genEv->eleEta;
+                       gen_elePhi = genEv->elePhi;
+                       for(int h=0; h<2; h++) {
+                         gen_hadE[h] = genEv->hadE[h];
+                         gen_hadPt[h] = genEv->hadPt[h];
+                         gen_hadEta[h] = genEv->hadEta[h];
+                         gen_hadPhi[h] = genEv->hadPhi[h];
+                       };
+                       */
                      };
 
                      helicity = 0; // set data helicity to zero
@@ -1074,6 +1248,7 @@ Int_t generateHelicity(Int_t idx, Float_t phiH, Float_t phiR) {
 
     case 9:  asym = amp*modu(1,phiH,phiR) - amp*modu(2,phiH,phiR); break;
     case 10: asym = amp*modu(1,phiH,phiR) - amp*modu(2,phiH,phiR) + (amp+0.02)*modu(3,phiH,phiR); break;
+    case 11: asym = 0.2*modu(1,phiH,phiR) + 0.2*modu(3,phiH,phiR) + 0.1*modu(2,phiH,phiR); break; // (to compare with Timothy)
     /* EventTree::NhelicityMC must equal the number of cases */
     default: fprintf(stderr,"generateHelicity undefined for idx=%d\n",idx); return 0;
   };

@@ -105,7 +105,7 @@ class EventTree : public TObject
     Float_t torus;
     Long64_t triggerBits;
     Int_t helicity;
-    static const Int_t NhelicityMC = 11;
+    static const Int_t NhelicityMC = 12;
     Int_t helicityMC[NhelicityMC];
 
     // PhiR 

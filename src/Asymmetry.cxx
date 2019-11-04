@@ -76,7 +76,7 @@ Asymmetry::Asymmetry(
       fprintf(stderr,"ERROR: bad phiModulation\n");
       return;
   };
-  if(dimension==-10000) return; // (use this if you only want to do basic things,
+  if(dimension==UNDEF) return; // (use this if you only want to do basic things,
                                 // like calculate modulations or access modulation
                                 // names)
 
@@ -384,7 +384,7 @@ Bool_t Asymmetry::AddEvent() {
 
 
   // check to make sure kinematics are defined (if they're not, something else
-  // probably set them to -10000)
+  // probably set them to UNDEF)
   for(int d=0; d<whichDim; d++) { 
     if(iv[d]<-8000) return KickEvent(TString(ivN[d]+" out of range"),iv[d]);
   };
@@ -407,7 +407,7 @@ Bool_t Asymmetry::AddEvent() {
   if(kf<kfLB || kf>kfUB) return KickEvent("KF out of range",kf);
 
   // evaluate modulation 
-  modulation = EvalModulation(); // (if asym2d==true, modulation=-10000, i.e., not used)
+  modulation = EvalModulation(); // (if asym2d==true, modulation=UNDEF, i.e., not used)
 
   // set weight (returns 1, unless weighting for G1perp)
   weight = EvalWeight();
@@ -886,7 +886,7 @@ void Asymmetry::SetAsymGrPoint(Int_t modBin_, Int_t modBin2_) {
   
 Float_t Asymmetry::EvalModulation() {
 
-  if(PhiH<-1000 || PhiR<-1000) return -10000;
+  if(PhiH<-1000 || PhiR<-1000) return UNDEF;
 
   switch(whichMod) {
     case modSinPhiR:
@@ -902,17 +902,17 @@ Float_t Asymmetry::EvalModulation() {
       return TMath::Sin(PhiH);
       break;
     case mod2dSinPhiR:
-      return -10000; // (not used if asym2d==true)
+      return UNDEF; // (not used if asym2d==true)
       break;
     case mod2dWeightSinPhiHR:
-      return -10000; // (not used if asym2d==true)
+      return UNDEF; // (not used if asym2d==true)
       break;
     case modTest:
       return TMath::Sin(PhiTest); // +++test
       break;
     default:
       fprintf(stderr,"ERROR: bad phiModulation\n");
-      return -10000;
+      return UNDEF;
   };
 
 };
@@ -945,19 +945,19 @@ Float_t Asymmetry::EvalKinematicFactor() {
 
  
 void Asymmetry::ResetVars() {
-  Mh = -10000;
-  x = -10000;
-  z = -10000;
-  PhiH = -10000;
-  PhiR = -10000;
-  PhiTest = -10000;
-  PhPerp = -10000;
-  theta = -10000;
-  spinn = -10000;
-  kfA = -10000;
-  kfC = -10000;
-  kfW = -10000;
-  for(int d=0; d<3; d++) iv[d]=-10000;
+  Mh = UNDEF;
+  x = UNDEF;
+  z = UNDEF;
+  PhiH = UNDEF;
+  PhiR = UNDEF;
+  PhiTest = UNDEF;
+  PhPerp = UNDEF;
+  theta = UNDEF;
+  spinn = UNDEF;
+  kfA = UNDEF;
+  kfC = UNDEF;
+  kfW = UNDEF;
+  for(int d=0; d<3; d++) iv[d]=UNDEF;
 };
 
 

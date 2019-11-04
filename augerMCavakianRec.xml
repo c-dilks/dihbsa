@@ -527,7 +527,7 @@ out_clasdispr.00.e10.600.emn0.75tmn.09.xs80.53nb.dis.0499.nrad.dat.evio.hipo
       <Input src="file:${workDir}/libDihBsa.so" dest="libDihBsa.so" copyOption="link"/>
       <Input src="file:${workDir}/src/DihBsaDict_rdict.pcm" dest="DihBsaDict_rdict.pcm" copyOption="link"/>
 
-      <Input src="file:${volDir}/outroot.MC.gen/${hipoFile}.root" dest="genfile.root" copyOption="link"/>
+      <!-- <Input src="file:${volDir}/outroot.MC.gen/${hipoFile}.root" dest="genfile.root" copyOption="link"/> -->
 
       <Command><![CDATA[
         ls -lh

@@ -204,11 +204,11 @@ void DIS::ComPrint() {
 
 
 void DIS::ResetVars() {
-  W = -10000;
-  Q2 = -10000;
-  Nu = -10000;
-  x = -10000;
-  y = -10000;
+  W = UNDEF;
+  Q2 = UNDEF;
+  Nu = UNDEF;
+  x = UNDEF;
+  y = UNDEF;
   return;
 };
 

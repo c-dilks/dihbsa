@@ -61,9 +61,9 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
 
   // these branches were temporarily used for early crosscheck studies
   if(chain->GetBranch("hadPtq")) chain->SetBranchAddress("hadPtq",hadPtq);
-  else { for(int h=0; h<2; h++) hadPtq[h]=-10000; };
+  else { for(int h=0; h<2; h++) hadPtq[h]=UNDEF; };
   if(chain->GetBranch("hadXF")) chain->SetBranchAddress("hadXF",hadXF);
-  else { for(int h=0; h<2; h++) hadXF[h]=-10000; };
+  else { for(int h=0; h<2; h++) hadXF[h]=UNDEF; };
   /////////////
 
   chain->SetBranchAddress("particleCnt",particleCnt);
@@ -77,7 +77,7 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("alpha",&alpha);
   chain->SetBranchAddress("theta",&theta);
   if(chain->GetBranch("zeta")) chain->SetBranchAddress("zeta",&zeta);
-  else zeta = -10000;
+  else zeta = UNDEF;
 
   chain->SetBranchAddress("Ph",&Ph);
   chain->SetBranchAddress("PhPerp",&PhPerp);
@@ -101,7 +101,7 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("helicity",&helicity);
 
   if(chain->GetBranch("helicityMC")) chain->SetBranchAddress("helicityMC",helicityMC);
-  else { for(int hh=0; hh<NhelicityMC; hh++) helicityMC[hh]=-10000; };
+  else { for(int hh=0; hh<NhelicityMC; hh++) helicityMC[hh]=UNDEF; };
   if(chain->GetBranch("matchDiff")) {
     chain->SetBranchAddress("matchDiff",&matchDiff);
     chain->SetBranchAddress("gen_eleE",&gen_eleE);
@@ -113,16 +113,16 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
     chain->SetBranchAddress("gen_hadEta",gen_hadEta);
     chain->SetBranchAddress("gen_hadPhi",gen_hadPhi);
   } else { 
-    matchDiff=1000; 
-    gen_eleE = -10000;
-    gen_elePt = -10000;
-    gen_eleEta = -10000;
-    gen_elePhi = -10000;
+    matchDiff=UNDEF; 
+    gen_eleE = UNDEF;
+    gen_elePt = UNDEF;
+    gen_eleEta = UNDEF;
+    gen_elePhi = UNDEF;
     for(int h=0; h<2; h++) {
-      gen_hadE[h] = -10000;
-      gen_hadPt[h] = -10000;
-      gen_hadEta[h] = -10000;
-      gen_hadPhi[h] = -10000;
+      gen_hadE[h] = UNDEF;
+      gen_hadPt[h] = UNDEF;
+      gen_hadEta[h] = UNDEF;
+      gen_hadPhi[h] = UNDEF;
     };
   };
 
@@ -221,7 +221,7 @@ void EventTree::GetEvent(Int_t i) {
   for(int h=0; h<2; h++) {
     cutDiphKinematics[h] = true;
     cutDiph[h] = true;
-    for(int p=0; p<2; p++) angEle[h][p] = -10000;
+    for(int p=0; p<2; p++) angEle[h][p] = UNDEF;
   };
   // -- then if there are diphotons in this dihadron we evaluate their cuts
   if(diphCnt>0) {
@@ -328,7 +328,7 @@ Int_t EventTree::SpinState() {
     switch(helicity) {
       case 1: return sM;
       case -1: return sP;
-      case 0: return -10000;
+      case 0: return UNDEF;
       default: fprintf(stderr,"WARNING: bad SpinState request: %d\n",helicity);
     };
   }
@@ -346,12 +346,12 @@ Int_t EventTree::SpinState() {
     switch(helicity) {
       case 2: return sM;
       case 3: return sP;
-      case 0: return -10000;
+      case 0: return UNDEF;
       default: fprintf(stderr,"WARNING: bad SpinState request: %d\n",helicity);
     };
   }
   else fprintf(stderr,"WARNING: runnum %d not in EventTree::SpinState\n",runnum);
-  return -10000;
+  return UNDEF;
 };
 
 
@@ -451,6 +451,7 @@ Float_t EventTree::GetKinematicFactor(Char_t kf) {
 
 // build map `evnumMap : evnum -> vector of corresponding tree entries`
 // -- return true if successful
+// -- deprecated, but still here for if you want to test MC matching ideas
 Bool_t EventTree::BuildMatchTable() {
   printf("building EventTree event matching table...\n");
 
@@ -489,6 +490,7 @@ Bool_t EventTree::BuildMatchTable() {
 // - loops through vector of dihadrons, and looks for matches based on how close the
 //   hadrons' kinematics are 
 // - returns true if a match is found
+// - deprecated, but still here for if you want to test MC matching ideas
 Bool_t EventTree::FindEvent(Int_t evnum_, Dihadron * queryDih) {
 
   // reset vars
@@ -529,7 +531,7 @@ Bool_t EventTree::FindEvent(Int_t evnum_, Dihadron * queryDih) {
   };
 
   // if a match is found, set branch variables to the matching dihadron;
-  // if not, set MD to a high value and set hadron kinematics to -10000
+  // if not, set MD to a high value and set hadron kinematics to UNDEF
   if(iiFound>=0) {
     this->GetEvent(iiFound);
     MD = MDmin;
@@ -538,10 +540,10 @@ Bool_t EventTree::FindEvent(Int_t evnum_, Dihadron * queryDih) {
   else {
     MD = 1000;
     for(int h=0; h<2; h++) {
-      hadE[h] = -10000;
-      hadPt[h] = -10000;
-      hadEta[h] = -10000;
-      hadPhi[h] = -10000;
+      hadE[h] = UNDEF;
+      hadPt[h] = UNDEF;
+      hadEta[h] = UNDEF;
+      hadPhi[h] = UNDEF;
     };
     return false;
   };

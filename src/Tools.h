@@ -7,6 +7,7 @@
 #include "TH2.h"
 #include "TProfile.h"
 #include "TLorentzVector.h"
+#include "Constants.h"
 
 class Tools {
   public:
@@ -59,7 +60,7 @@ class Tools {
         };
       };
       fprintf(stderr,"Tools::GetFirstFilledX called on empty histogram\n");
-      return -10000;
+      return UNDEF;
     };
 
     // get last filled bin of a histogram
@@ -70,7 +71,7 @@ class Tools {
         };
       };
       fprintf(stderr,"Tools::GetLastFilledX called on empty histogram\n");
-      return -10000;
+      return UNDEF;
     };
 
     
@@ -78,7 +79,7 @@ class Tools {
     static Float_t AngleSubtend(TVector3 vA, TVector3 vB) {
       Float_t m = vA.Mag() * vB.Mag();
       if(m>0) return TMath::ACos( vA.Dot(vB) / m );
-      return -10000;
+      return UNDEF;
     };
 
 

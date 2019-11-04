@@ -79,19 +79,19 @@ void Diphoton::SetEvent(Trajectory * traj1, Trajectory * traj2) {
 
 void Diphoton::ResetVars() {
   for(int h=0; h<2; h++) {
-    photE[h] = -10000;
-    photPt[h] = -10000;
-    photEta[h] = -10000;
-    photPhi[h] = -10000;
-    for(int c=0; c<3; c++) photVertex[h][c] = -10000;
+    photE[h] = UNDEF;
+    photPt[h] = UNDEF;
+    photEta[h] = UNDEF;
+    photPhi[h] = UNDEF;
+    for(int c=0; c<3; c++) photVertex[h][c] = UNDEF;
   };
-  E = -10000;
-  Z = -10000;
-  Pt = -10000;
-  M = -10000;
-  Alpha = -10000;
-  Eta = -10000;
-  Phi = -10000;
+  E = UNDEF;
+  Z = UNDEF;
+  Pt = UNDEF;
+  M = UNDEF;
+  Alpha = UNDEF;
+  Eta = UNDEF;
+  Phi = UNDEF;
 
   validDiphoton = false;
 };

@@ -289,30 +289,30 @@ void CrossChecker() {
     // reset variables so that it's easy to filter out which
     // aren't associated to any branch
     for(f=0; f<NF; f++) {
-      evnum[f] = -10000;
-      Q2[f] = -10000;
-      W[f] = -10000;
-      x[f] = -10000;
-      y[f] = -10000;
-      Mh[f] = -10000;
-      xF[f] = -10000;
-      theta[f] = -10000;
-      PhiH[f] = -10000;
-      PhiR[f] = -10000;
-      PhPerp[f] = -10000;
-      eleP[f] = -10000;
+      evnum[f] = UNDEF;
+      Q2[f] = UNDEF;
+      W[f] = UNDEF;
+      x[f] = UNDEF;
+      y[f] = UNDEF;
+      Mh[f] = UNDEF;
+      xF[f] = UNDEF;
+      theta[f] = UNDEF;
+      PhiH[f] = UNDEF;
+      PhiR[f] = UNDEF;
+      PhPerp[f] = UNDEF;
+      eleP[f] = UNDEF;
       for(h=0; h<nHad; h++) {
-        hadE[f][h] = -10000;
-        hadP[f][h] = -10000;
-        hadPt[f][h] = -10000;
-        hadPtq[f][h] = -10000;
-        hadTheta[f][h] = -10000;
-        hadPhi[f][h] = -10000;
-        hadPx[f][h] = -10000;
-        hadPy[f][h] = -10000;
-        hadPz[f][h] = -10000;
-        hadZ[f][h] = -10000;
-        hadXF[f][h] = -10000;
+        hadE[f][h] = UNDEF;
+        hadP[f][h] = UNDEF;
+        hadPt[f][h] = UNDEF;
+        hadPtq[f][h] = UNDEF;
+        hadTheta[f][h] = UNDEF;
+        hadPhi[f][h] = UNDEF;
+        hadPx[f][h] = UNDEF;
+        hadPy[f][h] = UNDEF;
+        hadPz[f][h] = UNDEF;
+        hadZ[f][h] = UNDEF;
+        hadXF[f][h] = UNDEF;
       };
     };
 
@@ -354,7 +354,7 @@ void CrossChecker() {
         if(extraCut) {
 
           // print comparisons
-          // -- if a variable is not set (i.e., set to -10000), its comparison will not
+          // -- if a variable is not set (i.e., set to UNDEF), its comparison will not
           //    be printed
           gSystem->RedirectOutput(outdat,"a");
 

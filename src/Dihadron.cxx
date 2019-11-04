@@ -232,8 +232,8 @@ void Dihadron::ComputeAngles() {
     PhEta = pPh.Eta();
     PhPhi = pPh.Phi();
   } else {
-    PhEta = -10000;
-    PhPhi = -10000;
+    PhEta = UNDEF;
+    PhPhi = UNDEF;
   };
 
 
@@ -262,7 +262,7 @@ Float_t Dihadron::GetSingleHadronPhiH(Int_t h_idx) {
   if(h_idx==qA || h_idx==qB) return PlaneAngle(pQ,pL,pQ,pHad[h_idx]);
   else {
     fprintf(stderr,"ERROR: bad h_idx in GetSingleHadronPhiH\n");
-    return -10000;
+    return UNDEF;
   }
 };
 
@@ -283,7 +283,7 @@ Float_t Dihadron::PlaneAngle(
 
   if(fabs(sgn)<0.00001) {
     //fprintf(stderr,"WARNING: Dihadron::PlaneAngle (AxB).D == 0\n");
-    return -10000;
+    return UNDEF;
   };
 
   sgn /= fabs(sgn); // sign of (AxB).D
@@ -293,7 +293,7 @@ Float_t Dihadron::PlaneAngle(
 
   if(fabs(denom)<0.00001) {
     //fprintf(stderr,"WARNING: Dihadron::PlaneAngle |AxB|*|CxD| == 0\n");
-    return -10000;
+    return UNDEF;
   };
 
   return sgn * TMath::ACos(numer/denom);
@@ -301,34 +301,34 @@ Float_t Dihadron::PlaneAngle(
 
 
 void Dihadron::ResetVars() {
-  Mh = -10000;
-  Mmiss = -10000;
-  for(h=0; h<2; h++) z[h] = -10000;
-  zpair = -10000;
-  xF = -10000;
+  Mh = UNDEF;
+  Mmiss = UNDEF;
+  for(h=0; h<2; h++) z[h] = UNDEF;
+  zpair = UNDEF;
+  xF = UNDEF;
   for(h=0; h<2; h++) {
-    hadXF[h] = -10000;
-    hadChi2pid[h] = -10000;
-    hadStatus[h] = -10000;
-    for(int c=0; c<3; c++) hadVertex[h][c] = -10000;
+    hadXF[h] = UNDEF;
+    hadChi2pid[h] = UNDEF;
+    hadStatus[h] = UNDEF;
+    for(int c=0; c<3; c++) hadVertex[h][c] = UNDEF;
   };
-  alpha = -10000;
+  alpha = UNDEF;
 
-  PhMag = -10000;
-  PhPerpMag = -10000;
-  PhEta = -10000;
-  PhPhi = -10000;
+  PhMag = UNDEF;
+  PhPerpMag = UNDEF;
+  PhEta = UNDEF;
+  PhPhi = UNDEF;
 
-  RMag = -10000;
-  RPerpMag = -10000;
-  RTMag = -10000;
+  RMag = UNDEF;
+  RPerpMag = UNDEF;
+  RTMag = UNDEF;
 
-  PhiH = -10000;
+  PhiH = UNDEF;
 
-  PhiRq = -10000;
-  PhiRp = -10000;
-  PhiRp_r = -10000;
-  PhiRp_g = -10000;
+  PhiRq = UNDEF;
+  PhiRp = UNDEF;
+  PhiRp_r = UNDEF;
+  PhiRp_g = UNDEF;
 };
 
 

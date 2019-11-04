@@ -9,6 +9,9 @@
 static Double_t PI = TMath::Pi();
 static Double_t PIe = TMath::Pi() + 0.3;
 
+// undefined constant
+static Double_t UNDEF = -10000;
+
 
 // useful enumerators
 enum xyz_enum { eX, eY, eZ };
@@ -80,16 +83,16 @@ static Int_t PartPID(Int_t p) {
     case kKp: return 321;
     case kKm: return -321;
     case kPhoton: return 22;
-    case kDiph: return -10000; // (no PID)
+    case kDiph: return UNDEF; // (no PID)
     default: 
       fprintf(stderr,"ERROR: bad PartPID request\n");
-      return -10000;
+      return UNDEF;
   };
 };
 // convert PID to particle index
 static Int_t PIDtoIdx(Int_t pid) {
   for(int i=0; i<nParticles; i++) { if(pid==PartPID(i)) return i; };
-  return -10000;
+  return UNDEF;
 };
 
 // mass and charge
@@ -104,10 +107,10 @@ static Float_t PartMass(Int_t p) {
     case kKp: return 0.493677;
     case kKm: return 0.493677;
     case kPhoton: return 0.0;
-    case kDiph: return -10000; // (use Diphoton class instead)
+    case kDiph: return UNDEF; // (use Diphoton class instead)
     default: 
       fprintf(stderr,"ERROR: bad PartMass request\n");
-      return -10000;
+      return UNDEF;
   };
 };
 static Int_t PartCharge(Int_t p) {
@@ -124,7 +127,7 @@ static Int_t PartCharge(Int_t p) {
     case kDiph: return 0;
     default: 
       fprintf(stderr,"ERROR: bad PartCharge request\n");
-      return -10000;
+      return UNDEF;
   };
 };
 
@@ -193,7 +196,7 @@ static Int_t OI(Int_t s) {
     //case sKm: return kKm;
     default: 
       fprintf(stderr,"ERROR: bad OI request (see Constants.h)\n");
-      return -10000;
+      return UNDEF;
   };
 };
 // convert particle index -> observable index
@@ -207,7 +210,7 @@ static Int_t IO(Int_t s) {
     //case kKm: return sKm;
     default: 
       fprintf(stderr,"ERROR: bad IO request (see Constants.h)\n");
-      return -10000;
+      return UNDEF;
   };
 };
 
@@ -271,7 +274,7 @@ static Int_t dihHadIdx(Int_t p1, Int_t p2, Int_t idx) {
 
   };
   fprintf(stderr,"ERROR: bad dihHadIdx request\n");
-  return -10000;
+  return UNDEF;
 };
 
 

@@ -212,7 +212,7 @@ int main(int argc, char** argv) {
 
 
   // print which IV will be analyzed
-  A = new Asymmetry(BS,whichModulation,-10000);
+  A = new Asymmetry(BS,whichModulation,UNDEF);
   TString modN = A->ModulationName;
   printf("--------> Analysing %s asymmetries vs. %s ",
       modN.Data(),(BS->IVname[ivVar[0]]).Data());
@@ -524,7 +524,7 @@ int main(int argc, char** argv) {
 
 
           // set any test modulation variables
-          A->PhiTest = -10000;
+          A->PhiTest = UNDEF;
           /*
           if(whichModulation == Asymmetry::modTest) {
             A->PhiTest = ev->GetDihadronObj()->GetSingleHadronPhiH(qA);
@@ -1382,7 +1382,7 @@ int PrintUsage() {
 
   printf(" -m\tazimuthal modulation for asymmetry\n");
   for(int m=0; m<Asymmetry::nMod; m++) {
-    A = new Asymmetry(BS,m,-10000);
+    A = new Asymmetry(BS,m,UNDEF);
     printf("   \t %d = %s =  %s\n",m,
         (A->ModulationName).Data(),
         (A->ModulationTitle).Data()
