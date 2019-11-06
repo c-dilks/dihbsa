@@ -341,6 +341,8 @@ Int_t EventTree::SpinState() {
     };
   }
   else if(runnum==11) {
+    // event matching cut
+    if(matchDiff<0 || matchDiff>0.02) return UNDEF;
     // MC convention (from injected asymmetries)
     helicity = helicityMC[whichHelicityMC];
     switch(helicity) {

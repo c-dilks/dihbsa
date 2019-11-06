@@ -1,7 +1,7 @@
 // draw asymmetry plots, with colors and formatting
 
 void drawAsymPlots(
-  TString infileN = "forMC/gen.2.root"
+  TString infileN = "forMC/rec.02.root"
 ) {
 
   TFile * infile = new TFile(infileN,"READ");
@@ -41,9 +41,16 @@ void drawAsymPlots(
   unsigned int color[numAmps] = {
     kGreen+1,
     kRed,
-    kGreen+1,
+    kBlue,
     kMagenta
   };
+  unsigned int markerStyle[numAmps] = {
+    kFullTriangleUp,
+    kFullCircle,
+    kFullTriangleDown,
+    kFullCross
+  };
+  unsigned int lineStyle[numAmps] = { 2, 1, 3, 4 };
   Bool_t legFilled = false;
   Int_t l;
   text1->SetNDC(1);
@@ -67,6 +74,8 @@ void drawAsymPlots(
           g->SetMarkerColor(color[l]);
           g->SetLineColor(color[l]);
           g->SetMarkerColor(color[l]);
+          g->SetLineStyle(lineStyle[l]);
+          g->SetMarkerStyle(markerStyle[l]);
           //g->SetLineStyle(1);
           if(!legFilled) leg->AddEntry(g,l<numAmps?legName[l]:"","PLE");
         } else if(setting==kOne) {
@@ -103,7 +112,7 @@ void drawAsymPlots(
       zline->SetLineColor(kGray+2);
       zline->SetLineWidth(1);
 
-      mg->GetYaxis()->SetRangeUser(-0.2,0.2);
+      mg->GetYaxis()->SetRangeUser(-0.2,0.3);
       mg->GetXaxis()->SetLabelSize(0.045);
       mg->GetYaxis()->SetLabelSize(0.045);
       mg->GetXaxis()->SetTitleSize(0.05);
