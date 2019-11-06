@@ -167,6 +167,7 @@ class EventTree : public TObject
     Float_t candPhi[2];
 
     // tree banches used for matching MCgen event
+    Bool_t MCrecMode;
     Float_t matchDiff;
     Float_t gen_eleE;
     Float_t gen_elePt;

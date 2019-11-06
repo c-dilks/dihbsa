@@ -103,6 +103,7 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   if(chain->GetBranch("helicityMC")) chain->SetBranchAddress("helicityMC",helicityMC);
   else { for(int hh=0; hh<NhelicityMC; hh++) helicityMC[hh]=UNDEF; };
   if(chain->GetBranch("matchDiff")) {
+    MCrecMode = true;
     chain->SetBranchAddress("matchDiff",&matchDiff);
     chain->SetBranchAddress("gen_eleE",&gen_eleE);
     chain->SetBranchAddress("gen_elePt",&gen_elePt);
@@ -113,6 +114,7 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
     chain->SetBranchAddress("gen_hadEta",gen_hadEta);
     chain->SetBranchAddress("gen_hadPhi",gen_hadPhi);
   } else { 
+    MCrecMode = false;
     matchDiff=UNDEF; 
     gen_eleE = UNDEF;
     gen_elePt = UNDEF;
@@ -340,9 +342,14 @@ Int_t EventTree::SpinState() {
       default: fprintf(stderr,"WARNING: bad SpinState request: %d\n",helicity);
     };
   }
-  else if(runnum==11) {
+
+  else if(runnum==11) { // MC helicity
+
     // event matching cut
-    if(matchDiff<0 || matchDiff>0.02) return UNDEF;
+    if(MCrecMode) {
+      if(matchDiff<0 || matchDiff>0.02) return UNDEF;
+    };
+
     // MC convention (from injected asymmetries)
     helicity = helicityMC[whichHelicityMC];
     switch(helicity) {

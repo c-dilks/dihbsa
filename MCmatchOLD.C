@@ -1,5 +1,4 @@
-// plots asymmetry modulation versus various other kinematics, to get an overall sense
-// of the acceptance from the data
+// use EventTree::FindEvent to match MCgen and MCrec dihadrons
 
 R__LOAD_LIBRARY(DihBsa)
 
@@ -16,7 +15,7 @@ enum fenum {kGen,kRec};
 int f;
 EventTree * ev[2];
 
-void MCmatch(TString fname=
+void MCmatchOLD(TString fname=
 "clasdispr.00.e10.600.emn0.75tmn.09.xs81.61nb.dis.0410.dat.hipo.root"
 ) {
 
