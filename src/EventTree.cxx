@@ -318,6 +318,10 @@ void EventTree::GetEvent(Int_t i) {
     ( TMath::Abs(hadStatus[qA])<4000 || TMath::Abs(hadStatus[qA])>=5000 ) &&
     ( TMath::Abs(hadStatus[qB])<4000 || TMath::Abs(hadStatus[qB])>=5000 );
 
+
+  // MCgen and MCrec matching cut
+  cutMCmatch = MCrecMode && matchDiff>=0 && matchDiff<0.02;
+
 };
 
 
@@ -352,9 +356,7 @@ Int_t EventTree::SpinState() {
   else if(runnum==11) { // MC helicity
 
     // event matching cut
-    if(MCrecMode) {
-      if(matchDiff<0 || matchDiff>0.02) return UNDEF;
-    };
+    if(MCrecMode && !cutMCmatch) return UNDEF;
 
     // MC convention (from injected asymmetries)
     helicity = helicityMC[whichHelicityMC];

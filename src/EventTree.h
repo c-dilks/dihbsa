@@ -154,6 +154,7 @@ class EventTree : public TObject
     Bool_t cutVertex;
     Bool_t cutFiducial;
     Bool_t cutDihadronStatus;
+    Bool_t cutMCmatch;
 
     // OTHER VARIABLES
     Bool_t useDiphBG;

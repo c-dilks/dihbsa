@@ -51,27 +51,61 @@ int main(int argc, char** argv) {
   TH1F * Ddist = new TH1F("Ddist","D distribution",NBINS,0,10);
   TH1F * DdistZoom = new TH1F("DdistZoom","D distribution (zoom)",NBINS,0,Dlim);
 
-  TH2F * hadEDiffVsD[2];
-  TH2F * hadPtDiffVsD[2];
-  TH2F * hadPhiDiffVsD[2];
+  TH2F * hadEDeltaVsD[2];
+  TH2F * hadPtDeltaVsD[2];
   TH2F * hadThetaDiffVsD[2];
+  TH2F * hadPhiDiffVsD[2];
   for(h=0; h<2; h++) {
-    hadEDiffVsD[h] = new TH2F(
+    hadEDeltaVsD[h] = new TH2F(
       TString(hadName[h]+"EDiffVsD"),
-      TString(hadTitle[h]+" #Delta E vs. D"),
+      TString(hadTitle[h]+" #DeltaE vs. D (no D cut)"),
       NBINS,0,Dlim,NBINS,-1,1);
-    hadPtDiffVsD[h] = new TH2F(
+    hadPtDeltaVsD[h] = new TH2F(
       TString(hadName[h]+"PtDiffVsD"),
-      TString(hadTitle[h]+" #Delta p_{T} vs. D"),
-      NBINS,0,Dlim,NBINS,-1,1);
-    hadPhiDiffVsD[h] = new TH2F(
-      TString(hadName[h]+"PhiDiffVsD"),
-      TString(hadTitle[h]+" #Delta #phi vs. D"),
+      TString(hadTitle[h]+" #Deltap_{T} vs. D (no D cut)"),
       NBINS,0,Dlim,NBINS,-1,1);
     hadThetaDiffVsD[h] = new TH2F(
       TString(hadName[h]+"ThetaDiffVsD"),
-      TString(hadTitle[h]+" #Delta #theta vs. D"),
-      NBINS,0,Dlim,NBINS,-1,1);
+      TString(hadTitle[h]+" #theta^{gen}-#theta^{rec} vs. D (no D cut)"),
+      NBINS,0,Dlim,NBINS,-10,10);
+    hadPhiDiffVsD[h] = new TH2F(
+      TString(hadName[h]+"PhiDiffVsD"),
+      TString(hadTitle[h]+" #phi^{gen}-#phi^{rec} vs. D (no D cut)"),
+      NBINS,0,Dlim,NBINS,-0.2,0.2);
+  };
+
+  TH2F * hadECorr[2];
+  TH2F * hadPtCorr[2];
+  TH2F * hadPhiCorr[2];
+  TH2F * hadThetaCorr[2];
+  TH1F * hadEDelta[2];
+  TH1F * hadPtDelta[2];
+  for(h=0; h<2; h++) {
+
+    hadECorr[h] = new TH2F(
+      TString(hadName[h]+"ECorr"),
+      TString(hadTitle[h]+" E^{rec} vs. E^{gen}"),
+      NBINS,0,10,NBINS,0,10);
+    hadPtCorr[h] = new TH2F(
+      TString(hadName[h]+"PtCorr"),
+      TString(hadTitle[h]+" p_{T}^{rec} vs. p_{T}^{gen}"),
+      NBINS,0,2.5,NBINS,0,2.5);
+    hadPhiCorr[h] = new TH2F(
+      TString(hadName[h]+"PhiCorr"),
+      TString(hadTitle[h]+" #phi^{rec} vs. #phi^{gen}"),
+      NBINS,-PIe,PIe,NBINS,-PIe,PIe);
+    hadThetaCorr[h] = new TH2F(
+      TString(hadName[h]+"ThetaCorr"),
+      TString(hadTitle[h]+" #theta^{rec} vs. #theta^{gen}"),
+      NBINS,0,45,NBINS,0,45);
+    hadEDelta[h] = new TH1F(
+      TString(hadName[h]+"hadEDelta"),
+      TString(hadTitle[h]+" #DeltaE distribution"),
+      NBINS,-1,1);
+    hadPtDelta[h] = new TH1F(
+      TString(hadName[h]+"hadPtDelta"),
+      TString(hadTitle[h]+" #Deltap_{T} distribution"),
+      NBINS,-1,1);
   };
 
 
@@ -85,11 +119,26 @@ int main(int argc, char** argv) {
 
       Ddist->Fill(ev->matchDiff);
       DdistZoom->Fill(ev->matchDiff);
+
       for(h=0; h<2; h++) {
-        hadEDiffVsD[h]->Fill(ev->matchDiff,Delta(ev->gen_hadE[h],ev->hadE[h]));
-        hadPtDiffVsD[h]->Fill(ev->matchDiff,Delta(ev->gen_hadPt[h],ev->hadPt[h]));
-        hadPhiDiffVsD[h]->Fill(ev->matchDiff,Delta(ev->gen_hadPhi[h],ev->hadPhi[h]),1);
-        hadThetaDiffVsD[h]->Fill(ev->matchDiff,Delta(ev->gen_hadTheta[h],ev->hadTheta[h]));
+        hadEDeltaVsD[h]->Fill(ev->matchDiff,Delta(ev->gen_hadE[h],ev->hadE[h]));
+        hadPtDeltaVsD[h]->Fill(ev->matchDiff,Delta(ev->gen_hadPt[h],ev->hadPt[h]));
+
+        hadThetaDiffVsD[h]->Fill(ev->matchDiff,ev->gen_hadTheta[h]-ev->hadTheta[h]);
+        hadPhiDiffVsD[h]->Fill(ev->matchDiff,
+          Tools::AdjAngle(ev->gen_hadPhi[h]-ev->hadPhi[h]));
+      }
+
+      // matching cut
+      if(ev->cutMCmatch) {
+        for(h=0; h<2; h++) {
+          hadECorr[h]->Fill(ev->gen_hadE[h],ev->hadE[h]);
+          hadPtCorr[h]->Fill(ev->gen_hadPt[h],ev->hadPt[h]);
+          hadPhiCorr[h]->Fill(ev->gen_hadPhi[h],ev->hadPhi[h],1);
+          hadThetaCorr[h]->Fill(ev->gen_hadTheta[h],ev->hadTheta[h]);
+          hadEDelta[h]->Fill(Delta(ev->gen_hadE[h],ev->hadE[h]));
+          hadPtDelta[h]->Fill(Delta(ev->gen_hadPt[h],ev->hadPt[h]));
+        };
       };
     };
   };
@@ -98,10 +147,18 @@ int main(int argc, char** argv) {
   Ddist->Write();
   DdistZoom->Write();
   for(h=0; h<2; h++) {
-    hadEDiffVsD[h]->Write();
-    hadPtDiffVsD[h]->Write();
+    hadEDeltaVsD[h]->Write();
+    hadPtDeltaVsD[h]->Write();
     hadPhiDiffVsD[h]->Write();
     hadThetaDiffVsD[h]->Write();
+  };
+  for(h=0; h<2; h++) {
+    hadECorr[h]->Write();
+    hadPtCorr[h]->Write();
+    hadPhiCorr[h]->Write();
+    hadThetaCorr[h]->Write();
+    hadEDelta[h]->Write();
+    hadPtDelta[h]->Write();
   };
 
   outfile->Close();
