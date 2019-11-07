@@ -3,11 +3,8 @@
 
 // ROOT
 #include "TFile.h"
-#include "TTree.h"
-#include "TChain.h"
 #include "TString.h"
 #include "TMath.h"
-#include "TSystem.h"
 #include "TRegexp.h"
 #include "TH1.h"
 #include "TH2.h"
@@ -22,112 +19,99 @@
 #include "Trajectory.h"
 #include "EventTree.h"
 
+Float_t Delta(Float_t vGen, Float_t vRec, Bool_t adjAngle=false);
+
 int main(int argc, char** argv) {
 
-   // ARGUMENTS
-   TString inDir = "outroot";
-   Int_t whichPair = EncodePairType(kPip,kPim);
-   if(argc>1) inDir = TString(argv[1]);
-   if(argc>2) whichPair = (Int_t)strtof(argv[2],NULL);
-
-   EventTree * ev = new EventTree(TString(inDir+"/*.root"),whichPair);
-
-   TFile * outfile = new TFile("match.root","RECREATE");
+  // ARGUMENTS
+  TString inDir = "outroot.MC.rec";
+  Int_t whichPair = EncodePairType(kPip,kPim);
+  if(argc>1) inDir = TString(argv[1]);
+  if(argc>2) whichPair = (Int_t)strtof(argv[2],NULL);
 
 
+  // open input files and define output file
+  EventTree * ev = new EventTree(TString(inDir+"/*.root"),whichPair);
+  TFile * outfile = new TFile("match.root","RECREATE");
 
-   // define histograms
-   const Int_t NBINS = 100;
-  
-     
-   Float_t modulation,weight;
+  Int_t whichHad[2];
+  TString hadName[2];
+  TString hadTitle[2];
+  int h;
+  DecodePairType(whichPair,whichHad[qA],whichHad[qB]);
+  for(int h=0; h<2; h++) {
+    hadName[h] = PairHadName(whichHad[qA],whichHad[qB],h);
+    hadTitle[h] = PairHadTitle(whichHad[qA],whichHad[qB],h);
+  };
 
-   printf("begin loop through %lld events...\n",ev->ENT);
-   for(int i=0; i<ev->ENT; i++) {
 
-     ev->GetEvent(i);
+  // define histograms
+  const Int_t NBINS = 100;
+  const Float_t Dlim = 0.3;
+  TH1F * Ddist = new TH1F("Ddist","D distribution",NBINS,0,10);
+  TH1F * DdistZoom = new TH1F("DdistZoom","D distribution (zoom)",NBINS,0,Dlim);
 
-     if(ev->Valid()) {
+  TH2F * hadEDiffVsD[2];
+  TH2F * hadPtDiffVsD[2];
+  TH2F * hadPhiDiffVsD[2];
+  TH2F * hadThetaDiffVsD[2];
+  for(h=0; h<2; h++) {
+    hadEDiffVsD[h] = new TH2F(
+      TString(hadName[h]+"EDiffVsD"),
+      TString(hadTitle[h]+" #Delta E vs. D"),
+      NBINS,0,Dlim,NBINS,-1,1);
+    hadPtDiffVsD[h] = new TH2F(
+      TString(hadName[h]+"PtDiffVsD"),
+      TString(hadTitle[h]+" #Delta p_{T} vs. D"),
+      NBINS,0,Dlim,NBINS,-1,1);
+    hadPhiDiffVsD[h] = new TH2F(
+      TString(hadName[h]+"PhiDiffVsD"),
+      TString(hadTitle[h]+" #Delta #phi vs. D"),
+      NBINS,0,Dlim,NBINS,-1,1);
+    hadThetaDiffVsD[h] = new TH2F(
+      TString(hadName[h]+"ThetaDiffVsD"),
+      TString(hadTitle[h]+" #Delta #theta vs. D"),
+      NBINS,0,Dlim,NBINS,-1,1);
+  };
 
-       PhiHDist->Fill(ev->PhiH);
-       PhiRDist->Fill(ev->PhiR);
-       PhiHvsPhiR->Fill(ev->PhiR,ev->PhiH);
 
-       PhiHR = Tools::AdjAngle(ev->PhiH - ev->PhiR);
-       PhiHRDist->Fill(PhiHR);
+  // event loop
+  printf("begin loop through %lld events...\n",ev->ENT);
+  for(int i=0; i<ev->ENT; i++) {
 
-       deltaPhi = Tools::AdjAngle(ev->hadPhi[qA] - ev->hadPhi[qB]);
-       deltaPhiDist->Fill(deltaPhi);
+    ev->GetEvent(i);
 
-       // set Asymmetry branches and fill modulation plots
-       for(int m=0; m<Asymmetry::nMod; m++) {
+    if(ev->Valid()) {
 
-         A[m]->Mh = ev->Mh;
-         A[m]->x = ev->x;
-         A[m]->z = ev->Zpair;
-         A[m]->PhPerp = ev->PhPerp;
-         A[m]->PhiH = ev->PhiH;
-         A[m]->PhiR = ev->PhiR;
-         //A[m]->PhiR = ev->PhiRq;
+      Ddist->Fill(ev->matchDiff);
+      DdistZoom->Fill(ev->matchDiff);
+      for(h=0; h<2; h++) {
+        hadEDiffVsD[h]->Fill(ev->matchDiff,Delta(ev->gen_hadE[h],ev->hadE[h]));
+        hadPtDiffVsD[h]->Fill(ev->matchDiff,Delta(ev->gen_hadPt[h],ev->hadPt[h]));
+        hadPhiDiffVsD[h]->Fill(ev->matchDiff,Delta(ev->gen_hadPhi[h],ev->hadPhi[h]),1);
+        hadThetaDiffVsD[h]->Fill(ev->matchDiff,Delta(ev->gen_hadTheta[h],ev->hadTheta[h]));
+      };
+    };
+  };
 
-         A[m]->spinn = ev->SpinState();
+  //write output
+  Ddist->Write();
+  DdistZoom->Write();
+  for(h=0; h<2; h++) {
+    hadEDiffVsD[h]->Write();
+    hadPtDiffVsD[h]->Write();
+    hadPhiDiffVsD[h]->Write();
+    hadThetaDiffVsD[h]->Write();
+  };
 
-         modulation = A[m]->EvalModulation();
-         weight = A[m]->EvalWeight();
-
-         ModVsZ[m]->Fill( ev->Zpair, modulation, weight );
-         ModVsX[m]->Fill( ev->x, modulation, weight );
-         ModVsMh[m]->Fill( ev->Mh, modulation, weight );
-         ModVsPhPerp[m]->Fill( ev->PhPerp, modulation, weight );
-         ModVsPhPerpMh[m]->Fill( ev->PhPerp/ev->Mh, modulation, weight );
-         ModVsPhiH[m]->Fill( ev->PhiH, modulation, weight );
-         ModVsPhiR[m]->Fill( ev->PhiR, modulation, weight );
-       };
-
-     };
-   };
-
-   deltaPhiDist->Write();
-   PhiHDist->Write();
-   PhiRDist->Write();
-   PhiHvsPhiR->Write();
-   PhiHRDist->Write();
-
-   for(int m=0; m<Asymmetry::nMod; m++) {
-     WriteCanvas(ModVsZ[m]);
-     WriteCanvas(ModVsX[m]);
-     WriteCanvas(ModVsMh[m]);
-     WriteCanvas(ModVsPhPerp[m]);
-     WriteCanvas(ModVsPhPerpMh[m]);
-     WriteCanvas(ModVsPhiH[m]);
-     WriteCanvas(ModVsPhiR[m]);
-   };
-
-   outfile->Close();
-
+  outfile->Close();
 };
 
-
-
-void WriteCanvas(TH2D * d) {
-  TString canvName = Form("%s_canv",d->GetName());
-  TCanvas * c = new TCanvas(canvName,canvName,1000,500);
-  c->Divide(2,1);
-
-  Float_t max = d->GetYaxis()->GetXmax();
-
-  TProfile * dp = d->ProfileX();
-  dp->SetLineColor(kBlack);
-  dp->SetLineWidth(2);
-
-  c->cd(1);
-  c->GetPad(1)->SetLogz();
-  d->Draw("colz");
-
-  c->cd(2);
-  dp->GetYaxis()->SetRangeUser(-max,max);
-  dp->Draw();
-
-  c->Write();
+Float_t Delta(Float_t vGen, Float_t vRec, Bool_t adjAngle) {
+  if(vRec==0) {
+    fprintf(stderr,"ERROR: vRec==0\n");
+    return UNDEF;
+  }
+  if(adjAngle) return Tools::AdjAngle(vGen-vRec)/vRec;
+  else return (vGen-vRec)/vRec;
 };
-

@@ -209,6 +209,12 @@ void EventTree::GetEvent(Int_t i) {
   //if( RNG->Rndm() > 0.5 ) theta = PI - theta; // coin-flip symmetrization
   //theta = PI-theta; // full theta flip
 
+  // convert eta to polar angle theta (not to be confused with partial wave theta)
+  for(int h=0; h<2; h++) {
+    hadTheta[h] = Tools::EtaToTheta(hadEta[h]);
+    gen_hadTheta[h] = MCrecMode ? Tools::EtaToTheta(gen_hadEta[h]) : UNDEF;
+  };
+
   // DIS cuts
   cutQ2 = Q2 > 1.0;
   cutW = W > 2.0;
@@ -526,10 +532,10 @@ Bool_t EventTree::FindEvent(Int_t evnum_, Dihadron * queryDih) {
 
       // calculate euclidean distance between query and candidate dihadrons' kinematics
       MD = TMath::Sqrt(
-        TMath::Power( queryTheta[qA] - candTheta[qA], 2) +
-        TMath::Power( queryTheta[qB] - candTheta[qB], 2) +
-        TMath::Power( queryPhi[qA] - candPhi[qA], 2) +
-        TMath::Power( queryPhi[qB] - candPhi[qB], 2) );
+        TMath::Power( Tools::AdjAngle(queryTheta[qA] - candTheta[qA]), 2) +
+        TMath::Power( Tools::AdjAngle(queryTheta[qB] - candTheta[qB]), 2) +
+        TMath::Power( Tools::AdjAngle(queryPhi[qA] - candPhi[qA]), 2) +
+        TMath::Power( Tools::AdjAngle(queryPhi[qB] - candPhi[qB]), 2) );
 
       // check if this is the smallest MD
       if(MD < MDmin) {

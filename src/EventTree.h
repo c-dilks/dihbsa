@@ -68,6 +68,7 @@ class EventTree : public TObject
     Float_t hadPt[2];
     Float_t hadPtq[2];
     Float_t hadEta[2];
+    Float_t hadTheta[2];
     Float_t hadPhi[2];
     Float_t hadXF[2];
     Float_t hadVertex[2][3];
@@ -176,6 +177,7 @@ class EventTree : public TObject
     Float_t gen_hadE[2]; // kinematics for matching MCgen hadron
     Float_t gen_hadPt[2];
     Float_t gen_hadEta[2];
+    Float_t gen_hadTheta[2];
     Float_t gen_hadPhi[2];
     
   private:

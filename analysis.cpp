@@ -1060,8 +1060,12 @@ int main(int argc, char** argv) {
                                // MD later on in order to select only the matches we
                                // have confidence in
                                hadMD[hp] = TMath::Sqrt(
-                                 TMath::Power( hadTheta[hp] - genHadVecTmp.Theta(), 2) +
-                                 TMath::Power( hadPhi[hp] - genHadVecTmp.Phi(), 2)
+                                 TMath::Power(
+                                   Tools::AdjAngle(hadTheta[hp] - genHadVecTmp.Theta()),
+                                   2) +
+                                 TMath::Power(
+                                   Tools::AdjAngle(hadPhi[hp] - genHadVecTmp.Phi()),
+                                   2)
                                );
 
                                if(hadMD[hp] < hadMDmin[hp]) {
