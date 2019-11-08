@@ -46,8 +46,10 @@ class EventTree : public TObject
 
     Float_t GetKinematicFactor(Char_t kf);
 
+    /*
     Bool_t BuildMatchTable();
     Bool_t FindEvent(Int_t evnum_, Dihadron * queryDih);
+    */
 
     Bool_t debug;
     Long64_t ENT;
@@ -160,13 +162,15 @@ class EventTree : public TObject
     Bool_t useDiphBG;
     Int_t whichHelicityMC;
 
-    // variables used for matching events in FindEvent()  (for MCrec and MCgen matching)
+    /*
+    // variables used for MCrec and MCgen matching
     Float_t MD,MDmin;
     Int_t iiFound;
     Float_t queryTheta[2];
     Float_t queryPhi[2];
     Float_t candTheta[2];
     Float_t candPhi[2];
+    */
 
     // tree banches used for matching MCgen event
     Bool_t MCrecMode;
@@ -198,10 +202,12 @@ class EventTree : public TObject
     TLorentzVector hadMom[2];
     TLorentzVector eleMom;
 
+    /*
     std::map<Int_t,std::vector<Int_t>> evnumMap;
     std::vector<Int_t>iList;
     bool inserted;
     Int_t evnumTmp;
+    */
 
 
   ClassDef(EventTree,1);

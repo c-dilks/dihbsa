@@ -288,7 +288,6 @@ int main(int argc, char** argv) {
    // MC: variables
    Bool_t printWarning = true;
    RNG = new TRandom(14972);
-   //EventTree * genEv;
    TString genfileN;
    Bool_t genSuccess,foundMatch;
    Int_t genPID;
@@ -331,22 +330,6 @@ int main(int argc, char** argv) {
   exit(0);
 #endif
 
-   // MC: load generated MC file, for obtaining MC helicities by event matching
-   //if(MCrecMode) {
-     //if(augerMode) genfileN = "genfile.root";
-     //else {
-       //genfileN = infileN;
-       //genfileN(TRegexp("^.*/")) = "outroot.MC.gen/";
-       ////genfileN(TRegexp(".hipo$")) = "";
-       //genfileN += ".root";
-     //};
-     //// TODO - helicity event matching only done for pi+pi- channel; this should
-     ////        eventually be generalized...
-     //printf("GENFILE = %s\n",genfileN.Data());
-     //genEv = new EventTree(genfileN,EncodePairType(kPip,kPim));
-     //genSuccess = genEv->BuildMatchTable();
-     //if(!genSuccess) return 0;
-   //};
 
    // MC branches
    Int_t helicityMC[EventTree::NhelicityMC];
@@ -1005,6 +988,8 @@ int main(int argc, char** argv) {
                        };
                      };
 
+                     // use matching MCgen kinematics in helicity generation
+                     /*
                      if(MCrecMode) {
 
                        // reset variables used for generated hadron matching
@@ -1132,26 +1117,32 @@ int main(int argc, char** argv) {
                          };
                        };
 
-
-                       // -- match to MCgen ROOT file (DEPRECATED)
-                       /*
-                       foundMatch = genEv->FindEvent(evnum,dih);
-                       for(int hh=0; hh<EventTree::NhelicityMC; hh++) {
-                         helicityMC[hh] = foundMatch ? genEv->helicityMC[hh] : 0;
-                       };
-                       MD = genEv->MD;
-                       gen_eleE = genEv->eleE;
-                       gen_elePt = genEv->elePt;
-                       gen_eleEta = genEv->eleEta;
-                       gen_elePhi = genEv->elePhi;
-                       for(int h=0; h<2; h++) {
-                         gen_hadE[h] = genEv->hadE[h];
-                         gen_hadPt[h] = genEv->hadPt[h];
-                         gen_hadEta[h] = genEv->hadEta[h];
-                         gen_hadPhi[h] = genEv->hadPhi[h];
-                       };
-                       */
                      };
+                     */
+
+
+                     // use MCrec kinematics in helicity generation (no matching)
+                     ///*
+                     if(MCrecMode) {
+                       for(int hh=0; hh<EventTree::NhelicityMC; hh++) {
+                         helicityMC[hh] = generateHelicity(hh,dih->PhiH,dih->PhiR);
+                       };
+                       // set MCgen kinematics to MCrec kinematics and MD to 0, so that
+                       // all MCrec dihadrons pass matching cuts
+                       MD = 0;
+                       gen_eleE = disEv->eleE;
+                       gen_elePt = disEv->elePt;
+                       gen_eleEta = disEv->eleEta;
+                       gen_elePhi = disEv->elePhi;
+                       for(int hp=0; hp<2; hp++) {
+                         gen_hadE[hp] = hadE[hp];
+                         gen_hadPt[hp] = hadPt[hp];
+                         gen_hadEta[hp] = hadEta[hp];
+                         gen_hadPhi[hp] = hadPhi[hp];
+                       };
+                     };
+                     //*/
+
 
                      helicity = 0; // set data helicity to zero
                      // ... and print a warning 

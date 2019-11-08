@@ -466,6 +466,7 @@ Float_t EventTree::GetKinematicFactor(Char_t kf) {
 };
 
 
+/*
 // build map `evnumMap : evnum -> vector of corresponding tree entries`
 // -- return true if successful
 // -- deprecated, but still here for if you want to test MC matching ideas
@@ -566,6 +567,7 @@ Bool_t EventTree::FindEvent(Int_t evnum_, Dihadron * queryDih) {
   };
   
 };
+*/
 
 
 EventTree::~EventTree() {
