@@ -6,7 +6,7 @@
 <!-- sample XML Files in /u/group/hps/production/ -->
 
   <List name="hipoFile">
-MC_DIS_DNP19_1.hipo
+MCDIS_632_OldLund.hipo
 MC_DIS_DNP19_2.hipo
 MC_DIS_DNP19_3.hipo
 MC_DIS_DNP19_4.hipo
