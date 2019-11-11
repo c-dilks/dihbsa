@@ -684,11 +684,11 @@ Bool_t Asymmetry::InitRooFit() {
       ///*
       asymExpansion = 
         "A0*" + rfModulation[modSinPhiR] + "+A1*" + rfModulation[weightSinPhiHR] +
-        "+A2*TMath::Sin(rfPhiH)+A3*TMath::Sin(rfPhiH+rfPhiR)";
+        "+A2*TMath::Sin(rfPhiH)+A3*TMath::Sin(2*rfPhiH-rfPhiR)";
       rfA[0]->SetTitle("A_{LU}[sin#phi_{R}]");
-      rfA[1]->SetTitle("A_{LU}[sin(#phi_{h}-#phi_{R}]");
+      rfA[1]->SetTitle("A_{LU}[sin(#phi_{h}-#phi_{R})]");
       rfA[2]->SetTitle("A_{LU}[sin#phi_{h}]");
-      rfA[3]->SetTitle("A_{LU}[sin(#phi_{h}+#phi_{R}]");
+      rfA[3]->SetTitle("A_{LU}[sin(2#phi_{h}-#phi_{R})]");
       nAmpUsed = 4;
       //*/
       /*

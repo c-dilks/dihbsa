@@ -1261,7 +1261,7 @@ Float_t modu(Int_t par, Float_t ph, Float_t pr) {
     case 1: return TMath::Sin(pr); break;
     case 2: return TMath::Sin(ph-pr); break;
     case 3: return TMath::Sin(ph); break;
-    case 4: return TMath::Sin(ph+pr); break;
+    case 4: return TMath::Sin(2*ph-pr); break;
     default: fprintf(stderr,"modu unknown\n"); return 0;
   };
 };

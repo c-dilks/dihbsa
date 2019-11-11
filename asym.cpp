@@ -785,7 +785,7 @@ int main(int argc, char** argv) {
     DrawKinDepGraph(kindepGr,BS,ivVar[0]);
 
     multiGr = multiMap.at(binNum);
-    // multiGr->Add(kindepGr); // do not include linear fit in multiGr
+    multiGr->Add(kindepGr); // include linear fit in multiGr
     for(int aa=0; aa<N_AMP; aa++) {
       RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
       RFkindepCanv[aa]->cd();
@@ -827,7 +827,7 @@ int main(int argc, char** argv) {
       DrawKinDepGraph(kindepGr,BS,ivVar[0]);
 
       multiGr = multiMap.at(binNum);
-      //multiGr->Add(kindepGr);
+      multiGr->Add(kindepGr); // include linear fit in multiGr
 
       for(int aa=0; aa<N_AMP; aa++) {
         RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
@@ -872,7 +872,7 @@ int main(int argc, char** argv) {
         DrawKinDepGraph(kindepGr,BS,ivVar[0]);
 
         multiGr = multiMap.at(binNum);
-        //multiGr->Add(kindepGr);
+        multiGr->Add(kindepGr); // include linear fit in multiGr
 
         for(int aa=0; aa<N_AMP; aa++) {
           RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
@@ -1317,7 +1317,7 @@ TGraphErrors * ShiftGraph(TGraphErrors * gr, Int_t nShift) {
 
   switch(nShift) {
     case 1:
-      retGr->SetLineColor(N_AMP==1?kGray+3:kGreen+3); 
+      retGr->SetLineColor(N_AMP==1?kGray+3:kGreen+1); 
       retGr->SetLineStyle(2);
       retGr->SetMarkerStyle(22);
       break;

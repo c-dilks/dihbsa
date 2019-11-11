@@ -31,26 +31,29 @@ void drawAsymPlots(
   TLegend * leg = new TLegend(0.6, 0.71, 0.93, 0.92);
 
   // hard coded plot nameing / coloring
-  const Int_t numAmps = 4;
+  const Int_t numAmps = 5;
   TString legName[numAmps] = {
+    "linear fit",
     "A_{R}sin #phi_{R}            ",
     "A_{hR}sin(#phi_{h}-#phi_{R})",
     "A_{h}sin #phi_{h}",
-    "A_{hR}sin(#phi_{h}+#phi_{R})"
+    "A_{hR}sin(2#phi_{h}-#phi_{R})"
   };
   unsigned int color[numAmps] = {
+    kBlack,
     kGreen+1,
     kRed,
     kBlue,
     kMagenta
   };
   unsigned int markerStyle[numAmps] = {
+    kFullSquare,
     kFullTriangleUp,
     kFullCircle,
     kFullTriangleDown,
     kFullCross
   };
-  unsigned int lineStyle[numAmps] = { 2, 1, 3, 4 };
+  unsigned int lineStyle[numAmps] = { 1, 2, 1, 3, 4 };
   Bool_t legFilled = false;
   Int_t l;
   text1->SetNDC(1);
