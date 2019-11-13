@@ -119,8 +119,10 @@ void Acceptance(TH1D ** dists_) {
   dists_[kRecData]->Divide(dists_[kData]);
 
   str = "canv_"+TString(dists_[kGen]->GetName());
-  TCanvas * canv = new TCanvas(str,str,1000,1000);
-  canv->Divide(2,2);
+  //TCanvas * canv = new TCanvas(str,str,1000,1000);
+  TCanvas * canv = new TCanvas(str,str,1200,400);
+  //canv->Divide(2,2);
+  canv->Divide(3,1);
   Int_t d[2];
 
   canv->cd(1);
@@ -130,17 +132,19 @@ void Acceptance(TH1D ** dists_) {
   dists_[d[1]]->Draw("same");
   leg[kRecGen]->Draw();
 
-  canv->cd(2);
-  dists_[kRecGen]->Draw();
+  //canv->cd(2);
+  //dists_[kRecGen]->Draw();
 
-  canv->cd(3);
+  //canv->cd(3);
+  canv->cd(2);
   if(dists_[kRec]->GetMaximum() > dists_[kData]->GetMaximum()) { d[0]=kRec; d[1]=kData; }
   else { d[0]=kData; d[1]=kRec; };
   dists_[d[0]]->Draw();
   dists_[d[1]]->Draw("same");
   leg[kRecData]->Draw();
 
-  canv->cd(4);
+  //canv->cd(4);
+  canv->cd(3);
   dists_[kRecData]->Draw();
   Float_t minFit = dists_[kRecData]->GetXaxis()->GetXmin();
   Float_t maxFit = dists_[kRecData]->GetXaxis()->GetXmax();

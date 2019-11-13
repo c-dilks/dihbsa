@@ -22,22 +22,24 @@ void drawAsymPlots(
   TLatex * text1 = new TLatex(0.14,0.85,"CLAS Preliminary");
   TLatex * text2 = new TLatex(0.14,0.8,"e^{-}p #rightarrow e^{-}#pi^{+}#pi^{-}X");
 
-  gStyle->SetLegendTextSize(0.05);
+  gStyle->SetLegendTextSize(0.03);
   gStyle->SetLabelFont(22,"xyz");
   gStyle->SetTitleFont(22,"xyz");
   gStyle->SetTitleFont(22,"");
 
   //TLegend * leg = new TLegend(0.55, 0.1, 0.9, 0.32);
-  TLegend * leg = new TLegend(0.6, 0.71, 0.93, 0.92);
+  //TLegend * leg = new TLegend(0.6, 0.71, 0.93, 0.92); // upper right corner
+  TLegend * leg = new TLegend(0.6, 0.1, 0.9, 0.3); // lower right corner
 
   // hard coded plot nameing / coloring
   const Int_t numAmps = 5;
   TString legName[numAmps] = {
-    "linear fit",
-    "A_{R}sin #phi_{R}            ",
-    "A_{hR}sin(#phi_{h}-#phi_{R})",
-    "A_{h}sin #phi_{h}",
-    "A_{hR}sin(2#phi_{h}-#phi_{R})"
+    /*"Asin#phi_{R} only",*/
+    "Asin(#phi_{h}-#phi_{R}) only",
+    "A_{1}sin #phi_{R}            ",
+    "A_{2}sin(#phi_{h}-#phi_{R})",
+    "A_{3}sin #phi_{h}",
+    "A_{4}sin(2#phi_{h}-#phi_{R})"
   };
   unsigned int color[numAmps] = {
     kBlack,
@@ -115,7 +117,7 @@ void drawAsymPlots(
       zline->SetLineColor(kGray+2);
       zline->SetLineWidth(1);
 
-      mg->GetYaxis()->SetRangeUser(-0.2,0.3);
+      mg->GetYaxis()->SetRangeUser(-0.3,0.3);
       mg->GetXaxis()->SetLabelSize(0.045);
       mg->GetYaxis()->SetLabelSize(0.045);
       mg->GetXaxis()->SetTitleSize(0.05);

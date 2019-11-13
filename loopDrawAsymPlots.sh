@@ -1,6 +1,7 @@
 #!/bin/bash
 
 dir="forMC"
+if [ $# -gt 0 ]; then dir="$1"; fi
 
 for file in ${dir}/*.root; do
   root -b -q drawAsymPlots.C'("'$file'")'
