@@ -65,7 +65,7 @@ enum flowEnum {
   fParallelFill,
   fParallelCat,
   fParallelCalc
-};
+}; // for flowControl setting
 
 
 //////////////////////////////////////
@@ -240,7 +240,6 @@ int main(int argc, char** argv) {
       return 0;
     };
   };
-  ev->whichHelicityMC = whichHelicityMC;
 
 
   // set output file names 
@@ -489,9 +488,12 @@ int main(int argc, char** argv) {
   //-----------------------------------------------------
   // EVENT LOOP  
   //-----------------------------------------------------
+  Bool_t eventAdded;
   if(flowControl!=fParallelCat && flowControl!=fParallelCalc) {
+
+    ev->whichHelicityMC = whichHelicityMC;
+
     printf("begin loop through %lld events...\n",ev->ENT);
-    Bool_t eventAdded;
     for(int i=0; i<ev->ENT; i++) {
 
       ev->GetEvent(i);
@@ -566,7 +568,9 @@ int main(int argc, char** argv) {
           A = asymMap.at(bn);
           A->AppendData(appFile);
         };
-        appFile->Close();
+        appFile->Close("R");
+        printf("done reading %s\n",appFileName.Data());
+        fprintf(stderr,"I AM ERROR\n"); //+++
       };
     };
     Tools::PrintSeparator(40,".");
@@ -1351,7 +1355,7 @@ TGraphErrors * ShiftGraph(TGraphErrors * gr, Int_t nShift) {
 void SetDefaultArgs() {
   inputData = "";
   pairType = EncodePairType(kPip,kPim);
-  whichModulation = Asymmetry::modSinPhiR;
+  whichModulation = Asymmetry::weightSinPhiHR;
   ivType = Binning::vM + 1;
   flowControl = fSerial;
   whichHelicityMC = 0;

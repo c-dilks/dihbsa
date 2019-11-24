@@ -35,7 +35,8 @@ void drawAsymPlots(
   const Int_t numAmps = 5;
   TString legName[numAmps] = {
     /*"Asin#phi_{R} only",*/
-    "Asin(#phi_{h}-#phi_{R}) only",
+    /*"Asin(#phi_{h}-#phi_{R}) only",*/
+    "linear fit",
     "A_{1}sin #phi_{R}            ",
     "A_{2}sin(#phi_{h}-#phi_{R})",
     "A_{3}sin #phi_{h}",
@@ -117,7 +118,7 @@ void drawAsymPlots(
       zline->SetLineColor(kGray+2);
       zline->SetLineWidth(1);
 
-      mg->GetYaxis()->SetRangeUser(-0.3,0.3);
+      mg->GetYaxis()->SetRangeUser(-0.1,0.1);
       mg->GetXaxis()->SetLabelSize(0.045);
       mg->GetYaxis()->SetLabelSize(0.045);
       mg->GetXaxis()->SetTitleSize(0.05);

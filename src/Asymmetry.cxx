@@ -1027,13 +1027,8 @@ void Asymmetry::StreamData(TFile * tf) {
 
 // append pertinent data structures a TFile to this current instance
 void Asymmetry::AppendData(TFile * tf) {
-  TH1D * appDist1;
-  TH2D * appDist2;
-  TH3D * appDist3;
-  RooDataSet * appRooDataSet;
 
   appName = "/" + aName + "/" + this->AppFileName(tf);
-
   printf("reading plots for: "); this->PrintSettings();
 
   switch(whichDim) {

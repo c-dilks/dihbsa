@@ -1,6 +1,6 @@
 #!/bin/bash
 
-dir="forMC"
+dir="spinout"
 if [ $# -gt 0 ]; then dir="$1"; fi
 
 for file in ${dir}/*.root; do
