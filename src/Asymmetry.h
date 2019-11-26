@@ -115,14 +115,15 @@ class Asymmetry : public TObject
 
 
 
-    // event-level variables -- these must be set for each event,
-    // prior to calling FillHists
+    // event-level variables -- these must be set for each event
     Float_t Mh;
     Float_t x;
     Float_t z;
     Float_t PhiH;
     Float_t PhiR;
     Float_t PhPerp;
+    Float_t Ph;
+    Float_t Q2;
     Float_t theta;
     Float_t pol;
     Int_t spinn;

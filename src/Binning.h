@@ -39,15 +39,13 @@ class Binning : public TObject
     void PrintBinBounds();
     Int_t GetBin(Int_t v_, Float_t iv_);
     TString GetBoundStr(Int_t v_, Int_t b_);
-    Int_t GetColor(Int_t v_);
-    Float_t GetAziMax(Int_t v_, Int_t b_);
 
     Bool_t ValidIV(Int_t v_) { return v_>=0 && v_<nIV; };
 
 
 
     // enumerators 
-    enum ivEnum { vX, vM, vZ, vPt, nIV }; // Independent Variables (IV)
+    enum ivEnum { vX, vM, vZ, vPt, vPh, vQ, nIV }; // Independent Variables (IV)
     Float_t minIV[nIV];
     Float_t maxIV[nIV];
 

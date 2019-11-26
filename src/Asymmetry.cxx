@@ -368,7 +368,8 @@ Bool_t Asymmetry::AddEvent() {
       case Binning::vX: iv[d] = x; break;
       case Binning::vZ: iv[d] = z; break;
       case Binning::vPt: iv[d] = PhPerp; break;
-      //case Binning::vTh: iv[d] = TMath::Sin(theta); break;
+      case Binning::vPh: iv[d] = Ph; break;
+      case Binning::vQ: iv[d] = Q2; break;
       default: 
         fprintf(stderr,
           "ERROR: Asymmetry::AddEvent does not understand I[%d]=%d\n",d,I[d]);
@@ -396,6 +397,8 @@ Bool_t Asymmetry::AddEvent() {
     return KickEvent("PhiTest out of range",PhiTest);
 
   if(PhPerp<-8000) return KickEvent("PhPerp out of range",PhPerp);
+  if(Ph<-8000) return KickEvent("Ph out of range",Ph);
+  if(Q2<-8000) return KickEvent("Q2 out of range",Q2);
   if(theta<-0.1 || theta>PIe) return KickEvent("theta out of range",theta);
 
 
@@ -952,6 +955,8 @@ void Asymmetry::ResetVars() {
   PhiR = UNDEF;
   PhiTest = UNDEF;
   PhPerp = UNDEF;
+  Ph = UNDEF;
+  Q2 = UNDEF;
   theta = UNDEF;
   spinn = UNDEF;
   kfA = UNDEF;

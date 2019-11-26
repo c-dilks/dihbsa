@@ -13,146 +13,97 @@ Binning::Binning(Int_t pairType_) {
   numKaons = 0;
   for(int h=0; h<2; h++) { if(whichHad[h]==kKp || whichHad[h]==kKm) numKaons++; };
 
-  // binning
+  // set minimum and maximum IV values
   minIV[vM] = 0;   maxIV[vM] = 3;
   minIV[vX] = 0;   maxIV[vX] = 1;
   minIV[vZ] = 0;   maxIV[vZ] = 1;
-  minIV[vPt] = 0;  maxIV[vPt] = 3;
+  minIV[vPt] = 0;  maxIV[vPt] = 2;
+  minIV[vPh] = 0;  maxIV[vPh] = 10;
+  minIV[vQ] = 0;   maxIV[vQ] = 12;
   for(int v=0; v<nIV; v++) nBins[v]=-1;
-  // -- mass
-  AddBinBound(vM,minIV[vM]);
+
+
+  // set minimum bin boundaries
+  for(int v=0; v<nIV; v++) AddBinBound(v,minIV[v]);
+
+
+  // set main bin boundaries
   if(numKaons==0) {
-    ///*
-    // 5 quantiles (from GetQuantiles.C)
-    AddBinBound(vM,0.53);
+
+    // -- M_h (dihadron invariant mass)
+    AddBinBound(vM,0.53); // 5 quantiles (from GetQuantiles.C)
     AddBinBound(vM,0.71);
     AddBinBound(vM,0.84);
     AddBinBound(vM,1.03);
-    //*/
-    /*
-    // old binning from DNP 2018
-    AddBinBound(vM,0.4);
-    AddBinBound(vM,0.8);
-    */
-    /*
-    AddBinBound(vM,0.4);
-    AddBinBound(vM,0.6);
-    AddBinBound(vM,0.8);
-    AddBinBound(vM,1.0);
-    AddBinBound(vM,1.2);
-    AddBinBound(vM,1.5);
-    */
-    /*
-    AddBinBound(vM,0.77); // rho mass
-    */
-    // Timothy's DNP 2019 bounds
-    /*
-    AddBinBound(vM,0.431);
-    AddBinBound(vM,0.550);
-    AddBinBound(vM,0.662);
-    AddBinBound(vM,0.750);
-    AddBinBound(vM,0.819);
-    AddBinBound(vM,0.906);
-    AddBinBound(vM,1.019);
-    AddBinBound(vM,1.194);
-    */
-  } else if(numKaons==1) {
-    AddBinBound(vM,0.85);
-    AddBinBound(vM,1.1);
-  } else {
-    AddBinBound(vM,1.25);
-  };
-  AddBinBound(vM,maxIV[vM]);
-  // -- x
-  AddBinBound(vX,minIV[vX]);
-  if(numKaons==0) {
-    ///*
-    // 5 quantiles (from GetQuantiles.C)
-    AddBinBound(vX,0.22);
+
+    // -- x (bjorken-x)
+    AddBinBound(vX,0.22); // 5 quantiles (from GetQuantiles.C)
     AddBinBound(vX,0.26);
     AddBinBound(vX,0.32);
     AddBinBound(vX,0.39);
-    //*/
-    /*
-    AddBinBound(vX,0.2);
-    AddBinBound(vX,0.4);
-    */
-    // Timothy's DNP 2019 bounds
-    /*
-    AddBinBound(vX,0.140);
-    AddBinBound(vX,0.168);
-    AddBinBound(vX,0.193);
-    AddBinBound(vX,0.220);
-    AddBinBound(vX,0.248);
-    AddBinBound(vX,0.283);
-    AddBinBound(vX,0.328);
-    AddBinBound(vX,0.398);
-    */
-  } else {
-    AddBinBound(vX,0.2);
-    AddBinBound(vX,0.3);
-  };
-  AddBinBound(vX,maxIV[vX]);
-  // -- z
-  AddBinBound(vZ,minIV[vZ]);
-  if(numKaons==0) {
-    ///*
-    // 5 quantiles (from GetQuantiles.C)
-    AddBinBound(vZ,0.47);
+
+    // -- z (fragmentation fraction)
+    AddBinBound(vZ,0.47); // 5 quantiles (from GetQuantiles.C)
     AddBinBound(vZ,0.55);
     AddBinBound(vZ,0.63);
     AddBinBound(vZ,0.73);
-    //*/
-    /*
-    AddBinBound(vZ,0.4);
-    AddBinBound(vZ,0.6);
-    */
-    // Timothy's DNP 2019 bounds
-    /*
-    AddBinBound(vZ,0.433);
-    AddBinBound(vZ,0.483);
-    AddBinBound(vZ,0.528);
-    AddBinBound(vZ,0.570);
-    AddBinBound(vZ,0.615);
-    AddBinBound(vZ,0.663);
-    AddBinBound(vZ,0.718);
-    AddBinBound(vZ,0.788);
-    */
-  } else {
+
+    // -- PhPerp (transverse momentum of dihadron)
+    AddBinBound(vPt,0.29); // 5 quantiles (from GetQuantiles.C)
+    AddBinBound(vPt,0.42);
+    AddBinBound(vPt,0.55);
+    AddBinBound(vPt,0.70);
+
+    // -- Ph (magnitude of momentum sum of dihadron)
+    AddBinBound(vPh,3.15); // 5 quantiles (from GetQuantiles.C)
+    AddBinBound(vPh,3.60);
+    AddBinBound(vPh,4.10);
+    AddBinBound(vPh,4.80);
+
+    // -- Q^2
+    AddBinBound(vQ,2.84); // 5 quantiles (from GetQuantiles.C)
+    AddBinBound(vQ,3.33);
+    AddBinBound(vQ,3.92);
+    AddBinBound(vQ,4.85);
+    
+  } else if(numKaons==1) {
+
+    // -- mass
+    AddBinBound(vM,0.85);
+    AddBinBound(vM,1.1);
+
+    // -- x
+    AddBinBound(vX,0.2);
+    AddBinBound(vX,0.3);
+
+    // -- z
     AddBinBound(vZ,0.5);
     AddBinBound(vZ,0.7);
+
+    // -- other IV binning schemes can be added later when kaons are included
   };
-  AddBinBound(vZ,maxIV[vZ]);
-  // -- PhPerp
-  AddBinBound(vPt,minIV[vPt]);
-  AddBinBound(vPt,0.5);
-  AddBinBound(vPt,maxIV[vPt]);
 
-  /*
-  if(singleBinMode) {
-    for(int v=0; v<nIV; v++) {
-      nBins[v]=-1;
-      AddBinBound(v,minIV[v]);
-      AddBinBound(v,maxIV[v]);
-    };
-    printf("\n-- SINGLE BIN MODE ENABLED\n");
-  };
-  */
+  // set maximum bin boundaries
+  for(int v=0; v<nIV; v++) AddBinBound(v,maxIV[v]);
 
 
+  // set IV names and titles
   IVname[vM] = "M";
   IVname[vX] = "X";
   IVname[vZ] = "Z";
   IVname[vPt] = "Pt";
+  IVname[vPh] = "Ph";
+  IVname[vQ] = "Q";
 
   IVtitle[vM] = "M_{h}";
   IVtitle[vX] = "x";
   IVtitle[vZ] = "z";
   IVtitle[vPt] = "P_{h}^{perp}";
+  IVtitle[vPh] = "P_{h}";
+  IVtitle[vQ] = "Q^{2}";
 
 
   //PrintBinBounds();
-
 
 };
 
@@ -217,46 +168,4 @@ TString Binning::GetBoundStr(Int_t v_, Int_t b_) {
 };
 
 
-Int_t Binning::GetColor(Int_t v_) {
-  switch(v_) {
-    //case vM: return kRed;
-    //case vX: return kGreen+1;
-    //case vZ: return kViolet+2;
-    //case vPt: return kAzure;
-    default: return kBlack;
-  };
-};
-
-
-Float_t Binning::GetAziMax(Int_t v_, Int_t b_) {
-
-  if(v_==vZ) {
-    if(b_==0) return 3.950000;
-    if(b_==1) return 4.450000;
-    if(b_==2) return 4.350000;
-  };
-
-  if(v_==vX) {
-    if(b_==0) return 4.350000;
-    if(b_==1) return 4.450000;
-    if(b_==2) return 3.450000;
-  };
-
-  if(v_==vM) {
-    if(b_==0) return 4.450000;
-    if(b_==1) return 3.350000;
-    if(b_==2) return 1.650000;
-  };
-
-  if(v_==vPt) {
-    if(b_==0) return 1.850000;
-    if(b_==1) return 4.450000;
-  };
-
-
-  fprintf(stderr,"ERROR: Binning::GetAziMax needs to be updated!\n");
-  return 5;
-};
-
 Binning::~Binning() {};
-

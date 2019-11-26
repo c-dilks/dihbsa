@@ -514,6 +514,8 @@ int main(int argc, char** argv) {
           A->PhiH = ev->PhiH;
           A->PhiR = ev->PhiR;
           A->PhPerp = ev->PhPerp;
+          A->Ph = ev->Ph;
+          A->Q2 = ev->Q2;
           A->theta = ev->theta;
 
           // set spin state
@@ -570,7 +572,6 @@ int main(int argc, char** argv) {
         };
         appFile->Close("R");
         printf("done reading %s\n",appFileName.Data());
-        fprintf(stderr,"I AM ERROR\n"); //+++
       };
     };
     Tools::PrintSeparator(40,".");
@@ -1166,7 +1167,6 @@ void DrawKinDepGraph(TGraphErrors * g_, Binning * B_, Int_t v_) {
 
   g_->Draw("APE"); // draw once, so we can then format it
 
-  g_->SetLineColor(B_->GetColor(v_));
   g_->SetLineWidth(2);
 
   g_->SetMarkerStyle(kFullCircle);
@@ -1202,7 +1202,6 @@ void DrawSimpleGraph(TGraphErrors * g_, Binning * B_, Int_t v_, Bool_t setRange)
 
   g_->Draw("AP"); // draw once, so we can then format it
 
-  //g_->SetLineColor(B_->GetColor(v_));
   //g_->SetLineWidth(2);
 
   g_->SetMarkerStyle(kFullCircle);

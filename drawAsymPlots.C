@@ -118,7 +118,7 @@ void drawAsymPlots(
       zline->SetLineColor(kGray+2);
       zline->SetLineWidth(1);
 
-      mg->GetYaxis()->SetRangeUser(-0.1,0.1);
+      mg->GetYaxis()->SetRangeUser(-0.06,0.06);
       mg->GetXaxis()->SetLabelSize(0.045);
       mg->GetYaxis()->SetLabelSize(0.045);
       mg->GetXaxis()->SetTitleSize(0.05);
