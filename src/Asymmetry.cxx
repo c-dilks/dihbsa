@@ -5,13 +5,7 @@ ClassImp(Asymmetry)
 using namespace std;
 
 
-Asymmetry::Asymmetry(
-  Binning * binScheme,
-  Int_t phiModulation, Int_t dimension, 
-  Int_t var0, Int_t bin0,
-  Int_t var1, Int_t bin1,
-  Int_t var2, Int_t bin2
-) {
+Asymmetry::Asymmetry(Int_t phiModulation, Binning * binScheme, Int_t binNum) {
 
   // OPTIONS ////////////
   debug = true;
@@ -76,16 +70,17 @@ Asymmetry::Asymmetry(
       fprintf(stderr,"ERROR: bad phiModulation\n");
       return;
   };
-  if(dimension==UNDEF) return; // (use this if you only want to do basic things,
-                                // like calculate modulations or access modulation
-                                // names)
+  if(BS==NULL || binNum==-1) return; // (used for if you only want to do basic things
+                                     // with an instance of Asymmetry,
+                                     // like calculate modulations or access modulation
+                                     // names)
 
   if(debug) printf("Instantiating Asymmetry...\n");
   printf("  ModulationTitle = %s\n",ModulationTitle.Data());
   printf("  modMax = %f   aziMax = %f\n",modMax,aziMax);
 
   // set up number of dimensions
-  if(dimension>=1 && dimension<=3) whichDim = dimension;
+  if(BS->dimensions>=1 && BS->dimensions<=3) whichDim = BS->dimensions;
   else {
     fprintf(stderr,"ERROR: bad number of dimensions\n");
     return;
@@ -95,13 +90,13 @@ Asymmetry::Asymmetry(
 
   // check IV mode
   successIVmode = true;
-  if(whichDim>=1 && (var0<0 || var0>Binning::nIV) ) successIVmode = false;
-  if(whichDim>=2 && (var1<0 || var1>Binning::nIV) ) successIVmode = false;
-  if(whichDim>=3 && (var2<0 || var2>Binning::nIV) ) successIVmode = false;
+  if(whichDim>=1 && (BS->ivVar[0]<0 || BS->ivVar[0]>Binning::nIV)) successIVmode=false;
+  if(whichDim>=2 && (BS->ivVar[1]<0 || BS->ivVar[1]>Binning::nIV)) successIVmode=false;
+  if(whichDim>=3 && (BS->ivVar[2]<0 || BS->ivVar[2]>Binning::nIV)) successIVmode=false;
   if(successIVmode) {
-    I[0] = var0;  B[0] = bin0;
-    I[1] = var1;  B[1] = bin1;
-    I[2] = var2;  B[2] = bin2;
+    I[0]=BS->ivVar[0];  B[0]=BS->UnhashBinNum(binNum,0);
+    I[1]=BS->ivVar[1];  B[1]=BS->UnhashBinNum(binNum,1);
+    I[2]=BS->ivVar[2];  B[2]=BS->UnhashBinNum(binNum,2);
   } else {
     fprintf(stderr,"ERROR: bad IV vars\n");
     return;
@@ -356,10 +351,41 @@ Asymmetry::Asymmetry(
 
 
 
-// fill all the plots; to be called in event loop
+// fill all the plots; to be called in an event loop
 // -- returns true if filled successfully, or false
-//    if not (which usually happens if it's the wrong bin)
-Bool_t Asymmetry::AddEvent() {
+//    if not (which usually happens if it's the wrong bin,
+//    or if one of the required kinematic variables has
+//    a bad value)
+Bool_t Asymmetry::AddEvent(EventTree * ev) {
+
+  // set kinematic vars
+  Mh = ev->Mh;
+  x = ev->x;
+  z = ev->Zpair;
+  PhiH = ev->PhiH;
+  PhiR = ev->PhiR;
+  PhPerp = ev->PhPerp;
+  Ph = ev->Ph;
+  Q2 = ev->Q2;
+  theta = ev->theta;
+
+  // set spin state
+  spinn = ev->SpinState();
+
+  // set kinematic factors
+  kfA = ev->GetKinematicFactor('A');
+  kfC = ev->GetKinematicFactor('C');
+  kfW = ev->GetKinematicFactor('W');
+
+  // set any test modulation variables
+  PhiTest = UNDEF;
+  /*
+  if(whichModulation == Asymmetry::modTest) {
+    PhiTest = ev->GetDihadronObj()->GetSingleHadronPhiH(qA);
+    z = ev->Z[qA];
+  };
+  */
+
 
   // set iv variable
   for(int d=0; d<whichDim; d++) {
@@ -378,7 +404,7 @@ Bool_t Asymmetry::AddEvent() {
   };
 
 
-  // check if we're in the proper bin; if not, simply return
+  // check if we're in the proper bin; if not, simply return silently
   for(int d=0; d<whichDim; d++) {
     if(B[d] != BS->GetBin(I[d],iv[d])) return false;
   };

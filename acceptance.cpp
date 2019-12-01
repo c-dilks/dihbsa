@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
    Binning * B = new Binning(whichPair);
    Asymmetry * A[Asymmetry::nMod];
    for(int m=0; m<Asymmetry::nMod; m++) {
-     A[m] = new Asymmetry(B,m,UNDEF);
+     A[m] = new Asymmetry(m);
      printf("m=%d  %s\n",m,A[m]->ModulationTitle.Data());
    };
 

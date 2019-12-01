@@ -40,7 +40,7 @@ class Binning : public TObject
     Int_t GetBin(Int_t v_, Float_t iv_);
     TString GetBoundStr(Int_t v_, Int_t b_);
 
-    Bool_t ValidIV(Int_t v_) { return v_>=0 && v_<nIV; };
+    Bool_t SetScheme(Int_t ivType);
 
 
 
@@ -59,6 +59,31 @@ class Binning : public TObject
 
     TString IVname[nIV];
     TString IVtitle[nIV];
+
+
+    // variables used to define Asymmetry binning scheme
+    Int_t dimensions; // total number of dimensions, for multi-dim binning
+    Int_t ivVar[3]; // which IV the binning scheme is in [dimension]
+    Int_t binNum;
+    // scheme maps:
+    // - each IV bin is assigned a 3-digit bin number
+    // - use HashBinNum(...) to convert a set of bin numbers to the 3-digit bin number
+    // - use binVecMap to convert the 3-digit number back to each bin number for each
+    //   dimension 
+    // - use binVec for looping over all bins (via range-based loops)
+    std::vector<Int_t> binVec; // vector of 3-digit bin numbers, used for looping
+    std::map<Int_t, Int_t> binVecMap[3]; // map 3-digit bin number back to each
+                                         // single-digit bin number [dimension]
+    
+
+    // scheme accessors, which return things according to the current binning scheme
+    Int_t GetNbins(Int_t dim);
+    TString GetIVname(Int_t dim);
+    TString GetIVtitle(Int_t dim);
+    // additional scheme methods
+    Bool_t CheckDim(Int_t dim_);
+    Int_t HashBinNum(Int_t bin0, Int_t bin1=-1, Int_t bin2=-1);
+    Int_t UnhashBinNum(Int_t bn, Int_t dim);
 
     
   private:

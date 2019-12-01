@@ -54,19 +54,14 @@
 #include "Trajectory.h"
 #include "DIS.h"
 #include "Binning.h"
+#include "EventTree.h"
 
 
 class Asymmetry : public TObject
 {
   public:
     Asymmetry() {}; // empty default constructor for streaming instances to ROOT files
-    Asymmetry(
-      Binning * binScheme,
-      Int_t phiModulation, Int_t dimension=1, 
-      Int_t var0=0,  Int_t bin0=0,
-      Int_t var1=-1, Int_t bin1=-1,
-      Int_t var2=-1, Int_t bin2=-1
-    );
+    Asymmetry(Int_t phiModulation, Binning * binScheme=NULL,  Int_t binNum=-1);
     ~Asymmetry();
 
 
@@ -76,7 +71,7 @@ class Asymmetry : public TObject
     void SetAsymGrPoint(Int_t modBin_, Int_t modBin2_=-1);
 
 
-    Bool_t AddEvent();
+    Bool_t AddEvent(EventTree * ev);
     Float_t EvalModulation();
     Float_t EvalWeight();
     Float_t EvalKinematicFactor();

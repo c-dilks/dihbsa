@@ -9,6 +9,7 @@
 *.class
 *.pdf
 *.log
+.~lock*
 logfiles/*
 src/DihBsaDict.*
 outz

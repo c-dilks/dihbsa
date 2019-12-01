@@ -30,7 +30,7 @@ MC_DIS_DNP19_8.hipo
 
       <Input src="file:${homeDir}/environment.csh" dest="environment.csh"/>
       <Input src="file:${hipoDir}/${hipoFile}" dest="infile.hipo" copyOption="link"/>
-      <Input src="file:${workDir}/analysis.exe" dest="analysis.exe" copyOption="link"/>
+      <Input src="file:${workDir}/buildOutroot.exe" dest="buildOutroot.exe" copyOption="link"/>
       <Input src="file:${workDir}/libDihBsa.so" dest="libDihBsa.so" copyOption="link"/>
       <Input src="file:${workDir}/src/DihBsaDict_rdict.pcm" dest="DihBsaDict_rdict.pcm" copyOption="link"/>
 
@@ -38,7 +38,7 @@ MC_DIS_DNP19_8.hipo
 
       <Command><![CDATA[
         ls -lh
-        analysis.exe infile.hipo 1
+        buildOutroot.exe infile.hipo 1
         ls -lh
       ]]></Command>
 

@@ -16,7 +16,7 @@ rm -v logfiles/*
 
 
 echo "generate batchfile: $job"
-echo "Executable = analysis.exe" > $job
+echo "Executable = buildOutroot.exe" > $job
 echo "Universe = vanilla" >> $job
 echo "notification = never" >> $job
 echo "getenv = True" >> $job
