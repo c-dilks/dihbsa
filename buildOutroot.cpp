@@ -1,3 +1,6 @@
+// read skim HIPO file and produce a ROOT tree, called an 'outroot file', which contains
+// branches associated with dihadrons
+
 #include <cstdlib>
 #include <iostream>
 

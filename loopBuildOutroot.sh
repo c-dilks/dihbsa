@@ -6,13 +6,12 @@ if [ $# -ne 1 ]; then
 fi
 indir=$1
 
-job="batchAnalysis.bat";
+job="batchBuildOutroot.bat";
 log="logfiles"
 mkdir -p $log
 
 mkdir -p outroot/
 rm -v spinroot/*.root
-rm -v logfiles/*
 
 
 echo "generate batchfile: $job"
@@ -27,9 +26,9 @@ for file in ${indir}/*.hipo; do
   suffix=`echo $file|sed 's/^.*\///g'|sed 's/\.hipo$//g'`
   echo "prepare to analyze $file"
   echo "Arguments = $file" >> $job
-  echo "Log    = ${log}/asym.${suffix}.log" >> $job
-  echo "Output = ${log}/asym.${suffix}.out" >> $job
-  echo "Error  = ${log}/asym.${suffix}.err" >> $job
+  echo "Log    = ${log}/buildOutroot.${suffix}.log" >> $job
+  echo "Output = ${log}/buildOutroot.${suffix}.out" >> $job
+  echo "Error  = ${log}/buildOutroot.${suffix}.err" >> $job
   echo "Queue" >> $job
   echo "" >> $job
 done

@@ -278,33 +278,6 @@ static Int_t dihHadIdx(Int_t p1, Int_t p2, Int_t idx) {
 };
 
 
-// name of hadron within the pair
-static TString PairHadName(Int_t p1, Int_t p2, Int_t h) {
-  TString ret = PartName(dihHadIdx(p1,p2,h));
-  if(p1==p2) ret = Form("%s%d",ret.Data(),h+1);
-  return ret;
-};
-static TString PairHadTitle(Int_t p1, Int_t p2, Int_t h) {
-  TString ret = PartTitle(dihHadIdx(p1,p2,h));
-  if(ret=="#gamma#gamma") ret="#pi^{0}"; // change \gamma\gamma to \pi^0
-  if(p1==p2) ret = Form("%s_{%d}",ret.Data(),h+1);
-  return ret;
-};
-
-// name of pair
-static TString PairName(Int_t p1, Int_t p2) {
-  return TString( PairHadName(p1,p2,qA) + "_" + PairHadName(p1,p2,qB) );
-};
-static TString PairTitle(Int_t p1, Int_t p2) {
-  return TString( PairHadTitle(p1,p2,qA) + PairHadTitle(p1,p2,qB) );
-  /*
-  return TString(
-    "(" + PairHadTitle(p1,p2,qA) + "," + PairHadTitle(p1,p2,qB) + ")"
-  );
-  */
-};
-
-
 // shorthand for referring to a pair is called "pairType", defined as a
 // 2-digit hex number, where each hex digit is the particle index
 // convert whichPair hex number to hadron indices
@@ -339,6 +312,41 @@ static Bool_t IterPair(Int_t a, Int_t b, Int_t & p_a, Int_t & p_b) {
   p_b = OI(b);
   return p_a==dihHadIdx(p_a,p_b,qA) && p_b==dihHadIdx(p_a,p_b,qB);
 };
+
+
+// name of hadron within the pair
+static TString PairHadName(Int_t p1, Int_t p2, Int_t h) {
+  TString ret = PartName(dihHadIdx(p1,p2,h));
+  if(p1==p2) ret = Form("%s%d",ret.Data(),h+1);
+  return ret;
+};
+static TString PairHadTitle(Int_t p1, Int_t p2, Int_t h) {
+  TString ret = PartTitle(dihHadIdx(p1,p2,h));
+  if(ret=="#gamma#gamma") ret="#pi^{0}"; // change \gamma\gamma to \pi^0
+  if(p1==p2) ret = Form("%s_{%d}",ret.Data(),h+1);
+  return ret;
+};
+
+
+// name of pair
+static TString PairName(Int_t p1, Int_t p2) {
+  return TString( PairHadName(p1,p2,qA) + "_" + PairHadName(p1,p2,qB) );
+};
+static TString PairName(Int_t ptype) {
+  Int_t h1,h2;
+  DecodePairType(ptype,h1,h2);
+  return PairName(h1,h2);
+};
+// title of pair
+static TString PairTitle(Int_t p1, Int_t p2) {
+  return TString( PairHadTitle(p1,p2,qA) + PairHadTitle(p1,p2,qB) );
+};
+static TString PairTitle(Int_t ptype) {
+  Int_t h1,h2;
+  DecodePairType(ptype,h1,h2);
+  return PairTitle(h1,h2);
+};
+  
 
 
 // spin 

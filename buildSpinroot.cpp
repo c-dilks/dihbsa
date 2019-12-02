@@ -1,3 +1,6 @@
+// builds spinroot files, which contain the necessary data structures
+// used by the asymmetry fitting code
+
 #include <cstdlib>
 #include <iostream>
 #include <vector>
@@ -5,29 +8,11 @@
 
 // ROOT
 #include "TFile.h"
-#include "TTree.h"
-#include "TChain.h"
 #include "TString.h"
-#include "TMath.h"
-#include "TSystem.h"
 #include "TRegexp.h"
-#include "TH1.h"
-#include "TH2.h"
-#include "TF1.h"
-#include "TCanvas.h"
-#include "TLine.h"
-#include "TStyle.h"
-#include "TMultiGraph.h"
-#include "TSystemDirectory.h"
-#include "TSystemFile.h"
-#include "TList.h"
-#include "TCollection.h"
 
 // DihBsa
 #include "Constants.h"
-#include "DIS.h"
-#include "Trajectory.h"
-#include "Dihadron.h"
 #include "EventTree.h"
 #include "Binning.h"
 #include "Asymmetry.h"
@@ -44,10 +29,7 @@ Int_t whichHelicityMC;
 void SetDefaultArgs();
 int PrintUsage();
 
-// other global variables
-Int_t N_AMP,N_D;
-Int_t whichHad[2];
-TString dihTitle, dihName;
+// global variables
 Binning * BS;
 Asymmetry * A;
 EventTree * ev;
@@ -109,14 +91,10 @@ int main(int argc, char** argv) {
   printf("whichHelicityMC = %d\n",whichHelicityMC);
   printf("\n");
 
-  // set dihadron name / title
-  DecodePairType(pairType,whichHad[qA],whichHad[qB]);
-  dihTitle = PairTitle(whichHad[qA],whichHad[qB]);
-  dihName = PairName(whichHad[qA],whichHad[qB]);
-
 
   // set binning scheme
   BS = new Binning(pairType);
+  BS->AsymModulation = whichModulation;
   Bool_t schemeSuccess = BS->SetScheme(ivType);
   if(!schemeSuccess) {
     fprintf(stderr,"ERROR: Binning::SetScheme failed\n");
@@ -136,19 +114,19 @@ int main(int argc, char** argv) {
 
 
   // instantiate spinroot file
-  TString outName;
+  TString spinrootFileN;
   if(inputType==iDir) {
-    outName = "spinroot/spin";
-    outName += "__" + dihName + "_";
-    for(int d=0; d<BS->dimensions; d++) outName += "_" + BS->GetIVname(d);
-    outName += "__" + modN;
-    outName += ".root";
+    spinrootFileN = "spinroot/spin";
+    spinrootFileN += "__" + PairName(pairType) + "_";
+    for(int d=0; d<BS->dimensions; d++) spinrootFileN += "_" + BS->GetIVname(d);
+    spinrootFileN += "__" + modN;
+    spinrootFileN += ".root";
   } else if(inputType==iFile) {
-    outName = inputData;
-    outName(TRegexp("^.*/")) = "spinroot/spin.";
+    spinrootFileN = inputData;
+    spinrootFileN(TRegexp("^.*/")) = "spinroot/spin.";
   };
-  printf("\nCREATING OUTPUT FILE = %s\n\n",outName.Data());
-  TFile * spinrootFile = new TFile(outName,"RECREATE");
+  printf("\nCREATING OUTPUT FILE = %s\n\n",spinrootFileN.Data());
+  TFile * spinrootFile = new TFile(spinrootFileN,"RECREATE");
 
 
   // instantiate Asymmetry objects, and
@@ -192,7 +170,6 @@ int main(int argc, char** argv) {
     A = asymMap.at(bn);
     A->StreamData(spinrootFile);
   };
-  spinrootFile->Close();
 
 
   // stream objects directly to spinroot file
@@ -213,9 +190,12 @@ int main(int argc, char** argv) {
     //A->rfData->Write(Aname);
     A->Write(Aname);
   };
-  spinrootFile->Close();
   */
 
+
+  // close spinroot file
+  spinrootFile->Close();
+  printf("\n%s written\n\n",spinrootFileN.Data());
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -230,9 +210,6 @@ void SetDefaultArgs() {
   whichModulation = Asymmetry::weightSinPhiHR;
   ivType = Binning::vM + 1;
   whichHelicityMC = 0;
-  DecodePairType(pairType,whichHad[qA],whichHad[qB]);
-  dihTitle = PairTitle(whichHad[qA],whichHad[qB]);
-  dihName = PairName(whichHad[qA],whichHad[qB]);
 };
 
 
@@ -253,7 +230,7 @@ int PrintUsage() {
 
   printf(" -p\tpair type, specified as a hexadecimal number\n");
   printf("   \trun PrintEnumerators.C for notation\n");
-  printf("   \tdefault = 0x%x (%s)\n\n",pairType,dihTitle.Data());
+  printf("   \tdefault = 0x%x (%s)\n\n",pairType,PairTitle(pairType).Data());
 
   printf(" -m\tazimuthal modulation for asymmetry\n");
   for(int m=0; m<Asymmetry::nMod; m++) {
