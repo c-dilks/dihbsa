@@ -5,7 +5,7 @@ ClassImp(Asymmetry)
 using namespace std;
 
 
-Asymmetry::Asymmetry(Int_t phiModulation, Binning * binScheme, Int_t binNum) {
+Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
 
   // OPTIONS ////////////
   debug = true;
@@ -18,7 +18,7 @@ Asymmetry::Asymmetry(Int_t phiModulation, Binning * binScheme, Int_t binNum) {
   BS = binScheme;
 
   // set up azimuthal modulation
-  whichMod = phiModulation;
+  whichMod = BS->AsymModulation;
   modMaxDefault = 1.1;
   asym2d = false;
   switch(whichMod) {
@@ -67,13 +67,13 @@ Asymmetry::Asymmetry(Int_t phiModulation, Binning * binScheme, Int_t binNum) {
       aziMax = modMaxDefault;
       break;
     default:
-      fprintf(stderr,"ERROR: bad phiModulation\n");
+      fprintf(stderr,"ERROR: bad BS->AsymModulation accesed in Asymmetry::Asymmetry\n");
       return;
   };
-  if(BS==NULL || binNum==-1) return; // (used for if you only want to do basic things
-                                     // with an instance of Asymmetry,
-                                     // like calculate modulations or access modulation
-                                     // names)
+  if(binNum==-1) return; // (used for if you only want to do basic things
+                         // with an instance of Asymmetry,
+                         // like calculate modulations or access modulation
+                         // names)
 
   if(debug) printf("Instantiating Asymmetry...\n");
   printf("  ModulationTitle = %s\n",ModulationTitle.Data());
@@ -101,10 +101,7 @@ Asymmetry::Asymmetry(Int_t phiModulation, Binning * binScheme, Int_t binNum) {
     fprintf(stderr,"ERROR: bad IV vars\n");
     return;
   };
-  if(debug) {
-    PrintSettings();
-  };
-
+  if(debug) PrintSettings();
 
 
   // set relevant variables for the given IV mode
@@ -121,6 +118,7 @@ Asymmetry::Asymmetry(Int_t phiModulation, Binning * binScheme, Int_t binNum) {
       ivMax[d] = 0;
     };
   };
+
 
 
 
@@ -1053,6 +1051,7 @@ void Asymmetry::StreamData(TFile * tf) {
   objName = appName + rfData->GetName(); rfData->Write(objName);
 
   tf->cd("/");
+  printf("done\n");//+++
 };
 
 

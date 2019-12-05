@@ -61,7 +61,7 @@ class Asymmetry : public TObject
 {
   public:
     Asymmetry() {}; // empty default constructor for streaming instances to ROOT files
-    Asymmetry(Int_t phiModulation, Binning * binScheme=NULL,  Int_t binNum=-1);
+    Asymmetry(Binning * binScheme,  Int_t binNum=-1);
     ~Asymmetry();
 
 

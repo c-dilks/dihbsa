@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
 
 
   // get modulation name for 1-amp fit
-  A = new Asymmetry(whichModulation);
+  A = new Asymmetry(BS);
   TString modN = A->ModulationName;
   printf("--> 1-amp fit will be for %s modulation\n\n",modN.Data());
 
@@ -133,7 +133,7 @@ int main(int argc, char** argv) {
   // build map of 3-digit bin number -> Asymmetry object
   std::map<Int_t, Asymmetry*> asymMap;
   for(Int_t bn : BS->binVec) {
-    A = new Asymmetry(whichModulation,BS,bn);
+    A = new Asymmetry(BS,bn);
     if(A->success) asymMap.insert(std::pair<Int_t, Asymmetry*>(bn,A));
     else return 0;
   };
@@ -232,9 +232,11 @@ int PrintUsage() {
   printf("   \trun PrintEnumerators.C for notation\n");
   printf("   \tdefault = 0x%x (%s)\n\n",pairType,PairTitle(pairType).Data());
 
-  printf(" -m\tazimuthal modulation for asymmetry\n");
+  printf(" -m\tazimuthal modulation for asymmetry linear fit\n");
+  BS = new Binning(pairType);
   for(int m=0; m<Asymmetry::nMod; m++) {
-    A = new Asymmetry(m);
+    BS->AsymModulation = m;
+    A = new Asymmetry(BS);
     printf("   \t %d = %s =  %s\n",m,
         (A->ModulationName).Data(),
         (A->ModulationTitle).Data()

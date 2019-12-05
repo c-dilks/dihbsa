@@ -6,6 +6,12 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <mcheck.h>//+++
+
+// DihBsa
+#include "Constants.h"
+#include "Binning.h"
+#include "Asymmetry.h"
 
 // ROOT
 #include "TFile.h"
@@ -17,23 +23,32 @@
 #include "TList.h"
 #include "TCollection.h"
 
-// DihBsa
-#include "Constants.h"
-#include "Binning.h"
-#include "Asymmetry.h"
-
-Asymmetry * A;
-Binning * BS;
 
 
 int main(int argc, char** argv) {
+  //mtrace();//+++
+
+  Binning * BS = new Binning(0x34); //+++
+  BS->SetScheme(1); //+++
+  BS->AsymModulation = 0; //+++
+  Asymmetry * A = new Asymmetry(BS,0); //+++
+  TFile * catFile = new TFile("test.root","RECREATE"); //+++
+  //muntrace();//+++
+
 
   // ARGUMENTS
   TString spinrootDir = "spinroot";
   if(argc>1) spinrootDir = TString(argv[1]);
 
   // instantiate catFile
-  TFile * catFile = new TFile(TString(spinrootDir+"/cat.root"),"RECREATE");
+  //TFile * catFile = new TFile(TString(spinrootDir+"/cat.root"),"RECREATE"); //+++
+
+  // instantiate class objects which will be read/written from/to spinroot file
+  // (empty constructors (no-op) effectively load the dihbsa dictionary)
+  //Binning * BS = new Binning();
+  //Asymmetry * A = new Asymmetry();
+
+
   
   // get list of spinroot files
   TString spinrootFileName;
@@ -52,20 +67,23 @@ int main(int argc, char** argv) {
     };
   };
 
-
   // extract binning scheme from a spinroot file, 
   TFile * spinrootFile;
   spinrootFile = new TFile(spinrootFileList.at(0),"READ");
-  BS = (Binning*) spinrootFile->Get("BS");
-  Int_t whichModulation = BS->AsymModulation;
+  spinrootFile->GetObject("BS",BS);
+  
+  //A = new Asymmetry(BS,0);//+++
+  //muntrace();//+++
+  ///*
 
   // instantiate catFile Asymmetry objects, following the extracted binning scheme
   std::map<Int_t, Asymmetry*> asymMap;
   for(Int_t bn : BS->binVec) {
-    A = new Asymmetry(whichModulation,BS,bn);
+    A = new Asymmetry(BS,bn);
     if(A->success) asymMap.insert(std::pair<Int_t, Asymmetry*>(bn,A));
     else return 0;
   };
+  return 0;
 
 
   // concatenate spinroot files data into catFile
@@ -94,5 +112,8 @@ int main(int argc, char** argv) {
     A = asymMap.at(bn);
     A->StreamData(catFile);
   };
+  printf("closing...\n");//+++
   catFile->Close();
+  printf("closed\n");//+++
+  //muntrace();//+++
 };
