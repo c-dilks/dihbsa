@@ -6,7 +6,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
-#include <mcheck.h>//+++
+//#include <mcheck.h> // (memory tracing)
 
 // DihBsa
 #include "Constants.h"
@@ -26,27 +26,18 @@
 
 
 int main(int argc, char** argv) {
-  //mtrace();//+++
-
-  Binning * BS = new Binning(0x34); //+++
-  BS->SetScheme(1); //+++
-  BS->AsymModulation = 0; //+++
-  Asymmetry * A = new Asymmetry(BS,0); //+++
-  TFile * catFile = new TFile("test.root","RECREATE"); //+++
-  //muntrace();//+++
-
+  //mtrace(); // (memory tracing)
 
   // ARGUMENTS
   TString spinrootDir = "spinroot";
   if(argc>1) spinrootDir = TString(argv[1]);
 
   // instantiate catFile
-  //TFile * catFile = new TFile(TString(spinrootDir+"/cat.root"),"RECREATE"); //+++
+  TFile * catFile = new TFile(TString(spinrootDir+"/cat.root"),"RECREATE");
 
-  // instantiate class objects which will be read/written from/to spinroot file
-  // (empty constructors (no-op) effectively load the dihbsa dictionary)
-  //Binning * BS = new Binning();
-  //Asymmetry * A = new Asymmetry();
+  // define class objects which will be read/written from/to spinroot file
+  Binning * BS = new Binning();
+  Asymmetry * A;
 
 
   
@@ -71,10 +62,8 @@ int main(int argc, char** argv) {
   TFile * spinrootFile;
   spinrootFile = new TFile(spinrootFileList.at(0),"READ");
   spinrootFile->GetObject("BS",BS);
+  spinrootFile->Close();
   
-  //A = new Asymmetry(BS,0);//+++
-  //muntrace();//+++
-  ///*
 
   // instantiate catFile Asymmetry objects, following the extracted binning scheme
   std::map<Int_t, Asymmetry*> asymMap;
@@ -83,7 +72,6 @@ int main(int argc, char** argv) {
     if(A->success) asymMap.insert(std::pair<Int_t, Asymmetry*>(bn,A));
     else return 0;
   };
-  return 0;
 
 
   // concatenate spinroot files data into catFile
@@ -112,8 +100,7 @@ int main(int argc, char** argv) {
     A = asymMap.at(bn);
     A->StreamData(catFile);
   };
-  printf("closing...\n");//+++
   catFile->Close();
-  printf("closed\n");//+++
-  //muntrace();//+++
+
+  //muntrace(); // (memory tracing)
 };
