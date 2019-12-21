@@ -38,7 +38,7 @@ class Binning : public TObject
     void AddBinBound(Int_t ivIdx, Float_t newBound);
     void PrintBinBounds();
     Int_t GetBin(Int_t v_, Float_t iv_);
-    TString GetBoundStr(Int_t v_, Int_t b_);
+    TString GetBoundStr(Int_t bn, Int_t dim);
 
     Bool_t SetScheme(Int_t ivType);
 
@@ -87,10 +87,10 @@ class Binning : public TObject
 
     // extra variables, used for Asymmetry
     Int_t AsymModulation;
+    Int_t whichHad[2];
 
     
   private:
-    Int_t whichHad[2];
     Int_t numKaons;
 
 

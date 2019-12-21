@@ -157,7 +157,10 @@ Int_t Binning::GetBin(Int_t ivIdx_, Float_t iv_) {
 };
 
 
-TString Binning::GetBoundStr(Int_t v_, Int_t b_) {
+TString Binning::GetBoundStr(Int_t bn, Int_t dim) {
+  if(dim<0||dim>3) return "";
+  Int_t v_ = ivVar[dim];
+  Int_t b_ = this->UnhashBinNum(bn,dim);
   TString retStr;
   Float_t lb,ub;
   try {

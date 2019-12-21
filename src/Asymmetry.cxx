@@ -130,7 +130,7 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
   binT = "::";
   binN = "";
   for(int d=0; d<whichDim; d++) {
-    binT += "  " + BS->GetBoundStr(I[d],B[d]);
+    binT += "  " + BS->GetBoundStr(B[d],d);
     binN = Form("%s_%s%d",binN.Data(),ivN[d].Data(),B[d]);
   };
   if(debug) printf("binT = %s\nbinN = %s\n",binT.Data(),binN.Data());
