@@ -24,30 +24,34 @@
 
 \begin{center}
 {\LARGE 
-Orthonormality of Modulations
+Orthogonality of Modulations
 }
 \end{center}
 
-\subsection*{Testing Orthonormality under Acceptance Constraints}
+\subsection*{Cross section modulations}
 
 
 The goal is to assess the orthogonality of the various modulations of the beam
-spin asymmetry; let $S$ be the set of such modulation functions, dependent on
-$\phi_h$, $\phi_R$, and $\theta$. The functions in $S$ are preferred to be
-mutually orthogonal, since the measurement of an amplitude of one modulation $f$
-can be impacted by the amplitudes of other modulations which are not orthogonal
-to $f$.  If the yield data do not cover the full $\phi_h,\phi_R,\theta$ range,
-the orthogonality of the functions of $S$ can be impacted, as the integration
-ranges will be limited by the acceptance. 
+spin asymmetry, or in general, of the polarization-dependent cross section. Let
+$S$ be the set of such modulation functions, dependent on $\phi_h$, $\phi_R$,
+and $\theta$. The functions in $S$ are preferred to be mutually orthogonal,
+since the measurement of an amplitude of one modulation $f$ can be impacted by
+the amplitudes of other modulations which are not orthogonal to $f$.  If the
+yield data do not cover the full $\phi_h,\phi_R,\theta$ range, the orthogonality
+of the functions of $S$ can be impacted, as the integration ranges will be
+limited by the acceptance. 
 
-The functions of $S$ are written as the product of two functions, 
+For the SIDIS dihadron production cross section,
+the functions of $S$ are written as the product of two functions, 
 $P_{\ell}^m\Phi_t^m$, which depend
 on the angular momentum state $|\ell,m\rangle_t$ of the dihadron system, where
-$\ell$ and $m$ are the angular momentum eigenvalues and $t$ is the twist:
-\begin{enumerate}
+$\ell$ and $m$ are the angular momentum eigenvalues and $t$ is the twist.
+Written explicitly, the functions are:
+\begin{itemize}
 \item $\Phi_t^m\left(\phi_h,\phi_R\right)$: 
-azimuthal modulations, which depend on $m$ and twist $t$; note that $\Phi_2^0=0$ and
-$\Phi_2^{-m}=-\Phi_2^{m}$.
+azimuthal modulations, which depend on $m$ and twist $t$. These functions are
+elements of the 2-dimensional Fourier basis. For a longitudinally polarized electron beam 
+and an unpolarized proton target, the functions are
   \begin{itemize}
   \item twist 2: $\Phi_2^m=\sin\left[m\left(\phi_h-\phi_R\right)\right]$
   \item twist 3: $\Phi_3^m=\sin\left[\left(1-m\right)\phi_h+m\phi_R\right]$
@@ -56,7 +60,7 @@ $\Phi_2^{-m}=-\Phi_2^{m}$.
 associated Legendre polynomials, which depend on the angular momentum
 eigenstate; note that $P_{\ell}^{-m}=P_{\ell}^{m}$ is assumed. This is the
 partial wave expansion of the DiFFs in $\cos\theta$.
-\end{enumerate}
+\end{itemize}
 The functions for $\ell\in\{0,1,2\}$ are (up to normalization factors):
 \begin{center}
 \begin{tabular}{|c|c|c|}
@@ -84,6 +88,10 @@ $|2,-2\rangle$ & $~$ & $\sin^2\theta\sin\left(3\phi_h-2\phi_R\right)$ \\\hline
 \end{tabular}
 ~\\~\\
 \end{center}
+
+
+\subsection*{Testing orthogonality under acceptance constraints}
+
 The inner product of two functions $f,g\in S$ is
 \begin{equation}
 \langle f,g\rangle=
@@ -97,9 +105,9 @@ g\left(\phi_h,\phi_R,\theta\right)
 If $\langle f,g\rangle=0$, then $f$ is orthogonal to $g$. Normalization of the
 functions can be obtained by $f\mapsto f/\sqrt{\langle ff\rangle}$, which
 ensures $\langle ff\rangle=1$.  
-Before continuing, let us simplify the notation by denoting a point
-$\left(\phi_h,\phi_R,\theta\right)$ by $\phi$. Any integral over $\phi$ is
-definite, as in equation \ref{eqIP}.
+Before continuing, denote a point $\left(\phi_h,\phi_R,\theta\right)$ by $\phi$,
+to simplify the notation; any integral over $\phi$ is definite, as in equation
+\ref{eqIP}.
 
 This inner product can be weighted by the acceptance, denoted $y(\phi)$, to see how the
 orthogonality between each $f$ and $g\in S$ is affected by acceptance
@@ -133,26 +141,15 @@ The normalization factors $N_f$ for $f\in S$ are determined by enforcing
 $O[f,f,Y]=1$:
 \begin{equation}
 \displaystyle
-N_f=\left[\sum_{b_\phi}{
-  v(b_\phi)Y(b_\phi)f(b_\phi)^2
-}\right]^{-1/2}
+N_f=\left(\sum{vYf^2}\right)^{-1/2}
 \end{equation}
 
-Lastly, we consider the uncertainty propagation. Let $\sigma_O[f,g,Y]$ denote
-the uncertainty on $O[f,g,Y]$, which is dominantly from the statistical
-uncertainty on the yield, $\sigma_Y(b_\phi)$. With the Poissonian statistics
-assumption, $\sigma_Y(b_\phi)=\sqrt{Y(b_\phi)}$. Assume the uncertainty on
-$\phi$ is negligible in this context, and that uncertainty from the functions
-$f$ and $g$ do not contribute to $\sigma_O$, as they are analytically defined. 
-To estimate $\sigma_O$, we first calculate $O\left[f,g,Y\pm\sigma_Y\right]$:
-\begin{equation}
-\begin{split}
-O\left[f,g,Y\pm\sigma_Y\right]
-&=N_fN_g\sum{v(Y\pm\sigma_Y)fg}\\
-&=O[f,g,Y]\pm N_fN_g\sum{v\sqrt{Y}fg}
-\end{split}
-\end{equation}
-Subtracting $O\left[f,g,Y\right]$ gives $\sigma_O$:
+Next, we consider the uncertainty propagation. Let $\sigma_O[f,g,Y]$ denote the
+uncertainty on $O[f,g,Y]$, which is dominantly from the statistical uncertainty
+on the yield, $\sigma_Y(b_\phi)$. With the Poissonian statistics assumption,
+$\sigma_Y(b_\phi)=\sqrt{Y(b_\phi)}$. Assume the uncertainty on $\phi$ is
+negligible in this context, and that there is no uncertainty from the functions
+$f$ and $g$, as they are analytically defined. We thus have:
 \begin{equation}
 \sigma_O[f,g,Y]=N_fN_g\sum{v\sqrt{Y}fg}=O\left[f,g,\sqrt{Y}\right]
 \end{equation}
