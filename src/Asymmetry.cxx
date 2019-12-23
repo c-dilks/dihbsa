@@ -343,7 +343,11 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
   // initialise RooFit
   success = this->InitRooFit();
 
-  if(debug) printf("Asymmetry instantiated.\n");
+  if(debug) {
+    printf("Asymmetry instantiated.\n");
+    printf(" - whichDim = %d\n",whichDim);
+    printf(" - whichMod = %d\n",whichMod);
+  };
 
 };
 
@@ -1134,8 +1138,11 @@ void Asymmetry::AppendData(TFile * tf) {
 
 TString Asymmetry::AppFileName(TFile * tf) {
   TString retstr = TString(tf->GetName());
-  retstr(TRegexp("^.*/spin.")) = "stream_";
-  retstr(TRegexp(".root$")) = "_";
+  retstr(TRegexp("^.*/")) = "";
+  retstr(TRegexp("^spin.")) = "";
+  retstr(TRegexp(".root$")) = "";
+  retstr(TRegexp(".hipo$")) = "";
+  retstr = "stream_" + retstr + "_";
   return retstr;
 };
 

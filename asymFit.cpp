@@ -39,6 +39,8 @@ void SetCloneName(TH1 * clone_);
 // global variables
 Int_t N_AMP,N_D;
 TString dihTitle,dihName;
+Binning * BS;
+Asymmetry * A;
 
 
 
@@ -51,13 +53,11 @@ int main(int argc, char** argv) {
   gStyle->SetOptFit(1);
 
   // open spinroot cat file and result file
-  TFile * catFile = new TFile(TString(spinrootDir+"/cat.root"),"READ");
   TFile * asymFile = new TFile(TString(spinrootDir+"/asym.root"),"RECREATE");
+  TFile * catFile = new TFile(TString(spinrootDir+"/cat.root"),"READ");
 
 
   // instantiate Binning and Asymmetry, and extract them from catFile
-  Binning * BS;
-  Asymmetry * A;
   std::map<Int_t, Asymmetry*> asymMap;
   catFile->GetObject("BS",BS);
   for(Int_t bn : BS->binVec) {
@@ -664,6 +664,7 @@ int main(int argc, char** argv) {
 
 
   asymFile->Close();
+  catFile->Close();
   printf("--- end %s\n",argv[0]);
   return 0;
 
