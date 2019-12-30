@@ -21,7 +21,7 @@
 // argument variables
 TString inputData;
 Int_t pairType;
-Int_t whichModulation;
+Int_t oaTw,oaL,oaM;
 Int_t ivType;
 Int_t whichHelicityMC;
 
@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
   int opt;
   enum inputType_enum {iFile,iDir};
   Int_t inputType = -1;
-  while( (opt=getopt(argc,argv,"f:d:p:m:i:h:")) != -1 ) {
+  while( (opt=getopt(argc,argv,"f:d:p:t:l:m:i:h:w")) != -1 ) {
     switch(opt) {
       case 'f': /* input file */
         if(inputType>=0) return PrintUsage();
@@ -62,8 +62,14 @@ int main(int argc, char** argv) {
       case 'p': /* pair type (hexadecimal number) */
         pairType = (Int_t) strtof(optarg,NULL);
         break;
-      case 'm': /* azimuthal modulation for asymmetry */
-        whichModulation = (Int_t) strtof(optarg,NULL);
+      case 't': /* one-amp fit modulation specifier Twist */
+        oaTw = (Int_t) strtof(optarg,NULL);
+        break;
+      case 'l': /* one-amp fit modulation specifier L */
+        oaL = (Int_t) strtof(optarg,NULL);
+        break;
+      case 'm': /* one-amp fit modulation specifier M */
+        oaM = (Int_t) strtof(optarg,NULL);
         break;
       case 'i': /* independent variables */
         ivType = (Int_t) strtof(optarg,NULL);
@@ -86,7 +92,7 @@ int main(int argc, char** argv) {
   // print arguments' values
   printf("inputData = %s\n",inputData.Data());
   printf("pairType = 0x%x\n",pairType);
-  printf("whichModulation = %d\n",whichModulation);
+  printf("oaModulation: |%d,%d>, twist-%d\n",oaL,oaM,oaTw);
   printf("ivType = %d\n",ivType);
   printf("whichHelicityMC = %d\n",whichHelicityMC);
   printf("\n");
@@ -94,7 +100,7 @@ int main(int argc, char** argv) {
 
   // set binning scheme
   BS = new Binning(pairType);
-  BS->AsymModulation = whichModulation;
+  BS->oaAsymModulation = oaModulation;
   Bool_t schemeSuccess = BS->SetScheme(ivType);
   if(!schemeSuccess) {
     fprintf(stderr,"ERROR: Binning::SetScheme failed\n");
@@ -108,8 +114,8 @@ int main(int argc, char** argv) {
 
 
   // get modulation name for 1-amp fit
-  A = new Asymmetry(BS);
-  TString modN = A->ModulationName;
+  Modulation * modu = new Modulation();
+  TString modN = modu->ModulationName(oaModulation);
   printf("--> 1-amp fit will be for %s modulation\n\n",modN.Data());
 
 
@@ -207,7 +213,7 @@ int main(int argc, char** argv) {
 void SetDefaultArgs() {
   inputData = "";
   pairType = EncodePairType(kPip,kPim);
-  whichModulation = Asymmetry::weightSinPhiHR;
+  oaModulation = Modulation::weightSinPhiHR;
   ivType = Binning::vM + 1;
   whichHelicityMC = 0;
 };
@@ -233,22 +239,21 @@ int PrintUsage() {
   printf("   \tdefault = 0x%x (%s)\n\n",pairType,PairTitle(pairType).Data());
 
   printf(" -m\tazimuthal modulation for asymmetry linear fit\n");
-  BS = new Binning(pairType);
-  for(int m=0; m<Asymmetry::nMod; m++) {
-    BS->AsymModulation = m;
-    A = new Asymmetry(BS);
+  Modulation * modu = new Modulation();
+  for(int m=0; m<Modulation::nMod; m++) {
     printf("   \t %d = %s =  %s\n",m,
-        (A->ModulationName).Data(),
-        (A->ModulationTitle).Data()
+        (modu->ModulationName(m)).Data(),
+        (modu->ModulationTitle(m)).Data()
         );
   };
-  printf("   \tdefault = %d\n\n",whichModulation);
+  printf("   \tdefault = %d\n\n",oaModulation);
 
   printf(" -i\tindependent variable specifier: 1, 2, or 3-digit number which\n");
   printf("   \tspecifies the independent variables that asymmetries will be\n");
   printf("   \tplotted against. The number of digits will be the number of\n");
   printf("   \tdimensions in the multi-dimensional binning\n");
   printf("   \t* the allowed digits are:\n");
+  BS = new Binning(pairType);
   for(int i=0; i<Binning::nIV; i++) {
     printf("   \t  %d = %s\n",i+1,(BS->IVtitle[i]).Data());
   };

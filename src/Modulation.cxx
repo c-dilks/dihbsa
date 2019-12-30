@@ -134,8 +134,52 @@ TString Modulation::BuildTF3formu(Int_t tw, Int_t l, Int_t m) {
 };
 
 TF3 * Modulation::BuildTF3(Int_t tw, Int_t l, Int_t m) {
-  tf3name = Form("modFunc_t%d_l%d_m%s%d",tw,l,m<0?"N":"",m);
+  tf3name = this->ModulationName(tw,l,m);
+  tf3name.ReplaceAll("mod","modFunc");
   return new TF3(tf3name,this->BuildTF3formu(tw,l,m),-PI,PI,-PI,PI,0,PI);
 };
+
+
+TString Modulation::ModulationTitle(Int_t tw, Int_t l, Int_t m) {
+  TString retstr = BaseString(tw,l,m);
+  retStr.ReplaceAll("phi","#phi");
+  retStr.ReplaceAll("theta","#theta");
+  return retstr;
+};
+TString Modulation::ModulationName(Int_t tw, Int_t l, Int_t m) {
+  TString retstr = Form("mod_t%d_l%d_m%s%d",tw,l,m<0?"N":"",m);
+  return retstr;
+};
+TString Modulation::StateTitle(Int_t tw, Int_t l, Int_t m) {
+  TString retstr = Form("|%d,%d>_{%d}",l,m,tw);
+  return retstr;
+};
+
+
+// returns values of tw,l,m for the given one-amplitude enumerator `oa`
+void Modulation::OneAmpState(Int_t oa, Int_t & tw, Int_t & l, Int_t & m) {
+  switch(oa) {
+    case modSinPhiR:     tw=3; l=1; m=1; break;
+    case modSinPhiHR:    tw=2; l=1; m=1; break;
+    case weightSinPhiHR: tw=2; l=1; m=1; break;
+    case modSinPhiH:     tw=3; l=0; m=0; break;
+    default:
+      fprintf(stderr,"ERROR: Modulation::OneAmpState -- bad oa enum\n");
+      return;
+  };
+};
+
+
+// implmentation for one-amp specifications
+TString Modulation::ModulationTitle(Int_t oa) {
+  this->OneAmpState(oa,twOA,lOA,mOA);
+  return this->ModulationTitle(twOA,lOA,mOA);
+}
+TString Modulation::ModulationName(Int_t oa) {
+  this->OneAmpState(oa,twOA,lOA,mOA);
+  return this->ModulationName(twOA,lOA,mOA);
+}
+
+
 
 Modulation::~Modulation() {};

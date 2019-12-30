@@ -108,7 +108,7 @@ Binning::Binning(Int_t pairType_) {
   // set binning scheme defaults
   dimensions = 0;
   for(int d=0; d<3; d++) ivVar[d] = -1;
-  AsymModulation = -1;
+  oaAsymModulation = -1;
 };
 
 

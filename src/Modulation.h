@@ -26,15 +26,32 @@ class Modulation : public TObject
     TString BuildTF3formu(Int_t tw, Int_t l, Int_t m);
     TF3 *  BuildTF3(Int_t tw, Int_t l, Int_t m);
 
+    TString ModulationTitle(Int_t tw, Int_t l, Int_t m);
+    TString ModulationTitle(Int_t oa);
+    TString ModulationName(Int_t tw, Int_t l, Int_t m);
+    TString ModulationName(Int_t oa);
+    TString StateTitle(Int_t tw, Int_t l, Int_t m);
+
+    void OneAmpState(Int_t oa, Int_t & tw, Int_t & l, Int_t & m);
+
 
     Bool_t enableTheta;
     static const Int_t LMAX = 2;
+
+    enum oneAmpEnum {
+      modSinPhiR,
+      modSinPhiHR,
+      weightSinPhiHR,
+      modSinPhiH,
+      nMod
+    };
 
   private:
     Double_t azi,leg;
     TString aziStr,legStr,baseStr,tf3str,tf3name;
     Int_t mAbs;
-    Int_t twCurr,mCurr,lCurr;
+    Int_t twCurr,lCurr,mCurr;
+    Int_t twOA,lOA,mOA;
     TF1 * funcCurr;
 
 

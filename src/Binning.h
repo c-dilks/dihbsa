@@ -86,7 +86,7 @@ class Binning : public TObject
     Int_t UnhashBinNum(Int_t bn, Int_t dim);
 
     // extra variables, used for Asymmetry
-    Int_t AsymModulation;
+    Int_t oaAsymModulation;
     Int_t whichHad[2];
 
     
