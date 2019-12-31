@@ -86,8 +86,14 @@ class Binning : public TObject
     Int_t UnhashBinNum(Int_t bn, Int_t dim);
 
     // extra variables, used for Asymmetry
-    Int_t oaAsymModulation;
+    // (it would be nicer to just stream Asymmetry objects to a root file,
+    //  but so far it's not working...)
+    Int_t oaTw,oaL,oaM;
+    void SetOAnums(Int_t t_, Int_t l_, Int_t m_) {
+      oaTw=t_; oaL=l_; oaM=m_;
+    };
     Int_t whichHad[2];
+    Bool_t useWeighting, oa2dFit;
 
     
   private:

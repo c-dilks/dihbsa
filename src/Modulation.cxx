@@ -155,31 +155,4 @@ TString Modulation::StateTitle(Int_t tw, Int_t l, Int_t m) {
   return retstr;
 };
 
-
-// returns values of tw,l,m for the given one-amplitude enumerator `oa`
-void Modulation::OneAmpState(Int_t oa, Int_t & tw, Int_t & l, Int_t & m) {
-  switch(oa) {
-    case modSinPhiR:     tw=3; l=1; m=1; break;
-    case modSinPhiHR:    tw=2; l=1; m=1; break;
-    case weightSinPhiHR: tw=2; l=1; m=1; break;
-    case modSinPhiH:     tw=3; l=0; m=0; break;
-    default:
-      fprintf(stderr,"ERROR: Modulation::OneAmpState -- bad oa enum\n");
-      return;
-  };
-};
-
-
-// implmentation for one-amp specifications
-TString Modulation::ModulationTitle(Int_t oa) {
-  this->OneAmpState(oa,twOA,lOA,mOA);
-  return this->ModulationTitle(twOA,lOA,mOA);
-}
-TString Modulation::ModulationName(Int_t oa) {
-  this->OneAmpState(oa,twOA,lOA,mOA);
-  return this->ModulationName(twOA,lOA,mOA);
-}
-
-
-
 Modulation::~Modulation() {};

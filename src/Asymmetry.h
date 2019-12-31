@@ -62,7 +62,7 @@ class Asymmetry : public TObject
 {
   public:
     Asymmetry() {}; // empty default constructor for streaming instances to ROOT files
-    Asymmetry(Binning * binScheme,  Int_t binNum, Bool_t enable2dFit=false);
+    Asymmetry(Binning * binScheme,  Int_t binNum);
     ~Asymmetry();
 
 
@@ -95,9 +95,10 @@ class Asymmetry : public TObject
     Binning * BS;
 
     // settings
-    Int_t whichOaMod;
+    Int_t oaTw,oaL,oaM;
     Int_t whichDim;
-    Bool_t asym2d;
+    Bool_t oa2d;
+    Bool_t useWeighting;
 
 
 

@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
 
 
   // print which IV will be analyzed
-  TString modN = A->ModulationName;
+  TString modN = A->oaModulationName;
   printf("--------> Analysing %s asymmetries vs. %s ",
     modN.Data(),(BS->GetIVname(0)).Data());
   if(BS->dimensions>=2) printf("in bins of %s ",(BS->GetIVname(1)).Data());
@@ -215,11 +215,11 @@ int main(int argc, char** argv) {
     // perform the fits
     A->CalculateAsymmetries();
 
-    if( ( A->asym2d==false && A->fitFunc!=NULL) || 
-        ( A->asym2d==true && A->fitFunc2!=NULL) ) {
+    if( ( A->oa2d==false && A->fitFunc!=NULL) || 
+        ( A->oa2d==true && A->fitFunc2!=NULL) ) {
 
       // linear fit result's asymmetry value and statistical uncertainty
-      if(!(A->asym2d)) {
+      if(!(A->oa2d)) {
         asymValue = A->fitFunc->GetParameter(1);
         asymError = A->fitFunc->GetParError(1);
       } else {
@@ -258,7 +258,7 @@ int main(int argc, char** argv) {
       kinError = 0; // OVERRIDE (since this should be a systematic uncertainty)
 
       // chi2 and ndf
-      if(!(A->asym2d)) {
+      if(!(A->oa2d)) {
         chisq = A->fitFunc->GetChisquare();
         ndf = A->fitFunc->GetNDF();
       } else {
@@ -387,12 +387,12 @@ int main(int argc, char** argv) {
       binNum = BS->HashBinNum(b0);
       A = asymMap.at(binNum);
       asymModCanv->cd(b0+1);
-      if(!(A->asym2d)) DrawAsymGr(A->asymGr);
+      if(!(A->oa2d)) DrawAsymGr(A->asymGr);
       else DrawAsymGr2(A->asymGr2);
       modDistCanv->cd(b0+1);
-      if(!(A->asym2d)) A->modDist->Draw();
+      if(!(A->oa2d)) A->modDist->Draw();
       else A->modDist2->Draw("colz");
-      if(A->asym2d) {
+      if(A->oa2d) {
         asymModHist2Canv->cd(b0+1);
         A->asymGr2hist->Draw("colz");
       };
@@ -430,12 +430,12 @@ int main(int argc, char** argv) {
         binNum = BS->HashBinNum(b0,b1);
         A = asymMap.at(binNum);
         asymModCanv->cd(b0*NB[1]+b1+1);
-        if(!(A->asym2d)) DrawAsymGr(A->asymGr);
+        if(!(A->oa2d)) DrawAsymGr(A->asymGr);
         else DrawAsymGr2(A->asymGr2);
         modDistCanv->cd(b0*NB[1]+b1+1);
-        if(!(A->asym2d)) A->modDist->Draw();
+        if(!(A->oa2d)) A->modDist->Draw();
         else A->modDist2->Draw();
-        if(A->asym2d) {
+        if(A->oa2d) {
           asymModHist2Canv->cd(b0*NB[1]+b1+1);
           A->asymGr2hist->Draw("colz");
         };
@@ -491,7 +491,7 @@ int main(int argc, char** argv) {
       if(b0==0) {
         ivFullDist1 = (TH1D*)(A->ivDist1)->Clone();
         SetCloneName(ivFullDist1);
-        if(!(A->asym2d)) {
+        if(!(A->oa2d)) {
           IVvsModFullDist = (TH2D*)(A->IVvsModDist)->Clone();
           SetCloneName(IVvsModFullDist);
           modFullDist = (TH1D*)(A->modDist)->Clone();
@@ -502,7 +502,7 @@ int main(int argc, char** argv) {
         };
       } else {
         ivFullDist1->Add(A->ivDist1);
-        if(!(A->asym2d)) {
+        if(!(A->oa2d)) {
           IVvsModFullDist->Add(A->IVvsModDist);
           modFullDist->Add(A->modDist);
         } else {
@@ -519,7 +519,7 @@ int main(int argc, char** argv) {
         if(b0==0 && b1==0) {
           ivFullDist2 = (TH2D*)(A->ivDist2)->Clone();
           SetCloneName(ivFullDist2);
-          if(!(A->asym2d)) {
+          if(!(A->oa2d)) {
             modFullDist = (TH1D*)(A->modDist)->Clone();
             SetCloneName(modFullDist);
           } else {
@@ -528,7 +528,7 @@ int main(int argc, char** argv) {
           };
         } else {
           ivFullDist2->Add(A->ivDist2);
-          if(!(A->asym2d)) modFullDist->Add(A->modDist);
+          if(!(A->oa2d)) modFullDist->Add(A->modDist);
           else modFullDist2->Add(A->modDist2);
         };
       };
@@ -543,7 +543,7 @@ int main(int argc, char** argv) {
           if(b0==0 && b1==0 && b2==0) {
             ivFullDist3 = (TH3D*)(A->ivDist3)->Clone();
             SetCloneName(ivFullDist3);
-            if(!(A->asym2d)) {
+            if(!(A->oa2d)) {
               modFullDist = (TH1D*)(A->modDist)->Clone();
               SetCloneName(modFullDist);
             } else {
@@ -552,7 +552,7 @@ int main(int argc, char** argv) {
             };
           } else {
             ivFullDist3->Add(A->ivDist3);
-            if(!(A->asym2d)) modFullDist->Add(A->modDist);
+            if(!(A->oa2d)) modFullDist->Add(A->modDist);
             else modFullDist2->Add(A->modDist2);
           };
         };
@@ -573,13 +573,13 @@ int main(int argc, char** argv) {
   // -- "full" distributions
   if(BS->dimensions==1) {
     ivFullDist1->Write();
-    if(!(A->asym2d)) IVvsModFullDist->Write();
+    if(!(A->oa2d)) IVvsModFullDist->Write();
   } else if(BS->dimensions==2) {
     ivFullDist2->Write();
   } else if(BS->dimensions==3) {
     ivFullDist3->Write();
   };
-  if(!(A->asym2d)) modFullDist->Write();
+  if(!(A->oa2d)) modFullDist->Write();
   else modFullDist2->Write();
 
 
@@ -590,10 +590,10 @@ int main(int argc, char** argv) {
     A->PrintSettings();
 
     // first write out the asymmetry vs. modulation graphs
-    if(!(A->asym2d)) A->asymGr->Write();
+    if(!(A->oa2d)) A->asymGr->Write();
     else A->asymGr2->Write();
 
-    // then write out the kindepGr *after* writing out all the
+    // then write out the kindepGr after writing out all the
     // relevant asymmetry vs. modulation graphs
     if(A->B[0] + 1 == NB[0]) {
       binNum = BS->HashBinNum(A->B[0], A->B[1], A->B[2]);
@@ -615,7 +615,7 @@ int main(int argc, char** argv) {
   rellumCanv->Write();
   if(BS->dimensions==1 || BS->dimensions==2) {
     asymModCanv->Write();
-    if(A->asym2d) asymModHist2Canv->Write();
+    if(A->oa2d) asymModHist2Canv->Write();
     modDistCanv->Write();
   };
 
