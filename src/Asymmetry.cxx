@@ -2,8 +2,6 @@
 
 ClassImp(Asymmetry)
 
-using namespace std;
-
 
 Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
 
@@ -42,8 +40,6 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
     fprintf(stderr,"ERROR: bad number of dimensions\n");
     return;
   };
-
-
 
   // check IV mode
   successIVmode = true;
@@ -99,8 +95,8 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
 
 
   // instantiate histograms etc.
-  // - these are mostly used for the one-amplitude ("oa") fit, whereas RooFit data structures
-  //   are used for the multi-amplitude fit
+  // - these are mostly used for the one-amplitude ("oa") fit, whereas RooFit data
+  //   structures are used for the multi-amplitude fit
   // - see header file for documentation of each object
   // - the histogram of appropriate dimension will be instantiated for use
   // - the unused dimensions will also be instantiated, but never filled; this is done
@@ -288,13 +284,16 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
     //nop
     fitFunc2 = new TF2(TString("nop_"+fitFuncName),"");
   } else {
-    if(whichOaMod == mod2dSinPhiR) {
+    if(oaTw==2 && oaL==1 && oaM==1) {
+      fitFunc2 = new TF2(fitFuncName,"[0]*TMath::Sin(y-x)",
+        -modMax,modMax,-modMax,modMax);
+    } else if(oaTw==3 && oaL==1 && oaM==1) {
       fitFunc2 = new TF2(fitFuncName,"[0]*TMath::Sin(x)",
         -modMax,modMax,-modMax,modMax);
     }
-    else if(whichOaMod == mod2dWeightSinPhiHR) {
-      fitFunc2 = new TF2(fitFuncName,"[0]*TMath::Sin(y-x)",
-        -modMax,modMax,-modMax,modMax);
+    else {
+      fprintf(stderr,"ERROR: this one-amp fit not defined for 2-d (phiH,phiR) fit\n");
+      return;
     };
     fitFunc2->SetParName(0,"A_{LU}");
     //nop
@@ -319,224 +318,6 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
 
 
 
-// fill all the plots; to be called in an event loop
-// -- returns true if filled successfully, or false
-//    if not (which usually happens if it's the wrong bin,
-//    or if one of the required kinematic variables has
-//    a bad value)
-Bool_t Asymmetry::AddEvent(EventTree * ev) {
-
-  // set kinematic vars
-  Mh = ev->Mh;
-  x = ev->x;
-  z = ev->Zpair;
-  PhiH = ev->PhiH;
-  PhiR = ev->PhiR;
-  PhPerp = ev->PhPerp;
-  Ph = ev->Ph;
-  Q2 = ev->Q2;
-  theta = ev->theta;
-
-  // set spin state
-  spinn = ev->SpinState();
-
-  // set kinematic factors
-  kfA = ev->GetKinematicFactor('A');
-  kfC = ev->GetKinematicFactor('C');
-  kfW = ev->GetKinematicFactor('W');
-
-  // set any test modulation variables
-  PhiTest = UNDEF;
-  /*
-  if(whichOaMod == modTest) {
-    PhiTest = ev->GetDihadronObj()->GetSingleHadronPhiH(qA);
-    z = ev->Z[qA];
-  };
-  */
-
-
-  // set iv variable
-  for(int d=0; d<whichDim; d++) {
-    switch(I[d]) {
-      case Binning::vM: iv[d] = Mh; break;
-      case Binning::vX: iv[d] = x; break;
-      case Binning::vZ: iv[d] = z; break;
-      case Binning::vPt: iv[d] = PhPerp; break;
-      case Binning::vPh: iv[d] = Ph; break;
-      case Binning::vQ: iv[d] = Q2; break;
-      default: 
-        fprintf(stderr,
-          "ERROR: Asymmetry::AddEvent does not understand I[%d]=%d\n",d,I[d]);
-        return false;
-    };
-  };
-
-
-  // check if we're in the proper bin; if not, simply return silently
-  for(int d=0; d<whichDim; d++) {
-    if(B[d] != BS->GetBin(I[d],iv[d])) return false;
-  };
-
-
-  // check to make sure kinematics are defined (if they're not, something else
-  // probably set them to UNDEF)
-  for(int d=0; d<whichDim; d++) { 
-    if(iv[d]<-8000) return KickEvent(TString(ivN[d]+" out of range"),iv[d]);
-  };
-
-  if(PhiH<-PIe || PhiH>PIe) return KickEvent("PhiH out of range",PhiH);
-  if(PhiR<-PIe || PhiR>PIe) return KickEvent("PhiR out of range",PhiR);
-
-  if(whichOaMod==modTest && (PhiTest<-PIe || PhiTest>PIe)) 
-    return KickEvent("PhiTest out of range",PhiTest);
-
-  if(PhPerp<-8000) return KickEvent("PhPerp out of range",PhPerp);
-  if(Ph<-8000) return KickEvent("Ph out of range",Ph);
-  if(Q2<-8000) return KickEvent("Q2 out of range",Q2);
-  if(theta<-0.1 || theta>PIe) return KickEvent("theta out of range",theta);
-
-
-  // check spin state, which was set by EventTree
-  if(spinn<0 || spinn>=nSpin) return false;
-
-  // get kinematic factor
-  kf = EvalKinematicFactor();
-  if(kf<kfLB || kf>kfUB) return KickEvent("KF out of range",kf);
-
-  // evaluate modulation 
-  modulation = EvalModulation(); // (if oa2d==true, modulation=UNDEF, i.e., not used)
-
-  // set weight (returns 1, unless weighting for G1perp)
-  weight = EvalWeight();
-  // weight *= kf; // weight events with kinematic factor
-
-  // set RooFit vars
-  rfPhiH->setVal(PhiH);
-  rfPhiR->setVal(PhiR);
-  rfPhiTest->setVal(PhiTest);
-  rfWeight->setVal(weight);
-  rfTheta->setVal(theta);
-  rfSpinCateg->setLabel(rfSpinName[spinn]);
-  rfData->add(*rfVars,rfWeight->getVal());
-
-
-
-
-
-
-  // fill plots
-  // ----------
-
-  if(!oa2d) {
-    aziDist[spinn]->Fill(modulation,weight);
-    modbin = aziDist[sP]->FindBin(modulation);
-    if(modbin>=1 && modbin<=nModBins) {
-      modBinDist[modbin-1]->Fill(modulation,weight);
-    } else {
-      fprintf(stderr,"ERROR: modulation bin not found for modulation=%f\n",modulation);
-      return false;
-    };
-    modDist->Fill(modulation,weight);
-  } 
-  else {
-    aziDist2[spinn]->Fill(PhiR,PhiH,weight);
-    modbinR = aziDist2[sP]->GetXaxis()->FindBin(PhiR);
-    modbinH = aziDist2[sP]->GetYaxis()->FindBin(PhiH);
-    if(modbinR>=1 && modbinR<=nModBins2 && modbinH>=1 && modbinH<=nModBins2) {
-      modBinDist2[modbinH-1][modbinR-1]->Fill(PhiR,PhiH,weight);
-    } else {
-      fprintf(stderr,"ERROR: 2d modulation bin not found (phiH=%f phiR=%f)\n",PhiH,PhiR);
-      return false;
-    };
-    modDist2->Fill(PhiR,PhiH,weight);
-  };
-
-
-  switch(whichDim) {
-    case 1: ivDist1->Fill(iv[0]); break;
-    case 2: ivDist2->Fill(iv[0],iv[1]); break;
-    case 3: ivDist3->Fill(iv[0],iv[1],iv[2]); break;
-  };
-
-
-  if(whichDim==1 && !oa2d) IVvsModDist->Fill(modulation,iv[0],weight);
-
-
-  yieldDist->Fill(spinn);
-  kfDist->Fill(kf);
-  
-  // increment event counter
-  nEvents++;
-  return true;
-};
-  
-
-
-// calculate the asymmetries; to be called at end of event loop
-void Asymmetry::CalculateAsymmetries() {
-
-  
-  if(debug) {
-    printf("calculate asymmetries for:\n");
-    PrintSettings(); 
-  };
-
-  // compute relative luminosity
-  spinbin = yieldDist->FindBin(sP);
-  rNumer = yieldDist->GetBinContent(spinbin);
-  spinbin = yieldDist->FindBin(sM);
-  rDenom = yieldDist->GetBinContent(spinbin);
-
-  if(rDenom>0) {
-    // -- relative luminosity
-    rellum = rNumer / rDenom;
-    // -- relative luminosity statistical uncertainty (assume poissonian yields)
-    rellumErr = sqrt( rNumer * (rNumer+rDenom) / pow(rDenom,3) );
-  } else {
-    rellum = 0;
-    rellumErr = 0;
-    fprintf(stderr,"WARNING: rellum denominator==0, abort asym calculation for this bin\n");
-    return;
-  };
-  printf("rellum = %f / %f =  %.3f  +-  %f\n",rNumer,rDenom,rellum,rellumErr);
-
-
-  // fit asymmetry with RooFit (needs rellum !)
-  this->CalculateRooAsymmetries();
-
-
-   
-  // compute asymmetry for each modulation bin
-  pointCnt = 0;
-  if(!oa2d) {
-    for(int m=1; m<=nModBins; m++) {
-      yL = aziDist[sP]->GetBinContent(m);
-      yR = aziDist[sM]->GetBinContent(m);
-      SetAsymGrPoint(m);
-    };
-  } else {
-    for(int mmH=1; mmH<=nModBins2; mmH++) {
-      for(int mmR=1; mmR<=nModBins2; mmR++) {
-        yL = aziDist2[sP]->GetBinContent(mmR,mmH);
-        yR = aziDist2[sM]->GetBinContent(mmR,mmH);
-        SetAsymGrPoint(mmH,mmR);
-      };
-    };
-  };
-
-
-  // fit asymmetry
-  if(!oa2d) {
-    fitFunc->FixParameter(0,0); // fix fit offset to 0
-    asymGr->Fit(fitFunc,"Q","",-modMax,modMax);
-  } else {
-    asymGr2->Fit(fitFunc2,"Q","");
-  };
-
-};
-
-
-
 // -------------------------------------------
 // initialize unbinned ML fit
 // -------------------------------------------
@@ -553,12 +334,10 @@ Bool_t Asymmetry::InitRooFit() {
   // - event vars
   rfPhiH = new RooRealVar("rfPhiH","#phi_{h}",-PIe,PIe);
   rfPhiR = new RooRealVar("rfPhiR","#phi_{R}",-PIe,PIe);
-  rfPhiTest = new RooRealVar("rfPhiTest","#phi_{H,sh}",-PIe,PIe);
   rfTheta = new RooRealVar("rfTheta","#theta",-PIe,PIe);
   rfWeight = new RooRealVar("rfWeight","P_{h}^{T}/M_{h}",0,10);
 
   rfVars = new RooArgSet(*rfPhiH,*rfPhiR,*rfTheta);
-  if(whichOaMod==modTest) rfVars->add(*rfPhiTest);
   rfVars->add(*rfWeight);
   rfVars->add(*rfSpinCateg);
 
@@ -575,10 +354,12 @@ Bool_t Asymmetry::InitRooFit() {
   nAmpUsed = 0;
   nDparamUsed = 0;
 
-  // - yield factor (proportional to actual yield, only for extended fit)
+  // - yield factor (proportional to actual yield, for extended fit only)
+  /*
   rfYield[sP] = new RooRealVar("rfYieldP","YP",1e5);
   rfYield[sM] = new RooRealVar("rfYieldM","YM",1e5);
   rfYieldBoth = new RooRealVar("rfYieldBoth","Y",1e5);
+  */
 
   // - polarization and rellum
   rfPol = new RooRealVar("rfPol","P",0,1);
@@ -603,7 +384,6 @@ Bool_t Asymmetry::InitRooFit() {
   rfModulation[modSinPhiH] = "TMath::Sin(rfPhiH)";
   rfModulation[mod2dSinPhiR] = "TMath::Sin(rfPhiR)";
   rfModulation[mod2dWeightSinPhiHR] = "TMath::Sin(rfPhiH-rfPhiR)";
-  rfModulation[modTest] = "TMath::Sin(rfPhiTest)"; // +++test
 
   // -- define Legendre polynomials; note that these follow the PW expansion of DiFFs,
   //    so overall coefficients may differ slightly from the actual Legendre polynomials
@@ -737,7 +517,6 @@ Bool_t Asymmetry::InitRooFit() {
     rfParams[s] = new RooArgSet();
     if(rfPdfFormu[s].Contains("rfPhiH")) rfParams[s]->add(*rfPhiH);
     if(rfPdfFormu[s].Contains("rfPhiR")) rfParams[s]->add(*rfPhiR);
-    if(rfPdfFormu[s].Contains("rfPhiTest")) rfParams[s]->add(*rfPhiTest);
     if(rfPdfFormu[s].Contains("rfTheta")) rfParams[s]->add(*rfTheta);
     for(int aa=0; aa<nAmpUsed; aa++) rfParams[s]->add(*rfA[aa]);
     for(int dd=0; dd<nDparamUsed; dd++) rfParams[s]->add(*rfD[dd]);
@@ -781,6 +560,221 @@ Bool_t Asymmetry::InitRooFit() {
 
   return true;
 };
+
+
+
+// fill all the plots; to be called in an event loop
+// -- assumes that EventTree::GetEvent(Int_t) has been called
+// -- returns true if filled successfully, or false
+//    if not (which usually happens if it's the wrong bin,
+//    or if one of the required kinematic variables has
+//    a bad value)
+Bool_t Asymmetry::AddEvent(EventTree * ev) {
+
+  // set kinematic vars
+  Mh = ev->Mh;
+  x = ev->x;
+  z = ev->Zpair;
+  PhiH = ev->PhiH;
+  PhiR = ev->PhiR;
+  PhPerp = ev->PhPerp;
+  Ph = ev->Ph;
+  Q2 = ev->Q2;
+  theta = ev->theta;
+
+  // set spin state
+  spinn = ev->SpinState();
+
+  // set kinematic factors
+  kfA = ev->GetKinematicFactor('A');
+  kfC = ev->GetKinematicFactor('C');
+  kfW = ev->GetKinematicFactor('W');
+
+  // testing single-hadron phiH definition
+  /*
+  PhiH = ev->GetDihadronObj()->GetSingleHadronPhiH(qA);
+  z = ev->Z[qA];
+  */
+
+
+  // set iv variable
+  for(int d=0; d<whichDim; d++) {
+    switch(I[d]) {
+      case Binning::vM: iv[d] = Mh; break;
+      case Binning::vX: iv[d] = x; break;
+      case Binning::vZ: iv[d] = z; break;
+      case Binning::vPt: iv[d] = PhPerp; break;
+      case Binning::vPh: iv[d] = Ph; break;
+      case Binning::vQ: iv[d] = Q2; break;
+      default: 
+        fprintf(stderr,
+          "ERROR: Asymmetry::AddEvent does not understand I[%d]=%d\n",d,I[d]);
+        return false;
+    };
+  };
+
+
+  // check if we're in the proper bin; if not, simply return silently
+  for(int d=0; d<whichDim; d++) {
+    if(B[d] != BS->GetBin(I[d],iv[d])) return false;
+  };
+
+
+  // check to make sure kinematics are defined (if they're not, something else
+  // probably set them to UNDEF)
+  for(int d=0; d<whichDim; d++) { 
+    if(iv[d]<-8000) return KickEvent(TString(ivN[d]+" out of range"),iv[d]);
+  };
+
+  if(PhiH<-PIe || PhiH>PIe) return KickEvent("PhiH out of range",PhiH);
+  if(PhiR<-PIe || PhiR>PIe) return KickEvent("PhiR out of range",PhiR);
+
+  if(PhPerp<-8000) return KickEvent("PhPerp out of range",PhPerp);
+  if(Ph<-8000) return KickEvent("Ph out of range",Ph);
+  if(Q2<-8000) return KickEvent("Q2 out of range",Q2);
+  if(theta<-0.1 || theta>PIe) return KickEvent("theta out of range",theta);
+
+
+  // check spin state, which was set by EventTree
+  if(spinn<0 || spinn>=nSpin) return false;
+
+  // get kinematic factor
+  kf = EvalKinematicFactor();
+  if(kf<kfLB || kf>kfUB) return KickEvent("KF out of range",kf);
+
+  // evaluate modulation 
+  modulation = EvalModulation(); // (if oa2d==true, modulation=UNDEF, i.e., not used)
+
+  // set weight (returns 1, unless weighting for G1perp)
+  weight = EvalWeight();
+  // weight *= kf; // weight events with kinematic factor
+
+  // set RooFit vars
+  rfPhiH->setVal(PhiH);
+  rfPhiR->setVal(PhiR);
+  rfWeight->setVal(weight);
+  rfTheta->setVal(theta);
+  rfSpinCateg->setLabel(rfSpinName[spinn]);
+  rfData->add(*rfVars,rfWeight->getVal());
+
+
+
+
+
+
+  // fill plots
+  // ----------
+
+  if(!oa2d) {
+    aziDist[spinn]->Fill(modulation,weight);
+    modbin = aziDist[sP]->FindBin(modulation);
+    if(modbin>=1 && modbin<=nModBins) {
+      modBinDist[modbin-1]->Fill(modulation,weight);
+    } else {
+      fprintf(stderr,"ERROR: modulation bin not found for modulation=%f\n",modulation);
+      return false;
+    };
+    modDist->Fill(modulation,weight);
+  } 
+  else {
+    aziDist2[spinn]->Fill(PhiR,PhiH,weight);
+    modbinR = aziDist2[sP]->GetXaxis()->FindBin(PhiR);
+    modbinH = aziDist2[sP]->GetYaxis()->FindBin(PhiH);
+    if(modbinR>=1 && modbinR<=nModBins2 && modbinH>=1 && modbinH<=nModBins2) {
+      modBinDist2[modbinH-1][modbinR-1]->Fill(PhiR,PhiH,weight);
+    } else {
+      fprintf(stderr,"ERROR: 2d modulation bin not found (phiH=%f phiR=%f)\n",PhiH,PhiR);
+      return false;
+    };
+    modDist2->Fill(PhiR,PhiH,weight);
+  };
+
+
+  switch(whichDim) {
+    case 1: ivDist1->Fill(iv[0]); break;
+    case 2: ivDist2->Fill(iv[0],iv[1]); break;
+    case 3: ivDist3->Fill(iv[0],iv[1],iv[2]); break;
+  };
+
+
+  if(whichDim==1 && !oa2d) IVvsModDist->Fill(modulation,iv[0],weight);
+
+
+  yieldDist->Fill(spinn);
+  kfDist->Fill(kf);
+  
+  // increment event counter
+  nEvents++;
+  return true;
+};
+  
+
+
+// calculate the asymmetries; to be called at end of event loop
+void Asymmetry::CalculateAsymmetries() {
+
+  
+  if(debug) {
+    printf("calculate asymmetries for:\n");
+    PrintSettings(); 
+  };
+
+  // compute relative luminosity
+  spinbin = yieldDist->FindBin(sP);
+  rNumer = yieldDist->GetBinContent(spinbin);
+  spinbin = yieldDist->FindBin(sM);
+  rDenom = yieldDist->GetBinContent(spinbin);
+
+  if(rDenom>0) {
+    // -- relative luminosity
+    rellum = rNumer / rDenom;
+    // -- relative luminosity statistical uncertainty (assume poissonian yields)
+    rellumErr = sqrt( rNumer * (rNumer+rDenom) / pow(rDenom,3) );
+  } else {
+    rellum = 0;
+    rellumErr = 0;
+    fprintf(stderr,"WARNING: rellum denominator==0, abort asym calculation for this bin\n");
+    return;
+  };
+  printf("rellum = %f / %f =  %.3f  +-  %f\n",rNumer,rDenom,rellum,rellumErr);
+
+
+  // fit asymmetry with RooFit (needs rellum !)
+  this->CalculateRooAsymmetries();
+
+
+   
+  // compute asymmetry for each modulation bin
+  pointCnt = 0;
+  if(!oa2d) {
+    for(int m=1; m<=nModBins; m++) {
+      yL = aziDist[sP]->GetBinContent(m);
+      yR = aziDist[sM]->GetBinContent(m);
+      SetAsymGrPoint(m);
+    };
+  } else {
+    for(int mmH=1; mmH<=nModBins2; mmH++) {
+      for(int mmR=1; mmR<=nModBins2; mmR++) {
+        yL = aziDist2[sP]->GetBinContent(mmR,mmH);
+        yR = aziDist2[sM]->GetBinContent(mmR,mmH);
+        SetAsymGrPoint(mmH,mmR);
+      };
+    };
+  };
+
+
+  // fit asymmetry
+  if(!oa2d) {
+    fitFunc->FixParameter(0,0); // fix fit offset to 0
+    asymGr->Fit(fitFunc,"Q","",-modMax,modMax);
+  } else {
+    asymGr2->Fit(fitFunc2,"Q","");
+  };
+
+};
+
+
+
 
 
 // calculate the asymmetries with RooFit; to be called at end of event loop
@@ -904,9 +898,6 @@ Float_t Asymmetry::EvalModulation() {
     case mod2dWeightSinPhiHR:
       return UNDEF; // (not used if oa2d==true)
       break;
-    case modTest:
-      return TMath::Sin(PhiTest); // +++test
-      break;
     default:
       fprintf(stderr,"ERROR: bad phiModulation\n");
       return UNDEF;
@@ -945,7 +936,6 @@ void Asymmetry::ResetVars() {
   z = UNDEF;
   PhiH = UNDEF;
   PhiR = UNDEF;
-  PhiTest = UNDEF;
   PhPerp = UNDEF;
   Ph = UNDEF;
   Q2 = UNDEF;

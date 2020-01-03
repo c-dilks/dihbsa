@@ -117,8 +117,6 @@ class Asymmetry : public TObject
     
     Float_t kfA,kfC,kfW;
 
-    Float_t PhiTest;
-
 
     // number of bins
     static const Int_t iv1Bins = 100; // number of bins for ivDist1 plots
@@ -215,13 +213,23 @@ class Asymmetry : public TObject
     TString rellumFactor[2];
     Float_t rfParamRange;
 
+  /* enums to remove:
+  modSinPhiR
+  modSinPhiHR
+  weightSinPhiHR
+  modSinPhiH
+  mod2dSinPhiR
+  mod2dWeightSinPhiHR
+  modTest
+  nMod
+  */
+
 
     RooRealVar *rfPhiH, *rfPhiR, *rfTheta;
-    RooRealVar *rfPhiTest;
     RooRealVar *rfWeight;
     RooRealVar *rfPol, *rfRellum;
 
-    static const Int_t nAmp = 4;
+    static const Int_t nAmp = 12;
     Int_t nAmpUsed;
     TString rfAname[nAmp];
     RooRealVar *rfA[nAmp];
@@ -231,8 +239,10 @@ class Asymmetry : public TObject
     TString rfDname[nDparam];
     RooRealVar *rfD[nDparam];
 
+    /*
     RooRealVar *rfYieldBoth;
     RooRealVar *rfYield[2];
+    */
 
     RooNLLVar * rfNLL;
     RooPlot * rfNLLplot[nAmp];

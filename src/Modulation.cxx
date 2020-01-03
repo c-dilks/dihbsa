@@ -118,25 +118,44 @@ TString Modulation::BaseString(Int_t tw, Int_t l, Int_t m) {
 };
 
 
-TString Modulation::BuildTF3formu(Int_t tw, Int_t l, Int_t m) {
+// build formula string for TF3
+TString Modulation::BuildFormu(Int_t tw, Int_t l, Int_t m) {
   if(!Validate(tw,l,m)) return "unknown";
-  tf3str = this->BaseString(tw,l,m);
+  formuStr = this->BaseString(tw,l,m);
 
-  Tools::GlobalRegexp(tf3str,TRegexp("sin"),"TMath::Sin");
-  Tools::GlobalRegexp(tf3str,TRegexp("cos"),"TMath::Cos");
-  Tools::GlobalRegexp(tf3str,TRegexp("pow"),"TMath::Power");
+  Tools::GlobalRegexp(formuStr,TRegexp("sin"),"TMath::Sin");
+  Tools::GlobalRegexp(formuStr,TRegexp("cos"),"TMath::Cos");
+  Tools::GlobalRegexp(formuStr,TRegexp("pow"),"TMath::Power");
 
-  Tools::GlobalRegexp(tf3str,TRegexp("phiH"),"x");
-  Tools::GlobalRegexp(tf3str,TRegexp("phiR"),"y");
-  Tools::GlobalRegexp(tf3str,TRegexp("theta"),"z");
+  Tools::GlobalRegexp(formuStr,TRegexp("phiH"),"x");
+  Tools::GlobalRegexp(formuStr,TRegexp("phiR"),"y");
+  Tools::GlobalRegexp(formuStr,TRegexp("theta"),"z");
 
-  return tf3str;
+  return formuStr;
 };
 
+// build formula string for RooFit
+TString Modulation::BuildFormuRF(Int_t tw, Int_t l, Int_t m) {
+  if(!Validate(tw,l,m)) return "unknown";
+  formuStr = this->BaseString(tw,l,m);
+
+  Tools::GlobalRegexp(formuStr,TRegexp("sin"),"TMath::Sin");
+  Tools::GlobalRegexp(formuStr,TRegexp("cos"),"TMath::Cos");
+  Tools::GlobalRegexp(formuStr,TRegexp("pow"),"TMath::Power");
+
+  Tools::GlobalRegexp(formuStr,TRegexp("phiH"),"rfPhiH");
+  Tools::GlobalRegexp(formuStr,TRegexp("phiR"),"rfPhiR");
+  Tools::GlobalRegexp(formuStr,TRegexp("theta"),"rfTheta");
+
+  return formuStr;
+};
+
+
+// build TF3
 TF3 * Modulation::BuildTF3(Int_t tw, Int_t l, Int_t m) {
   tf3name = this->ModulationName(tw,l,m);
   tf3name.ReplaceAll("mod","modFunc");
-  return new TF3(tf3name,this->BuildTF3formu(tw,l,m),-PI,PI,-PI,PI,0,PI);
+  return new TF3(tf3name,this->BuildFormu(tw,l,m),-PI,PI,-PI,PI,0,PI);
 };
 
 

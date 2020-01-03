@@ -23,7 +23,8 @@ class Modulation : public TObject
     Double_t Evaluate(Int_t tw, Int_t l, Int_t m, 
                       Float_t phiH, Float_t phiR, Float_t theta);
     TString BaseString(Int_t tw, Int_t l, Int_t m);
-    TString BuildTF3formu(Int_t tw, Int_t l, Int_t m);
+    TString BuildFormu(Int_t tw, Int_t l, Int_t m);
+    TString BuildFormuRF(Int_t tw, Int_t l, Int_t m);
     TF3 *  BuildTF3(Int_t tw, Int_t l, Int_t m);
 
     TString ModulationTitle(Int_t tw, Int_t l, Int_t m);
@@ -37,7 +38,7 @@ class Modulation : public TObject
 
   private:
     Double_t azi,leg;
-    TString aziStr,legStr,baseStr,tf3str,tf3name;
+    TString aziStr,legStr,baseStr,formuStr,tf3name;
     Int_t mAbs;
     Int_t twCurr,lCurr,mCurr;
     Int_t twOA,lOA,mOA;
