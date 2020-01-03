@@ -48,7 +48,9 @@ int main(int argc, char** argv) {
 
   // ARGUMENTS
   TString spinrootDir = "spinroot";
-  if(argc>1) spinrootDir = TString(argv[1]);
+  Int_t fitMode = 0;
+  if(argc>1) fitMode = (Int_t)strtof(argv[1],NULL);
+  if(argc>2) spinrootDir = TString(argv[2]);
 
   gStyle->SetOptFit(1);
 
@@ -213,7 +215,8 @@ int main(int argc, char** argv) {
     A = asymMap.at(bn);
 
     // perform the fits
-    A->CalculateAsymmetries();
+    A->FitOneAmp();
+    A->FitMultiAmp(fitMode);
 
     if( ( A->oa2d==false && A->fitFunc!=NULL) || 
         ( A->oa2d==true && A->fitFunc2!=NULL) ) {

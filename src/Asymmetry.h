@@ -66,9 +66,8 @@ class Asymmetry : public TObject
     ~Asymmetry();
 
 
-    Bool_t InitRooFit();
-    void CalculateAsymmetries();
-    void CalculateRooAsymmetries();
+    void FitOneAmp();
+    void FitMultiAmp(Int_t fitMode);
     void SetAsymGrPoint(Int_t modBin_, Int_t modBin2_=-1);
 
 
@@ -205,9 +204,6 @@ class Asymmetry : public TObject
     TString rfPdfFormu[2];
     TString rfSpinName[2];
 
-    TString rfModulation[nMod];
-    TString legendre[3];
-    TString pwFactorSP,pwFactorPP;
     TString pwUnpolDiff;
     TString asymExpansion;
     TString rellumFactor[2];

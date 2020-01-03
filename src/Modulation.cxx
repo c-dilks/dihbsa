@@ -76,7 +76,8 @@ TString Modulation::BaseString(Int_t tw, Int_t l, Int_t m) {
   };
 
   // theta dependence
-  // - this is from the partial wave expansion in terms of cos(theta)
+  // - this is from the partial wave expansion in terms of cos(theta); this follows
+  //   formulas 19-21 from arXiv:1408.5721
   // - the associated legendre polynomials are from spherical harmonics
   // - note that theta dependence of |l,m> is equal to |l,-m>
   if(l==0) legStr = "1";
@@ -95,10 +96,10 @@ TString Modulation::BaseString(Int_t tw, Int_t l, Int_t m) {
         legStr = "0.5*(3*pow(cos(theta),2)-1)";
         break;
       case 1:
-        legStr = "3*sin(theta)*cos(theta)";
+        legStr = "sin(2*theta)";
         break;
       case 2:
-        legStr = "3*pow(sin(theta),2)";
+        legStr = "pow(sin(theta),2)";
         break;
     };
   };
