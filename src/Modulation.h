@@ -31,8 +31,7 @@ class Modulation : public TObject
     TString ModulationName(Int_t tw, Int_t l, Int_t m);
     TString StateTitle(Int_t tw, Int_t l, Int_t m);
 
-
-    Bool_t enableTheta;
+    Bool_t enablePW;
     static const Int_t LMAX = 2;
 
 

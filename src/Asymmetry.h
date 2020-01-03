@@ -69,6 +69,7 @@ class Asymmetry : public TObject
     void FitOneAmp();
     void FitMultiAmp(Int_t fitMode);
     void SetAsymGrPoint(Int_t modBin_, Int_t modBin2_=-1);
+    void FormuAppend(Int_t TW, Int_t L, Int_t M);
 
 
     Bool_t AddEvent(EventTree * ev);
@@ -84,6 +85,7 @@ class Asymmetry : public TObject
     void StreamData(TFile * tf);
     void AppendData(TFile * tf);
     TString AppFileName(TFile * tf);
+
 
     Double_t nEvents;
 
@@ -205,21 +207,9 @@ class Asymmetry : public TObject
     TString rfSpinName[2];
 
     TString pwUnpolDiff;
-    TString asymExpansion;
+    TString asymFormu;
     TString rellumFactor[2];
     Float_t rfParamRange;
-
-  /* enums to remove:
-  modSinPhiR
-  modSinPhiHR
-  weightSinPhiHR
-  modSinPhiH
-  mod2dSinPhiR
-  mod2dWeightSinPhiHR
-  modTest
-  nMod
-  */
-
 
     RooRealVar *rfPhiH, *rfPhiR, *rfTheta;
     RooRealVar *rfWeight;

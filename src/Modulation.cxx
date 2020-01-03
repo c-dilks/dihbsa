@@ -6,13 +6,18 @@ ClassImp(Modulation)
 Modulation::Modulation() {
 
   // if true, enables theta dependence (partial waves) in the form of
-  // associated legendre polynomials
-  enableTheta = true;
+  // associated legendre polynomials; by default we leave it turned off
+  // so that other programs can choose to turn it on
+  enablePW = false;
 
   // variables which are used to track if a different value of tw,l,m is requested
   twCurr = (Int_t) UNDEF;
   lCurr = (Int_t) UNDEF;
   mCurr = (Int_t) UNDEF;
+
+  // variables for building the multi-amp formulas
+  multiAmpCnt = 0;
+  multiAmpFormu = "";
 };
 
 
@@ -105,7 +110,7 @@ TString Modulation::BaseString(Int_t tw, Int_t l, Int_t m) {
   };
 
   // concatenate
-  if(enableTheta) baseStr = "("+legStr+")*("+aziStr+")";
+  if(enablePW) baseStr = "("+legStr+")*("+aziStr+")";
   else baseStr = aziStr;
 
   // clean up the expression, to make it more human-readable
