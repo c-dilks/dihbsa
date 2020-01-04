@@ -113,9 +113,9 @@ int main(int argc, char** argv) {
 
   // set binning scheme
   BS = new Binning(pairType);
-  BS->SetOA(oaTw,oaL,oaM);
-  BS->useWeighting = useWeighting
-  BS->oa2dFit = oa2dFit
+  BS->SetOAnums(oaTw,oaL,oaM);
+  BS->useWeighting = useWeighting;
+  BS->oa2dFit = oa2dFit;
   Bool_t schemeSuccess = BS->SetScheme(ivType);
   if(!schemeSuccess) {
     fprintf(stderr,"ERROR: Binning::SetScheme failed\n");
@@ -271,13 +271,13 @@ int PrintUsage() {
   printf(" -w\tenable PhPerp/Mh weighting (default is off)\n\n");
 
   printf(" -t, -l, -m   azimuthal modulation single-amplitude asymmetry linear fit\n");
-  printf("   \texample: -t2 -l1 -l1 will fit the sin(phiH-phiR) modulation\n");
-  printf("   \texample: -t3 -l1 -l1 will fit the sin(phiR) modulation\n");
+  printf("   \texample: -t2 -l1 -m1 will fit the sin(phiH-phiR) modulation\n");
+  printf("   \texample: -t3 -l1 -m1 will fit the sin(phiR) modulation\n");
   printf("   \tdefault = -t%d -l%d -m%d\n\n",oaTw,oaL,oaM);
 
   printf(" -b\tdo single-amplitude fit in 2D azimuthal space (default is 1D)\n\n");
 
-  printf(" -h\t (for MC) - select which helicityMC to use\n\n");
+  printf(" -h\t(for MC) - select which helicityMC to use\n\n");
 
   return 0;
 };

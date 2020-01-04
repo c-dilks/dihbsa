@@ -15,9 +15,6 @@ Modulation::Modulation() {
   lCurr = (Int_t) UNDEF;
   mCurr = (Int_t) UNDEF;
 
-  // variables for building the multi-amp formulas
-  multiAmpCnt = 0;
-  multiAmpFormu = "";
 };
 
 
@@ -48,7 +45,6 @@ Double_t Modulation::Evaluate(Int_t tw, Int_t l, Int_t m,
     twCurr = tw;
     lCurr = l;
     mCurr = m;
-    if(funcCurr) delete funcCurr;
     funcCurr = this->BuildTF3(tw,l,m);
   };
 
@@ -167,8 +163,8 @@ TF3 * Modulation::BuildTF3(Int_t tw, Int_t l, Int_t m) {
 
 TString Modulation::ModulationTitle(Int_t tw, Int_t l, Int_t m) {
   TString retstr = BaseString(tw,l,m);
-  retStr.ReplaceAll("phi","#phi");
-  retStr.ReplaceAll("theta","#theta");
+  retstr.ReplaceAll("phi","#phi");
+  retstr.ReplaceAll("theta","#theta");
   return retstr;
 };
 TString Modulation::ModulationName(Int_t tw, Int_t l, Int_t m) {

@@ -356,11 +356,12 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
 
 
   if(debug) {
-    printf("Asymmetry instantiated.\n");
-    printf(" - whichDim = %d\n",whichDim);
-    printf(" - whichOaMod = %d\n",whichOaMod);
+    printf("whichDim = %d\n",whichDim);
+    printf("one-amp fit modulation = %s\n",modu->StateTitle(oaTw,oaL,oaM).Data());
+    printf("--> Asymmetry instantiated.\n");
   };
 
+  success = true;
 };
 
 
@@ -427,12 +428,12 @@ Bool_t Asymmetry::AddEvent(EventTree * ev) {
   for(int d=0; d<whichDim; d++) { 
     if(iv[d]<-8000) return KickEvent(TString(ivN[d]+" out of range"),iv[d]);
   };
-  if(PhiH<-PI || PhiH>PI) return KickEvent("PhiH out of range",PhiH);
-  if(PhiR<-PI || PhiR>PI) return KickEvent("PhiR out of range",PhiR);
+  if(PhiH<-PIe || PhiH>PIe) return KickEvent("PhiH out of range",PhiH);
+  if(PhiR<-PIe || PhiR>PIe) return KickEvent("PhiR out of range",PhiR);
   if(PhPerp<-8000) return KickEvent("PhPerp out of range",PhPerp);
   if(Ph<-8000) return KickEvent("Ph out of range",Ph);
   if(Q2<-8000) return KickEvent("Q2 out of range",Q2);
-  if(theta<0 || theta>PI) return KickEvent("theta out of range",theta);
+  if(theta<0 || theta>PIe) return KickEvent("theta out of range",theta);
 
   // check spin state, which was set by EventTree
   if(spinn<0 || spinn>=nSpin) return false;
@@ -660,8 +661,9 @@ void Asymmetry::FitMultiAmp(Int_t fitMode) {
       this->FormuAppend(3,1,-1);
       break;
     default:
-      fprintf(stderr,"ERROR: bad whichFormu\n");
-      return false;
+      fprintf(stderr,"ERROR: bad fitMode; using G1perp default\n");
+      this->FormuAppend(2,1,1);
+      break;
   };
 
   // append polarization factor to asymFormu

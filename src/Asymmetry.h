@@ -173,7 +173,7 @@ class Asymmetry : public TObject
     TH2D * asymGr2hist;
     TF2 * fitFunc2;
 
-    TString ModulationTitle,ModulationName;
+    TString oaModulationTitle,oaModulationName;
 
 
 

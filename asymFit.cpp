@@ -83,6 +83,14 @@ int main(int argc, char** argv) {
   printf("\n\n");
 
 
+  // perform the fits
+  printf("--- calculate asymmetries\n");
+  for(Int_t bn : BS->binVec) {
+    A = asymMap.at(bn);
+    A->FitOneAmp();
+    A->FitMultiAmp(fitMode);
+  };
+
 
   // build maps from Binning::binVec number to plots etc.
   TGraphErrors * kindepGr;
@@ -143,7 +151,7 @@ int main(int argc, char** argv) {
     if(BS->UnhashBinNum(bn,0)==0) {
 
       // instantiate kindep graph, for linear fit ("l.f.") result
-      grTitle = dihTitle + " A_{LU}[" + A->ModulationTitle + "]_{l.f.} " + 
+      grTitle = dihTitle + " A_{LU}[" + A->oaModulationTitle + "]_{l.f.} " + 
         " vs. " + grTitleSuffix;
       grName = "kindep_" + grNameSuffix;
       kindepGr = new TGraphErrors();
@@ -151,7 +159,7 @@ int main(int argc, char** argv) {
       kindepGr->SetTitle(grTitle);
 
       // instantiate multiGraph, for plotting kindep graphs together
-      grTitle = dihTitle + " A_{LU}[" + A->ModulationTitle + "] " + 
+      grTitle = dihTitle + " A_{LU}[" + A->oaModulationTitle + "] " + 
         " vs. " + grTitleSuffix;
       grName = "multiGr_" + grNameSuffix;
       multiGr = new TMultiGraph();
@@ -171,7 +179,7 @@ int main(int argc, char** argv) {
 
       // instantiate chi2/ndf graphs
       grTitle = "#chi^{2}/NDF of " +
-        dihTitle + " A_{LU}[" + A->ModulationTitle + "]_{l.f.} " + 
+        dihTitle + " A_{LU}[" + A->oaModulationTitle + "]_{l.f.} " + 
         " vs. " + grTitleSuffix;
       grName = "chindf_" + grNameSuffix;
       chindfGr = new TGraphErrors();
@@ -203,20 +211,15 @@ int main(int argc, char** argv) {
   TH1F * chisqDist = new TH1F("chisqDist",
       "#chi^{2} distribution (from linear fit results)",100,0,20);
 
-  // compute asymmetries
+  // graph asymmetry results
   Float_t asymValue,asymError;
   Float_t RFasymValue[Asymmetry::nAmp];
   Float_t RFasymError[Asymmetry::nAmp];
   Float_t meanKF;
   Float_t kinValue,kinError;
   Float_t chisq,ndf;
-  printf("--- calculate asymmetries\n");
   for(Int_t bn : BS->binVec) {
     A = asymMap.at(bn);
-
-    // perform the fits
-    A->FitOneAmp();
-    A->FitMultiAmp(fitMode);
 
     if( ( A->oa2d==false && A->fitFunc!=NULL) || 
         ( A->oa2d==true && A->fitFunc2!=NULL) ) {
