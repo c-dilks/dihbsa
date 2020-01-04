@@ -650,15 +650,40 @@ void Asymmetry::FitMultiAmp(Int_t fitMode) {
       //nDparamUsed = 2;
       break;
     case 5: // three L=1 modulations (for DNP2019)
+      this->FormuAppend(3,0,0);
       this->FormuAppend(2,1,1);
       this->FormuAppend(3,1,1);
-      this->FormuAppend(3,1,0);
       break;
     case 6: // all four L=1 modulations
+      this->FormuAppend(3,0,0);
       this->FormuAppend(2,1,1);
       this->FormuAppend(3,1,1);
-      this->FormuAppend(3,1,0);
       this->FormuAppend(3,1,-1);
+      break;
+    case 7: // modulations up to L=2 with nonegligble overlap with |1,1>_2
+      this->FormuAppend(3,0,0); // grey
+      this->FormuAppend(2,1,1); // red
+      this->FormuAppend(3,1,1); // blue
+      this->FormuAppend(3,1,-1); // purple
+      this->FormuAppend(2,2,2); // green
+      this->FormuAppend(3,2,2); // cyan
+      break;
+    case 8: // partial waves for G1perp SP
+      modu->enablePW = true;
+      this->FormuAppend(3,0,0); // grey
+      this->FormuAppend(2,1,1); // red
+      this->FormuAppend(3,1,1); // blue
+      this->FormuAppend(3,1,-1); // purple
+      this->FormuAppend(3,2,0); // green
+      this->FormuAppend(2,2,2); // cyan
+      this->FormuAppend(3,2,2); // yellow
+      break;
+    case 9: // partial waves for G1perp PP
+      modu->enablePW = true;
+      this->FormuAppend(3,1,0);
+      this->FormuAppend(2,2,1);
+      this->FormuAppend(3,2,1);
+      this->FormuAppend(3,2,-1);
       break;
     default:
       fprintf(stderr,"ERROR: bad fitMode; using G1perp default\n");

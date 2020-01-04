@@ -372,7 +372,7 @@ int main(int argc, char** argv) {
     DrawKinDepGraph(kindepGr,BS,0);
 
     multiGr = multiMap.at(binNum);
-    multiGr->Add(kindepGr); // include linear fit in multiGr
+    //multiGr->Add(kindepGr); // include linear fit in multiGr
     for(int aa=0; aa<N_AMP; aa++) {
       RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
       RFkindepCanv[aa]->cd();
@@ -414,7 +414,7 @@ int main(int argc, char** argv) {
       DrawKinDepGraph(kindepGr,BS,0);
 
       multiGr = multiMap.at(binNum);
-      multiGr->Add(kindepGr); // include linear fit in multiGr
+      //multiGr->Add(kindepGr); // include linear fit in multiGr
 
       for(int aa=0; aa<N_AMP; aa++) {
         RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
@@ -459,7 +459,7 @@ int main(int argc, char** argv) {
         DrawKinDepGraph(kindepGr,BS,0);
 
         multiGr = multiMap.at(binNum);
-        multiGr->Add(kindepGr); // include linear fit in multiGr
+        //multiGr->Add(kindepGr); // include linear fit in multiGr
 
         for(int aa=0; aa<N_AMP; aa++) {
           RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
@@ -837,22 +837,38 @@ TGraphErrors * ShiftGraph(TGraphErrors * gr, Int_t nShift) {
 
   switch(nShift) {
     case 1:
-      retGr->SetLineColor(N_AMP==1?kGray+3:kGreen+1); 
-      retGr->SetLineStyle(2);
-      retGr->SetMarkerStyle(22);
+      retGr->SetLineColor(N_AMP==1?kGray+3:kGray+1); 
+      //retGr->SetLineStyle(2);
+      retGr->SetMarkerStyle(kFullCircle);
       break;
     case 2:
       retGr->SetLineColor(kRed); 
-      retGr->SetLineStyle(1);
+      //retGr->SetLineStyle(1);
       retGr->SetMarkerStyle(kFullCircle);
       break;
     case 3:
-      retGr->SetLineColor(kBlue);
-      retGr->SetLineStyle(3);
-      retGr->SetMarkerStyle(23);
+      retGr->SetLineColor(kAzure+1);
+      //retGr->SetLineStyle(3);
+      retGr->SetMarkerStyle(kFullCircle);
       break;
     case 4:
-      retGr->SetLineColor(kMagenta);
+      retGr->SetLineColor(kViolet+1);
+      retGr->SetMarkerStyle(kFullCircle);
+      break;
+    case 5:
+      retGr->SetLineColor(kGreen+1);
+      retGr->SetMarkerStyle(kFullCircle);
+      break;
+    case 6:
+      retGr->SetLineColor(kCyan);
+      retGr->SetMarkerStyle(kFullCircle);
+      break;
+    case 7:
+      retGr->SetLineColor(kOrange);
+      retGr->SetMarkerStyle(kFullCircle);
+      break;
+    case 8:
+      retGr->SetLineColor(kOrange-7);
       retGr->SetMarkerStyle(kFullCircle);
       break;
     default: retGr->SetLineColor(kGray);
