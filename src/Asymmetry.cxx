@@ -817,6 +817,7 @@ void Asymmetry::FormuAppend(Int_t TW, Int_t L, Int_t M) {
   fitTw[nAmpUsed] = TW;
   fitL[nAmpUsed] = L;
   fitM[nAmpUsed] = M;
+  fitPW = modu->enablePW;
 
   nAmpUsed++;
 

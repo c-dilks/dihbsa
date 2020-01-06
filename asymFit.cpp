@@ -28,6 +28,7 @@
 #include "Constants.h"
 #include "Binning.h"
 #include "Asymmetry.h"
+#include "Modulation.h"
 
 
 // subroutines
@@ -43,6 +44,7 @@ Int_t N_AMP,N_D;
 TString dihTitle,dihName;
 Binning * BS;
 Asymmetry * A;
+Modulation * modu;
 
 
 
@@ -65,7 +67,8 @@ int main(int argc, char** argv) {
 
 
   // open spinroot cat file and result file
-  TFile * asymFile = new TFile(TString(spinrootDir+"/asym.root"),"RECREATE");
+  TString asymFileN = Form("%s/asym_%d.root",spinrootDir.Data(),fitMode);
+  TFile * asymFile = new TFile(asymFileN,"RECREATE");
   TFile * catFile = new TFile(TString(spinrootDir+"/cat.root"),"READ");
 
 
@@ -82,6 +85,7 @@ int main(int argc, char** argv) {
   };
   dihTitle = PairTitle(BS->whichHad[qA],BS->whichHad[qB]);
   dihName = PairName(BS->whichHad[qA],BS->whichHad[qB]);
+  modu = new Modulation();
 
 
   // print which IV will be analyzed
@@ -494,6 +498,7 @@ int main(int argc, char** argv) {
   // build multiGr canvases
   TCanvas * multiGrCanv;
   TLegend * multiLeg;
+  TString legText;
   TString multiGrCanvN;
   TObjArray * multiGrCanvArr;
   Int_t nRows = ( N_AMP + 1 - (includeOAonMultiGr?0:1) )/4 + 1;
@@ -509,18 +514,27 @@ int main(int argc, char** argv) {
 
       multiLeg = new TLegend(0.1,0.1,0.9,0.9);
 
+      modu->enablePW = A->fitPW;
+
       for(int aa=0; aa<N_AMP; aa++) {
         multiGrCanv->cd(aa+1);
+        multiGrCanv->GetPad(aa+1)->SetGrid(0,1);
         RFkindepGr[aa] = RFkindepMap[aa].at(bn);
         RFkindepGr[aa]->Draw("LAPE");
-        multiLeg->AddEntry(RFkindepGr[aa],RFkindepGr[aa]->GetName(),"PLE");
+        legText = modu->StateTitle(A->fitTw[aa],A->fitL[aa],A->fitM[aa]);
+        legText += ": ";
+        legText += modu->ModulationTitle(A->fitTw[aa],A->fitL[aa],A->fitM[aa]);
+        multiLeg->AddEntry(RFkindepGr[aa],legText,"PLE");
       };
       
       if(includeOAonMultiGr) {
         kindepGr = kindepMap.at(bn);
         multiGrCanv->cd(N_AMP+1);
+        multiGrCanv->GetPad(N_AMP+1)->SetGrid(0,1);
         kindepGr->Draw("LAPE");
-        multiLeg->AddEntry(kindepGr,kindepGr->GetName(),"PLE");
+        legText = A->oaModulationTitle;
+        legText += " one-amp result";
+        multiLeg->AddEntry(kindepGr,legText,"PLE");
       };
 
       multiGrCanv->cd(4*nRows);
