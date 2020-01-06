@@ -21,6 +21,8 @@
 #include "TStyle.h"
 #include "TMultiGraph.h"
 #include "TSystem.h"
+#include "TObjArray.h"
+#include "TLegend.h"
 
 // DihBsa
 #include "Constants.h"
@@ -46,13 +48,21 @@ Asymmetry * A;
 
 int main(int argc, char** argv) {
 
+  //////////////////////////////////////////////
   // ARGUMENTS
   TString spinrootDir = "spinroot";
   Int_t fitMode = 0;
   if(argc>1) fitMode = (Int_t)strtof(argv[1],NULL);
   if(argc>2) spinrootDir = TString(argv[2]);
+  //////////////////////////////////////////////
 
+
+  //////////////////////////////////////////////
+  // OPTIONS
+  Bool_t includeOAonMultiGr = false;
   gStyle->SetOptFit(1);
+  //////////////////////////////////////////////
+
 
   // open spinroot cat file and result file
   TFile * asymFile = new TFile(TString(spinrootDir+"/asym.root"),"RECREATE");
@@ -151,7 +161,7 @@ int main(int argc, char** argv) {
     if(BS->UnhashBinNum(bn,0)==0) {
 
       // instantiate kindep graph, for linear fit ("l.f.") result
-      grTitle = dihTitle + " A_{LU}[" + A->oaModulationTitle + "]_{l.f.} " + 
+      grTitle = dihTitle + " A_{LU}[" + A->oaModulationTitle + "] " + 
         " vs. " + grTitleSuffix;
       grName = "kindep_" + grNameSuffix;
       kindepGr = new TGraphErrors();
@@ -166,10 +176,10 @@ int main(int argc, char** argv) {
       multiGr->SetName(grName);
       multiGr->SetTitle(grTitle);
 
-      // instantiate kindep graphs for maximum likelihood method (m.l.m.) result
+      // instantiate kindep graphs for maximum likelihood method result
       // for each fit parameter
       for(int aa=0; aa<N_AMP; aa++) {
-        grTitle = dihTitle + " " + TString(A->rfA[aa]->GetTitle()) + "_{m.l.m.} " +
+        grTitle = dihTitle + " " + TString(A->rfA[aa]->GetTitle()) + 
           " vs. " + grTitleSuffix;
         grName = "RF_A" + TString::Itoa(aa,10) + "_kindep_" + grNameSuffix;
         RFkindepGr[aa] = new TGraphErrors();
@@ -372,7 +382,7 @@ int main(int argc, char** argv) {
     DrawKinDepGraph(kindepGr,BS,0);
 
     multiGr = multiMap.at(binNum);
-    //multiGr->Add(kindepGr); // include linear fit in multiGr
+    if(includeOAonMultiGr) multiGr->Add(kindepGr);
     for(int aa=0; aa<N_AMP; aa++) {
       RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
       RFkindepCanv[aa]->cd();
@@ -414,7 +424,7 @@ int main(int argc, char** argv) {
       DrawKinDepGraph(kindepGr,BS,0);
 
       multiGr = multiMap.at(binNum);
-      //multiGr->Add(kindepGr); // include linear fit in multiGr
+      if(includeOAonMultiGr) multiGr->Add(kindepGr);
 
       for(int aa=0; aa<N_AMP; aa++) {
         RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
@@ -459,7 +469,7 @@ int main(int argc, char** argv) {
         DrawKinDepGraph(kindepGr,BS,0);
 
         multiGr = multiMap.at(binNum);
-        //multiGr->Add(kindepGr); // include linear fit in multiGr
+        if(includeOAonMultiGr) multiGr->Add(kindepGr);
 
         for(int aa=0; aa<N_AMP; aa++) {
           RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
@@ -480,6 +490,47 @@ int main(int argc, char** argv) {
     };
   };
 
+
+  // build multiGr canvases
+  TCanvas * multiGrCanv;
+  TLegend * multiLeg;
+  TString multiGrCanvN;
+  TObjArray * multiGrCanvArr;
+  Int_t nRows = ( N_AMP + 1 - (includeOAonMultiGr?0:1) )/4 + 1;
+  for(Int_t bn : BS->binVec) {
+    A = asymMap.at(bn);
+    if(A->B[0] == 0) {
+
+      multiGr = multiMap.at(bn);
+      multiGrCanvN = multiGr->GetName();
+      multiGrCanvN.ReplaceAll("multiGr","multiGrCanv");
+      multiGrCanv = new TCanvas(multiGrCanvN,multiGrCanvN,1600,nRows*400);
+      multiGrCanv->Divide(4,nRows);
+
+      multiLeg = new TLegend(0.1,0.1,0.9,0.9);
+
+      for(int aa=0; aa<N_AMP; aa++) {
+        multiGrCanv->cd(aa+1);
+        RFkindepGr[aa] = RFkindepMap[aa].at(bn);
+        RFkindepGr[aa]->Draw("LAPE");
+        multiLeg->AddEntry(RFkindepGr[aa],RFkindepGr[aa]->GetName(),"PLE");
+      };
+      
+      if(includeOAonMultiGr) {
+        kindepGr = kindepMap.at(bn);
+        multiGrCanv->cd(N_AMP+1);
+        kindepGr->Draw("LAPE");
+        multiLeg->AddEntry(kindepGr,kindepGr->GetName(),"PLE");
+      };
+
+      multiGrCanv->cd(4*nRows);
+      multiLeg->Draw();
+
+      multiGrCanvArr = new TObjArray();
+      multiGrCanvArr->AddLast(multiGrCanv);
+
+    };
+  };
 
 
   // sum distributions (for showing bin boundaries)
@@ -588,7 +639,6 @@ int main(int argc, char** argv) {
   if(!(A->oa2d)) modFullDist->Write();
   else modFullDist2->Write();
 
-
   // -- asymmetries and kindep graphs
   printf("--- write kinematic-dependent asymmetries\n");
   for(Int_t bn : BS->binVec) {
@@ -613,6 +663,10 @@ int main(int argc, char** argv) {
       multiGr->Write();
     };
   };
+
+  // write multiGr canvases
+  multiGrCanvArr->Write("multiGrCanvArr",TObject::kSingleKey);
+
 
   kindepCanv->Write();
   for(int aa=0; aa<N_AMP; aa++) RFkindepCanv[aa]->Write();
@@ -873,11 +927,18 @@ TGraphErrors * ShiftGraph(TGraphErrors * gr, Int_t nShift) {
       break;
     default: retGr->SetLineColor(kGray);
   };
-  
+
 
   retGr->SetMarkerColor(kBlack);
   retGr->SetLineWidth(2);
   retGr->SetMarkerSize(1.3);
+
+  gr->SetLineColor(retGr->GetLineColor());
+  gr->SetLineStyle(retGr->GetLineStyle());
+  gr->SetMarkerStyle(retGr->GetMarkerStyle());
+  gr->SetMarkerColor(kBlack);
+  gr->SetLineWidth(2);
+  gr->SetMarkerSize(1.3);
 
   return retGr;
 };

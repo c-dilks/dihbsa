@@ -813,6 +813,11 @@ void Asymmetry::FormuAppend(Int_t TW, Int_t L, Int_t M) {
 
   asymFormu += "A"+TString::Itoa(nAmpUsed,10)+"*"+modu->BuildFormuRF(TW,L,M);
   rfA[nAmpUsed]->SetTitle(TString("A"+modu->StateTitle(TW,L,M)));
+
+  fitTw[nAmpUsed] = TW;
+  fitL[nAmpUsed] = L;
+  fitM[nAmpUsed] = M;
+
   nAmpUsed++;
 
 };

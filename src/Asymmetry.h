@@ -219,6 +219,9 @@ class Asymmetry : public TObject
     Int_t nAmpUsed;
     TString rfAname[nAmp];
     RooRealVar *rfA[nAmp];
+    Int_t fitTw[nAmp];
+    Int_t fitL[nAmp];
+    Int_t fitM[nAmp];
 
     static const Int_t nDparam = 2;
     Int_t nDparamUsed;
