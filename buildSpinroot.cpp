@@ -21,8 +21,10 @@
 // argument variables
 TString inputData;
 Int_t pairType;
-Int_t whichModulation;
 Int_t ivType;
+Int_t oaTw,oaL,oaM;
+Bool_t useWeighting;
+Bool_t oa2dFit;
 Int_t whichHelicityMC;
 
 // subroutines
@@ -47,7 +49,7 @@ int main(int argc, char** argv) {
   int opt;
   enum inputType_enum {iFile,iDir};
   Int_t inputType = -1;
-  while( (opt=getopt(argc,argv,"f:d:p:m:i:h:")) != -1 ) {
+  while( (opt=getopt(argc,argv,"f:d:p:i:t:l:m:w|b|h:")) != -1 ) {
     switch(opt) {
       case 'f': /* input file */
         if(inputType>=0) return PrintUsage();
@@ -62,11 +64,23 @@ int main(int argc, char** argv) {
       case 'p': /* pair type (hexadecimal number) */
         pairType = (Int_t) strtof(optarg,NULL);
         break;
-      case 'm': /* azimuthal modulation for asymmetry */
-        whichModulation = (Int_t) strtof(optarg,NULL);
-        break;
       case 'i': /* independent variables */
         ivType = (Int_t) strtof(optarg,NULL);
+        break;
+      case 't': /* one-amp fit modulation specifier Twist */
+        oaTw = (Int_t) strtof(optarg,NULL);
+        break;
+      case 'l': /* one-amp fit modulation specifier L */
+        oaL = (Int_t) strtof(optarg,NULL);
+        break;
+      case 'm': /* one-amp fit modulation specifier M */
+        oaM = (Int_t) strtof(optarg,NULL);
+        break;
+      case 'w': /* enable weighting by PhPerp/Mh */
+        useWeighting = true;
+        break;
+      case 'b': /* enable 2d asymmetry fit (one amp), instead of 1d fit */
+        oa2dFit = true;
         break;
       case 'h': /* which helicityMC */
         whichHelicityMC = (Int_t) strtof(optarg,NULL);
@@ -84,17 +98,24 @@ int main(int argc, char** argv) {
   };
 
   // print arguments' values
+  Tools::PrintSeparator(40,"=");
   printf("inputData = %s\n",inputData.Data());
   printf("pairType = 0x%x\n",pairType);
-  printf("whichModulation = %d\n",whichModulation);
   printf("ivType = %d\n",ivType);
+  printf("enable PhPerp/Mh weighting: %s\n",useWeighting?"true":"false");
+  Tools::PrintSeparator(40,"-");
+  printf("one-amp fit modulation: |%d,%d>, twist-%d\n",oaL,oaM,oaTw);
+  printf("one-amp fit performed in %dD azimuthal space\n",oa2dFit?2:1);
+  Tools::PrintSeparator(40,"-");
   printf("whichHelicityMC = %d\n",whichHelicityMC);
-  printf("\n");
+  Tools::PrintSeparator(40,"=");
 
 
   // set binning scheme
   BS = new Binning(pairType);
-  BS->AsymModulation = whichModulation;
+  BS->SetOAnums(oaTw,oaL,oaM);
+  BS->useWeighting = useWeighting;
+  BS->oa2dFit = oa2dFit;
   Bool_t schemeSuccess = BS->SetScheme(ivType);
   if(!schemeSuccess) {
     fprintf(stderr,"ERROR: Binning::SetScheme failed\n");
@@ -108,8 +129,8 @@ int main(int argc, char** argv) {
 
 
   // get modulation name for 1-amp fit
-  A = new Asymmetry(BS);
-  TString modN = A->ModulationName;
+  Modulation * modu = new Modulation();
+  TString modN = modu->ModulationName(oaTw,oaL,oaM);
   printf("--> 1-amp fit will be for %s modulation\n\n",modN.Data());
 
 
@@ -207,8 +228,12 @@ int main(int argc, char** argv) {
 void SetDefaultArgs() {
   inputData = "";
   pairType = EncodePairType(kPip,kPim);
-  whichModulation = Asymmetry::weightSinPhiHR;
   ivType = Binning::vM + 1;
+  oaTw = 2;
+  oaL = 1;
+  oaM = 1;
+  useWeighting = false;
+  oa2dFit = false;
   whichHelicityMC = 0;
 };
 
@@ -232,30 +257,27 @@ int PrintUsage() {
   printf("   \trun PrintEnumerators.C for notation\n");
   printf("   \tdefault = 0x%x (%s)\n\n",pairType,PairTitle(pairType).Data());
 
-  printf(" -m\tazimuthal modulation for asymmetry linear fit\n");
-  BS = new Binning(pairType);
-  for(int m=0; m<Asymmetry::nMod; m++) {
-    BS->AsymModulation = m;
-    A = new Asymmetry(BS);
-    printf("   \t %d = %s =  %s\n",m,
-        (A->ModulationName).Data(),
-        (A->ModulationTitle).Data()
-        );
-  };
-  printf("   \tdefault = %d\n\n",whichModulation);
-
   printf(" -i\tindependent variable specifier: 1, 2, or 3-digit number which\n");
   printf("   \tspecifies the independent variables that asymmetries will be\n");
   printf("   \tplotted against. The number of digits will be the number of\n");
   printf("   \tdimensions in the multi-dimensional binning\n");
   printf("   \t* the allowed digits are:\n");
+  BS = new Binning(pairType);
   for(int i=0; i<Binning::nIV; i++) {
     printf("   \t  %d = %s\n",i+1,(BS->IVtitle[i]).Data());
   };
   printf("   \tdefault = %d\n\n",ivType);
 
-  printf(" -g\t (for MC) - select which helicityMC to use\n\n");
+  printf(" -w\tenable PhPerp/Mh weighting (default is off)\n\n");
+
+  printf(" -t, -l, -m   azimuthal modulation single-amplitude asymmetry linear fit\n");
+  printf("   \texample: -t2 -l1 -m1 will fit the sin(phiH-phiR) modulation\n");
+  printf("   \texample: -t3 -l1 -m1 will fit the sin(phiR) modulation\n");
+  printf("   \tdefault = -t%d -l%d -m%d\n\n",oaTw,oaL,oaM);
+
+  printf(" -b\tdo single-amplitude fit in 2D azimuthal space (default is 1D)\n\n");
+
+  printf(" -h\t(for MC) - select which helicityMC to use\n\n");
 
   return 0;
 };
-

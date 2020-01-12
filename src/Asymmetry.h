@@ -51,6 +51,7 @@
 // dihbsa
 #include "Constants.h"
 #include "Tools.h"
+#include "Modulation.h"
 #include "Trajectory.h"
 #include "DIS.h"
 #include "Binning.h"
@@ -61,14 +62,14 @@ class Asymmetry : public TObject
 {
   public:
     Asymmetry() {}; // empty default constructor for streaming instances to ROOT files
-    Asymmetry(Binning * binScheme,  Int_t binNum=-1);
+    Asymmetry(Binning * binScheme,  Int_t binNum);
     ~Asymmetry();
 
 
-    Bool_t InitRooFit();
-    void CalculateAsymmetries();
-    void CalculateRooAsymmetries();
+    void FitOneAmp();
+    void FitMultiAmp(Int_t fitMode);
     void SetAsymGrPoint(Int_t modBin_, Int_t modBin2_=-1);
+    void FormuAppend(Int_t TW, Int_t L, Int_t M);
 
 
     Bool_t AddEvent(EventTree * ev);
@@ -85,28 +86,20 @@ class Asymmetry : public TObject
     void AppendData(TFile * tf);
     TString AppFileName(TFile * tf);
 
+
     Double_t nEvents;
 
     Bool_t success;
     Bool_t successIVmode;
     Bool_t debug;
 
-
-    // modulations
-    enum modEnum {
-      modSinPhiR,
-      modSinPhiHR,
-      weightSinPhiHR,
-      modSinPhiH,
-      mod2dSinPhiR,
-      mod2dWeightSinPhiHR,
-      modTest,
-      nMod
-    };
-    Int_t whichMod;
-    Int_t whichDim;
-    Bool_t asym2d;
     Binning * BS;
+
+    // settings
+    Int_t oaTw,oaL,oaM;
+    Int_t whichDim;
+    Bool_t oa2d;
+    Bool_t useWeighting;
 
 
 
@@ -125,8 +118,6 @@ class Asymmetry : public TObject
     
     Float_t kfA,kfC,kfW;
 
-    Float_t PhiTest;
-
 
     // number of bins
     static const Int_t iv1Bins = 100; // number of bins for ivDist1 plots
@@ -135,7 +126,6 @@ class Asymmetry : public TObject
     static const Int_t nModBins = 7; // number of bins in azimuthal modulation
     static const Int_t nModBins2 = 5; // number of bins in 2d azimuthal modulation
 
-    Float_t modMaxDefault;
     Float_t modMax,aziMax;
     Float_t weight;
     Float_t kf;
@@ -183,7 +173,7 @@ class Asymmetry : public TObject
     TH2D * asymGr2hist;
     TF2 * fitFunc2;
 
-    TString ModulationTitle,ModulationName;
+    TString oaModulationTitle,oaModulationName;
 
 
 
@@ -216,37 +206,39 @@ class Asymmetry : public TObject
     TString rfPdfFormu[2];
     TString rfSpinName[2];
 
-    TString rfModulation[nMod];
-    TString legendre[3];
-    TString pwFactorSP,pwFactorPP;
     TString pwUnpolDiff;
-    TString asymExpansion;
+    TString asymFormu;
     TString rellumFactor[2];
     Float_t rfParamRange;
 
-
     RooRealVar *rfPhiH, *rfPhiR, *rfTheta;
-    RooRealVar *rfPhiTest;
     RooRealVar *rfWeight;
     RooRealVar *rfPol, *rfRellum;
 
-    static const Int_t nAmp = 4;
+    static const Int_t nAmp = 12;
     Int_t nAmpUsed;
     TString rfAname[nAmp];
     RooRealVar *rfA[nAmp];
+    Int_t fitTw[nAmp];
+    Int_t fitL[nAmp];
+    Int_t fitM[nAmp];
+    Bool_t fitPW;
 
     static const Int_t nDparam = 2;
     Int_t nDparamUsed;
     TString rfDname[nDparam];
     RooRealVar *rfD[nDparam];
 
+    /*
     RooRealVar *rfYieldBoth;
     RooRealVar *rfYield[2];
+    */
 
     RooNLLVar * rfNLL;
     RooPlot * rfNLLplot[nAmp];
 
   private:
+    Modulation * modu;
 
     Float_t modulation;
     Int_t modbin,modbinH,modbinR;

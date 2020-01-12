@@ -38,7 +38,7 @@ class Binning : public TObject
     void AddBinBound(Int_t ivIdx, Float_t newBound);
     void PrintBinBounds();
     Int_t GetBin(Int_t v_, Float_t iv_);
-    TString GetBoundStr(Int_t v_, Int_t b_);
+    TString GetBoundStr(Int_t bn, Int_t dim);
 
     Bool_t SetScheme(Int_t ivType);
 
@@ -86,11 +86,17 @@ class Binning : public TObject
     Int_t UnhashBinNum(Int_t bn, Int_t dim);
 
     // extra variables, used for Asymmetry
-    Int_t AsymModulation;
+    // (it would be nicer to just stream Asymmetry objects to a root file,
+    //  but so far it's not working...)
+    Int_t oaTw,oaL,oaM;
+    void SetOAnums(Int_t t_, Int_t l_, Int_t m_) {
+      oaTw=t_; oaL=l_; oaM=m_;
+    };
+    Int_t whichHad[2];
+    Bool_t useWeighting, oa2dFit;
 
     
   private:
-    Int_t whichHad[2];
     Int_t numKaons;
 
 

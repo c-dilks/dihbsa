@@ -2,6 +2,7 @@
 #define TOOLS_H_GUARD
 
 #include "TString.h"
+#include "TRegexp.h"
 #include "TMath.h"
 #include "TH1.h"
 #include "TH2.h"
@@ -144,6 +145,11 @@ class Tools {
     };
 
 
+    // apply a TRegexp to a TString globally (I'm not sure if ROOT has this feature,
+    // so I made my own)
+    static void GlobalRegexp(TString & str, TRegexp re, TString rep) {
+      while(str.Contains(re)) { str(re)=rep; };
+    };
 
     ClassDef(Tools,1);
 };
