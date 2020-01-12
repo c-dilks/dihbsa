@@ -6,17 +6,19 @@
 <!-- sample XML Files in /u/group/hps/production/ -->
 
   <List name="hipoFile">
-MCDIS_632_OldLund.hipo
+DIS_OSG_F18_1.hipo
+<!--MCDIS_632_OldLund.hipo
 MC_DIS_DNP19_2.hipo
 MC_DIS_DNP19_3.hipo
 MC_DIS_DNP19_4.hipo
 MC_DIS_DNP19_6.hipo
 MC_DIS_DNP19_7.hipo
-MC_DIS_DNP19_8.hipo
+MC_DIS_DNP19_8.hipo-->
   </List>
 
 
-  <Variable name="hipoDir" value="/w/hallb-scifs17exp/clas12/gangel/Simu_DNP19/T-1.00_S-1.0/F18" />
+  <Variable name="hipoDir" value="/lustre/expphy/volatile/clas12/gangel" />
+  <!--<Variable name="hipoDir" value="/w/hallb-scifs17exp/clas12/gangel/Simu_DNP19/T-1.00_S-1.0/F18" />-->
   <Variable name="workDir" value="/w/hallb-scifs17exp/clas12/users/dilks/dihbsa" />
   <Variable name="volDir" value="/volatile/clas12/users/dilks" />
   <Variable name="homeDir" value="/u/home/dilks" />
@@ -24,8 +26,8 @@ MC_DIS_DNP19_8.hipo
   <ForEach list="hipoFile">
     <Job>
       <TimeLimit unit="minutes" time="240" />
-      <DiskSpace space="4" unit="GB" />
-      <Memory space="3" unit="GB" />
+      <DiskSpace space="100" unit="MB" />
+      <Memory space="1" unit="GB" />
 
 
       <Input src="file:${homeDir}/environment.csh" dest="environment.csh"/>
