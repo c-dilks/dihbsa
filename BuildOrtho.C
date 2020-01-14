@@ -1,6 +1,29 @@
 // builds ortho.root, which contains yield distributions needed for modulation
 // orthogonalty studies (see Orthogonality*.C)
 
+
+/* 
+// code which gives a distribution of the bin contents;
+// use this to check if d3 is binned too finely 
+void CountBinContents(TString fN = "ortho.root") {
+  TFile * f = new TFile(fN,"READ");
+  TH3D * d = (TH3D*) f->Get("d3");
+  TH1D * cd = new TH1D("cd","bin content distribution",20,0,20);
+  Double_t c;
+  for(int x=1; x<d->GetNbinsX(); x++) {
+    for(int y=1; y<d->GetNbinsY(); y++) {
+      for(int z=1; z<d->GetNbinsZ(); z++) {
+        c = d->GetBinContent(x,y,z);
+        if(c>0) cd->Fill(c);
+        //cd->Fill(c);
+      };
+    };
+  };
+  new TCanvas();
+  cd->Draw();
+};
+*/
+
 R__LOAD_LIBRARY(DihBsa)
 
 #include "Constants.h"
