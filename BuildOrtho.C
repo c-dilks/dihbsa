@@ -3,8 +3,8 @@
 
 
 /* 
-// code which gives a distribution of the bin contents;
-// use this to check if d3 is binned too finely 
+code which gives a distribution of the bin contents;
+use this to check if d3 is binned too finely 
 void CountBinContents(TString fN = "ortho.root") {
   TFile * f = new TFile(fN,"READ");
   TH3D * d = (TH3D*) f->Get("d3");
