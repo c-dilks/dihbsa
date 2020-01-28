@@ -67,7 +67,7 @@ class Asymmetry : public TObject
 
 
     void FitOneAmp();
-    void FitMultiAmp(Int_t fitMode);
+    void FitMultiAmp(Int_t fitMode, Float_t DparamVal=0);
     void SetAsymGrPoint(Int_t modBin_, Int_t modBin2_=-1);
     void FormuAppend(Int_t TW, Int_t L, Int_t M);
 
@@ -206,7 +206,6 @@ class Asymmetry : public TObject
     TString rfPdfFormu[2];
     TString rfSpinName[2];
 
-    TString pwUnpolDiff;
     TString asymFormu;
     TString rellumFactor[2];
     Float_t rfParamRange;
@@ -224,7 +223,7 @@ class Asymmetry : public TObject
     Int_t fitM[nAmp];
     Bool_t fitPW;
 
-    static const Int_t nDparam = 2;
+    static const Int_t nDparam = 1;
     Int_t nDparamUsed;
     TString rfDname[nDparam];
     RooRealVar *rfD[nDparam];

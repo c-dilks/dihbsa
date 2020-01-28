@@ -54,8 +54,10 @@ int main(int argc, char** argv) {
   // ARGUMENTS
   TString spinrootDir = "spinroot";
   Int_t fitMode = 0;
+  Float_t DparamVal = 0; // (for systematic uncertainty from D_1 pp-wave)
   if(argc>1) fitMode = (Int_t)strtof(argv[1],NULL);
   if(argc>2) spinrootDir = TString(argv[2]);
+  if(argc>3) DparamVal = (Float_t)strtof(argv[3],NULL);
   //////////////////////////////////////////////
 
 
@@ -102,7 +104,7 @@ int main(int argc, char** argv) {
   for(Int_t bn : BS->binVec) {
     A = asymMap.at(bn);
     A->FitOneAmp();
-    A->FitMultiAmp(fitMode);
+    A->FitMultiAmp(fitMode,DparamVal);
   };
 
 

@@ -329,12 +329,14 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
     rfAname[aa] = Form("A%d",aa);
     rfA[aa] = new RooRealVar(rfAname[aa],rfAname[aa],-rfParamRange,rfParamRange);
   };
+  nAmpUsed = 0;
+
   for(int dd=0; dd<nDparam; dd++) {
     rfDname[dd] = Form("D%d",dd);
     rfD[dd] = new RooRealVar(rfDname[dd],rfDname[dd],-3.0,3.0);
   };
-  nAmpUsed = 0;
   nDparamUsed = 0;
+
 
   // - yield factor (proportional to actual yield, for extended fit only)
   /*
@@ -614,7 +616,7 @@ void Asymmetry::SetAsymGrPoint(Int_t modBin_, Int_t modBin2_) {
 
 // calculate the asymmetries with RooFit; to be called at end of event loop
 // - this uses the unbinned maximum likelihood method
-void Asymmetry::FitMultiAmp(Int_t fitMode) {
+void Asymmetry::FitMultiAmp(Int_t fitMode, Float_t DparamVal) {
 
   // build asymmetry modulation paramaterization "asymFormu" 
   // = sum { amplitude_i * modulation_i }
@@ -636,31 +638,37 @@ void Asymmetry::FitMultiAmp(Int_t fitMode) {
       this->FormuAppend(2,1,1);
       this->FormuAppend(3,1,1);
       break;
-    case 4: // test 2 partial waves with PW-expanded denominator
-      //pwUnpolDiff = "1+D0*"+legendre[1]+"+D1*"+legendre[2]; // TODO
+    case 31: // test 2 partial waves with PW-expanded denominator (WITH D_1 pp-wave TERM)
       modu->enablePW = true;
       this->FormuAppend(2,1,1);
       this->FormuAppend(3,1,1);
-      //rfD[0]->SetTitle("D^{sp}/D^{ss}");
-      //rfD[1]->SetTitle("D^{pp}/D^{ss}");
-      //rfD[0]->setVal(2.0);
-      //rfD[1]->setVal(-2.0);
-      //rfD[0]->setConstant(kTRUE);
-      //rfD[1]->setConstant(kTRUE);
-      //nDparamUsed = 2;
+      nDparamUsed = 1;
       break;
-    case 5: // three L=1 modulations (for DNP2019)
+    case 4: // three L=1 modulations (for DNP2019)
       this->FormuAppend(3,0,0);
       this->FormuAppend(2,1,1);
       this->FormuAppend(3,1,1);
       break;
-    case 6: // all four L=1 modulations
+    case 41: // three L=1 modulations (for DNP2019) (WITH D_1 pp-wave TERM)
+      this->FormuAppend(3,0,0);
+      this->FormuAppend(2,1,1);
+      this->FormuAppend(3,1,1);
+      nDparamUsed = 1;
+      break;
+    case 5: // all four L=1 modulations
       this->FormuAppend(3,0,0);
       this->FormuAppend(2,1,1);
       this->FormuAppend(3,1,1);
       this->FormuAppend(3,1,-1);
       break;
-    case 7: // modulations up to L=2 with nonegligble overlap with |1,1>_2
+    case 51: // all four L=1 modulations (WITH D_1 pp-wave TERM)
+      this->FormuAppend(3,0,0);
+      this->FormuAppend(2,1,1);
+      this->FormuAppend(3,1,1);
+      this->FormuAppend(3,1,-1);
+      nDparamUsed = 1;
+      break;
+    case 6: // modulations up to L=2 with nonegligble overlap with |1,1>_2
       this->FormuAppend(3,0,0); // grey
       this->FormuAppend(2,1,1); // red
       this->FormuAppend(3,1,1); // blue
@@ -668,7 +676,7 @@ void Asymmetry::FitMultiAmp(Int_t fitMode) {
       this->FormuAppend(2,2,2); // green
       this->FormuAppend(3,2,2); // cyan
       break;
-    case 8: // partial waves for G1perp SP
+    case 7: // partial waves for G1perp SP
       modu->enablePW = true;
       this->FormuAppend(3,0,0); // grey
       this->FormuAppend(2,1,1); // red
@@ -678,7 +686,7 @@ void Asymmetry::FitMultiAmp(Int_t fitMode) {
       this->FormuAppend(2,2,2); // cyan
       this->FormuAppend(3,2,2); // yellow
       break;
-    case 9: // partial waves for G1perp PP
+    case 8: // partial waves for G1perp PP
       modu->enablePW = true;
       this->FormuAppend(3,1,0);
       this->FormuAppend(2,2,1);
@@ -693,6 +701,18 @@ void Asymmetry::FitMultiAmp(Int_t fitMode) {
 
   // append polarization factor to asymFormu
   asymFormu = "rfPol*("+asymFormu+")";
+
+  // append unpolarized denominator, if D_1 is expanded in partial waves
+  // (for systematic uncertainty study from unmeasured D_1 pp-wave)
+  // - D0 represents D_{1,LL} / D_{1,OO}, or in |L,M> notation, 
+  //   D0 = 2 * D_1^|2,0> / D_1^|0,0>  (note the factor of 2)
+  // - set nDparamUsed to 1 to include this denominator in the fit
+  if(nDparamUsed==1) {
+    rfD[0]->SetTitle("D_{1,LL}/D_{1,OO}");
+    rfD[0]->setVal(DparamVal);
+    rfD[0]->setConstant(kTRUE);
+    asymFormu = asymFormu + "/(1+D0*0.25*(3*pow(cos(rfTheta),2)-1))";
+  }
       
   // rellum factors
   rellumFactor[sP] = "rfRellum/(rfRellum+1)";
