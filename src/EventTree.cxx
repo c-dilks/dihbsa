@@ -266,7 +266,6 @@ void EventTree::GetEvent(Int_t i) {
 
   // dihadron kinematics cuts
   cutDihadronKinematics = 
-    Z[qA] > 0.1 && Z[qB] > 0.1 &&
     Zpair < 0.95 &&
     Mmiss > 1.05 &&
     xF > 0 &&
@@ -309,7 +308,7 @@ void EventTree::GetEvent(Int_t i) {
 
 
   // fiducial cuts
-  whichLevel = FiducialCuts::cutMedium;
+  whichLevel = FiducialCuts::cutLoose;
   cutFiducial = eleFidPCAL[whichLevel] && eleFidDC[whichLevel];
   //cutFiducial = true; // override
   
@@ -329,7 +328,7 @@ void EventTree::GetEvent(Int_t i) {
 // MAIN ANALYSIS CUT
 Bool_t EventTree::Valid() {
   return cutDIS && cutDihadron &&
-         cutVertex && cutFiducial && cutDihadronStatus;
+         /*cutVertex && cutFiducial &&*/ cutDihadronStatus;
 };
 /////////////////////////////////////////////////////////
 

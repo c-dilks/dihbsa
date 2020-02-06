@@ -4,7 +4,7 @@
 // OPTIONS
 // --------------
 Int_t fitMode = 51; // Asymmetry.cxx fitMode
-Float_t VMfrac = 0.12; // fraction of dihadrons from Vector Mesons (evaluated in MC)
+Float_t VMfrac = 0.5; // fraction of dihadrons from Vector Mesons (evaluated in MC)
 Float_t nsteps = 5; // number of steps of Dparam to vary
 // --------------
 
@@ -19,13 +19,12 @@ void exeFit(Float_t d) {
 };
 
 void VaryDparam() {
-  // - this is used as  in the positivity bounds
+  printf("VMfrac = %f\n",VMfrac);
 
   // positivity bounds: uses D_{1,OO}^{p}/D_{1,OO} set to 4/3 * VMfrac
   VMfrac *= 4.0/3.0;
   Float_t lb = -3.0/2.0 * VMfrac;
   Float_t ub = 3.0 * VMfrac;
-  printf("VMfrac = %f\n",VMfrac);
   printf("D_{1,LL} / D_{1,OO} will be varied between %f and %f\n",lb,ub);
 
   // determine sequence of Dparam values
