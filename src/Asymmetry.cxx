@@ -79,7 +79,7 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
 
   // fixed polarization (for now...)
   ///////////////////////////////////////////////////
-  pol = 0.86;
+  pol = 1.0; //0.86;
   ///////////////////////////////////////////////////
 
 
@@ -721,8 +721,12 @@ void Asymmetry::FitMultiAmp(Int_t fitMode, Float_t DparamVal) {
   }
       
   // rellum factors
+  /*
   rellumFactor[sP] = "rfRellum/(rfRellum+1)";
   rellumFactor[sM] = "1/(rfRellum+1)";
+  */
+  rellumFactor[sP] = "1";
+  rellumFactor[sM] = "1";
 
   // append yield factor to prefactors (for extended fit)
   //for(int s=0; s<nSpin; s++) rellumFactor[s] = "rfYieldBoth*" + rellumFactor[s];
