@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
 
   //////////////////////////////////////////////
   // OPTIONS
-  Bool_t includeOAonMultiGr = false;
+  Bool_t includeOAonMultiGr = true;
   gStyle->SetOptFit(1);
   //////////////////////////////////////////////
 
@@ -173,6 +173,7 @@ int main(int argc, char** argv) {
       kindepGr = new TGraphErrors();
       kindepGr->SetName(grName);
       kindepGr->SetTitle(grTitle);
+      kindepGr->SetLineStyle(2);
 
       // instantiate multiGraph, for plotting kindep graphs together
       grTitle = dihTitle + " A_{LU}[" + A->oaModulationTitle + "] " + 

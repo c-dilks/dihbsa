@@ -285,8 +285,14 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
     fitFunc2 = new TF2(TString("nop_"+fitFuncName),"");
   } else {
     if(oaTw==2 && oaL==1 && oaM==1) {
-      fitFunc2 = new TF2(fitFuncName,"[0]*TMath::Sin(y-x)",
-        -modMax,modMax,-modMax,modMax);
+      // y=phiH, x=phiR
+      //fitFunc2 = new TF2(fitFuncName,"[0]*TMath::Sin(y-x)",
+        //-modMax,modMax,-modMax,modMax);
+      //fitFunc2 = new TF2(fitFuncName,"[1]*TMath::Sin(y-x)+[0]*TMath::Sin(x)",
+        //-modMax,modMax,-modMax,modMax); // test multi-amp 2dFit (par0 plotted in kindep)
+      fitFunc2 = new TF2(fitFuncName,
+        "[1]*TMath::Sin(x)+[2]*TMath::Sin(y-x)+[0]*TMath::Sin(y)",
+        -modMax,modMax,-modMax,modMax); // test multi-amp 2dFit (par0 plotted in kindep)
     } else if(oaTw==3 && oaL==1 && oaM==1) {
       fitFunc2 = new TF2(fitFuncName,"[0]*TMath::Sin(x)",
         -modMax,modMax,-modMax,modMax);
@@ -626,8 +632,8 @@ void Asymmetry::FitMultiAmp(Int_t fitMode, Float_t DparamVal) {
       this->FormuAppend(oaTw,oaL,oaM);
       break;
     case 1: // test linear combination of e(x) and g1perp modulations
-      this->FormuAppend(2,1,1);
       this->FormuAppend(3,1,1);
+      this->FormuAppend(2,1,1);
       break;
     case 2: // test single partial wave with one-amp modulation
       modu->enablePW = true;
