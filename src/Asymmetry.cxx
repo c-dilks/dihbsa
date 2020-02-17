@@ -21,8 +21,8 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
   oaM = BS->oaM;
   oa2d = BS->oa2dFit;
   useWeighting = BS->useWeighting;
-  if(!oa2d) modMax = 1.1;
-  else modMax = PI + 0.2;
+  if(!oa2d) { modMax = 1.1; modMin = -modMax; }
+  else { modMax = 2*PI; modMin = 0; };
 
   // get one-amp fit's modulation name and title
   modu = new Modulation();
@@ -31,6 +31,7 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
   if(debug) {
     printf("Instantiating Asymmetry...\n");
     printf("  ModulationTitle = %s\n",oaModulationTitle.Data());
+    printf("  modMin = %f\n",modMin);
     printf("  modMax = %f\n",modMax);
   };
 
@@ -152,12 +153,12 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
   modTitle = Form("%s distribution %s",oaModulationTitle.Data(),binT.Data());
   if(!oa2d) {
     modTitle += ";" + oaModulationTitle;
-    modDist = new TH1D(modName,modTitle,iv1Bins,-modMax,modMax);
+    modDist = new TH1D(modName,modTitle,iv1Bins,modMin,modMax);
     // nop
     modDist2 = new TH2D(TString("nop_"+modName),TString("nop_"+modName),1,0,1,1,0,1);
   } else {
     modTitle += ";#phi_{R};#phi_{h}";
-    modDist2 = new TH2D(modName,modTitle,iv2Bins,-modMax,modMax,iv2Bins,-modMax,modMax);
+    modDist2 = new TH2D(modName,modTitle,iv2Bins,modMin,modMax,iv2Bins,modMin,modMax);
     // nop
     modDist = new TH1D(TString("nop_"+modName),TString("nop_"+modName),1,0,1);
   };
@@ -167,7 +168,7 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
     modBinName = Form("%s_bin_%d",modName.Data(),m);
     modBinTitle = Form("bin %d %s",m,modTitle.Data());
     if(!oa2d) {
-      modBinDist[m] = new TH1D(modBinName,modBinTitle,iv1Bins,-modMax,modMax);
+      modBinDist[m] = new TH1D(modBinName,modBinTitle,iv1Bins,modMin,modMax);
     } else {
       // nop
       modBinDist[m] = new TH1D(
@@ -182,7 +183,7 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
       if(oa2d) {
         modBinDist2[mmH][mmR] = new TH2D(
           modBinName,modBinTitle,
-          iv2Bins,-modMax,modMax,iv2Bins,-modMax,modMax);
+          iv2Bins,modMin,modMax,iv2Bins,modMin,modMax);
       } else {
         //nop
         modBinDist2[mmH][mmR] = new TH2D(
@@ -200,7 +201,7 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
   );
   if(whichDim==1 && !oa2d) {
     IVvsModDist = new TH2D(IVvsModName,IVvsModTitle,
-      iv1Bins,-modMax,modMax,
+      iv1Bins,modMin,modMax,
       iv1Bins,ivMin[0],ivMax[0]
     );
   } else {
@@ -218,14 +219,14 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
     );
     if(!oa2d) {
       aziTitle[s] += ";" + oaModulationTitle;
-      aziDist[s] = new TH1D(aziName[s],aziTitle[s],nModBins,-modMax,modMax);
+      aziDist[s] = new TH1D(aziName[s],aziTitle[s],nModBins,modMin,modMax);
       //nop
       aziDist2[s] = new TH2D(TString("nop_"+aziName[s]),TString("nop_"+aziName[s]),
         1,0,1,1,0,1);
     } else {
       aziTitle[s] += ";#phi_{R};#phi_{h}"; // PhiR is horizontal, PhiH is vertical
       aziDist2[s] = new TH2D(aziName[s],aziTitle[s],
-        nModBins2,-modMax,modMax,nModBins2,-modMax,modMax);
+        nModBins2,modMin,modMax,nModBins2,modMin,modMax);
       //nop
       aziDist[s] = new TH1D(TString("nop_"+aziName[s]),TString("nop_"+aziName[s]),
         1,0,1);
@@ -269,7 +270,7 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
     asymGr2->SetName(asymName);
     asymGr2->SetTitle(asymTitle);
     asymGr2hist = new TH2D(TString("hist"+asymName),asymTitle,
-      nModBins2,-modMax,modMax,nModBins2,-modMax,modMax);
+      nModBins2,modMin,modMax,nModBins2,modMin,modMax);
     //nop
     asymGr = new TGraphErrors(); asymGr->SetTitle(TString("nop_"+asymTitle));
   };
@@ -278,7 +279,7 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
   // fit function
   fitFuncName = "fit_"+asymName;
   if(!oa2d) {
-    fitFunc = new TF1(fitFuncName,"[0]+[1]*x",-modMax,modMax);
+    fitFunc = new TF1(fitFuncName,"[0]+[1]*x",modMin,modMax);
     fitFunc->SetParName(0,"B");
     fitFunc->SetParName(1,"A_{LU}");
     //nop
@@ -287,15 +288,15 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
     if(oaTw==2 && oaL==1 && oaM==1) {
       // y=phiH, x=phiR
       //fitFunc2 = new TF2(fitFuncName,"[0]*TMath::Sin(y-x)",
-        //-modMax,modMax,-modMax,modMax);
+        //modMin,modMax,modMin,modMax);
       //fitFunc2 = new TF2(fitFuncName,"[1]*TMath::Sin(y-x)+[0]*TMath::Sin(x)",
-        //-modMax,modMax,-modMax,modMax); // test multi-amp 2dFit (par0 plotted in kindep)
+        //modMin,modMax,modMin,modMax); // test multi-amp 2dFit (par0 plotted in kindep)
       fitFunc2 = new TF2(fitFuncName,
         "[1]*TMath::Sin(x)+[2]*TMath::Sin(y-x)+[0]*TMath::Sin(y)",
-        -modMax,modMax,-modMax,modMax); // test multi-amp 2dFit (par0 plotted in kindep)
+        modMin,modMax,modMin,modMax); // test multi-amp 2dFit (par0 plotted in kindep)
     } else if(oaTw==3 && oaL==1 && oaM==1) {
       fitFunc2 = new TF2(fitFuncName,"[0]*TMath::Sin(x)",
-        -modMax,modMax,-modMax,modMax);
+        modMin,modMax,modMin,modMax);
     }
     else {
       fprintf(stderr,"ERROR: this one-amp fit not defined for 2-d (phiH,phiR) fit\n");
@@ -436,8 +437,8 @@ Bool_t Asymmetry::AddEvent(EventTree * ev) {
   for(int d=0; d<whichDim; d++) { 
     if(iv[d]<-8000) return KickEvent(TString(ivN[d]+" out of range"),iv[d]);
   };
-  if(PhiH<-PIe || PhiH>PIe) return KickEvent("PhiH out of range",PhiH);
-  if(PhiR<-PIe || PhiR>PIe) return KickEvent("PhiR out of range",PhiR);
+  if(PhiH<modMin || PhiH>modMax) return KickEvent("PhiH out of range",PhiH);
+  if(PhiR<modMin || PhiR>modMax) return KickEvent("PhiR out of range",PhiR);
   if(PhPerp<-8000) return KickEvent("PhPerp out of range",PhPerp);
   if(Ph<-8000) return KickEvent("Ph out of range",Ph);
   if(Q2<-8000) return KickEvent("Q2 out of range",Q2);
@@ -564,7 +565,7 @@ void Asymmetry::FitOneAmp() {
   // fit asymmetry
   if(!oa2d) {
     fitFunc->FixParameter(0,0); // fix fit offset to 0
-    asymGr->Fit(fitFunc,"Q","",-modMax,modMax);
+    asymGr->Fit(fitFunc,"Q","",modMin,modMax);
   } else {
     asymGr2->Fit(fitFunc2,"Q","");
   };

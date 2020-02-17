@@ -126,7 +126,7 @@ class Asymmetry : public TObject
     static const Int_t nModBins = 7; // number of bins in azimuthal modulation
     static const Int_t nModBins2 = 8; // number of bins in 2d azimuthal modulation
 
-    Float_t modMax,aziMax;
+    Float_t modMin,modMax,aziMax;
     Float_t weight;
     Float_t kf;
 

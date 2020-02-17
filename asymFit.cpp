@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
 
   //////////////////////////////////////////////
   // OPTIONS
-  Bool_t includeOAonMultiGr = true;
+  Bool_t includeOAonMultiGr = false;
   gStyle->SetOptFit(1);
   //////////////////////////////////////////////
 
