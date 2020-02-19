@@ -250,8 +250,15 @@ int main(int argc, char** argv) {
         asymError = A->fitFunc2->GetParError(0);
       };
       for(int aa=0; aa<N_AMP; aa++) {
+        /*
         RFasymValue[aa] = A->rfA[aa]->getVal();
         RFasymError[aa] = A->rfA[aa]->getError();
+        */
+        // hack to replace MLM fit result with 2D fit results (must use fitMode==4)
+        for(int kk=0; kk<10; kk++) 
+          fprintf(stderr,"WARNING WARNING WARNING: mlm fit result replaced with 2dfit\n");
+        RFasymValue[aa] = A->fitFunc2->GetParameter(aa);
+        RFasymError[aa] = A->fitFunc2->GetParError(aa);
       };
 
 
@@ -743,6 +750,8 @@ int main(int argc, char** argv) {
   asymFile->Close();
   catFile->Close();
   printf("--- end %s\n",argv[0]);
+        for(int kk=0; kk<10; kk++) 
+          fprintf(stderr,"WARNING WARNING WARNING: mlm fit result replaced with 2dfit\n");
   return 0;
 
 };
@@ -762,8 +771,8 @@ void DrawKinDepGraph(TGraphErrors * g_, Binning * B_, Int_t d_) {
 
   // set vertical axis range (it is overridden if the plot's vertical range
   // is larger than the desired range)
-  Float_t yMin = -0.12;
-  Float_t yMax = 0.12;
+  Float_t yMin = -0.05;
+  Float_t yMax = 0.05;
   if(g_->GetYaxis()->GetXmin() < yMin) yMin = g_->GetYaxis()->GetXmin();
   if(g_->GetYaxis()->GetXmax() > yMax) yMax = g_->GetYaxis()->GetXmax();
   g_->GetYaxis()->SetRangeUser(yMin,yMax);
@@ -840,8 +849,8 @@ void DrawAsymGr(TGraphErrors * g_) {
 
   // set vertical axis range (it is overridden if the plot's vertical range
   // is larger than the desired range)
-  Float_t yMin = -0.2;
-  Float_t yMax = 0.2;
+  Float_t yMin = -0.05;
+  Float_t yMax = 0.05;
   if(g_->GetYaxis()->GetXmin() < yMin) yMin = g_->GetYaxis()->GetXmin() - 0.05;
   if(g_->GetYaxis()->GetXmax() > yMax) yMax = g_->GetYaxis()->GetXmax() + 0.05;
   g_->GetYaxis()->SetRangeUser(yMin,yMax);

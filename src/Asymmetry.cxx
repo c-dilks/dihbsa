@@ -292,7 +292,7 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
       //fitFunc2 = new TF2(fitFuncName,"[1]*TMath::Sin(y-x)+[0]*TMath::Sin(x)",
         //modMin,modMax,modMin,modMax); // test multi-amp 2dFit (par0 plotted in kindep)
       fitFunc2 = new TF2(fitFuncName,
-        "[1]*TMath::Sin(x)+[2]*TMath::Sin(y-x)+[0]*TMath::Sin(y)",
+        "[0]*TMath::Sin(y)+[1]*TMath::Sin(y-x)+[2]*TMath::Sin(x)",
         modMin,modMax,modMin,modMax); // test multi-amp 2dFit (par0 plotted in kindep)
     } else if(oaTw==3 && oaL==1 && oaM==1) {
       fitFunc2 = new TF2(fitFuncName,"[0]*TMath::Sin(x)",
