@@ -321,8 +321,12 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
     rfSpinCateg->defineType(rfSpinName[s]);
   };
   // - event vars
+  /*
   rfPhiH = new RooRealVar("rfPhiH","#phi_{h}",-PIe,PIe);
   rfPhiR = new RooRealVar("rfPhiR","#phi_{R}",-PIe,PIe);
+  */
+  rfPhiH = new RooRealVar("rfPhiH","#phi_{h}",-0.1,2*PIe);
+  rfPhiR = new RooRealVar("rfPhiR","#phi_{R}",-0.1,2*PIe);
   rfTheta = new RooRealVar("rfTheta","#theta",-PIe,PIe);
   rfWeight = new RooRealVar("rfWeight","P_{h}^{T}/M_{h}",0,10);
 
