@@ -752,8 +752,10 @@ int main(int argc, char** argv) {
   asymFile->Close();
   catFile->Close();
   printf("--- end %s\n",argv[0]);
-        for(int kk=0; kk<10; kk++) 
-          fprintf(stderr,"WARNING WARNING WARNING: mlm fit result replaced with 2dfit\n");
+  /*
+  for(int kk=0; kk<10; kk++) 
+    fprintf(stderr,"WARNING WARNING WARNING: mlm fit result replaced with 2dfit\n");
+    */
   return 0;
 
 };

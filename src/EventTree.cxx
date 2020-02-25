@@ -339,7 +339,7 @@ Bool_t EventTree::Valid() {
 
 
 Int_t EventTree::SpinState() {
-  if(runnum>=5000 && runnum<=5300) {
+  if(runnum>=4700 && runnum<=6000) {
     // Fall 2018 convention
     switch(helicity) {
       case 1: return sM;
