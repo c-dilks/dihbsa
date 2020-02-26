@@ -1,5 +1,5 @@
 // simply draws all canvases in 'multiGrCanvArr' 
-void drawAsymmetries(TString fN = "spinroot.chrisGrids/asym_4.root") {
+void drawAsymmetries(TString fN = "spinroot/asym_4.root") {
   TFile * f = new TFile(fN,"READ");
   TObjArray * a = (TObjArray*) f->Get("multiGrCanvArr");
   TIter n(a);
