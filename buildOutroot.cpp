@@ -92,7 +92,7 @@ int main(int argc, char** argv) {
    // set up structure for sorting particles by E
    //   each particle has a trajectory pointer array,
    //   which will be sorted by energy later
-   const Int_t maxTraj = 20;
+   const Int_t maxTraj = 40;
    TObjArray * trajArrUS[nParticles]; // unsorted array
    TObjArray * trajArr[nParticles]; // sorted array
    Trajectory * traj[nParticles][maxTraj]; // array of trajectory pointers
