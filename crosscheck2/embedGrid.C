@@ -2,6 +2,13 @@
 // them into a cat.root file, overwriting the ones that are already in there
 // - this is used to read Timothy's grid into a cat.root file, that I can easily feed to
 //   asymFit.exe
+// - PROCEDURE:
+//   - make sure we have a `cat.root` file in the `spinroot` directory
+//   - cp my `spinroot` directory here as `spinroot.chrisGrids`
+//   - cp the `cat.root` file to `spinroot.timGrids` as well; the `cat.root` file here
+//     will have its grids updated, according to the text-file grids from Timothy, stored
+//     in the `grids` subdirectory
+
 Int_t nx,ny;
 Double_t xl,xu,yl,yu;
 
@@ -42,10 +49,18 @@ void embedGrid() {
   const Int_t NH = 2;
   const Int_t NM = 2;
   TH2D * hist[NM][NH]; // [mass bin] [hel+-]
-  hist[0][0] = mkHisto("mass_0_0.txt","P_M0");
-  hist[0][1] = mkHisto("mass_1_0.txt","M_M0");
-  hist[1][0] = mkHisto("mass_0_1.txt","P_M1");
-  hist[1][1] = mkHisto("mass_1_1.txt","M_M1");
+  ///*
+  hist[0][0] = mkHisto("grids/mass_posHel_lowerBin.txt","P_M0");
+  hist[0][1] = mkHisto("grids/mass_negHel_lowerBin.txt","M_M0");
+  hist[1][0] = mkHisto("grids/mass_posHel_upperBin.txt","P_M1");
+  hist[1][1] = mkHisto("grids/mass_negHel_upperBin.txt","M_M1");
+  //*/
+  /*
+  hist[0][0] = mkHisto("printGrid/timothy_m0_hp.txt","P_M0");
+  hist[0][1] = mkHisto("printGrid/timothy_m0_hm.txt","M_M0");
+  hist[1][0] = mkHisto("printGrid/timothy_m1_hp.txt","P_M1");
+  hist[1][1] = mkHisto("printGrid/timothy_m1_hm.txt","M_M1");
+  */
   
   TFile * infile = new TFile("spinroot.timGrids/cat.root","UPDATE");
   TString writeN,dirN;

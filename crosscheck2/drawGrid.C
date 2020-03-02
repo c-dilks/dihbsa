@@ -1,4 +1,4 @@
-// draws grids from two different cat.root files, and fits them
+// draws grids from two different cat.root files, and compares them
 // - a 'grid' is the yield binned in (phiH,phiR)
 // - to make a grid, you need to use buildSpinroot.exe with the -b option
 
@@ -25,6 +25,31 @@ void drawGrid(TString catFileC="spinroot.chrisGrids/cat.root",
       };
     };
   };
+
+
+  TString txtName[2][2];
+  txtName[0][0] = "m0_hm.txt";
+  txtName[0][1] = "m0_hp.txt";
+  txtName[1][0] = "m1_hm.txt";
+  txtName[1][1] = "m1_hp.txt";
+  TString dirName[2] = {"printGrid/chris_","printGrid/timothy_"};
+  for(int n=0; n<2; n++) {
+    for(int m=0; m<NM; m++) {
+      for(int h=0; h<NH; h++) {
+        gSystem->RedirectOutput(TString(dirName[n]+txtName[m][h]),"w");
+        for(int bx=1; bx<=hist[n][m][h]->GetNbinsX(); bx++) {
+          for(int by=1; by<=hist[n][m][h]->GetNbinsY(); by++) {
+            printf("%f %f %f\n",
+              hist[n][m][h]->GetXaxis()->GetBinCenter(bx),
+              hist[n][m][h]->GetYaxis()->GetBinCenter(by),
+              hist[n][m][h]->GetBinContent(bx,by));
+          };
+        };
+        gSystem->RedirectOutput(0);
+      };
+    };
+  };
+
 
   TCanvas * canv[2];
   canv[chris] = new TCanvas("canvChris","canvChris",1000,1000);
@@ -54,8 +79,8 @@ void drawGrid(TString catFileC="spinroot.chrisGrids/cat.root",
       comp[m][h]->SetTitle(compT);
       comp[m][h]->Divide(hist[tim][m][h]); // ignore complates about different axis lims
       canvComp->cd(2*h+m+1);
-      comp[m][h]->SetMinimum(1);
-      comp[m][h]->SetMaximum(1.2);
+      comp[m][h]->SetMinimum(0);
+      comp[m][h]->SetMaximum(3);
       comp[m][h]->Draw("colztext");
     };
   };
@@ -63,5 +88,6 @@ void drawGrid(TString catFileC="spinroot.chrisGrids/cat.root",
   canv[chris]->Print("gridChris.png","png");
   canv[tim]->Print("gridTimothy.png","png");
   canvComp->Print("gridRatio.png","png");
+
 
 };
