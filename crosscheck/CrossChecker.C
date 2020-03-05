@@ -17,6 +17,7 @@ enum xenum { kTim, kHarut, kHarutOS, kOrlando,
              kSimpleC, kSimpleJava, kAnalysis, kAnalysisLund };
 
 Int_t xcheck[NF] = { kAnalysis, kTim };
+//Int_t xcheck[NF] = { kTim, kAnalysis };
 //Int_t xcheck[NF] = { kAnalysisLund, kOrlando };
 //Int_t xcheck[NF] = { kAnalysisLund, kHarut };
 //Int_t xcheck[NF] = { kAnalysisLund, kHarutOS };
@@ -49,6 +50,7 @@ Float_t hadE[NF][nHad];
 Float_t hadP[NF][nHad];
 Float_t hadPt[NF][nHad];
 Float_t hadPtq[NF][nHad];
+Float_t hadEta[NF][nHad];
 Float_t hadTheta[NF][nHad];
 Float_t hadPhi[NF][nHad];
 Float_t hadPx[NF][nHad];
@@ -58,12 +60,15 @@ Float_t hadZ[NF][nHad];
 Float_t hadXF[NF][nHad];
 ////////////////////////////
 
+Float_t MhTest;
+TLorentzVector vecHad[2];
 
 
 void PrintCompare(TString name, Float_t val, Float_t xval);
 void GetTreeVars(Int_t ff, Int_t ii);
 void GetEventTreeVars(Int_t ff, Int_t ii);
 void ReadOrlandoFormat(TString datname, Int_t ff);
+Long_t Hash(Int_t ff);
 
 
 void CrossChecker() {
@@ -75,7 +80,7 @@ void CrossChecker() {
    for(f=0; f<NF; f++) {
     switch(xcheck[f]) {
       case kAnalysis:
-        ev[f] = new EventTree( "../outrootCC/rec.root", EncodePairType(kPip,kPim) ); 
+        ev[f] = new EventTree( "../outrootCC/skim5_5051.hipo.root", EncodePairType(kPip,kPim) ); 
         break;
       case kAnalysisLund:
         ev[f] = new EventTree( "../outrootCC/lund.root", EncodePairType(kPip,kPim) ); 
@@ -98,21 +103,31 @@ void CrossChecker() {
     switch(xcheck[f]) {
 
       case kTim:
+
+        compareTitle[f] = "Timothy -- run_5051_cross_check.txt";
+        compareName[f] = "timothy";
+        gROOT->ProcessLine(
+          ".! tail -n +2 xfiles/run_5051_cross_check.txt > xtreeTim.dat"
+        ); // (strip header)
+
+        /*
         compareTitle[f] = "Timothy -- hayward_cross_check_os_format.txt";
         compareName[f] = "timothy";
         gROOT->ProcessLine(
           ".! tail -n +2 xfiles/hayward_cross_check_os_format.txt > xtreeTim.dat"
         ); // (strip header)
-        xstr = "evnum/I:Q2/F:x/F:W/F:y/F:eleP/F";
-        xstr += ":Mh/F:xF/F:PhPerp/F:theta/F";
-        xstr += ":PhiR/F:PhiH/F:pipP/F:pimP/F";
+        */
 
-        /*
         // old file
+        /*
         gROOT->ProcessLine(".! python formatTimFile.py");
         xstr = "evnum/I:eleE/F:pipE/F:pimE/F";
         xstr += ":Q2/F:W/F:x/F:y/F:Mh/F:pT/F:xF/F:theta/F:PhiR/F:PhiH/F";
         */
+
+        xstr = "evnum/I:Q2/F:x/F:W/F:y/F:eleP/F";
+        xstr += ":Mh/F:xF/F:PhPerp/F:theta/F";
+        xstr += ":PhiR/F:PhiH/F:pipP/F:pimP/F";
 
         printf("xtree[%d] branches: %s\n",f,xstr.Data());
         xtree[f]->ReadFile("xtreeTim.dat",xstr);
@@ -226,8 +241,8 @@ void CrossChecker() {
       
       // using EventTree these cases; no need to set branch addresses
       case kAnalysis: 
-        compareTitle[f] = "Chris (REC::Particle bank) -- outrootCC/rec.root";
-        compareName[f] = "chrisRec";
+        compareTitle[f] = "Chris (REC::Particle bank) -- outrootCC/skim5_5051.hipo.root";
+        compareName[f] = "chris";
         break;
       case kAnalysisLund:
         compareTitle[f] = "Chris (MC::Lund bank) -- outrootCC/lund.root";
@@ -255,20 +270,14 @@ void CrossChecker() {
   // -- this hash function now just returns the event number; before when our event
   //    numbers were not matching, I was instead using a hash function to search for
   //    matching events
-  Int_t hashVal;
-  std::map<Int_t,Int_t> hashMap; // event hash -> xtree[1] index
-  std::map<Int_t,Int_t>::iterator hashIter;
+  Long_t hashVal;
+  std::map<Long_t,Int_t> hashMap; // event hash -> xtree[1] index
+  std::map<Long_t,Int_t>::iterator hashIter;
 
   for(int xi=0; xi<ENT[1]; xi++) {
-
     GetTreeVars(1,xi);
-
-    // hash function
-    switch(xcheck[1]) {
-      default: hashVal = evnum[1];
-    };
-
-    hashMap.insert(std::pair<Int_t,Int_t>(hashVal,xi));
+    hashVal = Hash(1);
+    hashMap.insert(std::pair<Long_t,Int_t>(hashVal,xi));
   };
 
 
@@ -306,6 +315,7 @@ void CrossChecker() {
         hadP[f][h] = UNDEF;
         hadPt[f][h] = UNDEF;
         hadPtq[f][h] = UNDEF;
+        hadEta[f][h] = UNDEF;
         hadTheta[f][h] = UNDEF;
         hadPhi[f][h] = UNDEF;
         hadPx[f][h] = UNDEF;
@@ -322,18 +332,12 @@ void CrossChecker() {
     //ev->GetEvent(i); // evtr loop
 
 
-    evCut = true; // TODO
-    //if(xcheck[0]==kAnalysis) evCut = ev->cutCrossCheck;
-    //else... 
+    if(xcheck[0]==kAnalysis) evCut = ev[0]->Valid();
+    else evCut = true;
     if(evCut) {
 
-      // hash xtree[0]'s event
-      switch(xcheck[0]) {
-        default: hashVal = evnum[0];
-      };
-
-
       // check if xtree[1] has a matching hash value
+      hashVal = Hash(0);
       hashIter = hashMap.find(hashVal);
       if(hashIter!=hashMap.end()) {
 
@@ -341,14 +345,17 @@ void CrossChecker() {
         GetTreeVars(1,hashIter->second);
 
         // extra requirement to improve event matching
+        /*
         if( xcheck[0]==kHarutOS || xcheck[1]==kHarutOS || 
             xcheck[0]==kHarut || xcheck[1]==kHarut ||
             xcheck[0]==kOrlando || xcheck[1]==kOrlando
         ) {
           extraCut = fabs(hadE[0][iP]-hadE[1][iP]) < 0.1 &&
-                     fabs(hadE[0][iM]-hadE[1][iM]) < 0.1; //////////////////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                     fabs(hadE[0][iM]-hadE[1][iM]) < 0.1; 
         }
         else extraCut = true;
+        */
+        extraCut = true;
 
 
         if(extraCut) {
@@ -358,8 +365,11 @@ void CrossChecker() {
           //    be printed
           gSystem->RedirectOutput(outdat,"a");
 
-          printf("EVENT#");
+          printf("\nEVENT %d found (hash=%ld)\n",evnum[0],hashVal);
+          /*
+          printf("EVENT");
           for(f=0; f<NF; f++) printf("  xtree%d: %d",f,evnum[f]); printf("\n");
+          */
           //printf("HASH  xtree0: %d  xtree1: %d\n",hashVal,hashIter->first);
           printf("%12s %12s %12s %12s %12s\n",
             "evnum","var",compareName[0].Data(),compareName[1].Data(),"diff");
@@ -374,6 +384,7 @@ void CrossChecker() {
             PrintCompare( TString(hadN[h]+"Px"), hadPx[0][h], hadPx[1][h] );
             PrintCompare( TString(hadN[h]+"Py"), hadPy[0][h], hadPy[1][h] );
             PrintCompare( TString(hadN[h]+"Pz"), hadPz[0][h], hadPz[1][h] );
+            PrintCompare( TString(hadN[h]+"Eta"), hadEta[0][h], hadEta[1][h] );
             PrintCompare( TString(hadN[h]+"Theta"), hadTheta[0][h], hadTheta[1][h] );
             PrintCompare( TString(hadN[h]+"Phi"), hadPhi[0][h], hadPhi[1][h] );
             PrintCompare( TString(hadN[h]+"Z"), hadZ[0][h], hadZ[1][h] );
@@ -397,9 +408,32 @@ void CrossChecker() {
           gSystem->RedirectOutput(0);
         };
 
+      }
+      else {
+        gSystem->RedirectOutput(outdat,"a");
+        printf("\nEVENT %d missing (hash=%ld)\n",evnum[0],hashVal);
+        gSystem->RedirectOutput(0);
       };
-    };
-  };
+
+      if(xcheck[0]==kAnalysis) {
+        gSystem->RedirectOutput(outdat,"a");
+        for(h=0; h<nHad; h++) {
+          vecHad[h].SetPtEtaPhiE(hadPt[0][h],
+                                 hadEta[0][h],
+                                 hadPhi[0][h],
+                                 hadE[0][h]);
+        };
+        MhTest = (vecHad[0]+vecHad[1]).M();
+        printf("---> calculated Mh = %f\n",MhTest);
+        printf("---> calculated pipP, pimP = %f, %f\n",vecHad[0].P(),vecHad[1].P());
+        printf("---> 4-momentum sum components:\n");
+        //for(h=0; h<nHad; h++) vecHad[h].Print();
+        (vecHad[0]+vecHad[1]).Print();
+        gSystem->RedirectOutput(0);
+      };
+
+    }; // eo evCut
+  }; // eo loop through xtree[0]
 
   gROOT->ProcessLine(TString(".! cat "+outdat));
 
@@ -458,6 +492,7 @@ void GetEventTreeVars(Int_t ff, Int_t ii) {
       hadP[ff][hh] = ev[ff]->hadP[hh];
       hadPt[ff][hh] = ev[ff]->hadPt[hh];
       hadPtq[ff][hh] = ev[ff]->hadPtq[hh]; // deprecated
+      hadEta[ff][hh] = ev[ff]->hadEta[hh];
       hadTheta[ff][hh] = Tools::EtaToTheta(ev[ff]->hadEta[hh]);
       hadPhi[ff][hh] = ev[ff]->hadPhi[hh];
       hadZ[ff][hh] = ev[ff]->Z[hh];
@@ -503,4 +538,11 @@ void ReadOrlandoFormat(TString datname, Int_t ff) {
   xtree[ff]->SetBranchAddress("PhiH",&PhiH[ff]);
   //xtree[ff]->SetBranchAddress("PhiR1",&PhiR[ff]);
   xtree[ff]->SetBranchAddress("PhiR2",&PhiR[ff]); // preferred?
+};
+
+// HASH FUNCTION
+Long_t Hash(Int_t ff) {
+  return (Long_t)(evnum[ff])*1000000 + 
+         (Long_t)(hadP[ff][0]*100)*1000 +
+         (Long_t)(hadP[ff][1]*100);
 };
