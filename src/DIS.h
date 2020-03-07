@@ -28,7 +28,7 @@ class DIS : public TObject
     DIS();
     ~DIS() {};
 
-    void SetBeamEn(Float_t newBeamEn);
+    //void SetBeamEn(Float_t newBeamEn);
     void SetElectron(Trajectory * tr);
     void Analyse();
     void PrintEvent();

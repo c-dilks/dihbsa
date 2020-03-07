@@ -10,12 +10,12 @@ DIS::DIS() {
   debug = false;
   speedup = false;
 
-  BeamEn = 10.6; // ?? use run db to get beam en
+  BeamEn = 10.6041;
 
   vecBeam = TLorentzVector(
     0.0,
     0.0,
-    BeamEn,
+    TMath::Sqrt(TMath::Power(BeamEn,2)-TMath::Power(PartMass(kE),2)),
     BeamEn
   );
 
@@ -28,12 +28,15 @@ DIS::DIS() {
 };
 
 
+/*
+// not used, but could be if we want to use RCDB to get beam energy
 void DIS::SetBeamEn(Float_t newBeamEn) {
   BeamEn = newBeamEn;
   vecBeam.SetPz(BeamEn);
   vecBeam.SetE(BeamEn);
   return;
 };
+*/
 
 
 void DIS::SetElectron(Trajectory * tr) {
