@@ -35,6 +35,7 @@ TString xstr;
 Int_t ENT[NF];
 enum hadron_enum { iP, iM, nHad };
 TString hadN[nHad] = { "pip", "pim" };
+Bool_t disagreement;
 
 
 ////////////////////////////
@@ -288,6 +289,9 @@ void CrossChecker() {
   for(f=0; f<NF; f++) printf("xtree%d:  %s\n",f,compareTitle[f].Data());
   printf("\n");
   gSystem->RedirectOutput(0);
+  TString outmissing = "missingEvents.dat";
+  gSystem->RedirectOutput(outmissing,"w");
+  gSystem->RedirectOutput(0);
 
   Bool_t extraCut,evCut;
   
@@ -328,8 +332,6 @@ void CrossChecker() {
 
     // fill xtree[0] variables
     GetTreeVars(0,i);
-
-    //ev->GetEvent(i); // evtr loop
 
 
     if(xcheck[0]==kAnalysis) evCut = ev[0]->Valid();
@@ -376,6 +378,7 @@ void CrossChecker() {
           printf("%12s %12s %12s %12s %12s\n",sep,sep,sep,sep,sep);
 
 
+          disagreement = false;
           for(h=0; h<nHad; h++) {
             PrintCompare( TString(hadN[h]+"E"), hadE[0][h], hadE[1][h] );
             PrintCompare( TString(hadN[h]+"P"), hadP[0][h], hadP[1][h] );
@@ -402,6 +405,7 @@ void CrossChecker() {
           PrintCompare( "theta", theta[0], theta[1] );
           PrintCompare( "PhiH", PhiH[0], PhiH[1] );
           PrintCompare( "PhiR", PhiR[0], PhiR[1] );
+          if(disagreement) printf("-> flagged\n");
 
           printf("\n");
 
@@ -412,9 +416,15 @@ void CrossChecker() {
       else {
         gSystem->RedirectOutput(outdat,"a");
         printf("\nEVENT %d missing (hash=%ld)\n",evnum[0],hashVal);
+        if(xcheck[0]==kAnalysis) {
+          ev[0]->PrintEvent();
+          gSystem->RedirectOutput(outmissing,"a");
+          ev[0]->PrintEventLine();
+        }
         gSystem->RedirectOutput(0);
       };
 
+      /*
       if(xcheck[0]==kAnalysis) {
         gSystem->RedirectOutput(outdat,"a");
         for(h=0; h<nHad; h++) {
@@ -424,13 +434,14 @@ void CrossChecker() {
                                  hadE[0][h]);
         };
         MhTest = (vecHad[0]+vecHad[1]).M();
-        printf("---> calculated Mh = %f\n",MhTest);
         printf("---> calculated pipP, pimP = %f, %f\n",vecHad[0].P(),vecHad[1].P());
+        printf("---> calculated Mh = %f\n",MhTest);
         printf("---> 4-momentum sum components:\n");
         //for(h=0; h<nHad; h++) vecHad[h].Print();
         (vecHad[0]+vecHad[1]).Print();
         gSystem->RedirectOutput(0);
       };
+      */
 
     }; // eo evCut
   }; // eo loop through xtree[0]
@@ -456,7 +467,11 @@ void PrintCompare(TString name, Float_t val0, Float_t val1) {
     diff = val0 - val1;
   };
 
-  TString suffix = fabs(diff) > 1e-4 ? "  <- disagreement" : "";
+  TString suffix = "";
+  if(fabs(diff) > 1e-4) {
+    suffix = "  <- disagreement";
+    disagreement = true;
+  };
 
   // print comparison
   printf("%12d %12s %12.5f %12.5f %12.5f%s\n",

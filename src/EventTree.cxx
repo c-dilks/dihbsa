@@ -376,7 +376,7 @@ Int_t EventTree::SpinState() {
 };
 
 
-void EventTree::PrintEvent() {
+void EventTree::PrintEventVerbose() {
   printf("[---] Event Info\n");
   printf("  evnum=%d",evnum);
   printf("  runnum=%d",runnum);
@@ -419,6 +419,45 @@ void EventTree::PrintEvent() {
   printf("  PhiRp_r=%.2f",PhiRp_r);
   printf("\n");
 };
+
+void EventTree::PrintEvent() {
+  printf("\n");
+  printf("  evnum = %d\n",evnum);
+  for(int h=0; h<2; h++) {
+    printf("  %s p = %.5f\n",
+      PartName(dihHadIdx(hadIdx[qA],hadIdx[qB],h)).Data(),hadP[h]);
+  };
+  printf("  eleP = %.5f\n",eleP);
+  printf("  Q2 = %.5f\n",Q2);
+  printf("  W = %.5f\n",W);
+  printf("  x = %.5f\n",x);
+  printf("  y = %.5f\n",y);
+  printf("  Mh = %.5f\n",Mh);
+  printf("  xF = %.5f\n",xF);
+  printf("  PhPerp = %.5f\n",PhPerp);
+  printf("  theta = %.5f\n",theta);
+  printf("  PhiH = %.5f\n",PhiH);
+  printf("  PhiR = %.5f\n",PhiR);
+  printf("\n");
+};
+
+void EventTree::PrintEventLine() {
+  printf("%d",evnum);
+  for(int h=0; h<2; h++) printf(" %.5f",hadP[h]);
+  printf(" %.5f",eleP);
+  printf(" %.5f",Q2);
+  printf(" %.5f",W);
+  printf(" %.5f",x);
+  printf(" %.5f",y);
+  printf(" %.5f",Mh);
+  printf(" %.5f",xF);
+  printf(" %.5f",PhPerp);
+  printf(" %.5f",theta);
+  printf(" %.5f",PhiH);
+  printf(" %.5f",PhiR);
+  printf("\n");
+};
+
 
 
 

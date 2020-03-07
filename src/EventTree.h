@@ -39,7 +39,9 @@ class EventTree : public TObject
     void GetEvent(Int_t i);
     Int_t SpinState();
     Bool_t Valid();
+    void PrintEventVerbose();
     void PrintEvent();
+    void PrintEventLine();
 
     Dihadron * GetDihadronObj();
     DIS * GetDISObj();
