@@ -6,8 +6,7 @@
 PARTICLE_BANK = 0
 
 
-# Clas12Tool directory, relative to this config file's `pwd`
-CLAS12TOOLDIR = ../Clas12Tool
+# clas12root directory, relative to this config file's `pwd`
 
 ####################################
 
@@ -25,12 +24,13 @@ DEPS = $(shell root-config --cflags)
 LIBS = $(shell root-config --glibs)
 LIBS += -lMinuit -lRooFitCore -lRooFit
 
+# HIPO
+#DEPS += -I$(HIPO)/hipo4
+#LIBS += -L$(HIPO)/lib -lhipo4
 
-# Clas12Tool
-THISDIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
-CLAS12TOOL := $(THISDIR)$(CLAS12TOOLDIR)
-DEPS += -I$(CLAS12TOOL)/hipo4 -I$(CLAS12TOOL)/Clas12Banks
-LIBS += -L$(CLAS12TOOL)/lib -lClas12Banks -lHipo4 -llz4
+# clas12root
+DEPS += -I$(CLAS12ROOT)/hipo4 -I$(CLAS12ROOT)/Clas12Banks -I$(CLAS12ROOT)/Clas12Root
+LIBS += -L$(CLAS12ROOT)/lib -lClas12Banks -lClas12Root -lHipo4 -llz4
 
 
 # DihBsa shared object name and source directory

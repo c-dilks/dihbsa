@@ -443,8 +443,17 @@ void EventTree::PrintEvent() {
 
 void EventTree::PrintEventLine() {
   printf("%d",evnum);
-  for(int h=0; h<2; h++) printf(" %.5f",hadP[h]);
+  printf(" %d",hadOrder);
+  for(int h=0; h<2; h++) {
+    printf(" %.5f",hadP[h]);
+    printf(" %.5f",hadPt[h]);
+    printf(" %.5f",hadEta[h]);
+    printf(" %.5f",hadPhi[h]);
+  };
   printf(" %.5f",eleP);
+  printf(" %.5f",elePt);
+  printf(" %.5f",eleEta);
+  printf(" %.5f",elePhi);
   printf(" %.5f",Q2);
   printf(" %.5f",W);
   printf(" %.5f",x);

@@ -292,6 +292,9 @@ void CrossChecker() {
   TString outmissing = "missingEvents.dat";
   gSystem->RedirectOutput(outmissing,"w");
   gSystem->RedirectOutput(0);
+  TString outfound = "foundEvents.dat";
+  gSystem->RedirectOutput(outfound,"w");
+  gSystem->RedirectOutput(0);
 
   Bool_t extraCut,evCut;
   
@@ -409,6 +412,10 @@ void CrossChecker() {
 
           printf("\n");
 
+          if(xcheck[0]==kAnalysis) {
+            gSystem->RedirectOutput(outfound,"a");
+            ev[0]->PrintEventLine();
+          }
           gSystem->RedirectOutput(0);
         };
 
