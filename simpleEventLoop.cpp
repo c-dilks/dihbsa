@@ -118,11 +118,8 @@ int main(int argc, char** argv) {
            );
 
            // print each particle
-           printf("%d %d %f %f %f\n",evnum,partPid[h],
-             part->par()->getPx(),
-             part->par()->getPy(),
-             part->par()->getPz()
-           );
+           //printf("%d %d %f (%f %f %f)\n",evnum,partPid[h],
+             //pv.P(), pv.Px(), pv.Py(), pv.Pz() );
            
            if(pv.E() > En[h]) {
              En[h] = pv.E();
