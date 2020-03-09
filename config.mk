@@ -6,8 +6,6 @@
 PARTICLE_BANK = 0
 
 
-# clas12root directory, relative to this config file's `pwd`
-
 ####################################
 
 # compiler and flags

@@ -397,7 +397,7 @@ void CrossChecker() {
             PrintCompare( TString(hadN[h]+"XF"), hadXF[0][h], hadXF[1][h] );
           };
 
-          PrintCompare( "eleP", eleP[0], eleP[1] );
+          //PrintCompare( "eleP", eleP[0], eleP[1] );
           PrintCompare( "Q2", Q2[0], Q2[1] );
           PrintCompare( "W", W[0], W[1] );
           PrintCompare( "x", x[0], x[1] );
@@ -443,8 +443,9 @@ void CrossChecker() {
         MhTest = (vecHad[0]+vecHad[1]).M();
         printf("---> calculated pipP, pimP = %f, %f\n",vecHad[0].P(),vecHad[1].P());
         printf("---> calculated Mh = %f\n",MhTest);
+        printf("---> pip and pim 4-momenta:\n");
+        for(h=0; h<nHad; h++) vecHad[h].Print();
         printf("---> 4-momentum sum components:\n");
-        //for(h=0; h<nHad; h++) vecHad[h].Print();
         (vecHad[0]+vecHad[1]).Print();
         gSystem->RedirectOutput(0);
       };
@@ -453,8 +454,9 @@ void CrossChecker() {
     }; // eo evCut
   }; // eo loop through xtree[0]
 
-  gROOT->ProcessLine(TString(".! cat "+outdat));
-
+  //gROOT->ProcessLine(TString(".! cat "+outdat));
+  gROOT->ProcessLine(TString(".! grep -B16 flagged "+outdat+" > disagreements.dat"));
+  fprintf(stderr,"WARNING: eleP cross check temporarily commented out!!!\n");
 };
 
 
@@ -475,9 +477,14 @@ void PrintCompare(TString name, Float_t val0, Float_t val1) {
   };
 
   TString suffix = "";
+  // check diff to see if numbers disagree; angles are checked with a higher
+  // threshold, since for Phi near 0 or |pi|, the derivative d(arccos(x))/dx is very
+  // large (i.e., small changes in x near +/-1 impart very large changes in arccos(x))
   if(fabs(diff) > 1e-4) {
-    suffix = "  <- disagreement";
-    disagreement = true;
+    if(!(name.Contains("Phi")) || diff>1e-3) {
+      suffix = "  <- disagreement";
+      disagreement = true;
+    };
   };
 
   // print comparison
@@ -564,7 +571,16 @@ void ReadOrlandoFormat(TString datname, Int_t ff) {
 
 // HASH FUNCTION
 Long_t Hash(Int_t ff) {
+  /*
   return (Long_t)(evnum[ff])*1000000 + 
          (Long_t)(hadP[ff][0]*100)*1000 +
          (Long_t)(hadP[ff][1]*100);
+         */
+  /*
+  return (Long_t)(evnum[ff])*10000000000 + 
+         (Long_t)(hadP[ff][0]*10000)*100000 +
+         (Long_t)(hadP[ff][1]*10000);
+         */
+  return (Long_t)(evnum[ff])*10000000000 + 
+         (Long_t)((hadP[ff][0]*hadP[ff][1])*10000);
 };
