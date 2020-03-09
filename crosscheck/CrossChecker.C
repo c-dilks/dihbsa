@@ -571,16 +571,18 @@ void ReadOrlandoFormat(TString datname, Int_t ff) {
 
 // HASH FUNCTION
 Long_t Hash(Int_t ff) {
-  /*
+  ///*
   return (Long_t)(evnum[ff])*1000000 + 
          (Long_t)(hadP[ff][0]*100)*1000 +
          (Long_t)(hadP[ff][1]*100);
-         */
+         //*/
   /*
   return (Long_t)(evnum[ff])*10000000000 + 
          (Long_t)(hadP[ff][0]*10000)*100000 +
          (Long_t)(hadP[ff][1]*10000);
          */
+  /*
   return (Long_t)(evnum[ff])*10000000000 + 
          (Long_t)((hadP[ff][0]*hadP[ff][1])*10000);
+         */
 };

@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
    hipo::bank mcParticle(factory.getSchema("MC::Particle"));
 
    ///////////////////////
-   Bool_t useMC = 1; // if true, use MC bank instead of REC::Particle bank
+   Bool_t useMC = 0; // if true, use MC bank instead of REC::Particle bank
    ///////////////////////
 
 
@@ -116,6 +116,14 @@ int main(int argc, char** argv) {
              part->par()->getPz(),
              partMass[h]
            );
+
+           // print each particle
+           printf("%d %d %f %f %f\n",evnum,partPid[h],
+             part->par()->getPx(),
+             part->par()->getPy(),
+             part->par()->getPz()
+           );
+           
            if(pv.E() > En[h]) {
              En[h] = pv.E();
              Pt[h] = pv.Pt();
