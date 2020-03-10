@@ -5,5 +5,7 @@ void mkTree(TString f="missingEvents.dat") {
   branches += ":pimP/F:pimPt/F:pimEta/F:pimPhi/F";
   branches += ":eleP/F:elePt/F:eleEta/F:elePhi/F";
   branches += ":Q2/F:W/F:x/F:y/F:Mh/F:xF/F:PhPerp/F:theta/F:PhiH/F:PhiR/F";
+  branches += ":eleChi2pid/F:pipChi2pid/F:pimChi2pid/F";
   t->ReadFile(f,branches);
+  t->StartViewer();
 };

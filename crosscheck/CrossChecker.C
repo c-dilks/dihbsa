@@ -275,10 +275,15 @@ void CrossChecker() {
   std::map<Long_t,Int_t> hashMap; // event hash -> xtree[1] index
   std::map<Long_t,Int_t>::iterator hashIter;
 
+  Bool_t addToHashTable;
   for(int xi=0; xi<ENT[1]; xi++) {
     GetTreeVars(1,xi);
-    hashVal = Hash(1);
-    hashMap.insert(std::pair<Long_t,Int_t>(hashVal,xi));
+    if(xcheck[1]==kAnalysis) addToHashTable=ev[1]->Valid();
+    else addToHashTable = true;
+    if(addToHashTable) {
+      hashVal = Hash(1);
+      hashMap.insert(std::pair<Long_t,Int_t>(hashVal,xi));
+    };
   };
 
 
@@ -397,7 +402,7 @@ void CrossChecker() {
             PrintCompare( TString(hadN[h]+"XF"), hadXF[0][h], hadXF[1][h] );
           };
 
-          //PrintCompare( "eleP", eleP[0], eleP[1] );
+          PrintCompare( "eleP", eleP[0], eleP[1] );
           PrintCompare( "Q2", Q2[0], Q2[1] );
           PrintCompare( "W", W[0], W[1] );
           PrintCompare( "x", x[0], x[1] );
@@ -431,7 +436,6 @@ void CrossChecker() {
         gSystem->RedirectOutput(0);
       };
 
-      /*
       if(xcheck[0]==kAnalysis) {
         gSystem->RedirectOutput(outdat,"a");
         for(h=0; h<nHad; h++) {
@@ -445,18 +449,18 @@ void CrossChecker() {
         printf("---> calculated Mh = %f\n",MhTest);
         printf("---> pip and pim 4-momenta:\n");
         for(h=0; h<nHad; h++) vecHad[h].Print();
-        printf("---> 4-momentum sum components:\n");
+        printf("---> pip+pim 4-momentum sum components:\n");
         (vecHad[0]+vecHad[1]).Print();
+        printf("---> q-vector:\n");
+        (ev[0]->GetDISObj()->vecQ).Print();
         gSystem->RedirectOutput(0);
       };
-      */
 
     }; // eo evCut
   }; // eo loop through xtree[0]
 
   //gROOT->ProcessLine(TString(".! cat "+outdat));
   gROOT->ProcessLine(TString(".! grep -B16 flagged "+outdat+" > disagreements.dat"));
-  fprintf(stderr,"WARNING: eleP cross check temporarily commented out!!!\n");
 };
 
 
@@ -571,10 +575,17 @@ void ReadOrlandoFormat(TString datname, Int_t ff) {
 
 // HASH FUNCTION
 Long_t Hash(Int_t ff) {
-  ///*
+  /*
   return (Long_t)(evnum[ff])*1000000 + 
          (Long_t)(hadP[ff][0]*100)*1000 +
          (Long_t)(hadP[ff][1]*100);
+         */
+  ///*
+  return (Long_t)(evnum[ff])*100000000 + 
+         (Long_t)(hadP[ff][0]*1000+0.5)*10000 +
+         (Long_t)(hadP[ff][1]*1000+0.5)*10000 +
+         (Long_t)(Mh[ff]*10+0.5)*100;
+         (Long_t)(PhPerp[ff]*10+0.5);
          //*/
   /*
   return (Long_t)(evnum[ff])*10000000000 + 
@@ -582,7 +593,8 @@ Long_t Hash(Int_t ff) {
          (Long_t)(hadP[ff][1]*10000);
          */
   /*
-  return (Long_t)(evnum[ff])*10000000000 + 
-         (Long_t)((hadP[ff][0]*hadP[ff][1])*10000);
+  return (Long_t)(evnum[ff])*100000000 + 
+         (Long_t)((hadP[ff][0]+hadP[ff][1])*100+0.5)*1000 +
+         (Long_t)(Mh[ff]*100+0.5);
          */
 };

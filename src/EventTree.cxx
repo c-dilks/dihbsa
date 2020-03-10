@@ -464,6 +464,8 @@ void EventTree::PrintEventLine() {
   printf(" %.5f",theta);
   printf(" %.5f",PhiH);
   printf(" %.5f",PhiR);
+  printf(" %.5f",eleChi2pid);
+  for(int h=0; h<2; h++) printf(" %.5f",hadChi2pid[h]);
   printf("\n");
 };
 
