@@ -84,6 +84,7 @@ int main(int argc, char** argv) {
    reader.getReader().readDictionary(factory);
    hipo::event readerEvent;
    hipo::bank mcParticle(factory.getSchema("MC::Particle"));
+   hipo::bank recParticle(factory.getSchema("REC::Particle"));
 
    ///////////////////////
    Bool_t useMC = 0; // if true, use MC bank instead of REC::Particle bank
@@ -108,6 +109,12 @@ int main(int argc, char** argv) {
 
      // REC::Particle
      if(!useMC) {
+
+       reader.getReader().read(readerEvent);
+       readerEvent.getStructure(recParticle);
+       //if(evnum==51492706) recParticle.show();
+
+
        for(h=0; h<N; h++) {
          for(auto & part : reader.getByID(partPid[h])) {
            pv.SetXYZM(
@@ -118,8 +125,13 @@ int main(int argc, char** argv) {
            );
 
            // print each particle
-           //printf("%d %d %f (%f %f %f)\n",evnum,partPid[h],
-             //pv.P(), pv.Px(), pv.Py(), pv.Pz() );
+           /*
+           if(evnum==51492706) {
+             printf("%d %d %f (%f %f %f)\n",evnum,partPid[h],
+               pv.P(), pv.Px(), pv.Py(), pv.Pz() );
+           };
+           */
+           if(partPid[h]==11) printf("%d %f %f\n",evnum,pv.P(),part->par()->getChi2Pid());
            
            if(pv.E() > En[h]) {
              En[h] = pv.E();
