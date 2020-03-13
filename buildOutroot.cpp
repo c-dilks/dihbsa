@@ -528,19 +528,22 @@ int main(int argc, char** argv) {
        status = part->par()->getStatus();
 #endif
 
-
-
        
 
        // convert PID to local particle index; if it's not defined in Constants.h, pIdx
        // will be UNDEF and this particle will be ignored
        pIdx = PIDtoIdx(pidCur);
        if(pIdx==kP || pIdx==kN) pIdx=UNDEF; // also skip protons and neutrons
-       if(debug) printf("\nNEXT PARTICLE: --> pid=%d  pIdx=%d\n",pidCur,pIdx);
+       
+
+       // if it's an electron with chi2pid==0.00000, it may not be *the* scattered
+       // electron, so we skip it
+       if(pIdx==kE && fabs(chi2pid)<1e-5) pIdx=UNDEF;
 
 
        if(pIdx>UNDEF) {
-
+         if(debug) printf("\nNEXT PARTICLE: --> pid=%d  pIdx=%d\n",pidCur,pIdx);
+        
          // set Trajectory pointer tr to proper allocated Trajectory instance; if there
          // are more instances of this observable than we allocated for, (this max
          // number is "maxTraj"), just ignore the additional particles and print a
