@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
 
        reader.getReader().read(readerEvent);
        readerEvent.getStructure(recParticle);
-       //if(evnum==51492706) recParticle.show();
+       if(evnum==174860) recParticle.show();
 
 
        for(h=0; h<N; h++) {
@@ -125,13 +125,11 @@ int main(int argc, char** argv) {
            );
 
            // print each particle
-           /*
-           if(evnum==51492706) {
+           if(evnum==174860) {
              printf("%d %d %f (%f %f %f)\n",evnum,partPid[h],
                pv.P(), pv.Px(), pv.Py(), pv.Pz() );
            };
-           */
-           if(partPid[h]==11) printf("%d %f %f\n",evnum,pv.P(),part->par()->getChi2Pid());
+           //if(partPid[h]==11) printf("%d %f %f\n",evnum,pv.P(),part->par()->getChi2Pid());
            
            if(pv.E() > En[h]) {
              En[h] = pv.E();
