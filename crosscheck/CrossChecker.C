@@ -16,8 +16,8 @@ const Int_t NF = 2; // number of files
 enum xenum { kTim, kHarut, kHarutOS, kOrlando, 
              kSimpleC, kSimpleJava, kAnalysis, kAnalysisLund };
 
-Int_t xcheck[NF] = { kAnalysis, kTim };
-//Int_t xcheck[NF] = { kTim, kAnalysis };
+//Int_t xcheck[NF] = { kAnalysis, kTim };
+Int_t xcheck[NF] = { kTim, kAnalysis };
 //Int_t xcheck[NF] = { kAnalysisLund, kOrlando };
 //Int_t xcheck[NF] = { kAnalysisLund, kHarut };
 //Int_t xcheck[NF] = { kAnalysisLund, kHarutOS };
@@ -43,7 +43,7 @@ Bool_t disagreement;
 // -- IMPORTANT: make sure these are all reset in every iteration of the event loop !
 Int_t evnum[NF];
 Float_t Q2[NF], W[NF], x[NF], y[NF];
-Float_t Mh[NF], xF[NF], theta[NF], PhiH[NF], PhiR[NF];
+Float_t Mh[NF], xF[NF], theta[NF], PhiH[NF], PhiR[NF], Mmiss[NF], Zpair[NF];
 Float_t PhPerp[NF];
 Float_t eleP[NF];
 
@@ -70,6 +70,7 @@ void GetTreeVars(Int_t ff, Int_t ii);
 void GetEventTreeVars(Int_t ff, Int_t ii);
 void ReadOrlandoFormat(TString datname, Int_t ff);
 Long_t Hash(Int_t ff);
+void ResetVars(Int_t ff);
 
 
 void CrossChecker() {
@@ -81,7 +82,7 @@ void CrossChecker() {
    for(f=0; f<NF; f++) {
     switch(xcheck[f]) {
       case kAnalysis:
-        ev[f] = new EventTree( "../outrootCC/skim5_5051.hipo.root", EncodePairType(kPip,kPim) ); 
+        ev[f] = new EventTree( "../outroot/skim5_5051.hipo.root", EncodePairType(kPip,kPim) ); 
         break;
       case kAnalysisLund:
         ev[f] = new EventTree( "../outrootCC/lund.root", EncodePairType(kPip,kPim) ); 
@@ -129,6 +130,7 @@ void CrossChecker() {
         xstr = "evnum/I:Q2/F:x/F:W/F:y/F:eleP/F";
         xstr += ":Mh/F:xF/F:PhPerp/F:theta/F";
         xstr += ":PhiR/F:PhiH/F:pipP/F:pimP/F";
+        xstr += ":Mmiss/F:Zpair/F";
 
         printf("xtree[%d] branches: %s\n",f,xstr.Data());
         xtree[f]->ReadFile("xtreeTim.dat",xstr);
@@ -145,6 +147,8 @@ void CrossChecker() {
         xtree[f]->SetBranchAddress("theta",&theta[f]);
         xtree[f]->SetBranchAddress("PhiH",&PhiH[f]);
         xtree[f]->SetBranchAddress("PhiR",&PhiR[f]);
+        xtree[f]->SetBranchAddress("Mmiss",&Mmiss[f]);
+        xtree[f]->SetBranchAddress("Zpair",&Zpair[f]);
         for(h=0; h<nHad; h++) {
           xtree[f]->SetBranchAddress( TString(hadN[h]+"P"), &hadP[f][h] );
         };
@@ -276,6 +280,7 @@ void CrossChecker() {
   std::map<Long_t,Int_t>::iterator hashIter;
 
   Bool_t addToHashTable;
+  printf("---BUILD HASH TABLE from xtree[1]\n");
   for(int xi=0; xi<ENT[1]; xi++) {
     GetTreeVars(1,xi);
     if(xcheck[1]==kAnalysis) addToHashTable=ev[1]->Valid();
@@ -284,7 +289,16 @@ void CrossChecker() {
       hashVal = Hash(1);
       hashMap.insert(std::pair<Long_t,Int_t>(hashVal,xi));
     };
+    /*
+    if(evnum[1]==174860 && xcheck[1]==kAnalysis) { // bad event?
+      printf("-------------------------- valid = %d\n",ev[1]->Valid());
+      printf("-----xi = %d\n",xi);
+      ev[1]->PrintEventVerbose();
+      return;
+    };
+    */
   };
+  printf("---> hash table built\n");
 
 
 
@@ -305,38 +319,12 @@ void CrossChecker() {
   
 
   // loop through xtree[0]
+  printf("--- LOOP THROUGH xtree[0]\n");
   for(int i=0; i<ENT[0]; i++) {
 
     // reset variables so that it's easy to filter out which
     // aren't associated to any branch
-    for(f=0; f<NF; f++) {
-      evnum[f] = UNDEF;
-      Q2[f] = UNDEF;
-      W[f] = UNDEF;
-      x[f] = UNDEF;
-      y[f] = UNDEF;
-      Mh[f] = UNDEF;
-      xF[f] = UNDEF;
-      theta[f] = UNDEF;
-      PhiH[f] = UNDEF;
-      PhiR[f] = UNDEF;
-      PhPerp[f] = UNDEF;
-      eleP[f] = UNDEF;
-      for(h=0; h<nHad; h++) {
-        hadE[f][h] = UNDEF;
-        hadP[f][h] = UNDEF;
-        hadPt[f][h] = UNDEF;
-        hadPtq[f][h] = UNDEF;
-        hadEta[f][h] = UNDEF;
-        hadTheta[f][h] = UNDEF;
-        hadPhi[f][h] = UNDEF;
-        hadPx[f][h] = UNDEF;
-        hadPy[f][h] = UNDEF;
-        hadPz[f][h] = UNDEF;
-        hadZ[f][h] = UNDEF;
-        hadXF[f][h] = UNDEF;
-      };
-    };
+    for(f=0; f<NF; f++) ResetVars(f);
 
     // fill xtree[0] variables
     GetTreeVars(0,i);
@@ -409,6 +397,8 @@ void CrossChecker() {
           PrintCompare( "y", y[0], y[1] );
           PrintCompare( "Mh", Mh[0], Mh[1] );
           PrintCompare( "xF", xF[0], xF[1] );
+          PrintCompare( "Zpair", Zpair[0], Zpair[1] );
+          PrintCompare( "Mmiss", Mmiss[0], Mmiss[1] );
           PrintCompare( "PhPerp", PhPerp[0], PhPerp[1] );
           PrintCompare( "theta", theta[0], theta[1] );
           PrintCompare( "PhiH", PhiH[0], PhiH[1] );
@@ -428,11 +418,13 @@ void CrossChecker() {
       else {
         gSystem->RedirectOutput(outdat,"a");
         printf("\nEVENT %d missing (hash=%ld)\n",evnum[0],hashVal);
+        gSystem->RedirectOutput(outmissing,"a");
         if(xcheck[0]==kAnalysis) {
           ev[0]->PrintEvent();
-          gSystem->RedirectOutput(outmissing,"a");
-          ev[0]->PrintEventLine();
-        }
+          //ev[0]->PrintEventLine();
+        } else {
+          printf("%d %f %f\n",evnum[0],hadP[0][0],hadP[0][1]); 
+        };
         gSystem->RedirectOutput(0);
       };
 
@@ -451,13 +443,14 @@ void CrossChecker() {
         for(h=0; h<nHad; h++) vecHad[h].Print();
         printf("---> pip+pim 4-momentum sum components:\n");
         (vecHad[0]+vecHad[1]).Print();
-        printf("---> q-vector:\n");
-        (ev[0]->GetDISObj()->vecQ).Print();
+        //printf("---> q-vector:\n");
+        //(ev[0]->GetDISObj()->vecQ).Print();
         gSystem->RedirectOutput(0);
       };
 
     }; // eo evCut
   }; // eo loop through xtree[0]
+  printf("---> end looping through xtree[0]\n");
 
   //gROOT->ProcessLine(TString(".! cat "+outdat));
   gROOT->ProcessLine(TString(".! grep -B16 flagged "+outdat+" > disagreements.dat"));
@@ -515,6 +508,8 @@ void GetEventTreeVars(Int_t ff, Int_t ii) {
     y[ff] = ev[ff]->y;
     Mh[ff] = ev[ff]->Mh;
     xF[ff] = ev[ff]->xF;
+    Mmiss[ff] = ev[ff]->Mmiss;
+    Zpair[ff] = ev[ff]->Zpair;
     PhPerp[ff] = ev[ff]->PhPerp;
     theta[ff] = ev[ff]->theta;
     PhiH[ff] = ev[ff]->PhiH;
@@ -531,7 +526,8 @@ void GetEventTreeVars(Int_t ff, Int_t ii) {
       hadZ[ff][hh] = ev[ff]->Z[hh];
       hadXF[ff][hh] = ev[ff]->hadXF[hh]; // deprecated
     };
-  };
+  }
+  else ResetVars(ff);
 };
 
 
@@ -597,4 +593,35 @@ Long_t Hash(Int_t ff) {
          (Long_t)((hadP[ff][0]+hadP[ff][1])*100+0.5)*1000 +
          (Long_t)(Mh[ff]*100+0.5);
          */
+};
+
+void ResetVars(Int_t ff) {
+  evnum[ff] = UNDEF;
+  Q2[ff] = UNDEF;
+  W[ff] = UNDEF;
+  x[ff] = UNDEF;
+  y[ff] = UNDEF;
+  Mh[ff] = UNDEF;
+  xF[ff] = UNDEF;
+  theta[ff] = UNDEF;
+  PhiH[ff] = UNDEF;
+  PhiR[ff] = UNDEF;
+  Mmiss[ff] = UNDEF;
+  Zpair[ff] = UNDEF;
+  PhPerp[ff] = UNDEF;
+  eleP[ff] = UNDEF;
+  for(int hh=0; hh<nHad; hh++) {
+    hadE[ff][hh] = UNDEF;
+    hadP[ff][hh] = UNDEF;
+    hadPt[ff][hh] = UNDEF;
+    hadPtq[ff][hh] = UNDEF;
+    hadEta[ff][hh] = UNDEF;
+    hadTheta[ff][hh] = UNDEF;
+    hadPhi[ff][hh] = UNDEF;
+    hadPx[ff][hh] = UNDEF;
+    hadPy[ff][hh] = UNDEF;
+    hadPz[ff][hh] = UNDEF;
+    hadZ[ff][hh] = UNDEF;
+    hadXF[ff][hh] = UNDEF;
+  };
 };
