@@ -250,17 +250,17 @@ int main(int argc, char** argv) {
         asymError = A->fitFunc2->GetParError(0);
       };
       for(int aa=0; aa<N_AMP; aa++) {
-        /*
+        ///*
         RFasymValue[aa] = A->rfA[aa]->getVal();
         RFasymError[aa] = A->rfA[aa]->getError();
-        */
+        //*/
         // hack to replace MLM fit result with 2D fit results (must use fitMode==4)
-        ///*
+        /*
         for(int kk=0; kk<10; kk++) 
           fprintf(stderr,"WARNING WARNING WARNING: mlm fit result replaced with 2dfit\n");
         RFasymValue[aa] = A->fitFunc2->GetParameter(aa);
         RFasymError[aa] = A->fitFunc2->GetParError(aa);
-        //*/
+        */
       };
 
 

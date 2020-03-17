@@ -5,9 +5,9 @@
 // - PROCEDURE:
 //   - make sure we have a `cat.root` file in the `spinroot` directory
 //   - cp my `spinroot` directory here as `spinroot.chrisGrids`
-//   - cp the `cat.root` file to `spinroot.timGrids` as well; the `cat.root` file here
-//     will have its grids updated, according to the text-file grids from Timothy, stored
-//     in the `grids` subdirectory
+//   - cp the `cat.root` file to `spinroot.timGrids` as well; 
+//   - this script will update the `spinroot.timGrids/cat.root` file with grids from
+//     Timothy, read from the text files in in the `grids` subdirectory
 
 Int_t nx,ny;
 Double_t xl,xu,yl,yu;
@@ -50,10 +50,10 @@ void embedGrid() {
   const Int_t NM = 2;
   TH2D * hist[NM][NH]; // [mass bin] [hel+-]
   ///*
-  hist[0][0] = mkHisto("grids/mass_posHel_lowerBin.txt","P_M0");
-  hist[0][1] = mkHisto("grids/mass_negHel_lowerBin.txt","M_M0");
-  hist[1][0] = mkHisto("grids/mass_posHel_upperBin.txt","P_M1");
-  hist[1][1] = mkHisto("grids/mass_negHel_upperBin.txt","M_M1");
+  hist[0][0] = mkHisto("grids/Pos_Hel_Low_Mass.txt","P_M0");
+  hist[0][1] = mkHisto("grids/Neg_Hel_Low_Mass.txt","M_M0");
+  hist[1][0] = mkHisto("grids/Pos_Hel_High_Mass.txt","P_M1");
+  hist[1][1] = mkHisto("grids/Neg_Hel_High_Mass.txt","M_M1");
   //*/
   /*
   hist[0][0] = mkHisto("printGrid/timothy_m0_hp.txt","P_M0");
