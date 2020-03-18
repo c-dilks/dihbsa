@@ -164,6 +164,7 @@ int main(int argc, char** argv) {
   // EVENT LOOP  
   //-----------------------------------------------------
   Bool_t eventAdded;
+  Double_t evCount = 0;
   ev->whichHelicityMC = whichHelicityMC;
 
   printf("begin loop through %lld events...\n",ev->ENT);
@@ -178,6 +179,7 @@ int main(int argc, char** argv) {
         A = asymMap.at(bn);
         eventAdded = A->AddEvent(ev);
         //if(eventAdded && A->debug) ev->PrintEvent();
+        if(eventAdded) evCount+=1;
       };
 
     };
@@ -217,6 +219,7 @@ int main(int argc, char** argv) {
   // close spinroot file
   spinrootFile->Close();
   printf("\n%s written\n\n",spinrootFileN.Data());
+  printf("evCount = %.0f\n",evCount);
 };
 
 //////////////////////////////////////////////////////////////////////////
