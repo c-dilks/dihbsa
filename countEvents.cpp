@@ -31,8 +31,7 @@ int main(int argc, char** argv) {
 
      ev->GetEvent(i);
 
-     if(ev->Valid() && ev->SpinState()!=0 && 
-        ev->Mh>=0 && ev->Mh<=3) {
+     if(ev->Valid() && (ev->SpinState()==sP || ev->SpinState()==sM) ) {
        count+=1;
      };
 
