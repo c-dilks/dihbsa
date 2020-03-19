@@ -95,7 +95,7 @@ class EventTree : public TObject
 
     // dihadron kinematics
     Int_t particleCnt[nParticles];
-    Int_t particleCntAll;
+    //Int_t particleCntAll;
     Float_t Mh,Zpair,PhiH,Mmiss,xF,alpha;
     Float_t Z[2];
     Float_t zeta;

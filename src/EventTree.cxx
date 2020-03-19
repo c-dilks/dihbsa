@@ -67,7 +67,7 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   /////////////
 
   chain->SetBranchAddress("particleCnt",particleCnt);
-  chain->SetBranchAddress("particleCntAll",&particleCntAll);
+  //chain->SetBranchAddress("particleCntAll",&particleCntAll);
 
   chain->SetBranchAddress("Mh",&Mh);
   chain->SetBranchAddress("Mmiss",&Mmiss);

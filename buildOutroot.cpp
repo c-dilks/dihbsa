@@ -244,23 +244,15 @@ int main(int argc, char** argv) {
 
    // miscellaneous event-header branches
    Int_t evnum,runnum;
-   ULong64_t recHash;
    Int_t helicity;
    Float_t torus,solenoid;
    Long64_t triggerBits;
    tree->Branch("runnum",&runnum,"runnum/I");
    tree->Branch("evnum",&evnum,"evnum/I");
-   tree->Branch("recHash",&recHash,"recHash/l");
    tree->Branch("helicity",&helicity,"helicity/I");
    tree->Branch("torus",&torus,"torus/F");
    tree->Branch("solenoid",&solenoid,"solenoid/F");
    tree->Branch("triggerBits",&triggerBits,"triggerBits/L");
-
-
-   Int_t pidSum;
-   Int_t pxSum;
-   Int_t pySum;
-   Int_t pzSum;
 
 
    // define HIPO file reader and banks 
@@ -421,30 +413,6 @@ int main(int argc, char** argv) {
      torus = reader.runconfig()->getTorus(); // -->tree
      solenoid = reader.runconfig()->getSolenoid(); // -->tree
      //printf("schema name = %s\n",reader.head()->getSchema().getName().data());
-
-
-     // hash REC::Particle bank 
-     // - used as an alternative event number, useful for MC matching
-     recHash = 0;
-     pidSum = 0;  pxSum = 0;  pySum = 0; pzSum = 0;
-     for(auto & part : reader.getDetParticles()) {
-       pidSum += TMath::Abs(part->getPid());
-       pxSum += 100 * part->par()->getPx();
-       pySum += 100 * part->par()->getPy();
-       pzSum += 100 * part->par()->getPz();
-     };
-     recHash += (ULong64_t)(evnum & 0xFFFF) << (10*4);
-     recHash += (ULong64_t)(pidSum & 0xFFFF) << (6*4);
-     recHash += (ULong64_t)(pxSum & 0xFF) << (4*4);
-     recHash += (ULong64_t)(pySum & 0xFF) << (2*4);
-     recHash += (ULong64_t)(pzSum & 0xFF);
-     // recHash -->tree
-
-     if(debug) {
-       Tools::PrintSeparator(30);
-       printf("EVNUM = %d\n",evnum);
-       printf("recHash = %lld = 0x%llX\n",recHash,recHash);
-     };
 
 
      // reset trajectory-sorting data structures "trajArr" and "trajE"
