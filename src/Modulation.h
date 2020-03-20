@@ -31,6 +31,8 @@ class Modulation : public TObject
     TString StateTitle(Int_t tw, Int_t l, Int_t m);
 
     Bool_t enablePW;
+    Int_t polarization;
+    enum polarization_enum { kLU, kUU };
     static const Int_t LMAX = 2;
 
 

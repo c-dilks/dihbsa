@@ -10,6 +10,9 @@ Modulation::Modulation() {
   // so that other programs can choose to turn it on
   enablePW = false;
 
+  // set polarization of structure function
+  polarization = kLU;
+
   // variables which are used to track if a different value of tw,l,m is requested
   twCurr = (Int_t) UNDEF;
   lCurr = (Int_t) UNDEF;
@@ -65,23 +68,33 @@ TString Modulation::BaseString(Int_t tw, Int_t l, Int_t m) {
   mAbs = TMath::Abs(m);
 
   // azimuthal dependence
-  // - this is from the F_LU structure function's azimuthal modulation 
-  //   longitudinally polarized electron beam and unpolarized nucleon target
   // - if you don't want to consider the partial wave expansion, technically
   //   you should only consider m==1 as well
-  switch(tw) {
-    case 0:
-      aziStr = "1"; // constant modulation
-      break;
-    case 2:
-      if(m==0) aziStr = "0";
-      else aziStr = Form("sin(%d*phiH-%d*phiR)",mAbs,mAbs);
-      if(m<0) aziStr = "-"+aziStr; // pull minus sign out front
-      break;
-    case 3:
-      aziStr = Form("sin(%d*phiH+%d*phiR)",1-m,m);
-      break;
+  if(polarization==kLU) {
+    switch(tw) {
+      case 0:
+        aziStr = "1"; // constant modulation
+        break;
+      case 2:
+        if(m==0) aziStr = "0";
+        else aziStr = Form("sin(%d*phiH-%d*phiR)",mAbs,mAbs);
+        if(m<0) aziStr = "-"+aziStr; // pull minus sign out front
+        break;
+      case 3:
+        aziStr = Form("sin(%d*phiH+%d*phiR)",1-m,m);
+        break;
+    };
+  }
+  else if(polarization==kUU) {
+    //switch(tw) {
+      aziStr = "TODO";
+    //};
+  }
+  else {
+    fprintf(stderr,"ERROR: bad Modulation::polarization setting\n");
+    return "0";
   };
+
 
   // theta dependence
   // - this is from the partial wave expansion in terms of cos(theta); this follows
@@ -172,8 +185,10 @@ TString Modulation::ModulationName(Int_t tw, Int_t l, Int_t m) {
   return retstr;
 };
 TString Modulation::StateTitle(Int_t tw, Int_t l, Int_t m) {
-  TString retstr = Form("|%d,%d>_{%d}",l,m,tw);
+  TString retstr;
   if(tw==0) retstr = "const";
+  else if(enablePW) retstr = Form("|%d,%d>_{%d}",l,m,tw);
+  else retstr = Form("|L,%d>_{%d}",m,tw);
   return retstr;
 };
 

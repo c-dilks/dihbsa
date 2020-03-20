@@ -113,8 +113,8 @@ void Orthogonality3d(Int_t weightSetting=0, TString infileN="ortho.root") {
   TH2D * orthMatrix = new TH2D("orthMatrix","<fg> matrix",NF,0,NF,NF,0,NF);
   TString funcT[NF];
   for(f=0; f<NF; f++) { 
-    funcT[f] = modu[f]->ModulationTitle(
-      idx[f][kTwist],idx[f][kL],idx[f][kM]);
+    //funcT[f] = modu[f]->ModulationTitle(idx[f][kTwist],idx[f][kL],idx[f][kM]);
+    funcT[f] = modu[f]->StateTitle(idx[f][kTwist],idx[f][kL],idx[f][kM]);
     printf("%s\n",funcT[f].Data());
     orthMatrix->GetXaxis()->SetBinLabel(f+1,funcT[f]);
     orthMatrix->GetYaxis()->SetBinLabel(f+1,funcT[f]);
