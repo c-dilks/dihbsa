@@ -14,13 +14,14 @@ Modulation::Modulation() {
   twCurr = (Int_t) UNDEF;
   lCurr = (Int_t) UNDEF;
   mCurr = (Int_t) UNDEF;
+  funcCurr = NULL;
 
 };
 
 
 // check for valid values of twist, l, and m
 Bool_t Modulation::Validate(Int_t tw, Int_t l, Int_t m) {
-  if(tw!=2 && tw!=3) {
+  if(tw!=0 && tw!=2 && tw!=3) {
     fprintf(stderr,"ERROR: Modulation::Validate -- bad twist (%d)\n",tw);
     return false;
   };
@@ -45,7 +46,10 @@ Double_t Modulation::Evaluate(Int_t tw, Int_t l, Int_t m,
     twCurr = tw;
     lCurr = l;
     mCurr = m;
-    funcCurr = this->BuildTF3(tw,l,m);
+    tf3name = this->ModulationName(tw,l,m);
+    tf3name.ReplaceAll("mod","modFunc");
+    if(funcCurr) delete funcCurr;
+    funcCurr = new TF3(tf3name,this->BuildFormu(tw,l,m),-PI,PI,-PI,PI,0,PI);
   };
 
   return funcCurr->Eval(phiH,phiR,theta);
@@ -66,6 +70,9 @@ TString Modulation::BaseString(Int_t tw, Int_t l, Int_t m) {
   // - if you don't want to consider the partial wave expansion, technically
   //   you should only consider m==1 as well
   switch(tw) {
+    case 0:
+      aziStr = "1"; // constant modulation
+      break;
     case 2:
       if(m==0) aziStr = "0";
       else aziStr = Form("sin(%d*phiH-%d*phiR)",mAbs,mAbs);
@@ -153,13 +160,6 @@ TString Modulation::BuildFormuRF(Int_t tw, Int_t l, Int_t m) {
 };
 
 
-// build TF3
-TF3 * Modulation::BuildTF3(Int_t tw, Int_t l, Int_t m) {
-  tf3name = this->ModulationName(tw,l,m);
-  tf3name.ReplaceAll("mod","modFunc");
-  return new TF3(tf3name,this->BuildFormu(tw,l,m),-PI,PI,-PI,PI,0,PI);
-};
-
 
 TString Modulation::ModulationTitle(Int_t tw, Int_t l, Int_t m) {
   TString retstr = BaseString(tw,l,m);
@@ -173,6 +173,7 @@ TString Modulation::ModulationName(Int_t tw, Int_t l, Int_t m) {
 };
 TString Modulation::StateTitle(Int_t tw, Int_t l, Int_t m) {
   TString retstr = Form("|%d,%d>_{%d}",l,m,tw);
+  if(tw==0) retstr = "const";
   return retstr;
 };
 

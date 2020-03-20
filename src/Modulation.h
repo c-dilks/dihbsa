@@ -25,7 +25,6 @@ class Modulation : public TObject
     TString BaseString(Int_t tw, Int_t l, Int_t m);
     TString BuildFormu(Int_t tw, Int_t l, Int_t m);
     TString BuildFormuRF(Int_t tw, Int_t l, Int_t m);
-    TF3 *  BuildTF3(Int_t tw, Int_t l, Int_t m);
 
     TString ModulationTitle(Int_t tw, Int_t l, Int_t m);
     TString ModulationName(Int_t tw, Int_t l, Int_t m);
@@ -41,7 +40,7 @@ class Modulation : public TObject
     Int_t mAbs;
     Int_t twCurr,lCurr,mCurr;
     Int_t twOA,lOA,mOA;
-    TF1 * funcCurr;
+    TF3 * funcCurr;
 
 
   ClassDef(Modulation,1);
