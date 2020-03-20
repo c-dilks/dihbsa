@@ -28,8 +28,9 @@ R__LOAD_LIBRARY(DihBsa)
 
 #include "Constants.h"
 #include "EventTree.h"
+#include "Tools.h"
 
-void BuildOrtho(TString inDir="outroot.fall18.someMore") {
+void BuildOrtho(TString inDir="outroot") {
   const Int_t NBINS = 50;
   TFile * outfile = new TFile("ortho.root","RECREATE");
 
@@ -45,11 +46,14 @@ void BuildOrtho(TString inDir="outroot.fall18.someMore") {
                                                                      NBINS,-PI,PI);
 
   EventTree * ev = new EventTree(TString(inDir+"/*.root"),EncodePairType(kPip,kPim));
+  Float_t pH,pR;
   for(int i=0; i<ev->ENT; i++) {
     ev->GetEvent(i);
     if(ev->Valid()) {
-      d2->Fill(ev->PhiR,ev->PhiH);
-      d3->Fill(ev->PhiR,ev->PhiH,ev->theta);
+      pH = Tools::AdjAngle(ev->PhiH); // shift to [-pi,+pi]
+      pR = Tools::AdjAngle(ev->PhiR); // shift to [-pi,+pi]
+      d2->Fill(pR,pH);
+      d3->Fill(pR,pH,ev->theta);
       for(int h=0; h<2; h++) {
         pph[h]->Fill(ev->GetDihadronObj()->GetSingleHadronPhiH(h),ev->PhiH);
       };
