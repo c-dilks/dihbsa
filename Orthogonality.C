@@ -3,7 +3,6 @@ R__LOAD_LIBRARY(DihBsa)
 #include "Constants.h"
 #include "Modulation.h"
 
-Bool_t enableLegendre;
 void Draw3d(TH3D * dd, Int_t whichProj);
 
 // weightSetting: 
@@ -11,13 +10,15 @@ void Draw3d(TH3D * dd, Int_t whichProj);
 // 1 = uniform across all variables
 // 2+ = see switch statement
 
-void Orthogonality3d(Int_t weightSetting=0, TString infileN="ortho.root") {
+void Orthogonality(Int_t weightSetting=0, TString infileN="ortho.root") {
 
   
   // OPTIONS
   ///////////////////
-  enableLegendre = 0;
+  Bool_t enableLegendre = 1;
+  Int_t polarization = Modulation::kUU;
   Int_t LMAX = 2;
+  Bool_t useModulationTitle = false;
   ///////////////////
 
 
@@ -77,44 +78,58 @@ void Orthogonality3d(Int_t weightSetting=0, TString infileN="ortho.root") {
 
 
   // generate list of (l,m,twist) values
-  Int_t NFi = 0;
+  // - Modulation instances are set with the polarizations LU or UU (or any other)
+  // - since Modulation will create a new TF3 if the twist,l,m values change, we create
+  //   an instance of Modulation for each function; this speeds things up
   enum idx_enum{kL,kM,kTwist,Nidx};
-  Int_t idx[100][Nidx];
-  Int_t l,m,twist;
-  idx[NFi][kL]=0; idx[NFi][kM]=0; idx[NFi][kTwist]=0; NFi++; // (constant)
+  Int_t l,m,twist,lev;
+  Modulation * modu;
+  TObjArray * moduArr = new TObjArray();
+  // F_LU modulations
+  /*
   for(l=0; l<=LMAX; l++) {
     for(m=0; m<=l; m++) {
       for(twist=2; twist<=3; twist++) {
         if(!enableLegendre && l<LMAX) continue;
         if((twist==2 && m>0) || twist==3) {
-          idx[NFi][kL]=l; idx[NFi][kM]=m; idx[NFi][kTwist]=twist; NFi++;
-          if(twist==3 && m>0) {
-            idx[NFi][kL]=l; idx[NFi][kM]=-m; idx[NFi][kTwist]=twist; NFi++;
+          moduArr->AddLast(new Modulation(twist,l,m,0,enableLegendre,polarization));
+          if(twist==3 && m>0) { // negative m states
+            moduArr->AddLast(new Modulation(twist,l,-m,0,enableLegendre,polarization));
           };
         } 
       };
     };
   };
-  const Int_t NF = NFi;
-
-
-  // instantiate Modulation objects
-  // - since Modulation will create a new TF3 if the twist,l,m
-  //   values change, we create an instance of Modulation
-  //   for each function; this speeds things up
-  Modulation * modu[NF];
-  for(f=0; f<NF; f++) { 
-    modu[f] = new Modulation();
-    modu[f]->enablePW = enableLegendre;
+  */
+  // F_UU modulations
+  Int_t levMax;
+  for(l=0; l<=LMAX; l++) {
+    for(m=0; m<=l; m++) {
+      for(twist=2; twist<=3; twist++) {
+        levMax = twist==2 ? 1:0;
+        for(lev=0; lev<=levMax; lev++) {
+          if(!enableLegendre && l<LMAX) continue;
+          if((twist==2 && lev==0 && m>=0) || (twist==2 && lev==1) || twist==3) {
+            moduArr->AddLast(new Modulation(twist,l,m,lev,enableLegendre,polarization));
+            if(((twist==2 && lev==1) || twist==3) && m>0) { // negative m states
+              moduArr->AddLast(new Modulation(twist,l,-m,lev,enableLegendre,polarization));
+            };
+          };
+        };
+      };
+    };
   };
+  Int_t NMODi = moduArr->GetEntries();
+  const Int_t NMOD = NMODi;
 
 
   // |<fg>| matrix
-  TH2D * orthMatrix = new TH2D("orthMatrix","<fg> matrix",NF,0,NF,NF,0,NF);
-  TString funcT[NF];
-  for(f=0; f<NF; f++) { 
-    //funcT[f] = modu[f]->ModulationTitle(idx[f][kTwist],idx[f][kL],idx[f][kM]);
-    funcT[f] = modu[f]->StateTitle(idx[f][kTwist],idx[f][kL],idx[f][kM]);
+  TH2D * orthMatrix = new TH2D("orthMatrix","<fg> matrix",NMOD,0,NMOD,NMOD,0,NMOD);
+  TString funcT[NMOD];
+  for(f=0; f<NMOD; f++) { 
+    modu = (Modulation*) moduArr->At(f);
+    if(useModulationTitle) funcT[f] = modu->ModulationTitle();
+    else funcT[f] = modu->StateTitle();
     printf("%s\n",funcT[f].Data());
     orthMatrix->GetXaxis()->SetBinLabel(f+1,funcT[f]);
     orthMatrix->GetYaxis()->SetBinLabel(f+1,funcT[f]);
@@ -122,17 +137,21 @@ void Orthogonality3d(Int_t weightSetting=0, TString infileN="ortho.root") {
 
 
   // calculate <fg>
-  TH3D * intDist[NF][NF];
-  //TH2D * modDist_hr[NF];
-  //TH1D * modDist_t[NF];
-  Float_t phiH,phiR,theta;
-  Double_t dataWeight,modF,modG,product,integral;
-  TString intDistN,intDistT;
+  TH3D * intDist[NMOD][NMOD];
+  //TH2D * modDist_hr[NMOD];
+  //TH1D * modDist_t[NMOD];
   //TString modDistN,modDistT;
-  Double_t weightedNorm[NF];
+  Float_t phiH,phiR,theta;
+  Double_t dataWeight,modValF,modValG,product,integral;
+  TString intDistN,intDistT;
+  Double_t weightedNorm[NMOD];
   Double_t valF,valG;
-  for(f=0; f<NF; f++) {
-    for(g=0; g<NF; g++) {
+  Modulation * moduF;
+  Modulation * moduG;
+  for(f=0; f<NMOD; f++) {
+    moduF = (Modulation*) moduArr->At(f);
+    for(g=0; g<NMOD; g++) {
+      moduG = (Modulation*) moduArr->At(g);
 
       // generate histos, which hold the product of data*f*g
       intDistN = Form("intDist_f%d_g%d",f,g);
@@ -156,20 +175,16 @@ void Orthogonality3d(Int_t weightSetting=0, TString infileN="ortho.root") {
       for(r=1; r<=nbinsR; r++) {
         for(h=1; h<=nbinsH; h++) {
           for(t=1; t<=nbinsT; t++) {
+
             phiR = intDist[f][g]->GetXaxis()->GetBinCenter(r);
             phiH = intDist[f][g]->GetYaxis()->GetBinCenter(h);
             theta = intDist[f][g]->GetZaxis()->GetBinCenter(t);
 
             dataWeight = dataDist->GetBinContent(r,h,t);
-
-            modF = modu[f]->Evaluate(
-              idx[f][kTwist], idx[f][kL], idx[f][kM],
-              phiH, phiR, theta);
-            modG = modu[g]->Evaluate(
-              idx[g][kTwist], idx[g][kL], idx[g][kM],
-              phiH, phiR, theta);
+            modValF = moduF->Evaluate(phiH,phiR,theta);
+            modValG = moduG->Evaluate(phiH,phiR,theta);
             
-            product = dataWeight * modF * modG;
+            product = dataWeight * modValF * modValG;
 
             intDist[f][g]->SetBinContent(r,h,t,product);
 
@@ -196,8 +211,8 @@ void Orthogonality3d(Int_t weightSetting=0, TString infileN="ortho.root") {
 
 
   // fill orthogonality matrix
-  for(f=0; f<NF; f++) {
-    for(g=0; g<NF; g++) {
+  for(f=0; f<NMOD; f++) {
+    for(g=0; g<NMOD; g++) {
 
       // normalize data*f*g by 1/sqrt(<ff><gg>)
       intDist[f][g]->Scale(weightedNorm[f]*weightedNorm[g]);
@@ -211,12 +226,14 @@ void Orthogonality3d(Int_t weightSetting=0, TString infileN="ortho.root") {
 
   // draw
   gStyle->SetOptStat(0);
-  //gStyle->SetPalette(kBird);
+  gStyle->SetPalette(kBird);
   gStyle->SetPaintTextFormat(".3f");
   TCanvas * matCanv = new TCanvas("matCanv","matCanv",1000,1000);
   orthMatrix->SetMinimum(-1);
   orthMatrix->SetMaximum(1);
-  orthMatrix->Draw("boxtext");
+  orthMatrix->Draw("colztext");
+  //orthMatrix->Draw("boxtext");
+  if(polarization==Modulation::kUU) orthMatrix->GetXaxis()->SetRangeUser(0,1);
 
 
 
@@ -229,14 +246,14 @@ void Orthogonality3d(Int_t weightSetting=0, TString infileN="ortho.root") {
 
   /*
   TCanvas * modCanv = new TCanvas("modCanv","modCanv",800,800);
-  modCanv->Divide(5,2*((NF+5)/5));
-  for(f=0; f<NF; f++) {
+  modCanv->Divide(5,2*((NMOD+5)/5));
+  for(f=0; f<NMOD; f++) {
     //intDist[1][1]->Draw();
     modCanv->cd(5*(f/5)+f+1); modDist_hr[f]->Draw("colz");
     modCanv->cd(5*(f/5)+5+f+1); modDist_t[f]->Draw();
     //modCanv->cd(f+1); Draw3d(intDist[f][f],1);
     //modCanv->cd(f+1); intDist[f][f]->Draw();
-    //modCanv->cd(NF+f+1); Draw3d(intDist[f][f],2);
+    //modCanv->cd(NMOD+f+1); Draw3d(intDist[f][f],2);
   };
   */
 
@@ -244,11 +261,11 @@ void Orthogonality3d(Int_t weightSetting=0, TString infileN="ortho.root") {
 
   // print <fg> matrix (mathematica syntax)
   printf("A={\n");
-  for(f=0; f<NF; f++) {
+  for(f=0; f<NMOD; f++) {
     printf("{");
-    for(g=0; g<NF; g++) 
-      printf("%.3f%s",orthMatrix->GetBinContent(f+1,g+1),g+1==NF?"":",");
-    printf("}%s\n",f+1==NF?"":",");
+    for(g=0; g<NMOD; g++) 
+      printf("%.3f%s",orthMatrix->GetBinContent(f+1,g+1),g+1==NMOD?"":",");
+    printf("}%s\n",f+1==NMOD?"":",");
   };
   printf("};\n\n");
 

@@ -16,6 +16,7 @@
 #include "EventTree.h"
 #include "Binning.h"
 #include "Asymmetry.h"
+#include "Modulation.h"
 
 
 // argument variables
@@ -129,8 +130,8 @@ int main(int argc, char** argv) {
 
 
   // get modulation name for 1-amp fit
-  Modulation * modu = new Modulation();
-  TString modN = modu->ModulationName(oaTw,oaL,oaM);
+  Modulation * moduOA = new Modulation(oaTw,oaL,oaM);
+  TString modN = moduOA->ModulationName();
   printf("--> 1-amp fit will be for %s modulation\n\n",modN.Data());
 
 

@@ -28,7 +28,6 @@
 #include "Constants.h"
 #include "Binning.h"
 #include "Asymmetry.h"
-#include "Modulation.h"
 
 
 // subroutines
@@ -44,7 +43,6 @@ Int_t N_AMP,N_D;
 TString dihTitle,dihName;
 Binning * BS;
 Asymmetry * A;
-Modulation * modu;
 
 
 
@@ -87,7 +85,6 @@ int main(int argc, char** argv) {
   };
   dihTitle = PairTitle(BS->whichHad[qA],BS->whichHad[qB]);
   dihName = PairName(BS->whichHad[qA],BS->whichHad[qB]);
-  modu = new Modulation();
 
 
   // print which IV will be analyzed
@@ -526,16 +523,14 @@ int main(int argc, char** argv) {
 
       multiLeg = new TLegend(0.1,0.1,0.9,0.9);
 
-      modu->enablePW = A->fitPW;
-
       for(int aa=0; aa<N_AMP; aa++) {
         multiGrCanv->cd(aa+1);
         multiGrCanv->GetPad(aa+1)->SetGrid(0,1);
         RFkindepGr[aa] = RFkindepMap[aa].at(bn);
         RFkindepGr[aa]->Draw("LAPE");
-        legText = modu->StateTitle(A->fitTw[aa],A->fitL[aa],A->fitM[aa]);
+        legText = A->modu[aa]->StateTitle();
         legText += ": ";
-        legText += modu->ModulationTitle(A->fitTw[aa],A->fitL[aa],A->fitM[aa]);
+        legText += A->modu[aa]->ModulationTitle();
         multiLeg->AddEntry(RFkindepGr[aa],legText,"PLE");
       };
       

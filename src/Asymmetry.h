@@ -218,10 +218,6 @@ class Asymmetry : public TObject
     Int_t nAmpUsed;
     TString rfAname[nAmp];
     RooRealVar *rfA[nAmp];
-    Int_t fitTw[nAmp];
-    Int_t fitL[nAmp];
-    Int_t fitM[nAmp];
-    Bool_t fitPW;
 
     static const Int_t nDparam = 1;
     Int_t nDparamUsed;
@@ -236,10 +232,13 @@ class Asymmetry : public TObject
     RooNLLVar * rfNLL;
     RooPlot * rfNLLplot[nAmp];
 
-  private:
-    Modulation * modu;
+    Modulation * moduOA;
+    Modulation * modu[nAmp];
 
-    Float_t modulation;
+  private:
+    Bool_t enablePW;
+
+    Float_t modValOA;
     Int_t modbin,modbinH,modbinR;
     Int_t pointCnt;
 

@@ -1,5 +1,4 @@
-// plots asymmetry modulation versus various other kinematics, to get an overall sense
-// of the acceptance from the data
+// counts how many events pass each cut
 
 R__LOAD_LIBRARY(DihBsa)
 

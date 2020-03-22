@@ -1,0 +1,112 @@
+\documentclass[12pt]{article}
+\usepackage{setspace} % double space
+\onehalfspacing % 1.5 space
+\usepackage[left=1in,top=1in,right=1in,bottom=1in,nohead,nofoot]{geometry} %margins
+\setlength\footskip{0.25in} % separate page number from last line
+\setlength\parindent{0.5in} % indent paragraphs; first paragraphs are not indented
+\usepackage{epstopdf}
+\usepackage{graphicx} % Use for graphics
+
+% begin upright mu (\umu) definition
+%\usepackage{lmodern}
+%\usepackage{textcomp}
+%\DeclareFontFamily{U}{euc}{}
+%\DeclareFontShape{U}{euc}{m}{n}{<-6>eurm5<6-8>eurm7<8->eurm10}{}
+%\DeclareSymbolFont{AMSc}{U}{euc}{m}{n}
+%\DeclareMathSymbol{\umu}{\mathord}{AMSc}{"16}
+% end upright mu
+
+
+\usepackage{amssymb}
+\usepackage{amsmath}
+%\usepackage{MnSymbol} % this must be defined after \umu (upright mu)
+
+\begin{document}
+
+\begin{center}
+{\LARGE 
+Orthogonality of Modulations of the Unpolarized Dihadron Cross Section
+}
+\end{center}
+
+
+We assess the orthogonality of the various modulations of the unpolarized
+dihadron cross section, weighted by the acceptance at CLAS. This is in part an
+answer to Alessandro's question asked at CPHI, regarding the necessity of including
+$\phi$-dependence in the denominator of the beam spin asymmetry.
+
+The unpolarized
+cross section contains three structure functions at twists 2 and 3, each of
+which involve the convolution of PDFs with DiFFs; the DiFFs can be expanded in
+partial waves, denoted by the angular momentum state $|\ell,m\rangle$. The
+structure functions are:
+\begin{align}
+&F_{UU,T}^{P_{\ell,m}\cos\left(m\phi_h-m\phi_R\right)}
+  \sim f_1\otimes D_1^{|\ell,m\rangle}\\
+&F_{UU}^{P_{\ell,m}\cos\left[(2-m)\phi_h+m\phi_R\right]}
+  \sim h_1^{\perp}\otimes H_1^{\perp|\ell,m\rangle}\\
+&F_{UU}^{P_{\ell,m}\cos\left[(1-m)\phi_h+m\phi_R\right]}
+  \sim h\otimes H_1^{\perp|\ell,m\rangle}+
+       f^{\perp}\otimes D_1^{|\ell,m\rangle}
+\end{align}
+The subscripts denote the polarization, where $UU$ means unpolarized beam and
+target; if there is a third subscript, it denotes the polarization of the
+virtual photon. The superscripts denote the modulation function, dependent on
+$\phi_h,\phi_R,\theta$, and $P_{\ell,m}$ represents associated Legendre
+polynomials of $\cos\theta$. The first two structure functions are twist-2, and
+the third is twist-3, and for brevity the twist-3 structure function omits the
+terms containing twist-3 DiFFs as well as the relative kinematic factors between
+the two written terms. Finally, to simplify notation, we denote each modulation
+by the associated state vector $|\ell,m>_{polarization}^{twist}$, and we
+truncate the partial wave expansions at $\ell_{\text{max}}=2$.
+
+The denominator of an asymmetry involves an integral of the cross section
+$d\sigma_{UU}$, that is, the so-called ``constant moment'' of $d\sigma_{UU}$.
+Ideally, all terms except for those which are not dependent on
+$\phi_h,\phi_R,\theta$ vanish under the integral; the only modulation which is
+constant and independent of these variables is $|0,0\rangle_{UU,T}^{tw2}$. Because the
+usual orthogonality weight for the $\{P_{\ell,m}\}$ set is typically
+omitted\footnote{which also causes the $ss$ partial wave $|0,0\rangle$ to contain
+contamination from a pure $p$-wave}, the $|2,0\rangle_{UU,T}^{tw2}$ term also
+survives the integration. Contributions from this extra term have been accounted
+for as a systematic uncertainty, following the methodology developed by HERMES;
+the technique applies positivity bounds of the DiFFs, as well as the fraction of
+inclusive dihadrons which originate from vector meson decay.
+
+The arguments regarding the surviving terms of the integration are predicated on
+the orthogonality of $|0,0\rangle_{UU,T}^{tw2}$ between all other
+modulations\footnote{except for $|2,0\rangle_{UU,T}^{tw2}$, of course}. With the
+acceptance limitations, this is not necessarily true. Figure \ref{innerproducts}
+shows the CLAS acceptance-weighted inner products of $|0,0\rangle_{UU,T}^{tw2}$
+between all other relevant modulations. The inner products are normalized, so
+that the inner product of $|0,0\rangle_{UU,T}^{tw2}$ with itself is 1. Clearly
+the inner product with $|2,0\rangle_{UU,T}^{tw2}$ is large, for the
+aforementioned reasons; however, several other inner products are also quite
+large.
+
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.2\textwidth]{./matCanv.png}
+\caption{Acceptance-weighted inner products of modulations with $|0,0\rangle_{UU,T}^{tw2}$}
+\label{innerproducts}
+\end{figure}
+
+We need to assess how these non-orthogonal modulations impact the beam spin
+asymmetry, especially if the corresponding PDFs and DiFFs, such as the
+Boer-Mulders function $h_1^{\perp}$, are large in our kinematic bins. I am not
+yet sure how to do this.
+
+It should be noted that Stefan has studied the inclusion of denominator
+modulation amplitudes in the single-hadron beam spin asymmetry, and he does
+observe an effect which is stronger at high $p_T$. Applying his acceptance
+function and repeating the above calculation of inner products for the
+single-hadron unpolarized cross section modulations also yields large inner
+products.  Moreover, the inner products are much larger at high $p_T$ than at
+low $p_T$, in agreement with his observation. It is thus worthy to repeat this
+evaluation for dihadrons in different kinematic bins. 
+
+
+
+
+\end{document} 

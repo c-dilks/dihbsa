@@ -16,23 +16,27 @@
 class Modulation : public TObject
 {
   public:
-    Modulation();
+    Modulation(Int_t tw_, Int_t l_, Int_t m_,
+               Int_t level_ = 0,
+               Bool_t enablePW_ = false,
+               Int_t polarization_ = kLU);
     ~Modulation();
 
-    Bool_t Validate(Int_t tw, Int_t l, Int_t m);
-    Double_t Evaluate(Int_t tw, Int_t l, Int_t m, 
-                      Float_t phiH, Float_t phiR, Float_t theta);
-    TString BaseString(Int_t tw, Int_t l, Int_t m);
-    TString BuildFormu(Int_t tw, Int_t l, Int_t m);
-    TString BuildFormuRF(Int_t tw, Int_t l, Int_t m);
+    Double_t Evaluate(Float_t phiH, Float_t phiR, Float_t theta);
+    TString Formu();
+    TString FormuRF();
 
-    TString ModulationTitle(Int_t tw, Int_t l, Int_t m);
-    TString ModulationName(Int_t tw, Int_t l, Int_t m);
-    TString StateTitle(Int_t tw, Int_t l, Int_t m);
+    TString ModulationTitle();
+    TString ModulationName();
+    TString StateTitle();
 
-    Bool_t enablePW;
+    Int_t GetTw() { return tw; };
+    Int_t GetL() { return l; };
+    Int_t GetM() { return m; };
+    TString GetBaseString() { return baseStr; };
+
     Int_t polarization;
-    enum polarization_enum { kLU, kUU };
+    enum polarization_enum { kLU, kUU, nPOL };
     static const Int_t LMAX = 2;
 
 
@@ -40,9 +44,8 @@ class Modulation : public TObject
     Double_t azi,leg;
     TString aziStr,legStr,baseStr,formuStr,tf3name;
     Int_t mAbs;
-    Int_t twCurr,lCurr,mCurr;
-    Int_t twOA,lOA,mOA;
-    TF3 * funcCurr;
+    Int_t tw,l,m,lev,enablePW;
+    TF3 * function;
 
 
   ClassDef(Modulation,1);

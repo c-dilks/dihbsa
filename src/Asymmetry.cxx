@@ -25,9 +25,9 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
   else { modMax = 2*PI; modMin = 0; };
 
   // get one-amp fit's modulation name and title
-  modu = new Modulation();
-  oaModulationName = modu->ModulationName(oaTw,oaL,oaM);
-  oaModulationTitle = modu->ModulationTitle(oaTw,oaL,oaM);
+  moduOA = new Modulation(oaTw,oaL,oaM,0,false,Modulation::kLU);
+  oaModulationName = moduOA->ModulationName();
+  oaModulationTitle = moduOA->ModulationTitle();
   if(debug) {
     printf("Instantiating Asymmetry...\n");
     printf("  ModulationTitle = %s\n",oaModulationTitle.Data());
@@ -370,7 +370,7 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
 
   if(debug) {
     printf("whichDim = %d\n",whichDim);
-    printf("one-amp fit modulation = %s\n",modu->StateTitle(oaTw,oaL,oaM).Data());
+    printf("one-amp fit modulation = %s\n",moduOA->StateTitle().Data());
     printf("--> Asymmetry instantiated.\n");
   };
 
@@ -455,9 +455,9 @@ Bool_t Asymmetry::AddEvent(EventTree * ev) {
   kf = EvalKinematicFactor();
   if(kf<kfLB || kf>kfUB) return KickEvent("KF out of range",kf);
 
-  // evaluate modulation (if oa2d==true, modulation=UNDEF, i.e., not used)
-  if(!oa2d) modulation = modu->Evaluate(oaTw, oaL, oaM, PhiH, PhiR, theta);
-  else modulation = UNDEF;
+  // evaluate modValOA (if oa2d==true, modValOA=UNDEF, i.e., not used)
+  if(!oa2d) modValOA = moduOA->Evaluate(PhiH, PhiR, theta);
+  else modValOA = UNDEF;
 
   // set weight (returns 1, unless weighting for G1perp)
   weight = EvalWeight();
@@ -476,15 +476,15 @@ Bool_t Asymmetry::AddEvent(EventTree * ev) {
   // ----------
 
   if(!oa2d) {
-    aziDist[spinn]->Fill(modulation,weight);
-    modbin = aziDist[sP]->FindBin(modulation);
+    aziDist[spinn]->Fill(modValOA,weight);
+    modbin = aziDist[sP]->FindBin(modValOA);
     if(modbin>=1 && modbin<=nModBins) {
-      modBinDist[modbin-1]->Fill(modulation,weight);
+      modBinDist[modbin-1]->Fill(modValOA,weight);
     } else {
-      fprintf(stderr,"ERROR: modulation bin not found for modulation=%f\n",modulation);
+      fprintf(stderr,"ERROR: modValOA bin not found for modValOA=%f\n",modValOA);
       return false;
     };
-    modDist->Fill(modulation,weight);
+    modDist->Fill(modValOA,weight);
   } 
   else {
     aziDist2[spinn]->Fill(PhiR,PhiH,weight);
@@ -493,7 +493,7 @@ Bool_t Asymmetry::AddEvent(EventTree * ev) {
     if(modbinR>=1 && modbinR<=nModBins2 && modbinH>=1 && modbinH<=nModBins2) {
       modBinDist2[modbinH-1][modbinR-1]->Fill(PhiR,PhiH,weight);
     } else {
-      fprintf(stderr,"ERROR: 2d modulation bin not found (phiH=%f phiR=%f)\n",PhiH,PhiR);
+      fprintf(stderr,"ERROR: 2d bin not found (phiH=%f phiR=%f)\n",PhiH,PhiR);
       return false;
     };
     modDist2->Fill(PhiR,PhiH,weight);
@@ -505,7 +505,7 @@ Bool_t Asymmetry::AddEvent(EventTree * ev) {
     case 3: ivDist3->Fill(iv[0],iv[1],iv[2]); break;
   };
 
-  if(whichDim==1 && !oa2d) IVvsModDist->Fill(modulation,iv[0],weight);
+  if(whichDim==1 && !oa2d) IVvsModDist->Fill(modValOA,iv[0],weight);
 
   yieldDist->Fill(spinn);
   kfDist->Fill(kf);
@@ -632,6 +632,7 @@ void Asymmetry::FitMultiAmp(Int_t fitMode, Float_t DparamVal) {
   // build asymmetry modulation paramaterization "asymFormu" 
   // = sum { amplitude_i * modulation_i }
   nAmpUsed = 0;
+  enablePW = false;
   switch(fitMode) {
     case 0: // test one-amp modulation
       this->FormuAppend(oaTw,oaL,oaM);
@@ -641,16 +642,16 @@ void Asymmetry::FitMultiAmp(Int_t fitMode, Float_t DparamVal) {
       this->FormuAppend(2,1,1);
       break;
     case 2: // test single partial wave with one-amp modulation
-      modu->enablePW = true;
+      enablePW = true;
       this->FormuAppend(oaTw,oaL,oaM);
       break;
     case 3: // test 2 partial waves
-      modu->enablePW = true;
+      enablePW = true;
       this->FormuAppend(2,1,1);
       this->FormuAppend(3,1,1);
       break;
     case 31: // test 2 partial waves with PW-expanded denominator (WITH D_1 pp-wave TERM)
-      modu->enablePW = true;
+      enablePW = true;
       this->FormuAppend(2,1,1);
       this->FormuAppend(3,1,1);
       nDparamUsed = 1;
@@ -688,7 +689,7 @@ void Asymmetry::FitMultiAmp(Int_t fitMode, Float_t DparamVal) {
       this->FormuAppend(3,2,2); // cyan
       break;
     case 7: // partial waves for G1perp SP
-      modu->enablePW = true;
+      enablePW = true;
       this->FormuAppend(3,0,0); // grey
       this->FormuAppend(2,1,1); // red
       this->FormuAppend(3,1,1); // blue
@@ -698,7 +699,7 @@ void Asymmetry::FitMultiAmp(Int_t fitMode, Float_t DparamVal) {
       this->FormuAppend(3,2,2); // yellow
       break;
     case 8: // partial waves for G1perp PP
-      modu->enablePW = true;
+      enablePW = true;
       this->FormuAppend(3,1,0);
       this->FormuAppend(2,2,1);
       this->FormuAppend(3,2,1);
@@ -846,13 +847,12 @@ void Asymmetry::FormuAppend(Int_t TW, Int_t L, Int_t M) {
   if(nAmpUsed==0) asymFormu = "";
   else asymFormu += "+";
 
-  asymFormu += "A"+TString::Itoa(nAmpUsed,10)+"*"+modu->BuildFormuRF(TW,L,M);
-  rfA[nAmpUsed]->SetTitle(TString("A"+modu->StateTitle(TW,L,M)));
+  modu[nAmpUsed] = new Modulation(
+    TW, L, M, 0, enablePW, Modulation::kLU
+  );
 
-  fitTw[nAmpUsed] = TW;
-  fitL[nAmpUsed] = L;
-  fitM[nAmpUsed] = M;
-  fitPW = modu->enablePW;
+  asymFormu += "A"+TString::Itoa(nAmpUsed,10)+"*"+modu[nAmpUsed]->FormuRF();
+  rfA[nAmpUsed]->SetTitle(TString("A"+modu[nAmpUsed]->StateTitle()));
 
   nAmpUsed++;
 
