@@ -18,7 +18,7 @@ void Orthogonality(Int_t weightSetting=0, TString infileN="ortho.root") {
   Bool_t enableLegendre = 1;
   Int_t polarization = Modulation::kUU;
   Int_t LMAX = 2;
-  Bool_t useModulationTitle = false;
+  Bool_t useModulationTitle = true; // if true, print functions instaed of kets
   ///////////////////
 
 
@@ -128,8 +128,10 @@ void Orthogonality(Int_t weightSetting=0, TString infileN="ortho.root") {
   TString funcT[NMOD];
   for(f=0; f<NMOD; f++) { 
     modu = (Modulation*) moduArr->At(f);
-    if(useModulationTitle) funcT[f] = modu->ModulationTitle();
-    else funcT[f] = modu->StateTitle();
+    //if(useModulationTitle) funcT[f] = modu->ModulationTitle();
+    //else funcT[f] = modu->StateTitle();
+    funcT[f] = modu->ModulationTitle();
+    funcT[f] += " -- " + modu->StateTitle();
     printf("%s\n",funcT[f].Data());
     orthMatrix->GetXaxis()->SetBinLabel(f+1,funcT[f]);
     orthMatrix->GetYaxis()->SetBinLabel(f+1,funcT[f]);
@@ -231,6 +233,8 @@ void Orthogonality(Int_t weightSetting=0, TString infileN="ortho.root") {
   TCanvas * matCanv = new TCanvas("matCanv","matCanv",1000,1000);
   orthMatrix->SetMinimum(-1);
   orthMatrix->SetMaximum(1);
+  orthMatrix->GetXaxis()->SetLabelSize(0.03);
+  orthMatrix->GetYaxis()->SetLabelSize(0.03);
   orthMatrix->Draw("colztext");
   //orthMatrix->Draw("boxtext");
   if(polarization==Modulation::kUU) orthMatrix->GetXaxis()->SetRangeUser(0,1);
