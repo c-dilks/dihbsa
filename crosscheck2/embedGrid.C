@@ -50,10 +50,10 @@ void embedGrid() {
   const Int_t NM = 2;
   TH2D * hist[NM][NH]; // [mass bin] [hel+-]
   ///*
-  hist[0][0] = mkHisto("grids/Pos_Hel_Low_Mass.txt","P_M0");
-  hist[0][1] = mkHisto("grids/Neg_Hel_Low_Mass.txt","M_M0");
-  hist[1][0] = mkHisto("grids/Pos_Hel_High_Mass.txt","P_M1");
-  hist[1][1] = mkHisto("grids/Neg_Hel_High_Mass.txt","M_M1");
+  hist[0][0] = mkHisto("grids/pos_hel_low_mass.txt","M_M0");
+  hist[0][1] = mkHisto("grids/neg_hel_low_mass.txt","P_M0");
+  hist[1][0] = mkHisto("grids/pos_hel_high_mass.txt","M_M1");
+  hist[1][1] = mkHisto("grids/neg_hel_high_mass.txt","P_M1");
   //*/
   /*
   hist[0][0] = mkHisto("printGrid/timothy_m0_hp.txt","P_M0");

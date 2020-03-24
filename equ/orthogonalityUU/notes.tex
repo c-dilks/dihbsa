@@ -30,6 +30,53 @@ Orthogonality of Modulations of the Unpolarized Dihadron Cross Section
 \end{center}
 
 
+\section*{Motivation}
+
+Let $\{\alpha_k(\phi_h,\phi_R,\theta)\}$ and $\{\beta_k(\phi_h,\phi_R,\theta)\}$
+be sets of modulations of $d\sigma_{LU}$ and $d\sigma_{UU}$, respectively, and
+with $k$ an index. These sets are subsets of the Fourier series basis set, and
+thus are assumed to be mutually orthogonal, however, with acceptance
+limitations, inner product integration ranges are limited and full mutual
+orthogonality is not guaranteed in a measurement. In the following, associate
+each modulation to a Hilbert space vector and adopt bra-ket notation for inner
+products. The differential cross sections are:
+\begin{align}
+\displaystyle
+&|d\sigma_{LU}\rangle=\sum_{i}{a_i|\alpha_i\rangle}~ ~\text{where}~ ~
+a_i=K_A(x,y)F_{LU}^{\alpha_i}\\
+&|d\sigma_{UU}\rangle=\sum_{i}{b_i|\beta_i\rangle}~ ~\text{where}~ ~
+b_i=K_B(x,y)F_{UU}^{\beta_i}
+\end{align}
+$K$ denotes a kinematic depolarization factor, and $F$ denotes a structure function.
+
+The beam spin asymmetry modulated by $\alpha_k$ is
+\begin{equation}
+\displaystyle
+A_{LU}^{\alpha_k}=\frac{\langle\alpha_k|d\sigma_{LU}\rangle}
+                  {\langle1|d\sigma_{UU}\rangle}
+\end{equation}
+that is, the ratio of the $\alpha_k$-moment of $d\sigma_{LU}$ to the
+constant moment, {\it i.e.}, the total integral of $d\sigma_{UU}$, denoted
+$\sigma$. Letting $|\beta_0\rangle=|1\rangle$ and assuming normalization
+$\langle\alpha_i|\alpha_i\rangle=\langle\beta_i|\beta_i\rangle=1$, the asymmetry is 
+\begin{equation}
+A_{LU}^{\alpha_k}=\dfrac
+{ a_k+\sum_{i\neq k}{\langle \alpha_k|\alpha_i\rangle a_i} }
+{ b_0+\sum_{i\neq 0}{\langle 1|\beta_i\rangle b_i} }
+\end{equation}
+If all modulations were mutually orthogonal, then $A_{LU}^{\alpha_k}=a_k/b_0$,
+and we can associate $b_0=\sigma$. Since they are not orthogonal, define
+$A_k=a_k/\sigma$ and $B_k=b_k/\sigma$ so that
+\begin{equation}
+A_{LU}^{\alpha_k}=\dfrac
+{ A_k+\sum_{i\neq k}{\langle \alpha_k|\alpha_i\rangle A_i} }
+{ 1+\sum_{i\neq 0}{\langle 1|\beta_i\rangle B_i} }
+\end{equation}
+This equation represents the general fit form for the beam spin asymmetry.
+
+
+\section*{Orthogonality}
+
 We assess the orthogonality of the various modulations of the unpolarized
 dihadron cross section, weighted by the acceptance at CLAS. This is in part an
 answer to Alessandro's question asked at CPHI, regarding the necessity of including

@@ -54,7 +54,7 @@ void drawGrid(TString catFileC="spinroot.chrisGrids/cat.root",
   TCanvas * canv[2];
   canv[chris] = new TCanvas("canvChris","canvChris",1000,1000);
   canv[tim] = new TCanvas("canvTimothy","canvTimothy",1000,1000);
-  gStyle->SetOptStat(1);
+  gStyle->SetOptStat(0);
   
   for(int n=0; n<2; n++) {
     canv[n]->Divide(2,2);
