@@ -6,6 +6,10 @@
 \setlength\parindent{0.5in} % indent paragraphs; first paragraphs are not indented
 \usepackage{epstopdf}
 \usepackage{graphicx} % Use for graphics
+\usepackage{xcolor}
+
+\usepackage{array}
+\setlength\extrarowheight{5pt} % pad tables
 
 % begin upright mu (\umu) definition
 %\usepackage{lmodern}
@@ -73,6 +77,54 @@ A_{LU}^{\alpha_k}=\dfrac
 { 1+\sum_{i\neq 0}{\langle 1|\beta_i\rangle B_i} }
 \end{equation}
 This equation represents the general fit form for the beam spin asymmetry.
+
+
+\section*{Structure Functions and Modulations}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+
+Structure Function & Twist & 
+$m=0$ Modulation & $m=1$ Modulation & PDF $\otimes$ DiFF \\\hline\hline
+
+$F_{LU,T}^{P_{\ell,m}\sin\left(m\phi_h-m\phi_R\right)}$ & 2 &
+$0$ & ${\bf\color{magenta}\sin\left(\phi_h-\phi_R\right)}$ &
+$f_1\otimes {\bf\color{red}G_1^{\perp|\ell,m\rangle}}$\\\hline
+
+$F_{LU}^{P_{\ell,m}\sin\left[(1-m)\phi_h+m\phi_R\right]}$ & 3 &
+$\sin\phi_h$ & ${\bf\color{magenta}\sin\phi_R}$ &
+${\bf\color{red}e(x)}\otimes H_1^{\perp|\ell,m\rangle}+
+g^{\perp}\otimes D_1^{|\ell,m\rangle}$\\\hline
+
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+
+Structure Function & Twist & 
+$m=0$ Modulation & $m=1$ Modulation & PDF $\otimes$ DiFF \\\hline\hline
+
+$F_{UU,T}^{P_{\ell,m}\cos\left(m\phi_h-m\phi_R\right)}$ & 2 &
+$1$ & $\cos\left(\phi_h-\phi_R\right)$ &
+$f_1\otimes D_1^{|\ell,m\rangle}$\\\hline
+
+$F_{UU}^{P_{\ell,m}\cos\left[(2-m)\phi_h+m\phi_R\right]}$ & 2 &
+$\cos\left(2\phi_h\right)$ & $\cos\left(\phi_h+\phi_R\right)$ &
+$h_1^{\perp}\otimes H_1^{\perp|\ell,m\rangle}$\\\hline
+
+$F_{UU}^{P_{\ell,m}\cos\left[(1-m)\phi_h+m\phi_R\right]}$ & 3 &
+$\cos\phi_h$ & $\cos\phi_R$ &
+$h\otimes H_1^{\perp|\ell,m\rangle}+f^{\perp}\otimes D_1^{|\ell,m\rangle}$\\\hline
+
+\end{tabular}
+\end{center}
+
+
+
+
 
 
 \section*{Orthogonality}
