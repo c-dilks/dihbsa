@@ -61,7 +61,7 @@ A_{LU}^{\alpha_k}=\frac{\langle\alpha_k|d\sigma_{LU}\rangle}
 \end{equation}
 that is, the ratio of the $\alpha_k$-moment of $d\sigma_{LU}$ to the
 constant moment, {\it i.e.}, the total integral of $d\sigma_{UU}$, denoted
-$\sigma$. Letting $|\beta_0\rangle=|1\rangle$ and assuming normalization
+$\sigma$. Letting $|\beta_0\rangle=|1\rangle=1$ and assuming normalization
 $\langle\alpha_i|\alpha_i\rangle=\langle\beta_i|\beta_i\rangle=1$, the asymmetry is 
 \begin{equation}
 A_{LU}^{\alpha_k}=\dfrac
@@ -76,7 +76,23 @@ A_{LU}^{\alpha_k}=\dfrac
 { A_k+\sum_{i\neq k}{\langle \alpha_k|\alpha_i\rangle A_i} }
 { 1+\sum_{i\neq 0}{\langle 1|\beta_i\rangle B_i} }
 \end{equation}
-This equation represents the general fit form for the beam spin asymmetry.
+This equation motivates a simultaneous fit of the form
+\begin{equation}
+A_{LU}=
+\dfrac{d\sigma_+-d\sigma_-}{d\sigma_++d\sigma_-}=
+\dfrac{N_+/L_+\Omega_+-N_-/L_-\Omega_-}
+      {N_+/L_+\Omega_++N_-/L_-\Omega_-}=
+\dfrac{\sum_i{a_i|\alpha_i\rangle}}
+      {\sum_i{b_i|\beta_i\rangle}}=
+\dfrac{\sum_i{A_i|\alpha_i\rangle}}
+      {1+\sum_{i\neq 0}{B_i|\beta_i\rangle}}
+      \end{equation}
+where $L$ is luminosity, and $\Omega$ is the product of acceptance and
+efficiency.
+
+The relative luminosity can be determined, and if the acceptance and
+efficiency are equal for the two helicities, they cancel. The parameters
+$\{A_i,B_i\}$ can be fit simultaneously.
 
 
 \section*{Structure Functions and Modulations}
