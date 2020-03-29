@@ -1,4 +1,4 @@
-include ../config.mk
+include ../makeconfig.mk
 
 # rootcling dictionary
 DICT := $(DIHBSA)Dict.cxx
@@ -17,6 +17,7 @@ HEADERS := $(filter-out $(LINKDEF), $(wildcard *.h)) $(LINKDEF)
 $(DIHBSAOBJ): $(DICT) $(HEADERS) $(SOURCES)
 	@echo "----- build $@ -----"
 	$(CXX) $(SOURCES) -shared -o ../$@ $(FLAGS) $(DEPS) $(LIBS)
+	ln -sfv src/$(PCM) ../
 
 $(DICT): $(HEADERS)
 	@echo "----- generate dictionary $@ -----"

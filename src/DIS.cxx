@@ -10,21 +10,31 @@ DIS::DIS() {
   debug = false;
   speedup = false;
 
-  BeamEn = 10.6041;
+  Config * conf = new Config();
 
-  vecBeam = TLorentzVector(
-    0.0,
-    0.0,
-    TMath::Sqrt(TMath::Power(BeamEn,2)-TMath::Power(PartMass(kE),2)),
-    BeamEn
-  );
+  if(conf->Experiment=="clas") {
+    BeamEn = conf->EbeamEn;
+    vecBeam = TLorentzVector(
+      0.0,
+      0.0,
+      TMath::Sqrt(
+        TMath::Power(BeamEn,2) - 
+        TMath::Power(PartMass(kE),2)
+      ),
+      BeamEn
+    );
+    vecTarget = TLorentzVector(
+      0.0,
+      0.0,
+      0.0,
+      PartMass(kP)
+    );
+  }
 
-  vecTarget = TLorentzVector(
-    0.0,
-    0.0,
-    0.0,
-    PartMass(kP)
-  );
+  else if(conf->Experiment=="eic") {
+    // aqui
+    // also need to make calculations below L.I.
+  };
 };
 
 

@@ -20,6 +20,7 @@ spinweb*/
 *.dat
 outroot
 *.bat
+*.cf
 outroot.MC.gen
 outroot.MC.rec
 outroot.MC.recNotMatched

@@ -5,6 +5,7 @@
 //#pragma link off all functions;
 
 #pragma link C++ class Tools+;
+#pragma link C++ class Config+;
 #pragma link C++ class DIS+;
 #pragma link C++ class FiducialCuts+;
 #pragma link C++ class Trajectory+;

@@ -1,4 +1,4 @@
-include config.mk
+include makeconfig.mk
 
 
 # dihbsa/src dependencies
@@ -30,4 +30,4 @@ exe: $(EXES)
 
 clean:
 	@cd src; make clean
-	$(RM) $(EXES)
+	$(RM) $(EXES) *.pcm
