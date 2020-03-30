@@ -1,6 +1,7 @@
 #!/bin/bash
 
-datadir="/w/hallb-scifs17exp/clas12/rg-a/trains/v16_v2/skim5_inclusiveHadron"
+#datadir="/w/hallb-scifs17exp/clas12/rg-a/trains/v16_v2/skim5_inclusiveHadron" #dnp
+datadir="/cache/clas12/rg-a/production/recon/fall2018/torus-1/pass1/v0/dst/train/skim4"
 
 exe="buildOutroot"
 slurm=slurm.${exe}.bat
@@ -21,7 +22,7 @@ app "#SBATCH --array=0-${nruns}"
 app "#SBATCH --ntasks=1"
 app "#SBATCH --output=/farm_out/%u/%x-%j-%N.out"
 app "#SBATCH --error=/farm_out/%u/%x-%j-%N.err"
-app "dataList=(${datadir}/*.root)"
+app "dataList=(${datadir}/*.hipo)"
 
 app "srun ${exe}.exe \${dataList[\$SLURM_ARRAY_TASK_ID]}"
 

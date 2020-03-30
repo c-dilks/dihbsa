@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# default args for crosscheck: -i2 -t2 -l1 -m1 -b
+
 outrootdir="outroot"
 
 exe="buildSpinroot"
@@ -24,7 +26,7 @@ app "#SBATCH --job-name=dihbsa_${exe}"
 app "#SBATCH --account=clas12"
 app "#SBATCH --partition=production"
 app "#SBATCH --mem-per-cpu=500"
-app "#SBATCH --time=1:00:00"
+app "#SBATCH --time=2:00:00"
 app "#SBATCH --array=0-${nruns}"
 app "#SBATCH --ntasks=1"
 app "#SBATCH --output=/farm_out/%u/%x-%j-%N.out"
