@@ -131,9 +131,9 @@ Modulation::Modulation(Int_t tw_, Int_t l_, Int_t m_,
 };
 
 
-// evaluate the modulation for specified values of phiH, phiR, theta
-Double_t Modulation::Evaluate(Float_t phiH, Float_t phiR, Float_t theta) {
-  return function->Eval(phiH,phiR,theta);
+// evaluate the modulation for specified values of phiR, phiH, theta
+Double_t Modulation::Evaluate(Float_t phiR, Float_t phiH, Float_t theta) {
+  return function->Eval(phiR,phiH,theta);
 };
 
 
@@ -143,8 +143,8 @@ TString Modulation::Formu() {
   Tools::GlobalRegexp(formuStr,TRegexp("sin"),"TMath::Sin");
   Tools::GlobalRegexp(formuStr,TRegexp("cos"),"TMath::Cos");
   Tools::GlobalRegexp(formuStr,TRegexp("pow"),"TMath::Power");
-  Tools::GlobalRegexp(formuStr,TRegexp("phiH"),"x");
-  Tools::GlobalRegexp(formuStr,TRegexp("phiR"),"y");
+  Tools::GlobalRegexp(formuStr,TRegexp("phiR"),"x");
+  Tools::GlobalRegexp(formuStr,TRegexp("phiH"),"y");
   Tools::GlobalRegexp(formuStr,TRegexp("theta"),"z");
   return formuStr;
 };

@@ -183,8 +183,8 @@ void Orthogonality(Int_t weightSetting=0, TString infileN="ortho.root") {
             theta = intDist[f][g]->GetZaxis()->GetBinCenter(t);
 
             dataWeight = dataDist->GetBinContent(r,h,t);
-            modValF = moduF->Evaluate(phiH,phiR,theta);
-            modValG = moduG->Evaluate(phiH,phiR,theta);
+            modValF = moduF->Evaluate(phiR,phiH,theta);
+            modValG = moduG->Evaluate(phiR,phiH,theta);
             
             product = dataWeight * modValF * modValG;
 

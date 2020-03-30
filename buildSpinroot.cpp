@@ -25,7 +25,7 @@ Int_t pairType;
 Int_t ivType;
 Int_t oaTw,oaL,oaM;
 Bool_t useWeighting;
-Bool_t oa2dFit;
+Int_t gridDim;
 Int_t whichHelicityMC;
 
 // subroutines
@@ -80,8 +80,8 @@ int main(int argc, char** argv) {
       case 'w': /* enable weighting by PhPerp/Mh */
         useWeighting = true;
         break;
-      case 'b': /* enable 2d asymmetry fit (one amp), instead of 1d fit */
-        oa2dFit = true;
+      case 'b': /* enable 2d asymmetry grids, instead of 1d default */
+        gridDim = 2;
         break;
       case 'h': /* which helicityMC */
         whichHelicityMC = (Int_t) strtof(optarg,NULL);
@@ -106,7 +106,10 @@ int main(int argc, char** argv) {
   printf("enable PhPerp/Mh weighting: %s\n",useWeighting?"true":"false");
   Tools::PrintSeparator(40,"-");
   printf("one-amp fit modulation: |%d,%d>, twist-%d\n",oaL,oaM,oaTw);
-  printf("one-amp fit performed in %dD azimuthal space\n",oa2dFit?2:1);
+  if(gridDim==1)
+    printf("one-amp fit performed in 1D modulation space\n");
+  else if(gridDim==2)
+    printf("one-amp and multi-amp fits performed in 2D (PhiR,PhiH) space\n");
   Tools::PrintSeparator(40,"-");
   printf("whichHelicityMC = %d\n",whichHelicityMC);
   Tools::PrintSeparator(40,"=");
@@ -116,7 +119,7 @@ int main(int argc, char** argv) {
   BS = new Binning(pairType);
   BS->SetOAnums(oaTw,oaL,oaM);
   BS->useWeighting = useWeighting;
-  BS->oa2dFit = oa2dFit;
+  BS->gridDim = gridDim;
   Bool_t schemeSuccess = BS->SetScheme(ivType);
   if(!schemeSuccess) {
     fprintf(stderr,"ERROR: Binning::SetScheme failed\n");
@@ -237,7 +240,7 @@ void SetDefaultArgs() {
   oaL = 1;
   oaM = 1;
   useWeighting = false;
-  oa2dFit = false;
+  gridDim = 1;
   whichHelicityMC = 0;
 };
 

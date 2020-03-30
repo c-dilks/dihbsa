@@ -115,7 +115,7 @@ Binning::Binning(Int_t pairType_) {
   oaL = UNDEF;
   oaM = UNDEF;
   useWeighting = false;
-  oa2dFit = false;
+  gridDim = 1;
 };
 
 

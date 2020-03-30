@@ -66,8 +66,9 @@ class Asymmetry : public TObject
     ~Asymmetry();
 
 
-    void FitOneAmp();
-    void FitMultiAmp(Int_t fitMode, Float_t DparamVal=0);
+    void SetFitMode(Int_t fitMode);
+    void FitAsymGraph();
+    void FitAsymMLM(Float_t DparamVal=0);
     void SetAsymGrPoint(Int_t modBin_, Int_t modBin2_=-1);
     void FormuAppend(Int_t TW, Int_t L, Int_t M);
 
@@ -98,7 +99,7 @@ class Asymmetry : public TObject
     // settings
     Int_t oaTw,oaL,oaM;
     Int_t whichDim;
-    Bool_t oa2d;
+    Int_t gridDim;
     Bool_t useWeighting;
 
 
@@ -172,6 +173,7 @@ class Asymmetry : public TObject
     TGraph2DErrors * asymGr2;
     TH2D * asymGr2hist;
     TF2 * fitFunc2;
+    TString fitFunc2formu;
 
     TString oaModulationTitle,oaModulationName;
 
@@ -250,6 +252,7 @@ class Asymmetry : public TObject
 
     Double_t bMax;
     Int_t spinbin;
+    Int_t aziBin;
 
     TString objName,appName;
     TH1D * appDist1;

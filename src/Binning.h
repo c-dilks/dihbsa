@@ -93,7 +93,8 @@ class Binning : public TObject
       oaTw=t_; oaL=l_; oaM=m_;
     };
     Int_t whichHad[2];
-    Bool_t useWeighting, oa2dFit;
+    Bool_t useWeighting, 
+    Int_t gridDim;
 
     
   private:

@@ -19,10 +19,14 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
   oaTw = BS->oaTw;
   oaL = BS->oaL;
   oaM = BS->oaM;
-  oa2d = BS->oa2dFit;
+  gridDim = BS->gridDim;
   useWeighting = BS->useWeighting;
-  if(!oa2d) { modMax = 1.1; modMin = -modMax; }
-  else { modMax = 2*PI; modMin = 0; };
+  if(gridDim==1) { modMax = 1.1; modMin = -modMax; }
+  else if(gridDim==2) { modMax = 2*PI; modMin = 0; };
+  else {
+    fprintf(stderr,"ERROR: bad gridDim\n");
+    return;
+  };
 
   // get one-amp fit's modulation name and title
   moduOA = new Modulation(oaTw,oaL,oaM,0,false,Modulation::kLU);
@@ -38,7 +42,7 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
   // set up number of dimensions
   if(BS->dimensions>=1 && BS->dimensions<=3) whichDim = BS->dimensions;
   else {
-    fprintf(stderr,"ERROR: bad number of dimensions\n");
+    fprintf(stderr,"ERROR: bad number of IV bin dimensions\n");
     return;
   };
 
@@ -151,7 +155,7 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
   // modDist and modBinDist
   modName = Form("modDist%s",binN.Data());
   modTitle = Form("%s distribution %s",oaModulationTitle.Data(),binT.Data());
-  if(!oa2d) {
+  if(gridDim==1) {
     modTitle += ";" + oaModulationTitle;
     modDist = new TH1D(modName,modTitle,iv1Bins,modMin,modMax);
     // nop
@@ -167,7 +171,7 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
   for(int m=0; m<nModBins; m++) {
     modBinName = Form("%s_bin_%d",modName.Data(),m);
     modBinTitle = Form("bin %d %s",m,modTitle.Data());
-    if(!oa2d) {
+    if(gridDim==1) {
       modBinDist[m] = new TH1D(modBinName,modBinTitle,iv1Bins,modMin,modMax);
     } else {
       // nop
@@ -180,7 +184,7 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
       modBinName = Form("%s_bin_H%d_R%d",modName.Data(),mmH,mmR);
       modBinTitle = Form("bin (H%d,R%d) %s",mmH,mmR,modTitle.Data());
       modBinTitle += ";#phi_{R};#phi_{h}";
-      if(oa2d) {
+      if(gridDim==2) {
         modBinDist2[mmH][mmR] = new TH2D(
           modBinName,modBinTitle,
           iv2Bins,modMin,modMax,iv2Bins,modMin,modMax);
@@ -199,7 +203,7 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
     ivT[0].Data(),oaModulationTitle.Data(),binT.Data(),
     oaModulationTitle.Data(),ivT[0].Data()
   );
-  if(whichDim==1 && !oa2d) {
+  if(whichDim==1 && gridDim==1) {
     IVvsModDist = new TH2D(IVvsModName,IVvsModTitle,
       iv1Bins,modMin,modMax,
       iv1Bins,ivMin[0],ivMax[0]
@@ -217,7 +221,7 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
     aziTitle[s] = Form("%s binned distribution :: %s %s",
       oaModulationTitle.Data(),SpinTitle(s).Data(),binT.Data()
     );
-    if(!oa2d) {
+    if(gridDim==1) {
       aziTitle[s] += ";" + oaModulationTitle;
       aziDist[s] = new TH1D(aziName[s],aziTitle[s],nModBins,modMin,modMax);
       //nop
@@ -251,7 +255,7 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
 
   // asymGr
   asymName = Form("asym%s",binN.Data());
-  if(!oa2d) {
+  if(gridDim==1) {
     asymTitle = Form("%s asymmetry %s;%s;asymmetry",
       oaModulationTitle.Data(), binT.Data(),  oaModulationTitle.Data()
     );
@@ -273,38 +277,6 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
       nModBins2,modMin,modMax,nModBins2,modMin,modMax);
     //nop
     asymGr = new TGraphErrors(); asymGr->SetTitle(TString("nop_"+asymTitle));
-  };
-
-
-  // fit function
-  fitFuncName = "fit_"+asymName;
-  if(!oa2d) {
-    fitFunc = new TF1(fitFuncName,"[0]+[1]*x",modMin,modMax);
-    fitFunc->SetParName(0,"B");
-    fitFunc->SetParName(1,"A_{LU}");
-    //nop
-    fitFunc2 = new TF2(TString("nop_"+fitFuncName),"");
-  } else {
-    if(oaTw==2 && oaL==1 && oaM==1) {
-      // y=phiH, x=phiR
-      //fitFunc2 = new TF2(fitFuncName,"[0]*TMath::Sin(y-x)",
-        //modMin,modMax,modMin,modMax);
-      //fitFunc2 = new TF2(fitFuncName,"[1]*TMath::Sin(y-x)+[0]*TMath::Sin(x)",
-        //modMin,modMax,modMin,modMax); // test multi-amp 2dFit (par0 plotted in kindep)
-      fitFunc2 = new TF2(fitFuncName,
-        "[0]*TMath::Sin(y)+[1]*TMath::Sin(y-x)+[2]*TMath::Sin(x)",
-        modMin,modMax,modMin,modMax); // test multi-amp 2dFit (par0 plotted in kindep)
-    } else if(oaTw==3 && oaL==1 && oaM==1) {
-      fitFunc2 = new TF2(fitFuncName,"[0]*TMath::Sin(x)",
-        modMin,modMax,modMin,modMax);
-    }
-    else {
-      fprintf(stderr,"ERROR: this one-amp fit not defined for 2-d (phiH,phiR) fit\n");
-      return;
-    };
-    fitFunc2->SetParName(0,"A_{LU}");
-    //nop
-    fitFunc = new TF1(TString("nop_"+fitFuncName),"");
   };
 
   // initialize kinematic variables
@@ -455,9 +427,9 @@ Bool_t Asymmetry::AddEvent(EventTree * ev) {
   kf = EvalKinematicFactor();
   if(kf<kfLB || kf>kfUB) return KickEvent("KF out of range",kf);
 
-  // evaluate modValOA (if oa2d==true, modValOA=UNDEF, i.e., not used)
-  if(!oa2d) modValOA = moduOA->Evaluate(PhiH, PhiR, theta);
-  else modValOA = UNDEF;
+  // evaluate modValOA
+  if(gridDim==1) modValOA = moduOA->Evaluate(PhiR, PhiH, theta);
+  else modValOA = UNDEF; // not needed
 
   // set weight (returns 1, unless weighting for G1perp)
   weight = EvalWeight();
@@ -475,7 +447,7 @@ Bool_t Asymmetry::AddEvent(EventTree * ev) {
   // fill plots
   // ----------
 
-  if(!oa2d) {
+  if(gridDim==1) {
     aziDist[spinn]->Fill(modValOA,weight);
     modbin = aziDist[sP]->FindBin(modValOA);
     if(modbin>=1 && modbin<=nModBins) {
@@ -505,7 +477,7 @@ Bool_t Asymmetry::AddEvent(EventTree * ev) {
     case 3: ivDist3->Fill(iv[0],iv[1],iv[2]); break;
   };
 
-  if(whichDim==1 && !oa2d) IVvsModDist->Fill(modValOA,iv[0],weight);
+  if(whichDim==1 && gridDim==1) IVvsModDist->Fill(modValOA,iv[0],weight);
 
   yieldDist->Fill(spinn);
   kfDist->Fill(kf);
@@ -517,10 +489,13 @@ Bool_t Asymmetry::AddEvent(EventTree * ev) {
   
 
 
-// calculate the one-amp asymmetries; to be called at end of event loop
-// - this can be done in 1 azimuthal dimension, using the linear fit (oa2dFit==false)
-//   or in 2 azimuthal dimensions (oa2dFit==true)
-void Asymmetry::FitOneAmp() {
+// perform a fit using TGraphErrors::Fit()
+// - if gridDim==1, it is done using a 1D grid, with bins of modulation(phi)
+//   - only one amplitude can be fitted
+// - if gridDim==2, it is done using a 2D grid, with bins of (PhiR,PhiH)
+//   - either one amplitude or multiple amplitudes can be fitted, but the
+//     multi-amplitude fit implementation is limited
+void Asymmetry::FitAsymGraph() {
   
   if(debug) {
     printf("calculate asymmetries for:\n");
@@ -535,7 +510,8 @@ void Asymmetry::FitOneAmp() {
 
   if(rDenom>0) {
     // -- relative luminosity
-    rellum = rNumer / rDenom;
+    //rellum = rNumer / rDenom;
+    rellum = 1; // disable relative luminosity
     // -- relative luminosity statistical uncertainty (assume poissonian yields)
     rellumErr = sqrt( rNumer * (rNumer+rDenom) / pow(rDenom,3) );
   } else {
@@ -549,7 +525,7 @@ void Asymmetry::FitOneAmp() {
    
   // compute asymmetry for each modulation bin
   pointCnt = 0;
-  if(!oa2d) {
+  if(gridDim==1) {
     for(int m=1; m<=nModBins; m++) {
       yL = aziDist[sP]->GetBinContent(m);
       yR = aziDist[sM]->GetBinContent(m);
@@ -566,8 +542,25 @@ void Asymmetry::FitOneAmp() {
   };
 
 
+  // build fit function
+  fitFuncName = "fit_"+asymName;
+  if(gridDim==1) {
+    fitFunc = new TF1(fitFuncName,"[0]+[1]*x",modMin,modMax);
+    fitFunc->SetParName(0,"B");
+    fitFunc->SetParName(1,"A_{LU}");
+  } else {
+    if(!enablePW) {
+      fitFunc2 = new TF1(fitFuncName,fitFunc2formu,modMin,modMax,modMin,modMax);
+    }
+    else {
+      fprintf(stderr,"ERROR: cannot perform FitAsymGraph with enablePW==true\n");
+      return;
+    };
+  };
+
+
   // fit asymmetry
-  if(!oa2d) {
+  if(gridDim==1) {
     fitFunc->FixParameter(0,0); // fix fit offset to 0
     asymGr->Fit(fitFunc,"Q","",modMin,modMax);
   } else {
@@ -577,57 +570,10 @@ void Asymmetry::FitOneAmp() {
 };
 
 
-// set new asymGr point and error
-// -- called by CalculateAsymmetries() for each modulation bin
-// -- need to have yL, yR, and rellum set before calling
-// -- modBin_ and modBin2_ are used to address modBinDist for getting mean modulation
-//    for this modulation bin
-void Asymmetry::SetAsymGrPoint(Int_t modBin_, Int_t modBin2_) {
-
-  asymNumer = yL - (rellum * yR);
-  asymDenom = yL + (rellum * yR);
-
-  if(asymDenom>0) {
-    // compute asymmetry value
-    asymVal = (1.0/pol) * (asymNumer/asymDenom);
-
-    // compute asymmetry statistical error
-    // -- full formula
-    asymErr = ( 2 * rellum * sqrt( yL*pow(yR,2) + yR*pow(yL,2) ) ) / 
-              ( pol * pow(yL+rellum*yR,2) );
-    // -- compare to simple formula (assumes asym*pol<<1 and R~1)
-    //printf("difference = %f\n",asymErr - 1.0 / ( pol * sqrt(yL+yR) ));
-
-    // compute azimuthal modulation value and error
-    if(!oa2d) {
-      modVal = modBinDist[modBin_-1]->GetMean(); // use modulation bin's mean
-      modErr = 0; // for now (TODO)
-    } else {
-      // using modBinDist2[mmH-1][mmR-1]; x-axis is PhiR; y-axis is PhiH
-      modValR = modBinDist2[modBin_-1][modBin2_-1]->GetMean(1);
-      modValH = modBinDist2[modBin_-1][modBin2_-1]->GetMean(2);
-      modErrR = 0; // for now (TODO)
-      modErrH = 0; // for now (TODO)
-    };
-    
-
-    if(!oa2d) {
-      asymGr->SetPoint(pointCnt,modVal,asymVal);
-      asymGr->SetPointError(pointCnt,modErr,asymErr);
-    } else {
-      asymGr2->SetPoint(pointCnt,modValR,modValH,asymVal);
-      asymGr2->SetPointError(pointCnt,modErrR,modErrH,asymErr);
-      asymGr2hist->SetBinContent(modBin2_,modBin_,asymVal);
-    };
-    pointCnt++;
-  };
-};
-
-
-
-// calculate the asymmetries with RooFit; to be called at end of event loop
-// - this uses the unbinned maximum likelihood method
-void Asymmetry::FitMultiAmp(Int_t fitMode, Float_t DparamVal) {
+// set fit mode, which defines what combination of amplitude we will fit in 
+// a multi-amplitude fit
+// - this function must be called before fitting!
+void Asymmetry::SetFitMode(Int_t fitMode) {
 
   // build asymmetry modulation paramaterization "asymFormu" 
   // = sum { amplitude_i * modulation_i }
@@ -710,6 +656,63 @@ void Asymmetry::FitMultiAmp(Int_t fitMode, Float_t DparamVal) {
       this->FormuAppend(2,1,1);
       break;
   };
+};
+
+
+
+// set new asymGr point and error
+// -- called by CalculateAsymmetries() for each modulation bin
+// -- need to have yL, yR, and rellum set before calling
+// -- modBin_ and modBin2_ are used to address modBinDist for getting mean modulation
+//    for this modulation bin
+void Asymmetry::SetAsymGrPoint(Int_t modBin_, Int_t modBin2_) {
+
+  asymNumer = yL - (rellum * yR);
+  asymDenom = yL + (rellum * yR);
+
+  if(asymDenom>0) {
+    // compute asymmetry value
+    asymVal = (1.0/pol) * (asymNumer/asymDenom);
+
+    // compute asymmetry statistical error
+    // -- full formula
+    asymErr = ( 2 * rellum * sqrt( yL*pow(yR,2) + yR*pow(yL,2) ) ) / 
+              ( pol * pow(yL+rellum*yR,2) );
+    // -- compare to simple formula (assumes asym*pol<<1 and R~1)
+    //printf("difference = %f\n",asymErr - 1.0 / ( pol * sqrt(yL+yR) ));
+
+    // compute azimuthal modulation value and error
+    if(gridDim==1) {
+      modVal = modBinDist[modBin_-1]->GetMean(); // use modulation bin's mean
+      modErr = 0; // for now (TODO)
+    } else {
+      // using modBinDist2[mmH-1][mmR-1]; x-axis is PhiR; y-axis is PhiH
+      modValR = modBinDist2[modBin_-1][modBin2_-1]->GetMean(1); // use bin mean
+      modValH = modBinDist2[modBin_-1][modBin2_-1]->GetMean(2);
+      //modValR = aziDist2[0]->GetXaxis()->GetBinCenter(modBin2_); // use bin center
+      //modValH = aziDist2[0]->GetYaxis()->GetBinCenter(modBin_);
+      modErrR = 0; // for now (TODO)
+      modErrH = 0; // for now (TODO)
+    };
+    
+
+    if(gridDim==1) {
+      asymGr->SetPoint(pointCnt,modVal,asymVal);
+      asymGr->SetPointError(pointCnt,modErr,asymErr);
+    } else {
+      asymGr2->SetPoint(pointCnt,modValR,modValH,asymVal);
+      asymGr2->SetPointError(pointCnt,modErrR,modErrH,asymErr);
+      asymGr2hist->SetBinContent(modBin2_,modBin_,asymVal);
+    };
+    pointCnt++;
+  };
+};
+
+
+
+// use unbined MLM method to fit asymmetries, using RooFit Minuit to
+// minimize the -log likelihood
+void Asymmetry::FitAsymMLM(Float_t DparamVal) {
 
   // append polarization factor to asymFormu
   asymFormu = "rfPol*("+asymFormu+")";
@@ -727,12 +730,8 @@ void Asymmetry::FitMultiAmp(Int_t fitMode, Float_t DparamVal) {
   }
       
   // rellum factors
-  /*
   rellumFactor[sP] = "rfRellum/(rfRellum+1)";
   rellumFactor[sM] = "1/(rfRellum+1)";
-  */
-  rellumFactor[sP] = "1";
-  rellumFactor[sM] = "1";
 
   // append yield factor to prefactors (for extended fit)
   //for(int s=0; s<nSpin; s++) rellumFactor[s] = "rfYieldBoth*" + rellumFactor[s];
@@ -844,14 +843,22 @@ void Asymmetry::FormuAppend(Int_t TW, Int_t L, Int_t M) {
     return;
   };
 
-  if(nAmpUsed==0) asymFormu = "";
-  else asymFormu += "+";
+  if(nAmpUsed==0) {
+    asymFormu = "";
+    fitFunc2formu = "";
+  }
+  else {
+    asymFormu += "+";
+    fitFunc2formu += "+";
+  };
 
   modu[nAmpUsed] = new Modulation(
     TW, L, M, 0, enablePW, Modulation::kLU
   );
 
   asymFormu += "A"+TString::Itoa(nAmpUsed,10)+"*"+modu[nAmpUsed]->FormuRF();
+  fitFunc2formu += "["+TString::Itoa(nAmpUsed,10)+"]*"+modu[nAmpUsed]->Formu();
+
   rfA[nAmpUsed]->SetTitle(TString("A"+modu[nAmpUsed]->StateTitle()));
 
   nAmpUsed++;
@@ -929,7 +936,7 @@ void Asymmetry::StreamData(TFile * tf) {
       break;
   };
 
-  if(!oa2d) {
+  if(gridDim==1) {
     objName = appName + modDist->GetName(); modDist->Write(objName);
     for(Int_t m=0; m<nModBins; m++) {
       objName = appName + modBinDist[m]->GetName(); modBinDist[m]->Write(objName);
@@ -987,7 +994,7 @@ void Asymmetry::AppendData(TFile * tf) {
       break;
   };
 
-  if(!oa2d) {
+  if(gridDim==1) {
     objName = appName + modDist->GetName();
     appDist1 = (TH1D*) tf->Get(objName);
     modDist->Add(appDist1);
