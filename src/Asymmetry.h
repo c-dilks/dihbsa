@@ -252,7 +252,6 @@ class Asymmetry : public TObject
 
     Double_t bMax;
     Int_t spinbin;
-    Int_t aziBin;
 
     TString objName,appName;
     TH1D * appDist1;

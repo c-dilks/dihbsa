@@ -22,7 +22,7 @@ class Modulation : public TObject
                Int_t polarization_ = kLU);
     ~Modulation();
 
-    Double_t Evaluate(Float_t phiH, Float_t phiR, Float_t theta);
+    Double_t Evaluate(Float_t phiR, Float_t phiH, Float_t theta);
     TString Formu();
     TString FormuRF();
 

@@ -22,7 +22,7 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
   gridDim = BS->gridDim;
   useWeighting = BS->useWeighting;
   if(gridDim==1) { modMax = 1.1; modMin = -modMax; }
-  else if(gridDim==2) { modMax = 2*PI; modMin = 0; };
+  else if(gridDim==2) { modMax = 2*PI; modMin = 0; }
   else {
     fprintf(stderr,"ERROR: bad gridDim\n");
     return;
@@ -413,8 +413,8 @@ Bool_t Asymmetry::AddEvent(EventTree * ev) {
   for(int d=0; d<whichDim; d++) { 
     if(iv[d]<-8000) return KickEvent(TString(ivN[d]+" out of range"),iv[d]);
   };
-  if(PhiH<modMin || PhiH>modMax) return KickEvent("PhiH out of range",PhiH);
-  if(PhiR<modMin || PhiR>modMax) return KickEvent("PhiR out of range",PhiR);
+  if(PhiH<0 || PhiH>2*PI) return KickEvent("PhiH out of range",PhiH);
+  if(PhiR<0 || PhiR>2*PI) return KickEvent("PhiR out of range",PhiR);
   if(PhPerp<-8000) return KickEvent("PhPerp out of range",PhPerp);
   if(Ph<-8000) return KickEvent("Ph out of range",Ph);
   if(Q2<-8000) return KickEvent("Q2 out of range",Q2);
@@ -550,7 +550,7 @@ void Asymmetry::FitAsymGraph() {
     fitFunc->SetParName(1,"A_{LU}");
   } else {
     if(!enablePW) {
-      fitFunc2 = new TF1(fitFuncName,fitFunc2formu,modMin,modMax,modMin,modMax);
+      fitFunc2 = new TF2(fitFuncName,fitFunc2formu,modMin,modMax,modMin,modMax);
     }
     else {
       fprintf(stderr,"ERROR: cannot perform FitAsymGraph with enablePW==true\n");
