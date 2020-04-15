@@ -119,8 +119,9 @@ int main(int argc, char** argv) {
   for(Int_t bn : BS->binVec) {
     A = asymMap.at(bn);
     A->SetFitMode(fitMode);
+    A->DparamVal = DparamVal; // (for deprecated b-scan)
     A->FitAsymGraph();
-    if(fitAlgo==0) A->FitAsymMLM(DparamVal);
+    if(fitAlgo==0) A->FitAsymMLM();
   };
 
 

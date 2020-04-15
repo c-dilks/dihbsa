@@ -319,7 +319,7 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
 
   for(int dd=0; dd<nDparam; dd++) {
     rfDname[dd] = Form("D%d",dd);
-    rfD[dd] = new RooRealVar(rfDname[dd],rfDname[dd],-3.0,3.0);
+    rfD[dd] = new RooRealVar(rfDname[dd],rfDname[dd],-1,1);
   };
   nDparamUsed = 0;
 
@@ -576,35 +576,16 @@ void Asymmetry::SetFitMode(Int_t fitMode) {
       this->FormuAppend(2,1,1);
       this->FormuAppend(3,1,1);
       break;
-    case 31: // test 2 partial waves with PW-expanded denominator (WITH D_1 pp-wave TERM)
-      enablePW = true;
-      this->FormuAppend(2,1,1);
-      this->FormuAppend(3,1,1);
-      nDparamUsed = 1;
-      break;
     case 4: // three L=1 modulations (for DNP2019)
       this->FormuAppend(3,0,0);
       this->FormuAppend(2,1,1);
       this->FormuAppend(3,1,1);
-      break;
-    case 41: // three L=1 modulations (for DNP2019) (WITH D_1 pp-wave TERM)
-      this->FormuAppend(3,0,0);
-      this->FormuAppend(2,1,1);
-      this->FormuAppend(3,1,1);
-      nDparamUsed = 1;
       break;
     case 5: // all four L=1 modulations
       this->FormuAppend(3,0,0);
       this->FormuAppend(2,1,1);
       this->FormuAppend(3,1,1);
       this->FormuAppend(3,1,-1);
-      break;
-    case 51: // all four L=1 modulations (WITH D_1 pp-wave TERM)
-      this->FormuAppend(3,0,0);
-      this->FormuAppend(2,1,1);
-      this->FormuAppend(3,1,1);
-      this->FormuAppend(3,1,-1);
-      nDparamUsed = 1;
       break;
     case 6: // modulations up to L=2 with nonegligble overlap with |1,1>_2
       this->FormuAppend(3,0,0); // grey
@@ -630,6 +611,32 @@ void Asymmetry::SetFitMode(Int_t fitMode) {
       this->FormuAppend(2,2,1);
       this->FormuAppend(3,2,1);
       this->FormuAppend(3,2,-1);
+      break;
+    case 110:
+      this->FormuAppend(3,1,1);
+      this->DenomAppend(2,2,0,0); // tw2 |2,0> UU,T
+      break;
+    case 111:
+      this->FormuAppend(2,1,1);
+      this->DenomAppend(2,2,0,0); // tw2 |2,0> UU,T
+      break;
+    case 120:
+      this->FormuAppend(2,1,1);
+      this->FormuAppend(3,1,1);
+      this->DenomAppend(2,2,0,0); // tw2 |2,0> UU,T
+      break;
+    case 130:
+      this->FormuAppend(3,0,0);
+      this->FormuAppend(2,1,1);
+      this->FormuAppend(3,1,1);
+      this->DenomAppend(2,2,0,0); // tw2 |2,0> UU,T
+      break;
+    case 140:
+      this->FormuAppend(3,0,0);
+      this->FormuAppend(2,1,1);
+      this->FormuAppend(3,1,1);
+      this->FormuAppend(3,1,-1);
+      this->DenomAppend(2,2,0,0); // tw2 |2,0> UU,T
       break;
     default:
       fprintf(stderr,"ERROR: bad fitMode; using G1perp default\n");
@@ -712,22 +719,19 @@ void Asymmetry::SetAsymGrPoint(Int_t modBin_, Int_t modBin2_) {
 
 // use unbined MLM method to fit asymmetries, using RooFit Minuit to
 // minimize the -log likelihood
-void Asymmetry::FitAsymMLM(Float_t DparamVal) {
+void Asymmetry::FitAsymMLM() {
 
   // append polarization factor to asymFormu
   asymFormu = "rfPol*("+asymFormu+")";
 
   // append unpolarized denominator, if D_1 is expanded in partial waves
-  // (for systematic uncertainty study from unmeasured D_1 pp-wave)
-  // - D0 represents D_{1,LL} / D_{1,OO}, or in |L,M> notation, 
-  //   D0 = 2 * D_1^|2,0> / D_1^|0,0>  (note the factor of 2)
-  // - set nDparamUsed to 1 to include this denominator in the fit
-  if(nDparamUsed==1) {
-    rfD[0]->SetTitle("D_{1,LL}/D_{1,OO}");
+  // (for systematic uncertainty study from unmeasured/non-orthogonal D_1 pp-wave)
+  if(nDparamUsed>0) asymFormu += "/(" + denomFormu + ")";
+  /*
+  if(nDparamUsed==1) { // DEPRECATED (use for "b-scan")
     rfD[0]->setVal(DparamVal);
     rfD[0]->setConstant(kTRUE);
-    asymFormu = asymFormu + "/(1+D0*0.25*(3*pow(cos(rfTheta),2)-1))";
-  }
+  */
       
   // rellum factors
   rellumFactor[sP] = "rfRellum/(rfRellum+1)";
@@ -843,9 +847,7 @@ void Asymmetry::FormuAppend(Int_t TW, Int_t L, Int_t M) {
     fitFunc2formu += "+";
   };
 
-  modu[nAmpUsed] = new Modulation(
-    TW, L, M, 0, enablePW, Modulation::kLU
-  );
+  modu[nAmpUsed] = new Modulation(TW, L, M, 0, enablePW, Modulation::kLU);
 
   asymFormu += "A"+TString::Itoa(nAmpUsed,10)+"*"+modu[nAmpUsed]->FormuRF();
   fitFunc2formu += "["+TString::Itoa(nAmpUsed,10)+"]*"+modu[nAmpUsed]->Formu();
@@ -853,6 +855,27 @@ void Asymmetry::FormuAppend(Int_t TW, Int_t L, Int_t M) {
   rfA[nAmpUsed]->SetTitle(TString("A"+modu[nAmpUsed]->StateTitle()));
 
   nAmpUsed++;
+
+};
+
+
+// append modulations to the asymmetry denominator
+// - this is for studying impact of sigma_UU modulations not orthogonal to 1
+void Asymmetry::DenomAppend(Int_t TW, Int_t L, Int_t M, Int_t lev) {
+  if(nDparamUsed>=nDparam) {
+    fprintf(stderr,"ERROR: nDparamUsed > nDparam (the max allowed value)\n");
+    return;
+  };
+
+  if(nDparamUsed==0) denomFormu = "1";
+  denomFormu += "+";
+
+  moduD[nDparamUsed] = new Modulation(TW, L, M, lev, true, Modulation::kUU);
+
+  denomFormu += "D"+TString::Itoa(nDparamUsed,10)+"*"+moduD[nDparamUsed]->FormuRF();
+  rfD[nDparamUsed]->SetTitle(TString("D"+moduD[nDparamUsed]->StateTitle()));
+
+  nDparamUsed++;
 
 };
 

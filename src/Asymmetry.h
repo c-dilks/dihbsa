@@ -68,9 +68,10 @@ class Asymmetry : public TObject
 
     void SetFitMode(Int_t fitMode);
     void FitAsymGraph();
-    void FitAsymMLM(Float_t DparamVal=0);
+    void FitAsymMLM();
     void SetAsymGrPoint(Int_t modBin_, Int_t modBin2_=-1);
     void FormuAppend(Int_t TW, Int_t L, Int_t M);
+    void DenomAppend(Int_t TW, Int_t L, Int_t M, Int_t lev);
 
 
     Bool_t AddEvent(EventTree * ev);
@@ -210,6 +211,7 @@ class Asymmetry : public TObject
     TString rfSpinName[2];
 
     TString asymFormu;
+    TString denomFormu;
     TString rellumFactor[2];
     Float_t rfParamRange;
 
@@ -222,7 +224,7 @@ class Asymmetry : public TObject
     TString rfAname[nAmp];
     RooRealVar *rfA[nAmp];
 
-    static const Int_t nDparam = 1;
+    static const Int_t nDparam = 12;
     Int_t nDparamUsed;
     TString rfDname[nDparam];
     RooRealVar *rfD[nDparam];
@@ -234,6 +236,9 @@ class Asymmetry : public TObject
 
     Modulation * moduOA;
     Modulation * modu[nAmp];
+    Modulation * moduD[nDparam];
+
+    Float_t DparamVal;
 
   private:
     Bool_t enablePW;
