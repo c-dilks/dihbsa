@@ -204,9 +204,11 @@ void EventTree::GetEvent(Int_t i) {
   PhiHR = Tools::AdjAngle( PhiH - PhiR );
 
   // adjust range to 0-2pi (for cross-checking with Timothy)
+  /*
   PhiR = Tools::AdjAngleTwoPi(PhiR);
   PhiH = Tools::AdjAngleTwoPi(PhiH);
   PhiHR = Tools::AdjAngleTwoPi(PhiHR);
+  */
 
   // theta symmetrization tests
   //theta = fabs( fabs(theta-PI/2.0) - PI/2.0 ); // HERMES symmetrization

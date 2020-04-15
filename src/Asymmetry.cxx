@@ -25,7 +25,7 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
   gridDim = BS->gridDim;
   useWeighting = BS->useWeighting;
   if(gridDim==1) { modMax = 1.1; modMin = -modMax; }
-  else if(gridDim==2) { modMax = 2*PI; modMin = 0; }
+  else if(gridDim==2) { modMax = PIe; modMin = -modMax; }
   else {
     fprintf(stderr,"ERROR: bad gridDim\n");
     return;
@@ -296,12 +296,8 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
     rfSpinCateg->defineType(rfSpinName[s]);
   };
   // - event vars
-  /*
   rfPhiH = new RooRealVar("rfPhiH","#phi_{h}",-PIe,PIe);
   rfPhiR = new RooRealVar("rfPhiR","#phi_{R}",-PIe,PIe);
-  */
-  rfPhiH = new RooRealVar("rfPhiH","#phi_{h}",-0.1,2*PIe);
-  rfPhiR = new RooRealVar("rfPhiR","#phi_{R}",-0.1,2*PIe);
   rfTheta = new RooRealVar("rfTheta","#theta",-PIe,PIe);
   rfWeight = new RooRealVar("rfWeight","P_{h}^{T}/M_{h}",0,10);
 
@@ -413,12 +409,12 @@ Bool_t Asymmetry::AddEvent(EventTree * ev) {
   for(int d=0; d<whichDim; d++) { 
     if(iv[d]<-8000) return KickEvent(TString(ivN[d]+" out of range"),iv[d]);
   };
-  if(PhiH<0 || PhiH>2*PI) return KickEvent("PhiH out of range",PhiH);
-  if(PhiR<0 || PhiR>2*PI) return KickEvent("PhiR out of range",PhiR);
+  if(PhiH<-PIe || PhiH>PIe) return KickEvent("PhiH out of range",PhiH);
+  if(PhiR<-PIe || PhiR>PIe) return KickEvent("PhiR out of range",PhiR);
   if(PhPerp<-8000) return KickEvent("PhPerp out of range",PhPerp);
   if(Ph<-8000) return KickEvent("Ph out of range",Ph);
   if(Q2<-8000) return KickEvent("Q2 out of range",Q2);
-  if(theta<0 || theta>PIe) return KickEvent("theta out of range",theta);
+  if(theta<0 || theta>PI) return KickEvent("theta out of range",theta);
 
   // check spin state, which was set by EventTree
   if(spinn<0 || spinn>=nSpin) return false;
