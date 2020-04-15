@@ -266,11 +266,11 @@ int main(int argc, char** argv) {
 
 
   // event-level distributions
-  TH2D * helicityVsRun = new TH2D("helicityVsRun",
-    "helicity distribution vs. runnum;runnum;h",
+  TH2D * spinEVsRun = new TH2D("spinEVsRun",
+    "electron spin distribution vs. runnum;runnum;h",
     runnumBins,runnumMin,runnumMax,5,-2,3);
-  TH2D * helicityVsEPhi = new TH2D("helicityVsEPhi",
-    "helicity distribution vs. e^{-} #phi;e^{-} #phi;h",
+  TH2D * spinEVsEPhi = new TH2D("spinEVsEPhi",
+    "electron spin distribution vs. e^{-} #phi;e^{-} #phi;h",
     NPHIBINS,-PI,PI,5,-2,3);
 
 
@@ -384,8 +384,8 @@ int main(int argc, char** argv) {
       PhiHRVsPhPhi->Fill(ev->PhPhi,ev->PhiHR);
 
 
-      helicityVsRun->Fill(ev->runnum,ev->helicity);
-      helicityVsEPhi->Fill(ev->elePhi,ev->helicity);
+      spinEVsRun->Fill(ev->runnum,ev->spinE);
+      spinEVsEPhi->Fill(ev->elePhi,ev->spinE);
     };
 
   }; // eo event loop
@@ -426,7 +426,7 @@ int main(int argc, char** argv) {
   normalize(PhiRVsRun);
   normalize(PhiHRVsRun);
 
-  normalize(helicityVsRun);
+  normalize(spinEVsRun);
   
 
   // write output
@@ -464,7 +464,7 @@ int main(int argc, char** argv) {
   PhiRVsRun->Write();
   PhiHRVsRun->Write();
 
-  helicityVsRun->Write();
+  spinEVsRun->Write();
 
 
   outfile->cd("/");
@@ -501,7 +501,7 @@ int main(int argc, char** argv) {
   PhiRVsPhPhi->Write();
   PhiHRVsPhPhi->Write();
 
-  helicityVsEPhi->Write();
+  spinEVsEPhi->Write();
 
 
   outfile->Close();

@@ -10,18 +10,17 @@ DIS::DIS() {
   debug = false;
   speedup = false;
 
-  Config * conf = new Config();
+  conf = new Config();
 
   if(conf->Experiment=="clas") {
-    BeamEn = conf->EbeamEn;
     vecBeam = TLorentzVector(
       0.0,
       0.0,
       TMath::Sqrt(
-        TMath::Power(BeamEn,2) - 
+        TMath::Power(conf->EbeamEn,2) - 
         TMath::Power(PartMass(kE),2)
       ),
-      BeamEn
+      conf->EbeamEn
     );
     vecTarget = TLorentzVector(
       0.0,
@@ -32,21 +31,30 @@ DIS::DIS() {
   }
 
   else if(conf->Experiment=="eic") {
-    // aqui
-    // also need to make calculations below L.I.
+    crossingAngle = 22e-3; // [rad] (BEAST crossing angle is 22mrad)
+    EbeamP = TMath::Sqrt( TMath::Power(conf->EbeamEn,2) - 
+                          TMath::Power(PartMass(kE),2) );
+    PbeamP = TMath::Sqrt( TMath::Power(conf->PbeamEn,2) - 
+                          TMath::Power(PartMass(kP),2) );
+    vecBeam = TLorentzVector(
+      0,
+      0,
+      EbeamP,
+      conf->EbeamEn
+    );
+    vecTarget = TLorentzVector(
+      PbeamP * TMath::Sin(crossingAngle),
+      0,
+      -PbeamP * TMath::Cos(crossingAngle),
+      conf->PbeamEn
+    );
+  }
+
+  else {
+    fprintf(stderr,"ERROR: Config \"Experiment\"=%s is unknown\n",
+      (conf->Experiment).Data());
   };
 };
-
-
-/*
-// not used, but could be if we want to use RCDB to get beam energy
-void DIS::SetBeamEn(Float_t newBeamEn) {
-  BeamEn = newBeamEn;
-  vecBeam.SetPz(BeamEn);
-  vecBeam.SetE(BeamEn);
-  return;
-};
-*/
 
 
 void DIS::SetElectron(Trajectory * tr) {
@@ -80,14 +88,14 @@ void DIS::Analyse() {
   vecQ = vecBeam - vecElectron;
   Q2 = -1 * vecQ.M2();
 
-  // compute Nu (using lab frame)
-  Nu = vecBeam.E() - vecElectron.E();
+  // compute Nu
+  Nu = vecTarget.Dot(vecQ) / PartMass(kP);
 
-  // compute x (using lab frame)
-  x = Q2 / ( 2 * PartMass(kP) * Nu );
+  // compute x
+  x = Q2 / ( 2 * vecQ.Dot(vecTarget) );
 
-  // compute y (using lab frame)
-  y = Nu / BeamEn;
+  // compute y
+  y = vecTarget.Dot(vecQ) / vecTarget.Dot(vecBeam);
 
 
   // compute boost vectors

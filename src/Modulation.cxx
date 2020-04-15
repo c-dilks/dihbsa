@@ -6,7 +6,9 @@ Modulation::Modulation(Int_t tw_, Int_t l_, Int_t m_,
  Int_t level_, Bool_t enablePW_, Int_t polarization_) {
 
   // twist, l, m, and level (where level is used if there are additional
-  // modulations for a specific set of values {tw,l,m})
+  // modulations for a specific twist)
+  // - level numbers start at zero, and are in order for the nonzero 
+  //   structure functions listed in 1408.5721
   tw = tw_;
   l = l_;
   m = m_;
@@ -38,18 +40,19 @@ Modulation::Modulation(Int_t tw_, Int_t l_, Int_t m_,
   // build a string for the modulation function which is used as a "base";
   // regexps are used to modify this string into a title, a formula, TF3, etc.
   // -- baseStr azimuthal dependence
+  // -- formula numbers are in parentheses, from arXiv:1408.5721
   mAbs = TMath::Abs(m);
   if(polarization==kLU) {
     switch(tw) {
       case 0:
         aziStr = "1"; // constant modulation
         break;
-      case 2:
+      case 2: // (43)
         if(m==0) aziStr = "0";
         else aziStr = Form("sin(%d*phiH-%d*phiR)",mAbs,mAbs);
         if(m<0) aziStr = "-"+aziStr; // pull minus sign out front
         break;
-      case 3:
+      case 3: // (44)
         aziStr = Form("sin(%d*phiH+%d*phiR)",1-m,m);
         break;
       default: aziStr = "0";
@@ -61,17 +64,43 @@ Modulation::Modulation(Int_t tw_, Int_t l_, Int_t m_,
         aziStr = "1"; // constant modulation
         break;
       case 2:
-        if(lev==0) { // transverse photon
+        if(lev==0) { // transverse photon // (39)
           if(m==0) aziStr = "1";
           else aziStr = Form("cos(%d*phiH-%d*phiR)",mAbs,mAbs);
         }
-        else if(lev==1) { // unpolarized photon
+        else if(lev==1) { // unpolarized photon (40)
           aziStr = Form("cos(%d*phiH+%d*phiR)",2-m,m);
         }
         else aziStr = "0";
         break;
-      case 3:
+      case 3: // (41)
         aziStr = Form("cos(%d*phiH+%d*phiR)",1-m,m);
+        break;
+      default: aziStr = "0";
+    };
+  }
+  else if(polarization==kUT) {
+    switch(tw) {
+      case 2:
+        if(lev==0) { // transverse photon // (51)
+          aziStr = Form("sin(%d*phiH-%d*phiR-phiS)",1+m,m);
+        }
+        else if(lev==1) { // unpolarized photon // (52)
+          aziStr = Form("sin(%d*phiH+%d*phiR+phiS)",1-m,m);
+        }
+        else if(lev==2) { // unpolarized photon // (53)
+          aziStr = Form("sin(%d*phiH+%d*phiR-phiS)",3-m,m);
+        }
+        else aziStr = "0";
+        break;
+      case 3:
+        if(lev==0) { // (54)
+          aziStr = "sin(phiS)";
+        }
+        else if(lev==1) { // (55)
+          aziStr = Form("sin(%d*phiH+%d*phiR-phiS)",2-m,m);
+        }
+        else aziStr = "0";
         break;
       default: aziStr = "0";
     };
@@ -133,12 +162,19 @@ Modulation::Modulation(Int_t tw_, Int_t l_, Int_t m_,
 
 // evaluate the modulation for specified values of phiH, phiR, theta
 Double_t Modulation::Evaluate(Float_t phiH, Float_t phiR, Float_t theta) {
+  if(polarization==kUT) {
+    fprintf(stderr,"ERROR: Modulation::Evaluate not yet functional for UT\n");
+    return UNDEF; // TODO
+  };
   return function->Eval(phiH,phiR,theta);
 };
 
 
 // build formula string for TF3
 TString Modulation::Formu() {
+  if(polarization==kUT) {
+    return "1"; // need 4D function for UT // TODO
+  };
   formuStr = baseStr;
   Tools::GlobalRegexp(formuStr,TRegexp("sin"),"TMath::Sin");
   Tools::GlobalRegexp(formuStr,TRegexp("cos"),"TMath::Cos");
@@ -158,6 +194,7 @@ TString Modulation::FormuRF() {
   Tools::GlobalRegexp(formuStr,TRegexp("pow"),"TMath::Power");
   Tools::GlobalRegexp(formuStr,TRegexp("phiH"),"rfPhiH");
   Tools::GlobalRegexp(formuStr,TRegexp("phiR"),"rfPhiR");
+  Tools::GlobalRegexp(formuStr,TRegexp("phiS"),"rfPhiS");
   Tools::GlobalRegexp(formuStr,TRegexp("theta"),"rfTheta");
   return formuStr;
 };
@@ -179,6 +216,7 @@ TString Modulation::StateTitle() {
 
   TString retstr,polStr,lStr;
 
+  // 
   if(tw==0) return "const";
   switch(polarization) {
     case kLU:
@@ -187,6 +225,18 @@ TString Modulation::StateTitle() {
     case kUU: 
       if(tw==2 && lev==0) polStr = "UU,T";
       else polStr = "UU";
+      break;
+    case kUT:
+      if(tw==2) {
+        if(lev==0)      polStr = "UT,T";
+        else if(lev==1) polStr = "UTa";
+        else if(lev==2) polStr = "UTb";
+        else polStr = "unknown";
+      } else if(tw==3) {
+        if(lev==0)      polStr = "UTa";
+        else if(lev==1) polStr = "UTb";
+        else polStr = "unknown";
+      };
       break;
   };
 

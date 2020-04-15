@@ -36,7 +36,7 @@ class Modulation : public TObject
     TString GetBaseString() { return baseStr; };
 
     Int_t polarization;
-    enum polarization_enum { kLU, kUU, nPOL };
+    enum polarization_enum { kLU, kUU, kUT, nPOL };
     static const Int_t LMAX = 2;
 
 

@@ -43,7 +43,6 @@ class DIS : public TObject
     void ResetVars();
 
 
-    Float_t BeamEn;
     Float_t W,Q2,Nu,x,y;
     Float_t eleE,eleP,elePt,eleEta,elePhi;
     Float_t eleVertex[3];
@@ -83,8 +82,12 @@ class DIS : public TObject
     TLorentzVector comQ;
 
   private:
+    Config * conf;
     TLorentzVector boostvecBreit;
     TLorentzVector boostvecCom;
+
+    Float_t crossingAngle;
+    Float_t EbeamP,PbeamP;
 
   ClassDef(DIS,1);
 };

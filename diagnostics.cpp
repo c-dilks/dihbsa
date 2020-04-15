@@ -333,7 +333,8 @@ int main(int argc, char** argv) {
 
 
    // event-level distributions
-   TH1D * helicityDist = new TH1D("helicityDist","helicity",5,-2,3);
+   TH1D * spinEdist = new TH1D("spinEdist","electron spin",5,-2,3);
+   TH1D * spinPdist = new TH1D("spinPdist","proton spin",5,-2,3);
    TH1D * torusDist = new TH1D("torusDist","torus",5,-2,3);
   
    // diphoton-relevant distributions
@@ -508,7 +509,8 @@ int main(int argc, char** argv) {
        };
        
 
-       helicityDist->Fill(ev->helicity);
+       spinEdist->Fill(ev->spinE);
+       spinPdist->Fill(ev->spinP);
        torusDist->Fill(ev->torus);
 
        for(int dp=0; dp<ev->diphCnt; dp++) diphMdist->Fill(ev->diphM[dp]);
@@ -644,7 +646,8 @@ int main(int argc, char** argv) {
    PhiHRvsAlpha->Write();
 
    torusDist->Write();
-   helicityDist->Write();
+   spinEdist->Write();
+   spinPdist->Write();
 
    diphMdist->Write();
 

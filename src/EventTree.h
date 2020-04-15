@@ -96,7 +96,7 @@ class EventTree : public TObject
     // dihadron kinematics
     Int_t particleCnt[nParticles];
     //Int_t particleCntAll;
-    Float_t Mh,Zpair,PhiH,Mmiss,xF,alpha;
+    Float_t Mh,Zpair,PhiH,PhiS,Mmiss,xF,alpha;
     Float_t Z[2];
     Float_t zeta;
     Float_t theta;
@@ -109,9 +109,9 @@ class EventTree : public TObject
     Int_t evnum,runnum;
     Float_t torus;
     Long64_t triggerBits;
-    Int_t helicity;
-    static const Int_t NhelicityMC = 12;
-    Int_t helicityMC[NhelicityMC];
+    Int_t spinE,spinP;
+    static const Int_t NspinMC = 12;
+    Int_t spinMC[NspinMC];
 
     // PhiR 
     Float_t PhiR; // set to the preferred one
@@ -162,7 +162,7 @@ class EventTree : public TObject
 
     // OTHER VARIABLES
     Bool_t useDiphBG;
-    Int_t whichHelicityMC;
+    Int_t whichSpinMC;
 
     /*
     // variables used for MCrec and MCgen matching

@@ -34,7 +34,7 @@
 
 
 // methods / vars for MC
-Int_t generateHelicity(Int_t idx, Float_t phiH, Float_t phiR); // for MC
+Int_t generateSpin(Int_t idx, Float_t phiH, Float_t phiR); // for MC
 Float_t modu(Int_t par, Float_t ph, Float_t pr); // for MC
 TRandom * RNG; 
 //
@@ -244,12 +244,13 @@ int main(int argc, char** argv) {
 
    // miscellaneous event-header branches
    Int_t evnum,runnum;
-   Int_t helicity;
+   Int_t spinE,spinP;
    Float_t torus,solenoid;
    Long64_t triggerBits;
    tree->Branch("runnum",&runnum,"runnum/I");
    tree->Branch("evnum",&evnum,"evnum/I");
-   tree->Branch("helicity",&helicity,"helicity/I");
+   tree->Branch("spinE",&spinE,"spinE/I");
+   tree->Branch("spinP",&spinP,"spinP/I");
    tree->Branch("torus",&torus,"torus/F");
    tree->Branch("solenoid",&solenoid,"solenoid/F");
    tree->Branch("triggerBits",&triggerBits,"triggerBits/L");
@@ -327,7 +328,7 @@ int main(int argc, char** argv) {
 
 
    // MC branches
-   Int_t helicityMC[EventTree::NhelicityMC];
+   Int_t spinMC[EventTree::NspinMC];
    TString brStr;
    Float_t MD;
    Float_t gen_eleE, gen_elePt, gen_eleEta, gen_elePhi;
@@ -336,8 +337,8 @@ int main(int argc, char** argv) {
    Float_t gen_hadEta[2];
    Float_t gen_hadPhi[2];
    if(MCrecMode || MCgenMode) {
-     brStr = Form("helicityMC[%d]/I",EventTree::NhelicityMC);
-     tree->Branch("helicityMC",helicityMC,brStr);
+     brStr = Form("spinMC[%d]/I",EventTree::NspinMC);
+     tree->Branch("spinMC",spinMC,brStr);
    };
    if(MCrecMode) {
      tree->Branch("matchDiff",&MD,"matchDiff/F");
@@ -427,8 +428,9 @@ int main(int argc, char** argv) {
      };
 
 
-     // HELICITY
-     helicity = reader.event()->getHelicity(); // -->tree
+     // SPIN
+     spinE = reader.event()->getHelicity(); // -->tree
+     spinP = 0; // -->tree
 
 
 
@@ -946,7 +948,7 @@ int main(int argc, char** argv) {
 
 
 
-                   // MC helicity injection
+                   // MC spin injection // TODO: for now only for spinE
                    if(MCgenMode || MCrecMode) {
 
                      if(MCgenMode && MCrecMode) {
@@ -956,13 +958,13 @@ int main(int argc, char** argv) {
 
 
                      if(MCgenMode) {
-                       // generate helicity based on injected asymmetry
-                       for(int hh=0; hh<EventTree::NhelicityMC; hh++) {
-                         helicityMC[hh] = generateHelicity(hh,dih->PhiH,dih->PhiR);
+                       // generate spin based on injected asymmetry
+                       for(int hh=0; hh<EventTree::NspinMC; hh++) {
+                         spinMC[hh] = generateSpin(hh,dih->PhiH,dih->PhiR);
                        };
                      };
 
-                     // use matching MCgen kinematics in helicity generation
+                     // use matching MCgen kinematics in spin generation
                      /*
                      if(MCrecMode) {
 
@@ -1054,10 +1056,10 @@ int main(int argc, char** argv) {
                          genDIS->Analyse();
                          genDih->SetEvent(genHadTraj[qA],genHadTraj[qB],genDIS);
 
-                         // generate helicity based on injected asymmetry
+                         // generate spin based on injected asymmetry
                          // - this uses the generated dihadron kinematics
-                         for(int hh=0; hh<EventTree::NhelicityMC; hh++) {
-                           helicityMC[hh] = generateHelicity(
+                         for(int hh=0; hh<EventTree::NspinMC; hh++) {
+                           spinMC[hh] = generateSpin(
                              hh, genDih->PhiH, genDih->PhiR );
                          };
 
@@ -1077,7 +1079,7 @@ int main(int argc, char** argv) {
                          };
                        } else {
                          // if no match candidate was found, set everything to undefined
-                         for(int hh=0; hh<EventTree::NhelicityMC; hh++) helicityMC[hh]=0;
+                         for(int hh=0; hh<EventTree::NspinMC; hh++) spinMC[hh]=0;
                          MD = UNDEF;
                          gen_eleE = UNDEF;
                          gen_elePt = UNDEF;
@@ -1095,11 +1097,11 @@ int main(int argc, char** argv) {
                      */
 
 
-                     // use MCrec kinematics in helicity generation (no matching)
+                     // use MCrec kinematics in spin generation (no matching)
                      ///*
                      if(MCrecMode) {
-                       for(int hh=0; hh<EventTree::NhelicityMC; hh++) {
-                         helicityMC[hh] = generateHelicity(hh,dih->PhiH,dih->PhiR);
+                       for(int hh=0; hh<EventTree::NspinMC; hh++) {
+                         spinMC[hh] = generateSpin(hh,dih->PhiH,dih->PhiR);
                        };
                        // set MCgen kinematics to MCrec kinematics and MD to 0, so that
                        // all MCrec dihadrons pass matching cuts
@@ -1118,12 +1120,13 @@ int main(int argc, char** argv) {
                      //*/
 
 
-                     helicity = 0; // set data helicity to zero
+                     spinE = 0; // set data spinE to zero
+                     spinP = 0; // set data spinE to zero
                      // ... and print a warning 
-                     // (to prevent from accidentally altering the helicity of real data)
+                     // (to prevent from accidentally altering the spin of real data)
                      if(printWarning) {
                        fprintf(stderr,"WARNING WARNING WARNING: ");
-                       fprintf(stderr,"helicity has been altered (likely for MC study)!!!!!\n");
+                       fprintf(stderr,"spin has been altered (likely for MC study)!!!!!\n");
                        printWarning = false;
                      };
                    };
@@ -1197,7 +1200,7 @@ int main(int argc, char** argv) {
 };
 
 
-Int_t generateHelicity(Int_t idx, Float_t phiH, Float_t phiR) {
+Int_t generateSpin(Int_t idx, Float_t phiH, Float_t phiR) {
 
   Float_t amp = 0.10;
   Float_t asym;
@@ -1218,8 +1221,8 @@ Int_t generateHelicity(Int_t idx, Float_t phiH, Float_t phiR) {
     case 9:  asym = amp*modu(1,phiH,phiR) - amp*modu(2,phiH,phiR); break;
     case 10: asym = amp*modu(1,phiH,phiR) - amp*modu(2,phiH,phiR) + (amp+0.02)*modu(3,phiH,phiR); break;
     case 11: asym = 0.2*modu(1,phiH,phiR) + 0.2*modu(3,phiH,phiR) + 0.1*modu(2,phiH,phiR); break; // (to compare with Timothy)
-    /* EventTree::NhelicityMC must equal the number of cases */
-    default: fprintf(stderr,"generateHelicity undefined for idx=%d\n",idx); return 0;
+    /* EventTree::NspinMC must equal the number of cases */
+    default: fprintf(stderr,"generateSpin undefined for idx=%d\n",idx); return 0;
   };
 
   asym *= 0.86; // polarization factor
@@ -1227,7 +1230,7 @@ Int_t generateHelicity(Int_t idx, Float_t phiH, Float_t phiR) {
   // generate random number in [0,1]
   Float_t rn = RNG->Uniform();
 
-  // return helicity assignment:  2 = spin -   3 = spin +
+  // return spin assignment:  2 = spin -   3 = spin +
   return ( rn < 0.5*(1+asym) )  ?  3 : 2;
 };
 Float_t modu(Int_t par, Float_t ph, Float_t pr) {

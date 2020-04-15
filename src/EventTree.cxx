@@ -94,14 +94,18 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("PhiRp_r",&PhiRp_r);
   chain->SetBranchAddress("PhiRp_g",&PhiRp_g);
 
+  if(chain->GetBranch("PhiS")) chain->SetBranchAddress("PhiS",&PhiS);
+  else PhiS=UNDEF;
+
   chain->SetBranchAddress("runnum",&runnum);
   chain->SetBranchAddress("evnum",&evnum);
   chain->SetBranchAddress("torus",&torus);
   chain->SetBranchAddress("triggerBits",&triggerBits);
-  chain->SetBranchAddress("helicity",&helicity);
+  chain->SetBranchAddress("spinE",&spinE);
+  chain->SetBranchAddress("spinP",&spinP);
 
-  if(chain->GetBranch("helicityMC")) chain->SetBranchAddress("helicityMC",helicityMC);
-  else { for(int hh=0; hh<NhelicityMC; hh++) helicityMC[hh]=UNDEF; };
+  if(chain->GetBranch("spinMC")) chain->SetBranchAddress("spinMC",spinMC);
+  else { for(int hh=0; hh<NspinMC; hh++) spinMC[hh]=UNDEF; };
   if(chain->GetBranch("matchDiff")) {
     MCrecMode = true;
     chain->SetBranchAddress("matchDiff",&matchDiff);
@@ -152,7 +156,7 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   for(int h=0; h<2; h++) {
     trHad[h] = new Trajectory(dihHadIdx(whichHad[qA],whichHad[qB],h));
   };
-  whichHelicityMC = 0;
+  whichSpinMC = 0;
 };
 
 
@@ -341,34 +345,34 @@ Bool_t EventTree::Valid() {
 Int_t EventTree::SpinState() {
   if(runnum>=4700 && runnum<=6000) {
     // Fall 2018 convention
-    switch(helicity) {
+    switch(spinE) {
       case 1: return sM;
       case -1: return sP;
       case 0: return UNDEF;
-      default: fprintf(stderr,"WARNING: bad SpinState request: %d\n",helicity);
+      default: fprintf(stderr,"WARNING: bad SpinState request: %d\n",spinE);
     };
   }
   else if(runnum>=4000 && runnum<=4100) {
     // Spring 2018 (for DNP18) convention
-    switch(helicity) {
+    switch(spinE) {
       case 0: return sP;
       case 1: return sM;
-      default: fprintf(stderr,"WARNING: bad SpinState request: %d\n",helicity);
+      default: fprintf(stderr,"WARNING: bad SpinState request: %d\n",spinE);
     };
   }
 
-  else if(runnum==11) { // MC helicity
+  else if(runnum==11) { // MC spinE
 
     // event matching cut
     if(MCrecMode && !cutMCmatch) return UNDEF;
 
     // MC convention (from injected asymmetries)
-    helicity = helicityMC[whichHelicityMC];
-    switch(helicity) {
+    spinE = spinMC[whichSpinMC];
+    switch(spinE) {
       case 2: return sM;
       case 3: return sP;
       case 0: return UNDEF;
-      default: fprintf(stderr,"WARNING: bad SpinState request: %d\n",helicity);
+      default: fprintf(stderr,"WARNING: bad SpinState request: %d\n",spinE);
     };
   }
   else fprintf(stderr,"WARNING: runnum %d not in EventTree::SpinState\n",runnum);
@@ -382,7 +386,8 @@ void EventTree::PrintEventVerbose() {
   printf("  runnum=%d",runnum);
   printf("  pairType=0x%x",pairType);
   printf("\n");
-  printf("  helicity=%d",helicity);
+  printf("  spinE=%d",spinE);
+  printf("  spinP=%d",spinP);
   printf("  torus=%.1f",torus);
   printf("\n");
   printf("  triggerBits=%lld",triggerBits);

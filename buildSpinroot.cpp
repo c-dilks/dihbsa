@@ -26,7 +26,7 @@ Int_t ivType;
 Int_t oaTw,oaL,oaM;
 Bool_t useWeighting;
 Bool_t oa2dFit;
-Int_t whichHelicityMC;
+Int_t whichSpinMC;
 
 // subroutines
 void SetDefaultArgs();
@@ -83,8 +83,8 @@ int main(int argc, char** argv) {
       case 'b': /* enable 2d asymmetry fit (one amp), instead of 1d fit */
         oa2dFit = true;
         break;
-      case 'h': /* which helicityMC */
-        whichHelicityMC = (Int_t) strtof(optarg,NULL);
+      case 'h': /* which spinMC */
+        whichSpinMC = (Int_t) strtof(optarg,NULL);
         break;
       default: return PrintUsage();
     };
@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
   printf("one-amp fit modulation: |%d,%d>, twist-%d\n",oaL,oaM,oaTw);
   printf("one-amp fit performed in %dD azimuthal space\n",oa2dFit?2:1);
   Tools::PrintSeparator(40,"-");
-  printf("whichHelicityMC = %d\n",whichHelicityMC);
+  printf("whichSpinMC = %d\n",whichSpinMC);
   Tools::PrintSeparator(40,"=");
 
 
@@ -166,7 +166,7 @@ int main(int argc, char** argv) {
   //-----------------------------------------------------
   Bool_t eventAdded;
   Double_t evCount = 0;
-  ev->whichHelicityMC = whichHelicityMC;
+  ev->whichSpinMC = whichSpinMC;
 
   printf("begin loop through %lld events...\n",ev->ENT);
   for(int i=0; i<ev->ENT; i++) {
@@ -238,7 +238,7 @@ void SetDefaultArgs() {
   oaM = 1;
   useWeighting = false;
   oa2dFit = false;
-  whichHelicityMC = 0;
+  whichSpinMC = 0;
 };
 
 
@@ -281,7 +281,7 @@ int PrintUsage() {
 
   printf(" -b\tdo single-amplitude fit in 2D azimuthal space (default is 1D)\n\n");
 
-  printf(" -h\t(for MC) - select which helicityMC to use\n\n");
+  printf(" -h\t(for MC) - select which spinMC to use\n\n");
 
   return 0;
 };
