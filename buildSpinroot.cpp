@@ -17,6 +17,7 @@
 #include "Binning.h"
 #include "Asymmetry.h"
 #include "Modulation.h"
+#include "Config.h"
 
 
 // argument variables
@@ -34,6 +35,7 @@ int PrintUsage();
 
 // global variables
 Binning * BS;
+Config * conf;
 Asymmetry * A;
 EventTree * ev;
 
@@ -113,7 +115,8 @@ int main(int argc, char** argv) {
 
 
   // set binning scheme
-  BS = new Binning(pairType);
+  conf = new Config();
+  BS = new Binning(pairType,conf->Experiment);
   BS->SetOAnums(oaTw,oaL,oaM);
   BS->useWeighting = useWeighting;
   BS->oa2dFit = oa2dFit;
@@ -246,7 +249,7 @@ void SetDefaultArgs() {
 int PrintUsage() {
 
   SetDefaultArgs();
-  BS = new Binning(EncodePairType(kPip,kPim));
+  BS = new Binning(EncodePairType(kPip,kPim),"clas");
   fprintf(stderr,"\nUSAGE: buildSpinroot.exe [-f or -d input_data ] [options...]\n\n");
 
   printf("INPUT DATA:\n");
@@ -266,7 +269,7 @@ int PrintUsage() {
   printf("   \tplotted against. The number of digits will be the number of\n");
   printf("   \tdimensions in the multi-dimensional binning\n");
   printf("   \t* the allowed digits are:\n");
-  BS = new Binning(pairType);
+  BS = new Binning(pairType,"clas");
   for(int i=0; i<Binning::nIV; i++) {
     printf("   \t  %d = %s\n",i+1,(BS->IVtitle[i]).Data());
   };

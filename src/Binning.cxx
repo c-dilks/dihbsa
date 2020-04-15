@@ -5,7 +5,7 @@ ClassImp(Binning)
 using namespace std;
 
 
-Binning::Binning(Int_t pairType_) {
+Binning::Binning(Int_t pairType_,TString Experiment_) {
   //printf("Instantiating Binning...\n");
 
   // get hadron indices (bin bounds depends on hadron type)
@@ -14,12 +14,24 @@ Binning::Binning(Int_t pairType_) {
   for(int h=0; h<2; h++) { if(whichHad[h]==kKp || whichHad[h]==kKm) numKaons++; };
 
   // set minimum and maximum IV values
-  minIV[vM] = 0;   maxIV[vM] = 3;
-  minIV[vX] = 0;   maxIV[vX] = 1;
-  minIV[vZ] = 0;   maxIV[vZ] = 1;
-  minIV[vPt] = 0;  maxIV[vPt] = 2;
-  minIV[vPh] = 0;  maxIV[vPh] = 10;
-  minIV[vQ] = 0;   maxIV[vQ] = 12;
+  if(Experiment_=="clas") {
+    minIV[vM] = 0;   maxIV[vM] = 3;
+    minIV[vX] = 0;   maxIV[vX] = 1;
+    minIV[vZ] = 0;   maxIV[vZ] = 1;
+    minIV[vPt] = 0;  maxIV[vPt] = 2;
+    minIV[vPh] = 0;  maxIV[vPh] = 10;
+    minIV[vQ] = 0;   maxIV[vQ] = 12;
+  } else if(Experiment_=="eic") {
+    minIV[vM] = 0;   maxIV[vM] = 35;
+    minIV[vX] = 0;   maxIV[vX] = 1;
+    minIV[vZ] = 0;   maxIV[vZ] = 1;
+    minIV[vPt] = 0;  maxIV[vPt] = 2;
+    minIV[vPh] = 0;  maxIV[vPh] = 10;
+    minIV[vQ] = 0;   maxIV[vQ] = 12;
+  } else {
+    fprintf(stderr,"ERROR: bad Experiment_ in Binning::Binning\n");
+    return;
+  };
   for(int v=0; v<nIV; v++) nBins[v]=-1;
 
 
@@ -88,6 +100,18 @@ Binning::Binning(Int_t pairType_) {
 
   // set maximum bin boundaries
   for(int v=0; v<nIV; v++) AddBinBound(v,maxIV[v]);
+
+
+  // set to single-bin mode
+  if(Experiment_=="eic") {
+    printf("\n\nEIC OVERRIDE: set Binning to single bin\n\n");
+    for(int v=0; v<nIV; v++) {
+      nBins[v] = -1;
+      bound[v].clear();
+      AddBinBound(v,minIV[v]);
+      AddBinBound(v,maxIV[v]);
+    };
+  };
 
 
   // set IV names and titles

@@ -22,7 +22,7 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
   oa2d = BS->oa2dFit;
   useWeighting = BS->useWeighting;
   if(!oa2d) { modMax = 1.1; modMin = -modMax; }
-  else { modMax = 2*PI; modMin = 0; };
+  else { modMax = PIe; modMin = -modMax; };
 
   // get one-amp fit's modulation name and title
   moduOA = new Modulation(oaTw,oaL,oaM,0,false,Modulation::kLU);
@@ -321,16 +321,13 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
     rfSpinCateg->defineType(rfSpinName[s]);
   };
   // - event vars
-  /*
   rfPhiH = new RooRealVar("rfPhiH","#phi_{h}",-PIe,PIe);
   rfPhiR = new RooRealVar("rfPhiR","#phi_{R}",-PIe,PIe);
-  */
-  rfPhiH = new RooRealVar("rfPhiH","#phi_{h}",-0.1,2*PIe);
-  rfPhiR = new RooRealVar("rfPhiR","#phi_{R}",-0.1,2*PIe);
-  rfTheta = new RooRealVar("rfTheta","#theta",-PIe,PIe);
+  rfPhiS = new RooRealVar("rfPhiS","#phi_{S}",-PIe,PIe);
+  rfTheta = new RooRealVar("rfTheta","#theta",-0.1,PIe);
   rfWeight = new RooRealVar("rfWeight","P_{h}^{T}/M_{h}",0,10);
 
-  rfVars = new RooArgSet(*rfPhiH,*rfPhiR,*rfTheta);
+  rfVars = new RooArgSet(*rfPhiH,*rfPhiR,*rfPhiS,*rfTheta);
   rfVars->add(*rfWeight);
   rfVars->add(*rfSpinCateg);
 
@@ -393,6 +390,7 @@ Bool_t Asymmetry::AddEvent(EventTree * ev) {
   z = ev->Zpair;
   PhiH = ev->PhiH;
   PhiR = ev->PhiR;
+  PhiS = ev->PhiS;
   PhPerp = ev->PhPerp;
   Ph = ev->Ph;
   Q2 = ev->Q2;
@@ -441,12 +439,13 @@ Bool_t Asymmetry::AddEvent(EventTree * ev) {
   for(int d=0; d<whichDim; d++) { 
     if(iv[d]<-8000) return KickEvent(TString(ivN[d]+" out of range"),iv[d]);
   };
-  if(PhiH<modMin || PhiH>modMax) return KickEvent("PhiH out of range",PhiH);
-  if(PhiR<modMin || PhiR>modMax) return KickEvent("PhiR out of range",PhiR);
+  if(PhiH<-PIe || PhiH>PIe) return KickEvent("PhiH out of range",PhiH);
+  if(PhiR<-PIe || PhiR>PIe) return KickEvent("PhiR out of range",PhiR);
+  if(PhiS<-PIe || PhiS>PIe) return KickEvent("PhiS out of range",PhiS);
   if(PhPerp<-8000) return KickEvent("PhPerp out of range",PhPerp);
   if(Ph<-8000) return KickEvent("Ph out of range",Ph);
   if(Q2<-8000) return KickEvent("Q2 out of range",Q2);
-  if(theta<0 || theta>PIe) return KickEvent("theta out of range",theta);
+  if(theta<0 || theta>PI) return KickEvent("theta out of range",theta);
 
   // check spin state, which was set by EventTree
   if(spinn<0 || spinn>=nSpin) return false;
@@ -466,6 +465,7 @@ Bool_t Asymmetry::AddEvent(EventTree * ev) {
   // set RooFit vars
   rfPhiH->setVal(PhiH);
   rfPhiR->setVal(PhiR);
+  rfPhiS->setVal(PhiS);
   rfWeight->setVal(weight);
   rfTheta->setVal(theta);
   rfSpinCateg->setLabel(rfSpinName[spinn]);
@@ -705,6 +705,10 @@ void Asymmetry::FitMultiAmp(Int_t fitMode, Float_t DparamVal) {
       this->FormuAppend(3,2,1);
       this->FormuAppend(3,2,-1);
       break;
+    case 800: // UT
+      this->FormuAppendUT(2,1,1,1); // sin(phiR+phiS)
+      this->FormuAppendUT(3,1,1,0); // sin(phiS)
+      break;
     default:
       fprintf(stderr,"ERROR: bad fitMode; using G1perp default\n");
       this->FormuAppend(2,1,1);
@@ -751,6 +755,7 @@ void Asymmetry::FitMultiAmp(Int_t fitMode, Float_t DparamVal) {
     rfParams[s] = new RooArgSet();
     if(rfPdfFormu[s].Contains("rfPhiH")) rfParams[s]->add(*rfPhiH);
     if(rfPdfFormu[s].Contains("rfPhiR")) rfParams[s]->add(*rfPhiR);
+    if(rfPdfFormu[s].Contains("rfPhiS")) rfParams[s]->add(*rfPhiS);
     if(rfPdfFormu[s].Contains("rfTheta")) rfParams[s]->add(*rfTheta);
     for(int aa=0; aa<nAmpUsed; aa++) rfParams[s]->add(*rfA[aa]);
     for(int dd=0; dd<nDparamUsed; dd++) rfParams[s]->add(*rfD[dd]);
@@ -859,6 +864,31 @@ void Asymmetry::FormuAppend(Int_t TW, Int_t L, Int_t M) {
 };
 
 
+// build formula for UT modulations
+void Asymmetry::FormuAppendUT(Int_t TW, Int_t L, Int_t M, Int_t lev) {
+  if(nAmpUsed>=nAmp) {
+    fprintf(stderr,"ERROR: nAmpUsed > nAmp (the max allowed value)\n");
+    return;
+  };
+
+  if(nAmpUsed==0) asymFormu = "";
+  else asymFormu += "+";
+
+  modu[nAmpUsed] = new Modulation(
+    TW, L, M, lev, enablePW, Modulation::kUT
+  );
+
+  asymFormu += "A"+TString::Itoa(nAmpUsed,10)+"*"+modu[nAmpUsed]->FormuRF();
+  rfA[nAmpUsed]->SetTitle(TString("A"+modu[nAmpUsed]->StateTitle()));
+
+  // TODO: when we merge back to master, FormuAppend has extra stuff to
+  // define the TF2 formula... will we have to do it here too?
+
+  nAmpUsed++;
+
+};
+
+
 // g1perp PhPerp/Mh weighting
 Float_t Asymmetry::EvalWeight() {
   Float_t wt;
@@ -886,6 +916,7 @@ void Asymmetry::ResetVars() {
   z = UNDEF;
   PhiH = UNDEF;
   PhiR = UNDEF;
+  PhiS = UNDEF;
   PhPerp = UNDEF;
   Ph = UNDEF;
   Q2 = UNDEF;

@@ -26,6 +26,7 @@
 #include "DIS.h"
 #include "Dihadron.h"
 #include "Tools.h"
+#include "Config.h"
 
 
 
@@ -210,6 +211,8 @@ class EventTree : public TObject
     bool inserted;
     Int_t evnumTmp;
     */
+
+    Config * conf;
 
 
   ClassDef(EventTree,1);

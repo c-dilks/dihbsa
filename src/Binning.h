@@ -33,7 +33,9 @@ class Binning : public TObject
 {
   public:
     Binning() {}; // empty default constructor for streaming instances to ROOT files
-    Binning(Int_t pairType_);
+    Binning(Int_t pairType_,TString Experiment_);
+      // `Experiment_` is from Config; cannot instantiate Config here,
+      // or this class won't be streamable // TODO fix this
     ~Binning();
     void AddBinBound(Int_t ivIdx, Float_t newBound);
     void PrintBinBounds();

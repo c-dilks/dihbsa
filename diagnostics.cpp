@@ -21,6 +21,7 @@
 #include "Trajectory.h"
 #include "Dihadron.h"
 #include "EventTree.h"
+#include "Config.h"
 
 void HadronCompareCanv(TCanvas * canv, TH1D * dist[2], TH2D * corr);
 void Hadron2dCanv(TCanvas * canv, TH2D * distA, TH2D * distB);
@@ -54,6 +55,7 @@ int main(int argc, char** argv) {
    };
 
    EventTree * ev = new EventTree(TString(inDir+"/*.root"),whichPair);
+   Config * conf = new Config();
 
 
    TFile * outfile = new TFile("plots.root","RECREATE");
@@ -63,13 +65,26 @@ int main(int argc, char** argv) {
 
 
    // DIS kinematics
-   TH1D * WDist = new TH1D("WDist","W distribution (w/o W cut);W",NBINS,0,6);
-   TH1D * XDist = new TH1D("XDist","x distribution;x",NBINS,0,1);
-   TH1D * Q2Dist = new TH1D("Q2Dist","Q^{2} distribution;Q^{2}",NBINS,0,12);
+   Float_t Wmin = 0;
+   Float_t Wmax = 6;
+   Float_t Q2min = 0;
+   Float_t Q2max = 12;
+   if(conf->Experiment=="eic") { Wmax=60; Q2max=200; };
+   TH1D * WDist = new TH1D("WDist","W distribution (w/o W cut);W",
+     NBINS,Wmin,Wmax);
+   TH1D * XDist = new TH1D("XDist","x distribution;x",
+     NBINS,0,1);
+   TH1D * Q2Dist = new TH1D("Q2Dist","Q^{2} distribution;Q^{2}",
+     NBINS,Q2min,Q2max);
    TH2D * Q2vsW = new TH2D("Q2vsW","Q^{2} vs. W (w/o W cut);W;Q^{2}",
-                                   NBINS,0,6,NBINS,0,12);
-   TH2D * Q2vsX = new TH2D("Q2vsX","Q^{2} vs. x;x;Q^{2}",NBINS,0,1,NBINS,0,12);
-   TH1D * YDist = new TH1D("YDist","y distribution (w/o y cut);y",NBINS,0,1);
+     NBINS,Wmin,Wmax,NBINS,Q2min,Q2max);
+   TH2D * Q2vsX = new TH2D("Q2vsX","Q^{2} vs. x;x;Q^{2}",
+     NBINS,0,1,NBINS,Q2min,Q2max);
+   TH2D * Q2vsXlog = new TH2D("Q2vsXlog",
+     "Log(Q^{2}) vs. Log(x);Log(x);Log(Q^{2})",
+     NBINS,-4,0,NBINS,0,3); // TODO: might not be good for clas
+   TH1D * YDist = new TH1D("YDist","y distribution (w/o y cut);y",
+     NBINS,0,1);
    
    // electron kinematics
    TH1D * eleEDist = new TH1D("eleEDist","e^{-} E distribution",NBINS,0,12);
@@ -133,25 +148,34 @@ int main(int argc, char** argv) {
 
 
    // dihadron kinematics
+   Float_t MhMin = 0;
+   Float_t MhMax = 3;
+   Float_t MmissMin = -2;
+   Float_t MmissMax = 6;
+   if(conf->Experiment=="eic") { 
+     MhMax = 5; MmissMin = -40; MmissMax = 60;
+   };
    TString plotTitle = "#Delta#phi = #phi(" + hadTitle[qA] + ")" +
                                  " - #phi(" + hadTitle[qB] + 
                                  ") distribution;#Delta#phi";
    TH1D * deltaPhiDist = new TH1D("deltaPhiDist",plotTitle,NBINS,-PIe,PIe);
 
-   TH1D * MhDist = new TH1D("MhDist","M_{h} distribution;M_{h}",2*NBINS,0,3);
+   TH1D * MhDist = new TH1D("MhDist","M_{h} distribution;M_{h}",
+     2*NBINS,MhMin,MhMax);
    TH1D * PhDist = new TH1D("PhDist","|P_{h}| distribution;|P_{h}|",NBINS,0,10);
    TH1D * PhPerpDist = new TH1D("PhPerpDist","|P_{h}^{perp}| distribution;|P_{h}^{perp}|",
      NBINS,0,2);
    TH1D * ZpairDist = new TH1D("ZpairDist","z_{pair} distribution;z_{pair}",NBINS,0,1);
    TH1D * zetaDist = new TH1D("zetaDist","#zeta distribution;#zeta",NBINS,-1,1);
    TH1D * xFDist = new TH1D("xFDist","x_{F} distribution;x_{F}",NBINS,-2,2);
-   TH1D * MmissDist = new TH1D("MmissDist","M_{X} distribution;M_{X}",NBINS,-2,6);
+   TH1D * MmissDist = new TH1D("MmissDist","M_{X} distribution;M_{X}",
+     NBINS,MmissMin,MmissMax);
 
    TH1D * MmissDistZoom = new TH1D("MmissDistZoom","M_{X} distribution;M_{X}",
-     2*NBINS,0.5,3);
+     2*NBINS,0.5,3); // TODO: bin range not good for EIC
    TH2D * MmissVsMh = new TH2D("MmissVsMh","M_{X} vs. M_{h};M_{h};M_{X}",
      NBINS,0,2.5,
-     NBINS,0.5,3);
+     NBINS,MhMin,MhMax); // TODO: bin range not good for EIC
    
    TH1D * PhiHDist = new TH1D("PhiHDist","#phi_{h} distribution;#phi_{h}",
      NBINS,-PIe,PIe);
@@ -170,7 +194,7 @@ int main(int argc, char** argv) {
      NBINS,0,6);
    TH2D * PhPerpVsMh = new TH2D("PhPerpVsMh",
      "P_{h}^{perp} vs. M_{h};M_{h};P_{h}^{perp}",
-     NBINS,0,3,
+     NBINS,MhMin,MhMax,
      NBINS,0,3);
 
    // distributions for partial wave analysis
@@ -187,7 +211,7 @@ int main(int argc, char** argv) {
      NBINS,-PIe,PIe,NBINS,0,PIe);
 
    TH2D * thetaVsMh = new TH2D("thetaVsMh","#theta vs. M_{h};M_{h};#theta",
-     NBINS,0,3,NBINS,0,PIe);
+     NBINS,MhMin,MhMax,NBINS,0,PIe);
    TH2D * thetaVsZpair = new TH2D("thetaVsZpair","#theta vs. z;z;#theta",
      NBINS,0,1,NBINS,0,PIe);
    TH2D * thetaVsZeta = new TH2D("thetaVsZeta","#theta vs. #zeta;#zeta;#theta",
@@ -219,14 +243,14 @@ int main(int argc, char** argv) {
 
    // PhiH and PhiR vs. other variables
    TH2D * PhiHvsMh = new TH2D("PhiHvsMh","#phi_{h} vs. M_{h};M_{h};#phi_{h}",
-     NBINS,0,3,NBINS,-PIe,PIe);
+     NBINS,MhMin,MhMax,NBINS,-PIe,PIe);
    TH2D * PhiHvsZ = new TH2D("PhiHvsZ","#phi_{h} vs. z;z;#phi_{h}",
      NBINS,0,1,NBINS,-PIe,PIe);
    TH2D * PhiHvsX = new TH2D("PhiHvsX","#phi_{h} vs. x;x;#phi_{h}",
      NBINS,0,1,NBINS,-PIe,PIe);
 
    TH2D * PhiRvsMh = new TH2D("PhiRvsMh","#phi_{R} vs. M_{h};M_{h};#phi_{R}",
-     NBINS,0,3,NBINS,-PIe,PIe);
+     NBINS,MhMin,MhMax,NBINS,-PIe,PIe);
    TH2D * PhiRvsZ = new TH2D("PhiRvsZ","#phi_{R} vs. z;z;#phi_{R}",
      NBINS,0,1,NBINS,-PIe,PIe);
    TH2D * PhiRvsX = new TH2D("PhiRvsX","#phi_{R} vs. x;x;#phi_{R}",
@@ -272,7 +296,7 @@ int main(int argc, char** argv) {
    for(int k=0; k<Nkf; k++) {
      kfVsMh[k] = new TH2D(TString(kfName[k]+"vsMh"),
        TString(kfTitle[k]+" vs. M_{h}"),
-       NBINS,0,3,NBINS,kfRange[k][0],kfRange[k][1]);
+       NBINS,MhMin,MhMax,NBINS,kfRange[k][0],kfRange[k][1]);
      kfVsPhPerp[k] = new TH2D(TString(kfName[k]+"vsPhPerp"),
        TString(kfTitle[k]+" vs. P_{h}^{perp}"),
        NBINS,0,3,NBINS,kfRange[k][0],kfRange[k][1]);
@@ -413,6 +437,7 @@ int main(int argc, char** argv) {
 
 
        Q2vsX->Fill(ev->x,ev->Q2);
+       Q2vsXlog->Fill(TMath::Log10(ev->x),TMath::Log10(ev->Q2));
        XDist->Fill(ev->x);
        Q2Dist->Fill(ev->Q2);
 
@@ -543,6 +568,7 @@ int main(int argc, char** argv) {
    Q2Dist->Write();
    Q2vsW->Write();
    Q2vsX->Write();
+   Q2vsXlog->Write();
    YDist->Write();
 
    eleEDist->Write();

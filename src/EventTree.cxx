@@ -7,6 +7,7 @@ using namespace std;
 
 EventTree::EventTree(TString filelist, Int_t whichPair_) {
   printf("EventTree instantiated\n");
+  conf = new Config();
 
   debug = true;
 
@@ -89,20 +90,29 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
 
   chain->SetBranchAddress("PhiH",&PhiH);
 
-  chain->SetBranchAddress("PhiRq",&PhiRq);
-  chain->SetBranchAddress("PhiRp",&PhiRp);
-  chain->SetBranchAddress("PhiRp_r",&PhiRp_r);
-  chain->SetBranchAddress("PhiRp_g",&PhiRp_g);
+  if(conf->Experiment=="clas") {
+    chain->SetBranchAddress("PhiRq",&PhiRq);
+    chain->SetBranchAddress("PhiRp",&PhiRp);
+    chain->SetBranchAddress("PhiRp_r",&PhiRp_r);
+    chain->SetBranchAddress("PhiRp_g",&PhiRp_g);
+  } else if(conf->Experiment=="eic") {
+    chain->SetBranchAddress("PhiR",&PhiR);
+  };
 
   if(chain->GetBranch("PhiS")) chain->SetBranchAddress("PhiS",&PhiS);
   else PhiS=UNDEF;
 
   chain->SetBranchAddress("runnum",&runnum);
   chain->SetBranchAddress("evnum",&evnum);
-  chain->SetBranchAddress("torus",&torus);
-  chain->SetBranchAddress("triggerBits",&triggerBits);
   chain->SetBranchAddress("spinE",&spinE);
   chain->SetBranchAddress("spinP",&spinP);
+  if(conf->Experiment=="clas") {
+    chain->SetBranchAddress("torus",&torus);
+    chain->SetBranchAddress("triggerBits",&triggerBits);
+  } else {
+    torus = UNDEF;
+    triggerBits = UNDEF;
+  };
 
   if(chain->GetBranch("spinMC")) chain->SetBranchAddress("spinMC",spinMC);
   else { for(int hh=0; hh<NspinMC; hh++) spinMC[hh]=UNDEF; };
@@ -132,18 +142,37 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
     };
   };
 
-  chain->SetBranchAddress("diphCnt",&diphCnt);
-  chain->SetBranchAddress("diphPhotE",diphPhotE);
-  chain->SetBranchAddress("diphPhotPt",diphPhotPt);
-  chain->SetBranchAddress("diphPhotEta",diphPhotEta);
-  chain->SetBranchAddress("diphPhotPhi",diphPhotPhi);
-  chain->SetBranchAddress("diphE",diphE);
-  chain->SetBranchAddress("diphZ",diphZ);
-  chain->SetBranchAddress("diphPt",diphPt);
-  chain->SetBranchAddress("diphM",diphM);
-  chain->SetBranchAddress("diphAlpha",diphAlpha);
-  chain->SetBranchAddress("diphEta",diphEta);
-  chain->SetBranchAddress("diphPhi",diphPhi);
+  if(conf->Experiment=="clas") {
+    chain->SetBranchAddress("diphCnt",&diphCnt);
+    chain->SetBranchAddress("diphPhotE",diphPhotE);
+    chain->SetBranchAddress("diphPhotPt",diphPhotPt);
+    chain->SetBranchAddress("diphPhotEta",diphPhotEta);
+    chain->SetBranchAddress("diphPhotPhi",diphPhotPhi);
+    chain->SetBranchAddress("diphE",diphE);
+    chain->SetBranchAddress("diphZ",diphZ);
+    chain->SetBranchAddress("diphPt",diphPt);
+    chain->SetBranchAddress("diphM",diphM);
+    chain->SetBranchAddress("diphAlpha",diphAlpha);
+    chain->SetBranchAddress("diphEta",diphEta);
+    chain->SetBranchAddress("diphPhi",diphPhi);
+  } else {
+    diphCnt = UNDEF;
+    for(int di=0; di<2; di++) {
+      for(int dj=0; dj<2; dj++) {
+        diphPhotE[di][dj] = UNDEF;
+        diphPhotPt[di][dj] = UNDEF;
+        diphPhotEta[di][dj] = UNDEF;
+        diphPhotPhi[di][dj] = UNDEF;
+      };
+      diphE[di] = UNDEF;
+      diphZ[di] = UNDEF;
+      diphPt[di] = UNDEF;
+      diphM[di] = UNDEF;
+      diphAlpha[di] = UNDEF;
+      diphEta[di] = UNDEF;
+      diphPhi[di] = UNDEF;
+    };
+  };
 
   // random number generator (for random theta symmetrization)
   RNG = new TRandom(928); // (argument is seed)
@@ -203,14 +232,18 @@ void EventTree::GetEvent(Int_t i) {
   PhiRp_g = objDihadron->PhiRp_g; // via eq. 9 in 1408.5721
   */
 
-  // set preferred PhiR angle
-  PhiR = PhiRp; // preferred definition by Bacchetta (see Dihadron.cxx)
+  // set preferred PhiR angle (for eic, this is done earlier)
+  if(conf->Experiment=="clas") {
+    PhiR = PhiRp; // preferred definition by Bacchetta (see Dihadron.cxx)
+  };
   PhiHR = Tools::AdjAngle( PhiH - PhiR );
 
   // adjust range to 0-2pi (for cross-checking with Timothy)
+  /*
   PhiR = Tools::AdjAngleTwoPi(PhiR);
   PhiH = Tools::AdjAngleTwoPi(PhiH);
   PhiHR = Tools::AdjAngleTwoPi(PhiHR);
+  */
 
   // theta symmetrization tests
   //theta = fabs( fabs(theta-PI/2.0) - PI/2.0 ); // HERMES symmetrization
@@ -343,39 +376,48 @@ Bool_t EventTree::Valid() {
 
 
 Int_t EventTree::SpinState() {
-  if(runnum>=4700 && runnum<=6000) {
-    // Fall 2018 convention
-    switch(spinE) {
-      case 1: return sM;
-      case -1: return sP;
-      case 0: return UNDEF;
-      default: fprintf(stderr,"WARNING: bad SpinState request: %d\n",spinE);
-    };
-  }
-  else if(runnum>=4000 && runnum<=4100) {
-    // Spring 2018 (for DNP18) convention
-    switch(spinE) {
-      case 0: return sP;
-      case 1: return sM;
-      default: fprintf(stderr,"WARNING: bad SpinState request: %d\n",spinE);
-    };
-  }
+  if(conf->Experiment=="clas") {
+    if(runnum>=4700 && runnum<=6000) {
+      // Fall 2018 convention
+      switch(spinE) {
+        case 1: return sM;
+        case -1: return sP;
+        case 0: return UNDEF;
+        default: fprintf(stderr,"WARNING: bad SpinState request: %d\n",spinE);
+      };
+    }
+    else if(runnum>=4000 && runnum<=4100) {
+      // Spring 2018 (for DNP18) convention
+      switch(spinE) {
+        case 0: return sP;
+        case 1: return sM;
+        default: fprintf(stderr,"WARNING: bad SpinState request: %d\n",spinE);
+      };
+    }
 
-  else if(runnum==11) { // MC spinE
+    else if(runnum==11) { // MC spinE
 
-    // event matching cut
-    if(MCrecMode && !cutMCmatch) return UNDEF;
+      // event matching cut
+      if(MCrecMode && !cutMCmatch) return UNDEF;
 
-    // MC convention (from injected asymmetries)
-    spinE = spinMC[whichSpinMC];
-    switch(spinE) {
-      case 2: return sM;
-      case 3: return sP;
-      case 0: return UNDEF;
-      default: fprintf(stderr,"WARNING: bad SpinState request: %d\n",spinE);
-    };
+      // MC convention (from injected asymmetries)
+      spinE = spinMC[whichSpinMC];
+      switch(spinE) {
+        case 2: return sM;
+        case 3: return sP;
+        case 0: return UNDEF;
+        default: fprintf(stderr,"WARNING: bad SpinState request: %d\n",spinE);
+      };
+    }
+    else fprintf(stderr,"WARNING: runnum %d not in EventTree::SpinState\n",runnum);
   }
-  else fprintf(stderr,"WARNING: runnum %d not in EventTree::SpinState\n",runnum);
+  else if(conf->Experiment=="eic") {
+    switch(spinP) {
+      case 1: return sP;
+      case -1: return sM;
+      default: fprintf(stderr,"WARNING: bad SpinState request: %d\n",spinP);
+    };
+  };
   return UNDEF;
 };
 

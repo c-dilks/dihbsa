@@ -70,6 +70,7 @@ class Asymmetry : public TObject
     void FitMultiAmp(Int_t fitMode, Float_t DparamVal=0);
     void SetAsymGrPoint(Int_t modBin_, Int_t modBin2_=-1);
     void FormuAppend(Int_t TW, Int_t L, Int_t M);
+    void FormuAppendUT(Int_t TW, Int_t L, Int_t M, Int_t lev);
 
 
     Bool_t AddEvent(EventTree * ev);
@@ -109,6 +110,7 @@ class Asymmetry : public TObject
     Float_t z;
     Float_t PhiH;
     Float_t PhiR;
+    Float_t PhiS;
     Float_t PhPerp;
     Float_t Ph;
     Float_t Q2;
@@ -210,7 +212,7 @@ class Asymmetry : public TObject
     TString rellumFactor[2];
     Float_t rfParamRange;
 
-    RooRealVar *rfPhiH, *rfPhiR, *rfTheta;
+    RooRealVar *rfPhiH, *rfPhiR, *rfPhiS, *rfTheta;
     RooRealVar *rfWeight;
     RooRealVar *rfPol, *rfRellum;
 

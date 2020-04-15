@@ -52,6 +52,7 @@ int main(int argc, char** argv) {
     spinrootFileName = spinrootDir + "/" + TString(sysFile->GetName());
     if( !sysFile->IsDirectory() && 
         spinrootFileName.EndsWith(".root") &&
+        spinrootFileName.Contains("spin.") &&
         !spinrootFileName.Contains("/cat.root") ){
       spinrootFileList.push_back(spinrootFileName);
       printf("add %s\n",spinrootFileName.Data());
