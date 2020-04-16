@@ -271,11 +271,11 @@ void EventTree::GetEvent(Int_t i) {
 
 
 
-  // dihadron kinematics cuts
+  // dihadron kinematics cuts //+++
   cutDihadronKinematics = 
     Zpair < 0.95 &&
     Mmiss > 1.05 &&
-    xF > 0 &&
+    /*xF > 0 &&*/
     hadP[qA] > 1.25 && hadP[qB] > 1.25;
 
   // cutDihadron is the full dihadron cut
@@ -320,9 +320,12 @@ void EventTree::GetEvent(Int_t i) {
   //cutFiducial = true; // override
   
   // require hadrons observed in forward detectors
+  /*
   cutDihadronStatus = 
     ( TMath::Abs(hadStatus[qA])<4000 || TMath::Abs(hadStatus[qA])>=5000 ) &&
     ( TMath::Abs(hadStatus[qB])<4000 || TMath::Abs(hadStatus[qB])>=5000 );
+    */
+  cutDihadronStatus = true; //+++
 
 
   // MCgen and MCrec matching cut

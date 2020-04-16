@@ -183,6 +183,7 @@ int main(int argc, char** argv) {
    tree->Branch("hadPt",hadPt,"hadPt[2]/F");
    tree->Branch("hadEta",hadEta,"hadEta[2]/F");
    tree->Branch("hadPhi",hadPhi,"hadPhi[2]/F");
+   tree->Branch("hadXF",dih->hadXF,"hadXF[2]/F");
    tree->Branch("hadVertex",dih->hadVertex,"hadVertex[2][3]/F");
    tree->Branch("hadStatus",dih->hadStatus,"hadStatus[2]/I");
    tree->Branch("hadChi2pid",dih->hadChi2pid,"hadChi2pid[2]/F");
