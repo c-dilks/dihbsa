@@ -70,7 +70,8 @@ class Asymmetry : public TObject
     void FitAsymGraph();
     void FitAsymMLM();
     void SetAsymGrPoint(Int_t modBin_, Int_t modBin2_=-1);
-    void FormuAppend(Int_t TW, Int_t L, Int_t M);
+    void FormuAppend(Int_t TW, Int_t L, Int_t M,
+      Int_t lev=0, Int_t initPol = Modulation::kLU);
     void DenomAppend(Int_t TW, Int_t L, Int_t M, Int_t lev);
 
 

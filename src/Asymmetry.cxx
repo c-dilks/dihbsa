@@ -634,6 +634,9 @@ void Asymmetry::SetFitMode(Int_t fitMode) {
       this->FormuAppend(3,1,-1);
       this->DenomAppend(2,2,0,0); // tw2 |2,0> UU,T
       break;
+    case 700: // test DSIDIS
+      this->FormuAppend(0,0,0,0,Modulation::kLU_DSIDIS);
+      break;
     default:
       fprintf(stderr,"ERROR: bad fitMode; using G1perp default\n");
       this->FormuAppend(2,1,1);
@@ -828,7 +831,8 @@ void Asymmetry::FitAsymMLM() {
 
 
 // append a modulation to build a multi-amplitude fit formula
-void Asymmetry::FormuAppend(Int_t TW, Int_t L, Int_t M) {
+void Asymmetry::FormuAppend(
+  Int_t TW, Int_t L, Int_t M, Int_t lev, Int_t initPol) {
   if(nAmpUsed>=nAmp) {
     fprintf(stderr,"ERROR: nAmpUsed > nAmp (the max allowed value)\n");
     return;
@@ -843,7 +847,7 @@ void Asymmetry::FormuAppend(Int_t TW, Int_t L, Int_t M) {
     fitFunc2formu += "+";
   };
 
-  modu[nAmpUsed] = new Modulation(TW, L, M, 0, enablePW, Modulation::kLU);
+  modu[nAmpUsed] = new Modulation(TW, L, M, lev, enablePW, initPol);
 
   asymFormu += "A"+TString::Itoa(nAmpUsed,10)+"*"+modu[nAmpUsed]->FormuRF();
   fitFunc2formu += "["+TString::Itoa(nAmpUsed,10)+"]*"+modu[nAmpUsed]->Formu();

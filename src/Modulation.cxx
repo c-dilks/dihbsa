@@ -76,6 +76,9 @@ Modulation::Modulation(Int_t tw_, Int_t l_, Int_t m_,
       default: aziStr = "0";
     };
   }
+  else if(polarization==kLU_DSIDIS) {
+    aziStr = Form("sin(phiR)"); // dsidis hack: using phiR as deltaPhi
+  }
   else aziStr = "0";
 
 
@@ -187,6 +190,9 @@ TString Modulation::StateTitle() {
     case kUU: 
       if(tw==2 && lev==0) polStr = "UU,T";
       else polStr = "UU";
+      break;
+    case kLU_DSIDIS:
+      polStr = "LU,DSIDIS";
       break;
   };
 

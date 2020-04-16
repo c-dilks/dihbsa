@@ -200,7 +200,8 @@ void EventTree::GetEvent(Int_t i) {
   */
 
   // set preferred PhiR angle
-  PhiR = PhiRp; // preferred definition by Bacchetta (see Dihadron.cxx)
+  //PhiR = PhiRp; // preferred definition by Bacchetta (see Dihadron.cxx)
+  PhiR = Tools::AdjAngle(hadPhi[qA]-hadPhi[qB]); // dsidis hack: use phiR as deltaPhi
   PhiHR = Tools::AdjAngle( PhiH - PhiR );
 
   // adjust range to 0-2pi (for cross-checking with Timothy)
@@ -271,11 +272,11 @@ void EventTree::GetEvent(Int_t i) {
 
 
 
-  // dihadron kinematics cuts
+  // dihadron kinematics cuts // dsidis hack: xf cut
   cutDihadronKinematics = 
     Zpair < 0.95 &&
     Mmiss > 1.05 &&
-    xF > 0 &&
+    /*xF > 0 &&*/ hadXF[qA]>0 && hadXF[qB]<0 &&
     hadP[qA] > 1.25 && hadP[qB] > 1.25;
 
   // cutDihadron is the full dihadron cut
@@ -320,9 +321,12 @@ void EventTree::GetEvent(Int_t i) {
   //cutFiducial = true; // override
   
   // require hadrons observed in forward detectors
+  /*
   cutDihadronStatus = 
     ( TMath::Abs(hadStatus[qA])<4000 || TMath::Abs(hadStatus[qA])>=5000 ) &&
     ( TMath::Abs(hadStatus[qB])<4000 || TMath::Abs(hadStatus[qB])>=5000 );
+    */
+  cutDihadronStatus = true; // dsidis hack: disable status cut
 
 
   // MCgen and MCrec matching cut
