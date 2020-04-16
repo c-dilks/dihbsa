@@ -48,6 +48,7 @@ class Trajectory : public FiducialCuts
     void SetVertex(Float_t vx, Float_t vy, Float_t vz) { Vertex.SetXYZ(vx,vy,vz); };
     Float_t chi2pid;
     Int_t Status;
+    Float_t Beta;
 
 
     Bool_t debug;

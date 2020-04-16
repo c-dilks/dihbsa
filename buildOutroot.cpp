@@ -186,6 +186,7 @@ int main(int argc, char** argv) {
    tree->Branch("hadXF",dih->hadXF,"hadXF[2]/F");
    tree->Branch("hadVertex",dih->hadVertex,"hadVertex[2][3]/F");
    tree->Branch("hadStatus",dih->hadStatus,"hadStatus[2]/I");
+   tree->Branch("hadBeta",dih->hadBeta,"hadBeta[2]/F");
    tree->Branch("hadChi2pid",dih->hadChi2pid,"hadChi2pid[2]/F");
    /*
    Bool_t hadFidPCAL[2], hadFidDC[2];
@@ -272,6 +273,7 @@ int main(int argc, char** argv) {
    Float_t vertex[3];
    Float_t chi2pid;
    Int_t status;
+   Float_t beta;
 
 
    Int_t pidCur,pIdx;
@@ -454,6 +456,7 @@ int main(int argc, char** argv) {
        vertex[eZ] = part->par()->getVz();
        chi2pid = part->par()->getChi2Pid();
        status = part->par()->getStatus();
+       beta = part->par()->getBeta();
 #elif PARTICLE_BANK == 1 // MC::Lund for reading MC-generated particles
      particleCntAll = (reader.mcparts())->getRows(); // -->tree
      for(int rr=0; rr<particleCntAll; rr++) {
@@ -466,6 +469,7 @@ int main(int argc, char** argv) {
        vertex[eZ] = (reader.mcparts())->getVz(rr);
        chi2pid = UNDEF;
        status = 0;
+       beta = UNDEF;
 #elif PARTICLE_BANK == 2 // MC::Particle for reading MC-generated particles
      reader.getReader().read(readerEvent);
      readerEvent.getStructure(mcParticle);
@@ -480,6 +484,7 @@ int main(int argc, char** argv) {
        vertex[eZ] = mcParticle.getFloat("vz",rr);
        chi2pid = UNDEF;
        status = 0;
+       beta = UNDEF;
 #elif PARTICLE_BANK == 3 // REC::Particle for reconstructed particles from MC
      reader.getReader().read(readerEvent);
      readerEvent.getStructure(mcParticle); // for matching to MCgen
@@ -495,6 +500,7 @@ int main(int argc, char** argv) {
        vertex[eZ] = part->par()->getVz();
        chi2pid = part->par()->getChi2Pid();
        status = part->par()->getStatus();
+       beta = part->par()->getBeta();
 #endif
 
        
@@ -532,6 +538,7 @@ int main(int argc, char** argv) {
              tr->SetVertex(vertex[eX],vertex[eY],vertex[eZ]);
              tr->chi2pid = chi2pid;
              tr->Status = status;
+             tr->Beta = beta;
              
              // set tr FiducialCuts info (note: Trajectory derives from FiducialCuts)
 #if PARTICLE_BANK == 0 || PARTICLE_BANK == 3
