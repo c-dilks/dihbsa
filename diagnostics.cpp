@@ -347,18 +347,26 @@ int main(int argc, char** argv) {
 
 
    // DSIDIS plots
-   // [i][j], Mh vs. XF_i for XF_(i+1) below (j=0) and above (j=1) zero
-   TH2D * MhVsHadXF[2][2];
+   TH2D * MhVsHadXF[2][2]; // [i][j], Mh vs. XF_i for 
+                           // XF_(i+1) below (j=0) and above (j=1) zero
+   TH1D * MhDistCutXF[2][2]; // [i][j] represent each hadXF above/below 0
    TString plotN,plotT;
    int ii,jj;
    for(ii=0; ii<2; ii++) {
      for(jj=0; jj<2; jj++) {
        plotN = "Mh_vs_XF" + hadName[ii] + 
-         "__for__XF" + hadName[(ii+1)%2] + "_" + (jj==0?"lt":"gt") + "_zero";
+         "__for__XF" + hadName[(ii+1)%2] + (jj==0?"LT":"GT") + "0";
        plotT = "M_{h} vs. x_{F}(" + hadTitle[ii] + 
          ") for x_{F}(" + hadTitle[(ii+1)%2] + ")" + (jj==0?"<":">") + 
          "0;x_{F}(" + hadTitle[ii] + ");M_{h}";
        MhVsHadXF[ii][jj] = new TH2D(plotN,plotT,NBINS,-1,1,NBINS,0,3);
+       //
+       plotN = "MhDist__for__XF" + hadName[ii] + (ii==0?"LT":"GT") + "0" +
+                           "_XF" + hadName[jj] + (jj==0?"LT":"GT") + "0";
+       plotT = "M_{h} distribution for x_{F}(" +
+         hadTitle[ii] + ")" + (ii==0?"<":">") + "0 and x_{F}(" +
+         hadTitle[jj] + ")" + (jj==0?"<":">") + "0;M_{h}";
+       MhDistCutXF[ii][jj] = new TH1D(plotN,plotT,2*NBINS,0,3);
      };
    };
 
@@ -538,7 +546,10 @@ int main(int argc, char** argv) {
          jj = (ev->hadXF[(ii+1)%2] < 0) ? 0:1;
          MhVsHadXF[ii][jj]->Fill(ev->hadXF[ii],ev->Mh);
        };
-
+       if(ev->hadXF[qA]<0 && ev->hadXF[qB]<0) MhDistCutXF[0][0]->Fill(ev->Mh);
+       if(ev->hadXF[qA]>0 && ev->hadXF[qB]<0) MhDistCutXF[1][0]->Fill(ev->Mh);
+       if(ev->hadXF[qA]<0 && ev->hadXF[qB]>0) MhDistCutXF[0][1]->Fill(ev->Mh);
+       if(ev->hadXF[qA]>0 && ev->hadXF[qB]>0) MhDistCutXF[1][1]->Fill(ev->Mh);
      };
 
 
@@ -689,11 +700,10 @@ int main(int argc, char** argv) {
      kfVsPhiHR[k]->Write();
    };
 
-   for(ii=0; ii<2; ii++) {
-     for(jj=0; jj<2; jj++) {
-       MhVsHadXF[ii][jj]->Write();
-     };
-   };
+   for(ii=0; ii<2; ii++) { for(jj=0; jj<2; jj++) {
+     MhVsHadXF[ii][jj]->Write(); };};
+   for(ii=0; ii<2; ii++) { for(jj=0; jj<2; jj++) {
+     MhDistCutXF[ii][jj]->Write(); };};
 
    outfile->Close();
 
