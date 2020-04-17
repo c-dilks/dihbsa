@@ -346,10 +346,24 @@ int main(int argc, char** argv) {
      "M_{#gamma#gamma} distribution;M_{#gamma#gamma}",NBINS,0,1);
 
 
+   // DSIDIS plots
+   // [i][j], Mh vs. XF_i for XF_(i+1) below (j=0) and above (j=1) zero
+   TH2D * MhVsHadXF[2][2];
+   TString plotN,plotT;
+   int ii,jj;
+   for(ii=0; ii<2; ii++) {
+     for(jj=0; jj<2; jj++) {
+       plotN = "Mh_vs_XF" + hadName[ii] + 
+         "__for__XF" + hadName[(ii+1)%2] + "_" + (jj==0?"lt":"gt") + "_zero";
+       plotT = "M_{h} vs. x_{F}(" + hadTitle[ii] + 
+         ") for x_{F}(" + hadTitle[(ii+1)%2] + ")" + (jj==0?"<":">") + 
+         "0;x_{F}(" + hadTitle[ii] + ");M_{h}";
+       MhVsHadXF[ii][jj] = new TH2D(plotN,plotT,NBINS,-1,1,NBINS,0,3);
+     };
+   };
 
 
-
-
+   // EVENT LOOP
    printf("begin loop through %lld events...\n",ev->ENT);
    Int_t hadI[2];
    for(int i=0; i<ev->ENT; i++) {
@@ -520,6 +534,11 @@ int main(int argc, char** argv) {
 
        for(int dp=0; dp<ev->diphCnt; dp++) diphMdist->Fill(ev->diphM[dp]);
 
+       for(ii=0; ii<2; ii++) {
+         jj = (ev->hadXF[(ii+1)%2] < 0) ? 0:1;
+         MhVsHadXF[ii][jj]->Fill(ev->hadXF[ii],ev->Mh);
+       };
+
      };
 
 
@@ -668,6 +687,12 @@ int main(int argc, char** argv) {
      kfVsPhiR[k]->Write();
      kfVsPhiH[k]->Write();
      kfVsPhiHR[k]->Write();
+   };
+
+   for(ii=0; ii<2; ii++) {
+     for(jj=0; jj<2; jj++) {
+       MhVsHadXF[ii][jj]->Write();
+     };
    };
 
    outfile->Close();

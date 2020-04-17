@@ -182,12 +182,13 @@ TString Modulation::StateTitle() {
 
   TString retstr,polStr,lStr;
 
-  if(tw==0) return "const";
   switch(polarization) {
     case kLU:
+      if(tw==0) return "const";
       polStr = "LU";
       break;
     case kUU: 
+      if(tw==0) return "const";
       if(tw==2 && lev==0) polStr = "UU,T";
       else polStr = "UU";
       break;
