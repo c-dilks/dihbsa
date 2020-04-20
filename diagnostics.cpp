@@ -364,8 +364,8 @@ int main(int argc, char** argv) {
        plotN = "MhDist__for__XF" + hadName[ii] + (ii==0?"LT":"GT") + "0" +
                            "_XF" + hadName[jj] + (jj==0?"LT":"GT") + "0";
        plotT = "M_{h} distribution for x_{F}(" +
-         hadTitle[ii] + ")" + (ii==0?"<":">") + "0 and x_{F}(" +
-         hadTitle[jj] + ")" + (jj==0?"<":">") + "0;M_{h}";
+         hadTitle[qA] + ")" + (ii==0?"<":">") + "0 and x_{F}(" +
+         hadTitle[qB] + ")" + (jj==0?"<":">") + "0;M_{h}";
        MhDistCutXF[ii][jj] = new TH1D(plotN,plotT,2*NBINS,0,3);
      };
    };
