@@ -271,12 +271,19 @@ void EventTree::GetEvent(Int_t i) {
   };
 
 
+  // xF cuts // dsidis hack
+  cutXFdihCFR = xF > 0; // sidis CFR dihadrons
+  cutXFdsidis[kTFR][kTFR] = hadXF[qA]<0 && hadXF[qB]<0;
+  cutXFdsidis[kTFR][kCFR] = hadXF[qA]<0 && hadXF[qB]>0;
+  cutXFdsidis[kCFR][kTFR] = hadXF[qA]>0 && hadXF[qB]<0; // f0 channel
+  cutXFdsidis[kCFR][kCFR] = hadXF[qA]>0 && hadXF[qB]>0;
+  cutXF = cutXFdsidis[kCFR][kCFR]; // chosen XF cut
 
   // dihadron kinematics cuts // dsidis hack: xf cut
   cutDihadronKinematics = 
     Zpair < 0.95 &&
     Mmiss > 1.05 &&
-    /*xF > 0 &&*/ /*hadXF[qA]>0 && hadXF[qB]<0 &&*/
+    cutXF &&
     hadP[qA] > 1.25 && hadP[qB] > 1.25;
 
   // cutDihadron is the full dihadron cut

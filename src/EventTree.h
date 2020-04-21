@@ -159,6 +159,10 @@ class EventTree : public TObject
     Bool_t cutFiducial;
     Bool_t cutDihadronStatus;
     Bool_t cutMCmatch;
+    Bool_t cutXF;
+    Bool_t cutXFdihCFR;
+    Bool_t cutXFdsidis[2][2]; // [qA:0=TFR,1=CFR][qB:0=TFR,1=CFR]
+    enum fr_enum {kTFR,kCFR};
 
     // OTHER VARIABLES
     Bool_t useDiphBG;

@@ -31,13 +31,13 @@ Binning::Binning(Int_t pairType_) {
   if(numKaons==0) {
 
     // -- M_h (dihadron invariant mass)
-    /*
+    ///*
     AddBinBound(vM,0.53); // 5 quantiles (from GetQuantiles.C)
     AddBinBound(vM,0.71);
     AddBinBound(vM,0.84);
     AddBinBound(vM,1.03);
-    */
-    AddBinBound(vM,0.77); // bin above/below rho mass
+    //*/
+    //AddBinBound(vM,0.77); // bin above/below rho mass
 
     // -- x (bjorken-x)
     AddBinBound(vX,0.22); // 5 quantiles (from GetQuantiles.C)
