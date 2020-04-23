@@ -39,13 +39,13 @@ DIS::DIS() {
     vecBeam = TLorentzVector(
       0,
       0,
-      EbeamP,
+      -EbeamP,
       conf->EbeamEn
     );
     vecTarget = TLorentzVector(
       PbeamP * TMath::Sin(crossingAngle),
       0,
-      -PbeamP * TMath::Cos(crossingAngle),
+      PbeamP * TMath::Cos(crossingAngle),
       conf->PbeamEn
     );
   }

@@ -257,13 +257,6 @@ void EventTree::GetEvent(Int_t i) {
     gen_hadTheta[h] = MCrecMode ? Tools::EtaToTheta(gen_hadEta[h]) : UNDEF;
   };
 
-  // DIS cuts
-  cutQ2 = Q2 > 1.0;
-  cutW = W > 2.0;
-  cutY = y < 0.8;
-  cutDIS = cutQ2 && cutW && cutY;
-
-
 
   // diphoton and pi0/BG cuts
   // -- if dihadron does not include pi0s, just set to true; first we set
@@ -305,8 +298,19 @@ void EventTree::GetEvent(Int_t i) {
   };
 
 
+  ///////////////////////////////////
+  // DIS cuts
+  ///////////////////////////////////
+  //cutQ2 = Q2 > 1.0;
+  cutQ2 = true; // DISABLE Q2 CUT
+  cutW = W > 2.0;
+  cutY = y < 0.8;
+  cutDIS = cutQ2 && cutW && cutY;
 
+
+  ///////////////////////////////////
   // dihadron kinematics cuts
+  ///////////////////////////////////
   cutDihadronKinematics = 
     Zpair < 0.95 &&
     Mmiss > 1.05 &&
@@ -319,21 +323,10 @@ void EventTree::GetEvent(Int_t i) {
     cutDihadronKinematics && 
     cutDiph[qA] && cutDiph[qB];
 
-  
-  //// cut for doing cross-checks - deprecated
-  //// -- tim's cuts
-  //cutCrossCheck = 
-    //Tools::PairSame(hadIdx[qA],hadIdx[qB],kPip,kPim) &&
-    ///*
-    //particleCnt[kPip]==1 && particleCnt[kPim]==1 &&
-    //Tools::EMtoP(hadE[qA],PartMass(kPip)) > 1.0 &&
-    //Tools::EMtoP(hadE[qB],PartMass(kPim)) > 1.0 &&
-    //Tools::EMtoP(eleE,PartMass(kE)) > 2.0 &&
-    //*/
-    //Q2>1 && W>2;
 
-
+  ///////////////////////////////////
   // vertex cuts
+  ///////////////////////////////////
   cutVertex = eleVertex[eZ]     > -8  &&  eleVertex[eZ]     < 3  &&
               hadVertex[qA][eZ] > -8  &&  hadVertex[qA][eZ] < 3  &&
               hadVertex[qB][eZ] > -8  &&  hadVertex[qB][eZ] < 3;
@@ -349,12 +342,17 @@ void EventTree::GetEvent(Int_t i) {
   };
 
 
+  ///////////////////////////////////
   // fiducial cuts
+  ///////////////////////////////////
   whichLevel = FiducialCuts::cutLoose;
   cutFiducial = eleFidPCAL[whichLevel] && eleFidDC[whichLevel];
   //cutFiducial = true; // override
   
+
+  ////////////////////////////////////////////////////////
   // require hadrons observed in forward detectors
+  ////////////////////////////////////////////////////////
   cutDihadronStatus = 
     ( TMath::Abs(hadStatus[qA])<4000 || TMath::Abs(hadStatus[qA])>=5000 ) &&
     ( TMath::Abs(hadStatus[qB])<4000 || TMath::Abs(hadStatus[qB])>=5000 );
