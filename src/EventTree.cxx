@@ -43,7 +43,6 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
 
 
   chain->SetBranchAddress("pairType",&pairType);
-  chain->SetBranchAddress("hadOrder",&hadOrder);
   chain->SetBranchAddress("hadIdx",hadIdx);
   chain->SetBranchAddress("hadE",hadE);
   chain->SetBranchAddress("hadP",hadP);
@@ -53,6 +52,9 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("hadVertex",hadVertex);
   chain->SetBranchAddress("hadStatus",hadStatus);
   chain->SetBranchAddress("hadChi2pid",hadChi2pid);
+  if(chain->GetBranch("hadOrder"))
+    chain->SetBranchAddress("hadOrder",&hadOrder);
+  else hadOrder = -1;
   /*
   if(chain->GetBranch("hadFidPCAL")) chain->SetBranchAddress("hadFidPCAL",hadFidPCAL);
   else { for(int h=0; h<2; h++) hadFidPCAL[h]=false; };
@@ -256,6 +258,8 @@ void EventTree::GetEvent(Int_t i) {
     hadTheta[h] = Tools::EtaToTheta(hadEta[h]);
     gen_hadTheta[h] = MCrecMode ? Tools::EtaToTheta(gen_hadEta[h]) : UNDEF;
   };
+  eleTheta = Tools::EtaToTheta(eleEta);
+  PhTheta = Tools::EtaToTheta(PhEta);
 
 
   // diphoton and pi0/BG cuts

@@ -180,8 +180,8 @@ enum observable_enum {
   sPip,
   sPim,
   sDiph,
-  //sKp,
-  //sKm,
+  sKp,
+  sKm,
   nObservables
 };
 
@@ -192,10 +192,10 @@ static Int_t OI(Int_t s) {
     case sPim: return kPim;
     case sDiph: return kDiph;
     //case sDiph: return kPi0; // (for if pi0s are found in HIPO files)
-    //case sKp: return kKp;
-    //case sKm: return kKm;
+    case sKp: return kKp;
+    case sKm: return kKm;
     default: 
-      fprintf(stderr,"ERROR: bad OI request (see Constants.h)\n");
+      fprintf(stderr,"ERROR: bad OI request s=%d (see Constants.h)\n",s);
       return UNDEF;
   };
 };
@@ -206,10 +206,10 @@ static Int_t IO(Int_t s) {
     case kPim: return sPim;
     case kDiph: return sDiph; 
     //case kPi0: return sDiph; // (for if pi0s are found in HIPO files)
-    //case kKp: return sKp;
-    //case kKm: return sKm;
+    case kKp: return sKp;
+    case kKm: return sKm;
     default: 
-      fprintf(stderr,"ERROR: bad IO request (see Constants.h)\n");
+      fprintf(stderr,"ERROR: bad IO request s=%d (see Constants.h)\n",s);
       return UNDEF;
   };
 };

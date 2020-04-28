@@ -44,7 +44,7 @@ class Tools {
 
     // convert Eta to Theta (with theta in degrees)
     static Float_t EtaToTheta(Float_t eta) {
-      return 2 * TMath::ATan( TMath::Exp( -1*eta) ) * 180.0/PI;
+      return AdjAngle(2*TMath::ATan(TMath::Exp(-1*eta)));
     };
     // convert Energy and Mass to |Momentum|
     static Float_t EMtoP(Float_t energy, Float_t mass) {
