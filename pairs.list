@@ -1,6 +1,15 @@
 0x33 piPlus1_piPlus2
 0x34 piPlus_piMinus
+0x37 piPlus_KMinus
 0x39 piPlus_diphoton
 0x44 piMinus1_piMinus2
+0x63 KPlus_piPlus
+0x64 KPlus_piMinus
+0x66 KPlus1_KPlus2
+0x67 KPlus_KMinus
+0x69 KPlus_diphoton
+0x74 KMinus_piMinus
+0x77 KMinus1_KMinus2
 0x94 diphoton_piMinus
+0x97 diphoton_KMinus
 0x99 diphoton1_diphoton2

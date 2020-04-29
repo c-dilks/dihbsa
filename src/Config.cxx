@@ -30,6 +30,25 @@ Config::Config() {
     EbeamEn = 10.6041;
     PbeamEn = 0;
   }
+
+  // set kinematic ranges (array index: 0=min, 1=max)
+  if(this->Experiment=="clas") {
+    bdQ2[0] = 0;          bdQ2[1] = 12;
+    bdW[0] = 0;           bdW[1] = 6;
+    bdMh[0] = 0;          bdMh[1] = 3;
+    bdMmiss[0] = 0;      bdMmiss[1] = 6;
+    bdEta[0] = -1;        bdEta[1] = 5;
+    bdHadP[0] = 0;        bdHadP[1] = 10;
+  }
+  else if(this->Experiment=="eic") {
+    bdQ2[0] = 0;          bdQ2[1] = 200;
+    bdW[0] = 0;           bdW[1] = 60;
+    bdMh[0] = 0;          bdMh[1] = 30;
+    bdMmiss[0] = 0;     bdMmiss[1] = 60;
+    bdEta[0] = -15;       bdEta[1] = 15;
+    bdHadP[0] = 0;        bdHadP[1] = 30;
+  };
+
 }
 
 
