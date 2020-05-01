@@ -15,6 +15,7 @@
 #include "TGraph.h"
 #include "TEllipse.h"
 #include "TLine.h"
+#include "TStyle.h"
 
 // DihBsa
 #include "Constants.h"
@@ -26,6 +27,33 @@
 #include "Config.h"
 
 
+// binning --------------------------------------------
+Float_t Q2min = 1e-2; Float_t Q2max = 1e+3;
+Float_t xmin = 1e-4;  Float_t xmax = 1;
+
+const Int_t NBINS_Q2 = 4;
+Float_t binBounds_Q2[NBINS_Q2] = {
+  Q2min,
+  2.5,
+  10,
+  Q2max 
+};
+
+const Int_t NBINS_x = 3;
+Float_t binBounds_x[NBINS_x] = {
+  xmin,
+  0.02,
+  xmax
+};
+
+//-----------------------------------------------------
+
+const Int_t NBINS = NBINS_Q2 * NBINS_x;
+Float_t Q2Bin[NBINS][2];
+Float_t xBin[NBINS][2];
+Double_t numEvents[NBINS];
+Double_t maxEvents;
+int b;
 TString inDir;
 Int_t whichPair;
 Int_t whichHad[2];
@@ -35,6 +63,8 @@ int h;
 
 
 TCanvas * PolarCanv(TH2D * dist);
+TCanvas * xQ2Canv(TH2D * dist);
+TCanvas * MatrixCanv(TCanvas ** canvArr);
 
 
 int main(int argc, char** argv) {
@@ -59,41 +89,19 @@ int main(int argc, char** argv) {
 
   EventTree * ev = new EventTree(TString(inDir+"/*.root"),whichPair);
   Config * conf = new Config();
+  gStyle->SetOptStat(0);
 
 
   TFile * outfile = new TFile("eicPlots.root","RECREATE");
 
 
-  // binning --------------------------------------------
-  const Int_t NBINS_Q2 = 6;
-  Float_t binBounds_Q2[NBINS_Q2] = {
-    0,
-    0.1,
-    1,
-    10,
-    100,
-    1000
-  };
-  const Int_t NBINS_x = 4;
-  Float_t binBounds_x[NBINS_x] = {
-    0,
-    0.33,
-    0.66,
-    1
-  };
-  //-----------------------------------------------------
-
   // remap all bin bounds into a 1-dimensional array
   // note: the "last" bin for each variable is an extra; it is used to
   //       integrate over other dimensions (see printout)
-  const Int_t NBINS = NBINS_Q2 * NBINS_x;
-  Float_t Q2Bin[NBINS][2];
-  Float_t xBin[NBINS][2];
-  int b;
-  for(int bQ2=0; bQ2<NBINS_Q2; bQ2++) {
-    for(int bx=0; bx<NBINS_x; bx++) {
-      b = bQ2 + bx*NBINS_Q2;
-      //b = bQ2 + bx*NBINS_Q2 + bPh*NBINS_x*NBINS_Q2; // for another dim
+  for(int bx=0; bx<NBINS_x; bx++) {
+    for(int bQ2=0; bQ2<NBINS_Q2; bQ2++) {
+      b = bx + bQ2*NBINS_x;
+      //b = bx + bQ2*NBINS_x + bPh*NBINS_Q2*NBINS_x; // for another dim
       for(int bb=0; bb<2; bb++) {
         Q2Bin[b][bb] = (bQ2<NBINS_Q2-1) ? binBounds_Q2[bQ2+bb] :
                                           binBounds_Q2[bb==0?0:NBINS_Q2-1];
@@ -103,7 +111,7 @@ int main(int argc, char** argv) {
     };
   };
   for(b=0; b<NBINS; b++) {
-    printf("b=%d\tQ2:[%7.2f,%7.2f]\tx[%7.2f,%7.2f]\n",
+    printf("b=%d\tQ2:[%g,%g]\tx[%g,%g]\n",
       b,Q2Bin[b][0],Q2Bin[b][1],
       xBin[b][0],xBin[b][1]
     );
@@ -112,41 +120,66 @@ int main(int argc, char** argv) {
 
 
   // define plots ---------------------------------------
-  const Int_t NPLOTBINS = 150;
+  const Int_t NPLOTBINS = 50;
+  const Int_t N_P_BINS = NPLOTBINS;
+  const Int_t N_THETA_BINS = 3*NPLOTBINS;
+
+  // Q2 vs. x planes
+  TH2D * Q2vsXfull = new TH2D("Q2vsX_all_events",
+    "Log(Q^{2}) vs. Log(x) for all generated events;Log(x);Log(Q^{2})",
+    NPLOTBINS,TMath::Log10(xmin),TMath::Log10(xmax),
+    NPLOTBINS,TMath::Log10(Q2min),TMath::Log10(Q2max));
+  TH2D * Q2vsXcut = new TH2D("Q2vsX_with_cuts",
+    "Log(Q^{2}) vs. Log(x) for selected dihadrons;Log(x);Log(Q^{2})",
+    NPLOTBINS,TMath::Log10(xmin),TMath::Log10(xmax),
+    NPLOTBINS,TMath::Log10(Q2min),TMath::Log10(Q2max));
+
+  // compare (x,Q2) determined from electron to that in pythia event record
+  TH2D * Q2vsQ2pythia = new TH2D("Q2vsQ2pythia",
+    "Log(Q^{2}) from e' vs. Log(Q^{2}) from pythia event record",
+    NPLOTBINS,TMath::Log10(Q2min),TMath::Log10(Q2max),
+    NPLOTBINS,TMath::Log10(Q2min),TMath::Log10(Q2max));
+  TH2D * XvsXpythia = new TH2D("XvsXpythia",
+    "Log(x) from e' vs. Log(x) from pythia event record",
+    NPLOTBINS,TMath::Log10(xmin),TMath::Log10(xmax),
+    NPLOTBINS,TMath::Log10(xmin),TMath::Log10(xmax));
+
+  // acceptance plots
   TH2D * elePolar[NBINS];
   TH2D * dihPolar[NBINS];
-  TH2D * hadPolar[NBINS][2];
+  TH2D * hadPolar[2][NBINS];
   TString plotN,plotT,cutT;
-
   for(b=0; b<NBINS; b++) {
 
-    // cut title
-    cutT = Form("%.1f<Q^{2}<%.1f GeV^{2} and %.2f<x<%.2f",
-      Q2Bin[b][0],Q2Bin[b][1],
-      xBin[b][0],xBin[b][1]
-    );
+    // (x,Q2) bin range title
+    cutT = "";
+    if(Q2Bin[b][0]==Q2min && Q2Bin[b][1]==Q2max) cutT += "Full Q^{2}";
+    else cutT += Form("%g<Q^{2}<%g",Q2Bin[b][0],Q2Bin[b][1]);
+    cutT += " and ";
+    if(xBin[b][0]==xmin && xBin[b][1]==xmax) cutT += "Full x";
+    else cutT += Form("%g<x<%g",xBin[b][0],xBin[b][1]);
 
     // -- electron plots
     plotN = Form("elePolar_%d",b);
-    plotT = "e^{-} momentum, for " + cutT +
+    plotT = "e^{-}, for " + cutT +
       ";p_{z} [GeV];p_{T} [GeV]";
     elePolar[b] = new TH2D(plotN,plotT,
-      NPLOTBINS,-PI,PI,NPLOTBINS,0,conf->EbeamEn);
+      N_THETA_BINS,-PI,PI,N_P_BINS,0,conf->EbeamEn);
 
     // -- dihadron plots
     plotN = Form("dihPolar_%d",b);
-    plotT = dihTitle + " momentum, for " + cutT +
+    plotT = dihTitle + ", for " + cutT +
       ";P_{h,z} [GeV];P_{h,T} [GeV]";
     dihPolar[b] = new TH2D(plotN,plotT,
-        NPLOTBINS,-PI,PI,NPLOTBINS,conf->bdHadP[0],conf->bdHadP[1]);
+        N_THETA_BINS,-PI,PI,N_P_BINS,conf->bdHadP[0],conf->bdHadP[1]);
 
     // -- hadron plots
     for(h=0; h<2; h++) {
       plotN = Form("had%dPolar_%d",h+1,b);
-      plotT = hadTitle[h] + " momentum, for " + cutT + 
+      plotT = hadTitle[h] + ", for " + cutT + 
         ";p_{z} [GeV];p_{T} [GeV]";
-      hadPolar[b][h] = new TH2D(plotN,plotT,
-        NPLOTBINS,-PI,PI,NPLOTBINS,conf->bdHadP[0],conf->bdHadP[1]);
+      hadPolar[h][b] = new TH2D(plotN,plotT,
+        N_THETA_BINS,-PI,PI,N_P_BINS,conf->bdHadP[0],conf->bdHadP[1]);
     };
 
   };
@@ -161,74 +194,97 @@ int main(int argc, char** argv) {
   // EVENT LOOP
   ///////////////////////////////////////////////
   printf("begin loop through %lld events...\n",ev->ENT);
+  Bool_t fillPlots;
+  for(b=0; b<NBINS; b++) numEvents[b]=0;
   for(int i=0; i<ev->ENT; i++) {
+    //if(i>10000) break; // limiter
     ev->GetEvent(i);
 
-    // loop over (Q2,x) bins
+    // fill (x,Q2) plots
+    Q2vsXfull->Fill(TMath::Log10(ev->x),TMath::Log10(ev->Q2));
+    Q2vsQ2pythia->Fill(TMath::Log10(ev->Q2_pythia),TMath::Log10(ev->Q2));
+    XvsXpythia->Fill(TMath::Log10(ev->x_pythia),TMath::Log10(ev->x));
+    if(ev->Valid()) {
+      Q2vsXcut->Fill(TMath::Log10(ev->x),TMath::Log10(ev->Q2));
+    };
+
+    // loop over (x,Q2) bins
     for(b=0; b<NBINS; b++) {
 
-      // override (Q2,x) cuts in EventTree
+      // override (x,Q2) cuts in EventTree
       ev->cutQ2 = ev->Q2 > Q2Bin[b][0] && ev->Q2 < Q2Bin[b][1];
       ev->cutX = ev->x > xBin[b][0] && ev->x < xBin[b][1];
       ev->cutDIS = ev->cutQ2 && ev->cutX && ev->cutW && ev->cutY;
 
+      fillPlots = ev->Valid(); // use full cuts
+      //fillPlots = ev->cutDIS; // use DIS cuts only
+
       // fill polar plots
-      if(ev->Valid()) {
+      if(fillPlots) {
         elePolar[b]->Fill(ev->eleTheta,ev->eleP);
         dihPolar[b]->Fill(ev->PhTheta,ev->Ph);
-        for(h=0; h<2; h++) 
-          hadPolar[b][h]->Fill(ev->hadTheta[h],ev->hadP[h]);
+        for(h=0; h<2; h++) hadPolar[h][b]->Fill(ev->hadTheta[h],ev->hadP[h]);
+        numEvents[b]++;
       };
     };
   };
 
 
-  // define polar plot canvases
+  // get maximum number of events of all (x,Q2) bins
+  maxEvents = 0;
+  for(b=0; b<NBINS; b++) {
+    printf("numEvents in bin %d: %.f\n",b,numEvents[b]);
+    maxEvents = numEvents[b]>maxEvents ? numEvents[b]:maxEvents;
+  };
+  printf("maxEvents = %.f\n",maxEvents);
+
+
+  // (x,Q2) plot canvases
+  TCanvas * Q2vsXfullCanv = xQ2Canv(Q2vsXfull);
+  TCanvas * Q2vsXcutCanv = xQ2Canv(Q2vsXcut);
+
+
+  // polar plot canvases
   TCanvas * elePolarCanv[NBINS];
   TCanvas * dihPolarCanv[NBINS];
-  TCanvas * hadPolarCanv[NBINS][2];
+  TCanvas * hadPolarCanv[2][NBINS];
   for(b=0; b<NBINS; b++) {
     elePolarCanv[b] = PolarCanv(elePolar[b]);
     dihPolarCanv[b] = PolarCanv(dihPolar[b]);
     for(h=0; h<2; h++)
-      hadPolarCanv[b][h] = PolarCanv(hadPolar[b][h]);
+      hadPolarCanv[h][b] = PolarCanv(hadPolar[h][b]);
   };
 
 
-  // draw matrix of polar plots in bins of (Q2,x)
+  // draw matrix of polar plots in bins of (x,Q2)
   TString matrixT;
-  TCanvas * elePolarMatrix = 
-    new TCanvas("elePolarMatrix","elePolarMatrix",1000,1000);
-  TCanvas * dihPolarMatrix = 
-    new TCanvas("dihPolarMatrix","dihPolarMatrix",1000,1000);
+  TCanvas * elePolarMatrix = MatrixCanv(elePolarCanv);
+  TCanvas * dihPolarMatrix = MatrixCanv(dihPolarCanv);
   TCanvas * hadPolarMatrix[2];
-  for(h=0; h<2; h++) {
-    matrixT = Form("had%dPolarMatrix",h+1);
-    hadPolarMatrix[h] = new TCanvas(matrixT,matrixT,1000,1000);
-  };
-  elePolarMatrix->Divide(NBINS_Q2,NBINS_x);
-  dihPolarMatrix->Divide(NBINS_Q2,NBINS_x);
-  for(h=0; h<2; h++)
-    hadPolarMatrix[h]->Divide(NBINS_Q2,NBINS_x);
-  for(b=0; b<NBINS; b++) {
-    elePolarMatrix->cd(b+1); elePolarCanv[b]->DrawClonePad();
-    dihPolarMatrix->cd(b+1); dihPolarCanv[b]->DrawClonePad();
-    for(h=0; h<2; h++) {
-      hadPolarMatrix[h]->cd(b+1); hadPolarCanv[b][h]->DrawClonePad();
-    };
-  };
+  for(h=0; h<2; h++) hadPolarMatrix[h] = MatrixCanv(hadPolarCanv[h]);
 
 
   // write output
+  Q2vsXfullCanv->Write();
+  Q2vsXcutCanv->Write();
+
   elePolarMatrix->Write();
   dihPolarMatrix->Write();
-  for(h=0; h<2; h++)
-    hadPolarMatrix[h]->Write();
+  for(h=0; h<2; h++) hadPolarMatrix[h]->Write();
+
+  outfile->mkdir("singlePlots");
+  outfile->cd("singlePlots");
+  Q2vsXfull->Write();
+  Q2vsXcut->Write();
   for(b=0; b<NBINS; b++) elePolarCanv[b]->Write();
   for(b=0; b<NBINS; b++) dihPolarCanv[b]->Write();
-  for(h=0; h<2; h++) {
-    for(b=0; b<NBINS; b++) hadPolarCanv[b][h]->Write();
-  };
+  for(h=0; h<2; h++) { for(b=0; b<NBINS; b++) hadPolarCanv[h][b]->Write(); };
+  outfile->cd("/");
+
+  Q2vsQ2pythia->Write();
+  XvsXpythia->Write();
+
+  outfile->Close();
 
 };
 
@@ -238,33 +294,24 @@ int main(int argc, char** argv) {
 TCanvas * PolarCanv(TH2D * dist) {
 
   // instantiate canvas
-  TString canvN = dist->GetName();
-  canvN = canvN.ReplaceAll("Polar","PolarCanv");
+  TString canvN = TString(dist->GetName()) + "_Canv";
   TCanvas * canv = new TCanvas(canvN,canvN,800,700);
-
-  // draw empty distribution, to use its axes
   Double_t radius = dist->GetYaxis()->GetXmax();
-  Int_t bgbins = dist->GetYaxis()->GetNbins();
-  TString distN = TString(dist->GetName()) + "_bg";
-  TString distT = dist->GetTitle();
-  TH2D * distBG = new TH2D(distN,distT,bgbins,
-    -radius,radius,bgbins/2,0,radius);
-  distBG->SetXTitle(dist->GetXaxis()->GetTitle());
-  distBG->SetYTitle(dist->GetYaxis()->GetTitle());
-  distBG->SetMaximum(dist->GetMaximum());
-  distBG->Draw("colz");
+  canv->SetLogz();
+  canv->DrawFrame(-radius,0,radius,radius,dist->GetTitle());
 
   // draw circles of constant momentum
   const Int_t nCircles = 3;
   TEllipse * circle[nCircles+1];
   Double_t circleRadius;
-  for(int c=0; c<nCircles; c++) {
+  for(int c=0; c<=nCircles; c++) {
     circleRadius = radius - radius*((float)c)/nCircles;
-    circle[c] = new TEllipse(0,0,circleRadius,circleRadius,0,180);
+    if(c<nCircles)
+      circle[c] = new TEllipse(0,0,circleRadius,circleRadius,0,180);
+    else
+      circle[c] = new TEllipse(0,0,1.25,1.25,0,180);
     circle[c]->Draw();
   };
-  circle[nCircles] = new TEllipse(0,0,1.25,1.25,0,180);
-  circle[nCircles]->Draw();
 
   // draw spokes of constant eta
   const Int_t etaSpokeMax = 5;
@@ -280,7 +327,62 @@ TCanvas * PolarCanv(TH2D * dist) {
   etaSpoke[0] = new TLine(0, 0, 0, radius);
   for(int c=0; c<2*etaSpokeMax+1; c++) etaSpoke[c]->Draw();
 
-  // draw polar plot and return canvas
+  // draw polar histogram
+  dist->SetMinimum(1);
+  dist->SetMaximum(maxEvents);
   dist->Draw("pol colz same");
+  return canv;
+};
+
+
+
+// draw bin lines on (x,Q2) plane
+TCanvas * xQ2Canv(TH2D * dist) {
+
+  // instantiate canvas
+  TString canvN = TString(dist->GetName()) + "_Canv";
+  TCanvas * canv = new TCanvas(canvN,canvN,800,700);
+  canv->SetLogz();
+  dist->Draw("colz");
+
+  // bin lines
+  TLine * Q2line[NBINS_Q2];
+  TLine * xline[NBINS_x];
+  for(b=0; b<NBINS_Q2; b++) {
+    Q2line[b] = new TLine(
+      TMath::Log10(xmin),
+      TMath::Log10(binBounds_Q2[b]),
+      TMath::Log10(xmax),
+      TMath::Log10(binBounds_Q2[b])
+    );
+    Q2line[b]->Draw();
+  };
+  for(b=0; b<NBINS_x; b++) {
+    xline[b] = new TLine(
+      TMath::Log10(binBounds_x[b]),
+      TMath::Log10(Q2min),
+      TMath::Log10(binBounds_x[b]),
+      TMath::Log10(Q2max)
+    );
+    xline[b]->Draw();
+  };
+
+  return canv;
+};
+
+
+// return a matrix of (x,Q2) bins, containing plots
+TCanvas * MatrixCanv(TCanvas ** canvArr) {
+  TString canvN = TString(canvArr[0]->GetName()) + "Matrix";
+  canvN = canvN.ReplaceAll("_0_","");
+  TCanvas * canv = new TCanvas(canvN,canvN,1200,1000);
+  canv->Divide(NBINS_x,NBINS_Q2);
+  Int_t pad;
+  for(b=0; b<NBINS; b++) {
+    pad = (NBINS_Q2-b/NBINS_x-1)*NBINS_x + (b%NBINS_x) + 1;
+    //printf("b+1=%d pad=%d\n",b+1,pad);
+    canv->cd(pad);
+    canvArr[b]->DrawClonePad();
+  };
   return canv;
 };

@@ -144,6 +144,20 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
     };
   };
 
+  if(chain->GetBranch("Q2_pythia")) {
+    chain->SetBranchAddress("W_pythia",&W_pythia);
+    chain->SetBranchAddress("Q2_pythia",&Q2_pythia);
+    chain->SetBranchAddress("Nu_pythia",&Nu_pythia);
+    chain->SetBranchAddress("x_pythia",&x_pythia);
+    chain->SetBranchAddress("y_pythia",&y_pythia);
+  } else {
+    W_pythia = UNDEF;
+    Q2_pythia = UNDEF;
+    Nu_pythia = UNDEF;
+    x_pythia = UNDEF;
+    y_pythia = UNDEF;
+  };
+
   if(conf->Experiment=="clas") {
     chain->SetBranchAddress("diphCnt",&diphCnt);
     chain->SetBranchAddress("diphPhotE",diphPhotE);
@@ -310,7 +324,7 @@ void EventTree::GetEvent(Int_t i) {
   cutX = true; // disabled, but can be changed externally (all cuts can be)
   cutW = W > 2.0;
   cutY = y < 0.8;
-  cutDIS = cutQ2 && cutW && cutY;
+  cutDIS = cutQ2 && cutX && cutW && cutY;
 
 
   ///////////////////////////////////

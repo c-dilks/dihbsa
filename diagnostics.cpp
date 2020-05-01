@@ -13,7 +13,6 @@
 #include "TH2.h"
 #include "TCanvas.h"
 #include "TGraph.h"
-#include "TEllipse.h"
 
 // DihBsa
 #include "Constants.h"
@@ -35,7 +34,6 @@ Int_t whichPair;
 Int_t whichHad[2];
 TString hadName[2];
 TString hadTitle[2];
-const Int_t nCircles = 3;
 
 int main(int argc, char** argv) {
 

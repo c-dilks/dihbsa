@@ -165,6 +165,7 @@ class EventTree : public TObject
     // OTHER VARIABLES
     Bool_t useDiphBG;
     Int_t whichSpinMC;
+    Float_t W_pythia,Q2_pythia,Nu_pythia,x_pythia,y_pythia;
 
     /*
     // variables used for MCrec and MCgen matching
