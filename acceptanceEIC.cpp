@@ -48,6 +48,9 @@ Float_t binBounds_x[NBINS_x] = {
 
 //-----------------------------------------------------
 
+enum obsEnum {kEle,kDih,kHadA,kHadB,NOBS};
+int o;
+
 const Int_t NBINS = NBINS_Q2 * NBINS_x;
 Float_t Q2Bin[NBINS][2];
 Float_t xBin[NBINS][2];
@@ -57,8 +60,6 @@ int b;
 TString inDir;
 Int_t whichPair;
 Int_t whichHad[2];
-TString hadTitle[2];
-TString dihTitle;
 int h;
 
 
@@ -77,9 +78,13 @@ int main(int argc, char** argv) {
 
   // get hadron pair from whichPair; note that in the print out, the 
   // order of hadron 0 and 1 is set by Constants::dihHadIdx
+  TString hadTitle[2];
+  TString hadName[2];
+  TString dihTitle;
   printf("whichPair = 0x%x\n",whichPair);
   DecodePairType(whichPair,whichHad[qA],whichHad[qB]);
   for(h=0; h<2; h++) {
+    hadName[h] = PairHadName(whichHad[qA],whichHad[qB],h);
     hadTitle[h] = PairHadTitle(whichHad[qA],whichHad[qB],h);
     printf("hadron %d:  idx=%d  hadron=%s\n",
         h,dihHadIdx(whichHad[qA],whichHad[qB],h),hadTitle[h].Data());
@@ -87,11 +92,19 @@ int main(int argc, char** argv) {
   dihTitle = PairTitle(whichPair);
   printf("dihadron=%s\n",dihTitle.Data());
 
+  // set names and titles for observables
+  TString obsN[NOBS];
+  TString obsT[NOBS];
+  obsN[kEle] = "ele"; obsT[kEle] = "e'"; 
+  obsN[kDih] = "dihadron"; obsT[kDih] = dihTitle;
+  obsN[kHadA] = "hadA"; obsT[kHadA] = hadTitle[qA];
+  obsN[kHadB] = "hadB"; obsT[kHadB] = hadTitle[qB];
+
+
+  // setup
   EventTree * ev = new EventTree(TString(inDir+"/*.root"),whichPair);
   Config * conf = new Config();
   gStyle->SetOptStat(0);
-
-
   TFile * outfile = new TFile("eicPlots.root","RECREATE");
 
 
@@ -144,44 +157,36 @@ int main(int argc, char** argv) {
     NPLOTBINS,TMath::Log10(xmin),TMath::Log10(xmax),
     NPLOTBINS,TMath::Log10(xmin),TMath::Log10(xmax));
 
+
   // acceptance plots
-  TH2D * elePolar[NBINS];
-  TH2D * dihPolar[NBINS];
-  TH2D * hadPolar[2][NBINS];
+  TH2D * accPolar[NOBS][NBINS];
   TString plotN,plotT,cutT;
-  for(b=0; b<NBINS; b++) {
+  Float_t pHigh;
+  for(o=0; o<NOBS; o++) {
+    for(b=0; b<NBINS; b++) {
 
-    // (x,Q2) bin range title
-    cutT = "";
-    if(Q2Bin[b][0]==Q2min && Q2Bin[b][1]==Q2max) cutT += "Full Q^{2}";
-    else cutT += Form("%g<Q^{2}<%g",Q2Bin[b][0],Q2Bin[b][1]);
-    cutT += " and ";
-    if(xBin[b][0]==xmin && xBin[b][1]==xmax) cutT += "Full x";
-    else cutT += Form("%g<x<%g",xBin[b][0],xBin[b][1]);
+      // (x,Q2) bin range title
+      cutT = "";
+      if(Q2Bin[b][0]==Q2min && Q2Bin[b][1]==Q2max) cutT += "Full Q^{2}";
+      else cutT += Form("%g<Q^{2}<%g",Q2Bin[b][0],Q2Bin[b][1]);
+      cutT += " and ";
+      if(xBin[b][0]==xmin && xBin[b][1]==xmax) cutT += "Full x";
+      else cutT += Form("%g<x<%g",xBin[b][0],xBin[b][1]);
 
-    // -- electron plots
-    plotN = Form("elePolar_%d",b);
-    plotT = "e^{-}, for " + cutT +
-      ";p_{z} [GeV];p_{T} [GeV]";
-    elePolar[b] = new TH2D(plotN,plotT,
-      N_THETA_BINS,-PI,PI,N_P_BINS,0,conf->EbeamEn);
+      // bin boundaries
+      if(o==kEle) {
+        pHigh = conf->EbeamEn;
+      } else if(o==kDih || o==kHadA || o==kHadB) {
+        pHigh = conf->bdHadP[1];
+      };
 
-    // -- dihadron plots
-    plotN = Form("dihPolar_%d",b);
-    plotT = dihTitle + ", for " + cutT +
-      ";P_{h,z} [GeV];P_{h,T} [GeV]";
-    dihPolar[b] = new TH2D(plotN,plotT,
-        N_THETA_BINS,-PI,PI,N_P_BINS,conf->bdHadP[0],conf->bdHadP[1]);
-
-    // -- hadron plots
-    for(h=0; h<2; h++) {
-      plotN = Form("had%dPolar_%d",h+1,b);
-      plotT = hadTitle[h] + ", for " + cutT + 
-        ";p_{z} [GeV];p_{T} [GeV]";
-      hadPolar[h][b] = new TH2D(plotN,plotT,
-        N_THETA_BINS,-PI,PI,N_P_BINS,conf->bdHadP[0],conf->bdHadP[1]);
+      // instantiate plots
+      plotN = Form("%sPolar_%d",obsN[o].Data(),b);
+      plotT = obsT[o] + ", for " + cutT + ";p_{z} [GeV];p_{T} [GeV]";
+      accPolar[o][b] = new TH2D(plotN,plotT,
+        N_THETA_BINS,-PI,PI,
+        N_P_BINS,0,pHigh);
     };
-
   };
 
 
@@ -221,9 +226,10 @@ int main(int argc, char** argv) {
 
       // fill polar plots
       if(fillPlots) {
-        elePolar[b]->Fill(ev->eleTheta,ev->eleP);
-        dihPolar[b]->Fill(ev->PhTheta,ev->Ph);
-        for(h=0; h<2; h++) hadPolar[h][b]->Fill(ev->hadTheta[h],ev->hadP[h]);
+        accPolar[kEle][b]->Fill(ev->eleTheta,ev->eleP);
+        accPolar[kDih][b]->Fill(ev->PhTheta,ev->Ph);
+        accPolar[kHadA][b]->Fill(ev->hadTheta[qA],ev->hadP[qA]);
+        accPolar[kHadB][b]->Fill(ev->hadTheta[qB],ev->hadP[qB]);
         numEvents[b]++;
       };
     };
@@ -245,40 +251,29 @@ int main(int argc, char** argv) {
 
 
   // polar plot canvases
-  TCanvas * elePolarCanv[NBINS];
-  TCanvas * dihPolarCanv[NBINS];
-  TCanvas * hadPolarCanv[2][NBINS];
-  for(b=0; b<NBINS; b++) {
-    elePolarCanv[b] = PolarCanv(elePolar[b]);
-    dihPolarCanv[b] = PolarCanv(dihPolar[b]);
-    for(h=0; h<2; h++)
-      hadPolarCanv[h][b] = PolarCanv(hadPolar[h][b]);
+  TCanvas * accPolarCanv[NOBS][NBINS];
+  TCanvas * accPolarMatrix[NOBS];
+  for(o=0; o<NOBS; o++) {
+    for(b=0; b<NBINS; b++) {
+      accPolarCanv[o][b] = PolarCanv(accPolar[o][b]);
+    };
+    accPolarMatrix[o] = MatrixCanv(accPolarCanv[o]);
   };
-
-
-  // draw matrix of polar plots in bins of (x,Q2)
-  TString matrixT;
-  TCanvas * elePolarMatrix = MatrixCanv(elePolarCanv);
-  TCanvas * dihPolarMatrix = MatrixCanv(dihPolarCanv);
-  TCanvas * hadPolarMatrix[2];
-  for(h=0; h<2; h++) hadPolarMatrix[h] = MatrixCanv(hadPolarCanv[h]);
 
 
   // write output
   Q2vsXfullCanv->Write();
   Q2vsXcutCanv->Write();
 
-  elePolarMatrix->Write();
-  dihPolarMatrix->Write();
-  for(h=0; h<2; h++) hadPolarMatrix[h]->Write();
+  for(o=0; o<NOBS; o++) accPolarMatrix[o]->Write();
 
   outfile->mkdir("singlePlots");
   outfile->cd("singlePlots");
   Q2vsXfull->Write();
   Q2vsXcut->Write();
-  for(b=0; b<NBINS; b++) elePolarCanv[b]->Write();
-  for(b=0; b<NBINS; b++) dihPolarCanv[b]->Write();
-  for(h=0; h<2; h++) { for(b=0; b<NBINS; b++) hadPolarCanv[h][b]->Write(); };
+  for(o=0; o<NOBS; o++) {
+    for(b=0; b<NBINS; b++) accPolarCanv[o][b]->Write();
+  };
   outfile->cd("/");
 
   Q2vsQ2pythia->Write();
@@ -296,9 +291,18 @@ TCanvas * PolarCanv(TH2D * dist) {
   // instantiate canvas
   TString canvN = TString(dist->GetName()) + "_Canv";
   TCanvas * canv = new TCanvas(canvN,canvN,800,700);
-  Double_t radius = dist->GetYaxis()->GetXmax();
   canv->SetLogz();
-  canv->DrawFrame(-radius,0,radius,radius,dist->GetTitle());
+  Double_t radius = dist->GetYaxis()->GetXmax();
+
+  // instantiate frame (because TPad::DrawFrame does not use unique names)
+  //canv->DrawFrame(-radius,0,radius,radius,dist->GetTitle());
+  TH1F * frame = new TH1F(TString(canvN+"frame"),dist->GetTitle(),
+    1000,-radius,radius);
+  frame->SetBit(TH1::kNoStats);
+  frame->SetMinimum(0);
+  frame->SetMaximum(radius);
+  frame->GetYaxis()->SetLimits(0,radius);
+  frame->Draw(" ");
 
   // draw circles of constant momentum
   const Int_t nCircles = 3;
