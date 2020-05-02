@@ -104,7 +104,7 @@ class EventTree : public TObject
     Float_t theta;
 
     Float_t Ph,PhPerp;
-    Float_t PhEta,PhTheta,PhPhi;
+    Float_t PhEta,PhTheta,PhPhi,PhPt;
     Float_t R,RPerp,RT;
 
     // event-level branches

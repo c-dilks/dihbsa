@@ -274,6 +274,7 @@ void EventTree::GetEvent(Int_t i) {
   };
   eleTheta = Tools::EtaToTheta(eleEta);
   PhTheta = Tools::EtaToTheta(PhEta);
+  PhPt = Ph * TMath::Sin(PhTheta);
 
 
   // diphoton and pi0/BG cuts
@@ -322,8 +323,8 @@ void EventTree::GetEvent(Int_t i) {
   //cutQ2 = Q2 > 1.0;
   cutQ2 = true; // DISABLE Q2 CUT
   cutX = true; // disabled, but can be changed externally (all cuts can be)
-  cutW = W > 2.0;
-  cutY = y < 0.8;
+  cutW = W>2.0;
+  cutY = y<0.95 && y>0.01;
   cutDIS = cutQ2 && cutX && cutW && cutY;
 
 
@@ -335,7 +336,8 @@ void EventTree::GetEvent(Int_t i) {
     Mmiss > 1.5 &&
     xF > 0 &&
     Z[qA] > 0.01 && Z[qB] > 0.01 &&
-    hadP[qA] > 1.0 && hadP[qB] > 1.0;
+    hadP[qA] > 1.0 && hadP[qB] > 1.0 &&
+    hadPt[qA] > 0.5 && hadPt[qB] > 0.5;
 
   // cutDihadron is the full dihadron cut
   cutDihadron = 

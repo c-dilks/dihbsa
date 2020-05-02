@@ -36,7 +36,7 @@ Config::Config() {
     bdQ2[0] = 0;          bdQ2[1] = 12;
     bdW[0] = 0;           bdW[1] = 6;
     bdMh[0] = 0;          bdMh[1] = 3;
-    bdMmiss[0] = 0;      bdMmiss[1] = 6;
+    bdMmiss[0] = 0;       bdMmiss[1] = 6;
     bdEta[0] = -1;        bdEta[1] = 5;
     bdHadP[0] = 0;        bdHadP[1] = 10;
   }
@@ -44,8 +44,8 @@ Config::Config() {
     bdQ2[0] = 0;          bdQ2[1] = 200;
     bdW[0] = 0;           bdW[1] = 60;
     bdMh[0] = 0;          bdMh[1] = 30;
-    bdMmiss[0] = 0;     bdMmiss[1] = 60;
-    bdEta[0] = -15;       bdEta[1] = 15;
+    bdMmiss[0] = 0;       bdMmiss[1] = 60;
+    bdEta[0] = -5;        bdEta[1] = 5;
     bdHadP[0] = 0;        bdHadP[1] = 70;
   };
 
