@@ -79,15 +79,21 @@ class Tools {
     // set equal size binning for a log-scale histogram's axis
     static void BinLog(TAxis * axis)
     {
-      int bins = axis->GetNbins();
+      Float_t lb = axis->GetXmin();
+      Float_t ub = axis->GetXmax();
+      if(lb<=0||ub<=0||lb>=ub) {
+        fprintf(stderr,"ERROR: bad axis range for Tools::BinLog\n");
+        return;
+      };
+      lb = TMath::Log10(lb);
+      ub = TMath::Log10(ub);
 
-      Axis_t from = axis->GetXmin();
-      Axis_t to = axis->GetXmax();
-      Axis_t width = (to-from) / bins;
-      Axis_t * new_bins = new Axis_t[bins+1];
-      for (int i=0; i<=bins; i++) new_bins[i] = TMath::Power(10,from+i*width);
-      axis->Set(bins, new_bins);
-      delete[] new_bins;
+      Int_t nbins = axis->GetNbins();
+      Float_t width = (ub-lb)/nbins;
+      Float_t * newBins = new Float_t[nbins+1];
+      for (int b=0; b<=nbins; b++) newBins[b] = TMath::Power(10,lb+b*width);
+      axis->Set(nbins,newBins);
+      delete[] newBins;
     } 
 
     
