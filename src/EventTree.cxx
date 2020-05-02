@@ -336,8 +336,8 @@ void EventTree::GetEvent(Int_t i) {
     Mmiss > 1.5 &&
     xF > 0 &&
     Z[qA] > 0.01 && Z[qB] > 0.01 &&
-    hadP[qA] > 1.0 && hadP[qB] > 1.0 &&
-    hadPt[qA] > 0.5 && hadPt[qB] > 0.5;
+    hadP[qA] > 1.0 && hadP[qB] > 1.0;
+    
 
   // cutDihadron is the full dihadron cut
   cutDihadron = 

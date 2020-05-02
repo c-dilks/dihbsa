@@ -31,11 +31,10 @@
 Float_t Q2min = 1e-2; Float_t Q2max = 1e+3;
 Float_t xmin = 1e-4;  Float_t xmax = 1;
 
-const Int_t NBINS_Q2 = 4;
+const Int_t NBINS_Q2 = 3;
 Float_t binBounds_Q2[NBINS_Q2] = {
   Q2min,
-  2.5,
-  10,
+  5,
   Q2max 
 };
 
@@ -66,7 +65,8 @@ int h;
 TCanvas * PolarCanv(TH2D * dist, TString format);
 TCanvas * xQ2Canv(TH2D * dist);
 TCanvas * MatrixifyCanv(TCanvas ** canvArr);
-TCanvas * MatrixifyDist(TH2F ** distArr, Bool_t logx, Bool_t logy);
+TCanvas * MatrixifyDist1(TH1D ** distArr,Bool_t logx,Bool_t logy);
+TCanvas * MatrixifyDist2(TH2D ** distArr,Bool_t logx,Bool_t logy,Bool_t logz);
 
 
 int main(int argc, char** argv) {
@@ -96,17 +96,21 @@ int main(int argc, char** argv) {
   // set names and titles for observables
   TString obsN[NOBS];
   TString obsT[NOBS];
-  obsN[kEle] = "ele"; obsT[kEle] = "e'"; 
-  obsN[kDih] = "dih"; obsT[kDih] = dihTitle;
-  obsN[kHadA] = "hadA"; obsT[kHadA] = hadTitle[qA];
-  obsN[kHadB] = "hadB"; obsT[kHadB] = hadTitle[qB];
+  obsN[kEle] = "electron"; obsT[kEle] = "e'"; 
+  obsN[kDih] = "dihadron"; obsT[kDih] = dihTitle;
+  obsN[kHadA] = "hadronA"; obsT[kHadA] = hadTitle[qA];
+  obsN[kHadB] = "hadronB"; obsT[kHadB] = hadTitle[qB];
 
 
   // setup
   EventTree * ev = new EventTree(inFiles,whichPair);
   Config * conf = new Config();
   gStyle->SetOptStat(0);
-  TFile * outfile = new TFile("eicPlots.root","RECREATE");
+  TString outfileN= inFiles;
+  if(inFiles.Contains("*")) outfileN = "eicPlots.root";
+  else outfileN(TRegexp("^.*/")) = "eicPlots.";
+  printf("outfileN = %s\n",outfileN.Data());
+  TFile * outfile = new TFile(outfileN,"RECREATE");
 
 
   // remap all bin bounds into a 1-dimensional array
@@ -166,6 +170,11 @@ int main(int argc, char** argv) {
   TH2D * PtVsPzHiP[NOBS][NBINS];
   TH2D * EtaVsP[NOBS][NBINS];
   TH2D * EtaVsPt[NOBS][NBINS];
+  TH2D * EtaVsZ[NOBS][NBINS];
+  // - dihadrons only
+  TH2D * PhiHvsPhiR[NBINS];
+  TH1D * distMh[NBINS];
+  ////
   TString plotN,plotT,cutT;
   Float_t pMaxLo,pMaxHi;
   for(o=0; o<NOBS; o++) {
@@ -206,11 +215,39 @@ int main(int argc, char** argv) {
       plotT = obsT[o] + " #eta vs. p, for " + cutT + ";p [GeV];#eta";
       plotN = Form("%s_EtaVsP_%d",obsN[o].Data(),b);
       EtaVsP[o][b] = new TH2D(plotN,plotT,
-        N_P_BINS, 0.01, pMaxLo, N_P_BINS, conf->bdEta[0], conf->bdEta[1]);
+        N_P_BINS, TMath::Log10(0.1), TMath::Log10(3*pMaxLo),
+        N_P_BINS, conf->bdEta[0], conf->bdEta[1]);
+      Tools::BinLog(EtaVsP[o][b]->GetXaxis());
+
       plotT = obsT[o] + " #eta vs. p_{T}, for " + cutT + ";p_{T} [GeV];#eta";
       plotN = Form("%s_EtaVsPt_%d",obsN[o].Data(),b);
       EtaVsPt[o][b] = new TH2D(plotN,plotT,
-        N_P_BINS, 0.01, pMaxLo, N_P_BINS, conf->bdEta[0], conf->bdEta[1]);
+        N_P_BINS, TMath::Log10(0.1), TMath::Log10(1.5*pMaxLo),
+        N_P_BINS, conf->bdEta[0], conf->bdEta[1]);
+      Tools::BinLog(EtaVsPt[o][b]->GetXaxis());
+
+      plotT = obsT[o] + " #eta vs. z, for " + cutT + ";z;#eta";
+      plotN = Form("%s_EtaVsZ_%d",obsN[o].Data(),b);
+      EtaVsZ[o][b] = new TH2D(plotN,plotT,
+        N_P_BINS, 0, 1, N_P_BINS, conf->bdEta[0], conf->bdEta[1]);
+
+      if(o==kDih) {
+
+        plotT = obsT[o] + " #phi_{h} vs. #phi_{R}, for " + cutT + 
+          ";#phi_{R};#phi_{h}";
+        plotN = Form("%s_PhiHvsPhiR_%d",obsN[o].Data(),b);
+        PhiHvsPhiR[b] = new TH2D(plotN,plotT,
+          N_P_BINS, -PI, PI, N_P_BINS, -PI, PI);
+
+        plotT = obsT[o] + " M_{h} distribution, for " + cutT + ";M_{h}";
+          "#phi_{R};#phi_{h}";
+        plotN = Form("%s_Mh_%d",obsN[o].Data(),b);
+        distMh[b] = new TH1D(plotN,plotT,
+          3*N_P_BINS, 0, 3);
+        distMh[b]->SetFillColor(kRed);
+        distMh[b]->SetLineColor(kRed);
+
+      };
     };
   };
 
@@ -221,7 +258,7 @@ int main(int argc, char** argv) {
 
   // prepare for event loop
   Bool_t fillPlots;
-  Float_t oP,oPt,oTheta,oEta;
+  Float_t oP,oPt,oTheta,oEta,oZ;
   for(b=0; b<NBINS; b++) numEvents[b]=0;
 
 
@@ -261,24 +298,28 @@ int main(int argc, char** argv) {
               oPt = ev->elePt;
               oTheta = ev->eleTheta;
               oEta = ev->eleEta;
+              oZ = UNDEF;
               break;
             case kDih:
               oP = ev->Ph;
               oPt = ev->PhPt;
               oTheta = ev->PhTheta;
               oEta = ev->PhEta;
+              oZ = ev->Zpair;
               break;
             case kHadA:
               oP = ev->hadP[qA];
               oPt = ev->hadPt[qA];
               oTheta = ev->hadTheta[qA];
               oEta = ev->hadEta[qA];
+              oZ = ev->Z[qA];
               break;
             case kHadB:
               oP = ev->hadP[qB];
               oPt = ev->hadPt[qB];
               oTheta = ev->hadTheta[qB];
               oEta = ev->hadEta[qB];
+              oZ = ev->Z[qB];
               break;
           };
 
@@ -288,7 +329,11 @@ int main(int argc, char** argv) {
           PtVsPzHiP[o][b]->Fill(oP*TMath::Cos(oTheta),oPt);
           EtaVsP[o][b]->Fill(oP,oEta);
           EtaVsPt[o][b]->Fill(oPt,oEta);
-
+          EtaVsZ[o][b]->Fill(oZ,oEta);
+          if(o==kDih) {
+            PhiHvsPhiR[b]->Fill(ev->PhiR,ev->PhiH);
+            distMh[b]->Fill(ev->Mh);
+          };
         };
 
         numEvents[b]++;
@@ -334,26 +379,42 @@ int main(int argc, char** argv) {
   TCanvas * PtVsPzHiPMatrix[NOBS];
   TCanvas * EtaVsPMatrix[NOBS];
   TCanvas * EtaVsPtMatrix[NOBS];
+  TCanvas * EtaVsZMatrix[NOBS];
+  TCanvas * PhiHvsPhiRMatrix;
+  TCanvas * distMhMatrix;
   for(o=0; o<NOBS; o++) {
     accPolarLoPMatrix[o] = MatrixifyCanv(accPolarLoPCanv[o]);
     accPolarHiPMatrix[o] = MatrixifyCanv(accPolarHiPCanv[o]);
     PtVsPzLoPMatrix[o] = MatrixifyCanv(PtVsPzLoPCanv[o]);
     PtVsPzHiPMatrix[o] = MatrixifyCanv(PtVsPzHiPCanv[o]);
-    EtaVsPMatrix[o] = MatrixifyDist(EtaVsP[o],1,0);
-    EtaVsPtMatrix[o] = MatrixifyDist(EtaVsPt[o],1,0);
+    EtaVsPMatrix[o] = MatrixifyDist2(EtaVsP[o],1,0,1);
+    EtaVsPtMatrix[o] = MatrixifyDist2(EtaVsPt[o],1,0,1);
+    EtaVsZMatrix[o] = MatrixifyDist2(EtaVsZ[o],0,0,1);
   };
+  PhiHvsPhiRMatrix = MatrixifyDist2(PhiHvsPhiR,0,0,1);
+  distMhMatrix = MatrixifyDist1(distMh,0,0);
 
 
   // write output
   Q2vsXfullCanv->Write();
   Q2vsXcutCanv->Write();
 
-  for(o=0; o<NOBS; o++) accPolarLoPMatrix[o]->Write();
-  for(o=0; o<NOBS; o++) accPolarHiPMatrix[o]->Write();
-  for(o=0; o<NOBS; o++) PtVsPzLoPMatrix[o]->Write();
-  for(o=0; o<NOBS; o++) PtVsPzHiPMatrix[o]->Write();
-  for(o=0; o<NOBS; o++) EtaVsPMatrix[o]->Write();
-  for(o=0; o<NOBS; o++) EtaVsPtMatrix[o]->Write();
+  for(o=0; o<NOBS; o++) {
+    outfile->mkdir(obsN[o]);
+    outfile->cd(obsN[o]);
+    accPolarLoPMatrix[o]->Write();
+    accPolarHiPMatrix[o]->Write();
+    PtVsPzLoPMatrix[o]->Write();
+    PtVsPzHiPMatrix[o]->Write();
+    EtaVsPMatrix[o]->Write();
+    EtaVsPtMatrix[o]->Write();
+    if(o!=kEle) EtaVsZMatrix[o]->Write();
+    if(o==kDih) {
+      PhiHvsPhiRMatrix->Write();
+      distMhMatrix->Write();
+    };
+    outfile->cd("/");
+  };
 
   outfile->mkdir("singlePlots");
   outfile->cd("singlePlots");
@@ -366,6 +427,11 @@ int main(int argc, char** argv) {
     for(b=0; b<NBINS; b++) PtVsPzHiPCanv[o][b]->Write();
     for(b=0; b<NBINS; b++) EtaVsP[o][b]->Write();
     for(b=0; b<NBINS; b++) EtaVsPt[o][b]->Write();
+    if(o!=kEle) { for(b=0; b<NBINS; b++) EtaVsZ[o][b]->Write(); };
+    if(o==kDih) {
+      for(b=0; b<NBINS; b++) PhiHvsPhiR[b]->Write();
+      for(b=0; b<NBINS; b++) distMh[b]->Write();
+    };
   };
   outfile->cd("/");
 
@@ -391,6 +457,8 @@ TCanvas * PolarCanv(TH2D * dist, TString format) {
   //canv->DrawFrame(-radius,0,radius,radius,dist->GetTitle());
   TH1F * frame = new TH1F(TString(canvN+"frame"),dist->GetTitle(),
     1000,-radius,radius);
+  frame->SetXTitle(dist->GetXaxis()->GetTitle());
+  frame->SetYTitle(dist->GetYaxis()->GetTitle());
   frame->SetBit(TH1::kNoStats);
   frame->SetMinimum(0);
   frame->SetMaximum(radius);
@@ -472,7 +540,7 @@ TCanvas * xQ2Canv(TH2D * dist) {
 TCanvas * MatrixifyCanv(TCanvas ** canvArr) {
   TString canvN = TString(canvArr[0]->GetName()) + "Matrix";
   canvN = canvN.ReplaceAll("_0_","_");
-  TCanvas * canv = new TCanvas(canvN,canvN,1200,1000);
+  TCanvas * canv = new TCanvas(canvN,canvN,400*NBINS_x,300*NBINS_Q2);
   canv->Divide(NBINS_x,NBINS_Q2);
   Int_t pad;
   for(b=0; b<NBINS; b++) {
@@ -483,15 +551,32 @@ TCanvas * MatrixifyCanv(TCanvas ** canvArr) {
   };
   return canv;
 };
-TCanvas * MatrixifyDist(TH2F ** distArr, Bool_t logx, Bool_t logy) {
+
+TCanvas * MatrixifyDist1(TH1D ** distArr,Bool_t logx,Bool_t logy) {
   TCanvas * canvases[NBINS];
   TString canvN;
   for(b=0; b<NBINS; b++) {
-    canvN = TString(distArr[b]->GetName()) + "Canv";
+    canvN = TString(distArr[b]->GetName()) + "_Canv";
     canvases[b] = new TCanvas(canvN,canvN,800,700);
     if(logx) canvases[b]->SetLogx();
     if(logy) canvases[b]->SetLogy();
-    distArr->Draw("colz");
+    canvases[b]->SetGrid(1,1);
+    distArr[b]->Draw();
+  };
+  return MatrixifyCanv(canvases);
+};
+
+TCanvas * MatrixifyDist2(TH2D ** distArr,Bool_t logx,Bool_t logy,Bool_t logz) {
+  TCanvas * canvases[NBINS];
+  TString canvN;
+  for(b=0; b<NBINS; b++) {
+    canvN = TString(distArr[b]->GetName()) + "_Canv";
+    canvases[b] = new TCanvas(canvN,canvN,800,700);
+    if(logx) canvases[b]->SetLogx();
+    if(logy) canvases[b]->SetLogy();
+    if(logz) canvases[b]->SetLogz();
+    canvases[b]->SetGrid(1,1);
+    distArr[b]->Draw("colz");
   };
   return MatrixifyCanv(canvases);
 };

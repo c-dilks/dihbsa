@@ -43,7 +43,7 @@ Config::Config() {
   else if(this->Experiment=="eic") {
     bdQ2[0] = 0;          bdQ2[1] = 200;
     bdW[0] = 0;           bdW[1] = 60;
-    bdMh[0] = 0;          bdMh[1] = 30;
+    bdMh[0] = 0;          bdMh[1] = 5;
     bdMmiss[0] = 0;       bdMmiss[1] = 60;
     bdEta[0] = -5;        bdEta[1] = 5;
     bdHadP[0] = 0;        bdHadP[1] = 70;

@@ -6,6 +6,7 @@
 #include "TMath.h"
 #include "TH1.h"
 #include "TH2.h"
+#include "TAxis.h"
 #include "TProfile.h"
 #include "TLorentzVector.h"
 #include "Constants.h"
@@ -74,6 +75,20 @@ class Tools {
       fprintf(stderr,"Tools::GetLastFilledX called on empty histogram\n");
       return UNDEF;
     };
+
+    // set equal size binning for a log-scale histogram's axis
+    static void BinLog(TAxis * axis)
+    {
+      int bins = axis->GetNbins();
+
+      Axis_t from = axis->GetXmin();
+      Axis_t to = axis->GetXmax();
+      Axis_t width = (to-from) / bins;
+      Axis_t * new_bins = new Axis_t[bins+1];
+      for (int i=0; i<=bins; i++) new_bins[i] = TMath::Power(10,from+i*width);
+      axis->Set(bins, new_bins);
+      delete[] new_bins;
+    } 
 
     
     // get angle between two vectors
