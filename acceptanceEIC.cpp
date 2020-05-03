@@ -31,19 +31,15 @@
 Float_t Q2min = 1e-2; Float_t Q2max = 1e+3;
 Float_t xmin = 1e-4;  Float_t xmax = 1;
 
+// TODO: implement better
+Float_t Q2mid=5; Float_t xmid=0.02; Float_t EbeamEn=10; // 10x100
+//Float_t Q2mid=10; Float_t xmid=0.004; Float_t EbeamEn=20; // 20x250
+
 const Int_t NBINS_Q2 = 3;
-Float_t binBounds_Q2[NBINS_Q2] = {
-  Q2min,
-  5,
-  Q2max 
-};
+Float_t binBounds_Q2[NBINS_Q2] = {Q2min,Q2mid,Q2max};
 
 const Int_t NBINS_x = 3;
-Float_t binBounds_x[NBINS_x] = {
-  xmin,
-  0.02,
-  xmax
-};
+Float_t binBounds_x[NBINS_x] = {xmin,xmid,xmax};
 
 //-----------------------------------------------------
 
@@ -54,7 +50,6 @@ const Int_t NBINS = NBINS_Q2 * NBINS_x;
 Float_t Q2Bin[NBINS][2];
 Float_t xBin[NBINS][2];
 Double_t numEvents[NBINS];
-Double_t maxEvents;
 int b;
 TString inFiles;
 Int_t whichPair;
@@ -62,7 +57,7 @@ Int_t whichHad[2];
 int h;
 
 
-TCanvas * PolarCanv(TH2D * dist, TString format);
+TCanvas * PolarCanv(TH2D * dist, TString format, Double_t max);
 TCanvas * xQ2Canv(TH2D * dist);
 TCanvas * MatrixifyCanv(TCanvas ** canvArr);
 TCanvas * MatrixifyDist1(TH1D ** distArr,Bool_t logx,Bool_t logy);
@@ -199,7 +194,7 @@ int main(int argc, char** argv) {
 
       // bin boundaries
       if(o==kEle) {
-        pMaxLo = conf->EbeamEn;
+        pMaxLo = EbeamEn;
         pMaxHi = 3*pMaxLo;
       } else if(o==kDih || o==kHadA || o==kHadB) {
         pMaxLo = 10;
@@ -392,15 +387,11 @@ int main(int argc, char** argv) {
       };
     };
   };
-
-
-  // get maximum number of events of all (x,Q2) bins
-  maxEvents = 0;
   for(b=0; b<NBINS; b++) {
     printf("numEvents in bin %d: %.f\n",b,numEvents[b]);
-    maxEvents = numEvents[b]>maxEvents ? numEvents[b]:maxEvents;
   };
-  printf("maxEvents = %.f\n",maxEvents);
+
+
 
 
   // (x,Q2) plot canvases
@@ -413,12 +404,25 @@ int main(int argc, char** argv) {
   TCanvas * accPolarHiPCanv[NOBS][NBINS];
   TCanvas * PtVsPzLoPCanv[NOBS][NBINS];
   TCanvas * PtVsPzHiPCanv[NOBS][NBINS];
+  Double_t polarMaxLoP;
+  Double_t polarMaxHiP;
   for(o=0; o<NOBS; o++) {
+    polarMaxLoP = polarMaxHiP = 0;
     for(b=0; b<NBINS; b++) {
-      accPolarLoPCanv[o][b] = PolarCanv(accPolarLoP[o][b],"pol colz");
-      accPolarHiPCanv[o][b] = PolarCanv(accPolarHiP[o][b],"pol colz");
-      PtVsPzLoPCanv[o][b] = PolarCanv(PtVsPzLoP[o][b],"colz");
-      PtVsPzHiPCanv[o][b] = PolarCanv(PtVsPzHiP[o][b],"colz");
+      polarMaxLoP = accPolarLoP[o][b]->GetMaximum() > polarMaxLoP ?
+                    accPolarLoP[o][b]->GetMaximum() : polarMaxLoP;
+      polarMaxHiP = accPolarHiP[o][b]->GetMaximum() > polarMaxHiP ?
+                    accPolarHiP[o][b]->GetMaximum() : polarMaxHiP;
+    };
+    for(b=0; b<NBINS; b++) {
+      accPolarLoPCanv[o][b] = 
+        PolarCanv(accPolarLoP[o][b],"pol colz",polarMaxLoP);
+      accPolarHiPCanv[o][b] =
+        PolarCanv(accPolarHiP[o][b],"pol colz",polarMaxHiP);
+      PtVsPzLoPCanv[o][b] =
+        PolarCanv(PtVsPzLoP[o][b],"colz",polarMaxLoP);
+      PtVsPzHiPCanv[o][b] =
+        PolarCanv(PtVsPzHiP[o][b],"colz",polarMaxHiP);
     };
   };
 
@@ -520,7 +524,7 @@ int main(int argc, char** argv) {
 
 
 // take a TH2D and make a polar plot
-TCanvas * PolarCanv(TH2D * dist, TString format) {
+TCanvas * PolarCanv(TH2D * dist, TString format, Double_t max) {
 
   // instantiate canvas
   TString canvN = TString(dist->GetName()) + "_Canv";
@@ -569,7 +573,7 @@ TCanvas * PolarCanv(TH2D * dist, TString format) {
 
   // draw polar histogram
   dist->SetMinimum(1);
-  dist->SetMaximum(maxEvents);
+  dist->SetMaximum(max);
   dist->Draw(TString(format+" same"));
   return canv;
 };
@@ -623,12 +627,17 @@ TCanvas * MatrixifyCanv(TCanvas ** canvArr) {
 TCanvas * MatrixifyDist1(TH1D ** distArr,Bool_t logx,Bool_t logy) {
   TCanvas * canvases[NBINS];
   TString canvN;
+  Double_t max = 0;
+  for(b=0; b<NBINS; b++) {
+    max = distArr[b]->GetMaximum() > max ? distArr[b]->GetMaximum() : max;
+  };
   for(b=0; b<NBINS; b++) {
     canvN = TString(distArr[b]->GetName()) + "_Canv";
     canvases[b] = new TCanvas(canvN,canvN,800,700);
     if(logx) canvases[b]->SetLogx();
     if(logy) canvases[b]->SetLogy();
     canvases[b]->SetGrid(1,1);
+    distArr[b]->SetMaximum(max);
     distArr[b]->Draw();
   };
   return MatrixifyCanv(canvases);
@@ -637,6 +646,10 @@ TCanvas * MatrixifyDist1(TH1D ** distArr,Bool_t logx,Bool_t logy) {
 TCanvas * MatrixifyDist2(TH2D ** distArr,Bool_t logx,Bool_t logy,Bool_t logz) {
   TCanvas * canvases[NBINS];
   TString canvN;
+  Double_t max = 0;
+  for(b=0; b<NBINS; b++) {
+    max = distArr[b]->GetMaximum() > max ? distArr[b]->GetMaximum() : max;
+  };
   for(b=0; b<NBINS; b++) {
     canvN = TString(distArr[b]->GetName()) + "_Canv";
     canvases[b] = new TCanvas(canvN,canvN,800,700);
@@ -644,6 +657,7 @@ TCanvas * MatrixifyDist2(TH2D ** distArr,Bool_t logx,Bool_t logy,Bool_t logz) {
     if(logy) canvases[b]->SetLogy();
     if(logz) canvases[b]->SetLogz();
     canvases[b]->SetGrid(1,1);
+    distArr[b]->SetMaximum(max);
     distArr[b]->Draw("colz");
   };
   return MatrixifyCanv(canvases);
