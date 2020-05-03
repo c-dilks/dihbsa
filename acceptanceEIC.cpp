@@ -32,8 +32,8 @@ Float_t Q2min = 1e-2; Float_t Q2max = 1e+3;
 Float_t xmin = 1e-4;  Float_t xmax = 1;
 
 // TODO: implement better
-Float_t Q2mid=5; Float_t xmid=0.02; Float_t EbeamEn=10; // 10x100
-//Float_t Q2mid=10; Float_t xmid=0.004; Float_t EbeamEn=20; // 20x250
+//Float_t Q2mid=5; Float_t xmid=0.02; Float_t EbeamEn=10; // 10x100
+Float_t Q2mid=10; Float_t xmid=0.005; Float_t EbeamEn=18; // 18x275
 
 const Int_t NBINS_Q2 = 3;
 Float_t binBounds_Q2[NBINS_Q2] = {Q2min,Q2mid,Q2max};
@@ -198,7 +198,7 @@ int main(int argc, char** argv) {
         pMaxHi = 3*pMaxLo;
       } else if(o==kDih || o==kHadA || o==kHadB) {
         pMaxLo = 10;
-        pMaxHi = 100;
+        pMaxHi = 50;
       };
 
       // instantiate plots
@@ -637,7 +637,7 @@ TCanvas * MatrixifyDist1(TH1D ** distArr,Bool_t logx,Bool_t logy) {
     if(logx) canvases[b]->SetLogx();
     if(logy) canvases[b]->SetLogy();
     canvases[b]->SetGrid(1,1);
-    distArr[b]->SetMaximum(max);
+    //distArr[b]->SetMaximum(max);
     distArr[b]->Draw();
   };
   return MatrixifyCanv(canvases);
