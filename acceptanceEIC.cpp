@@ -713,10 +713,12 @@ TCanvas * xQ2Canv(TH2D * dist) {
   TLine * xline[NBINS_x];
   for(b=0; b<NBINS_Q2; b++) {
     Q2line[b] = new TLine(xmin,binBounds_Q2[b],xmax,binBounds_Q2[b]);
+    Q2line[b]->SetLineWidth(2);
     Q2line[b]->Draw();
   };
   for(b=0; b<NBINS_x; b++) {
     xline[b] = new TLine(binBounds_x[b],Q2min,binBounds_x[b],Q2max);
+    xline[b]->SetLineWidth(2);
     xline[b]->Draw();
   };
 
@@ -784,12 +786,12 @@ TCanvas * MatrixifyDist2(TH2D ** distArr,Bool_t logx,Bool_t logy,Bool_t logz) {
 
 // set font sizes, etc
 void * FormatDist(TH1 * dist) {
-  dist->GetXaxis()->SetTitleSize(0.06);
-  dist->GetYaxis()->SetTitleSize(0.06);
-  dist->GetXaxis()->SetLabelSize(0.06);
-  dist->GetYaxis()->SetLabelSize(0.06);
-  dist->GetXaxis()->SetTitleOffset(1.2);
-  dist->GetYaxis()->SetTitleOffset(0.9);
+  //dist->GetXaxis()->SetTitleSize(0.06);
+  //dist->GetYaxis()->SetTitleSize(0.06);
+  //dist->GetXaxis()->SetLabelSize(0.06);
+  //dist->GetYaxis()->SetLabelSize(0.06);
+  //dist->GetXaxis()->SetTitleOffset(1.2);
+  //dist->GetYaxis()->SetTitleOffset(0.9);
   dist->SetTitleSize(0.04);
 };
 
