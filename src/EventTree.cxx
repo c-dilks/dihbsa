@@ -323,8 +323,8 @@ void EventTree::GetEvent(Int_t i) {
   //cutQ2 = Q2 > 1.0;
   cutQ2 = true; // DISABLE Q2 CUT
   cutX = true; // disabled, but can be changed externally (all cuts can be)
-  cutW = W>2.0;
-  cutY = y<0.95 && y>0.01;
+  cutW = W>3.0;
+  cutY = y>0.01 && y<0.95;
   cutDIS = cutQ2 && cutX && cutW && cutY;
 
 
@@ -333,10 +333,10 @@ void EventTree::GetEvent(Int_t i) {
   ///////////////////////////////////
   cutDihadronKinematics = 
     Zpair < 0.95 &&
-    Mmiss > 1.5 &&
+    /*Mmiss > 1.5 &&*/
     hadXF[qA]>0 && hadXF[qB]>0 &&
     Z[qA]>0.01 && Z[qB]>0.01 &&
-    hadP[qA]>1.0 && hadP[qB]>1.0;
+    hadP[qA]>0.0 && hadP[qB]>0.0;
     
 
   // cutDihadron is the full dihadron cut

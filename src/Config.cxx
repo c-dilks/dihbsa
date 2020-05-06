@@ -45,7 +45,7 @@ Config::Config() {
     bdW[0] = 0;           bdW[1] = 60;
     bdMh[0] = 0;          bdMh[1] = 5;
     bdMmiss[0] = 0;       bdMmiss[1] = 60;
-    bdEta[0] = -5;        bdEta[1] = 5;
+    bdEta[0] = -6;        bdEta[1] = 6;
     bdHadP[0] = 0;        bdHadP[1] = 70;
   };
 
