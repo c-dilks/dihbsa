@@ -324,7 +324,7 @@ void EventTree::GetEvent(Int_t i) {
   cutQ2 = true; // DISABLE Q2 CUT
   cutX = true; // disabled, but can be changed externally (all cuts can be)
   cutW = W>3.0;
-  cutY = y>0.01 && y<0.95;
+  cutY = y>0.0001 && y<0.95;
   cutDIS = cutQ2 && cutX && cutW && cutY;
 
 

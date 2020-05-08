@@ -27,14 +27,15 @@
 #include "Config.h"
 
 
-// binning --------------------------------------------
-Float_t Q2min = 1; Float_t Q2max = 2e+3; // Q2min must match generation cut
+// OPTIONS --------------------------------------------
+// binning 
+Float_t Q2min = 0.1; Float_t Q2max = 2e+3; // Q2min must match generation cut
 Float_t xmin = 1e-4;  Float_t xmax = 1;
 const Int_t NBINS_Q2 = 3;
 const Int_t NBINS_x = 3;
+//-----------------------------------------------------
 Float_t binBounds_Q2[NBINS_Q2];
 Float_t binBounds_x[NBINS_x];
-//-----------------------------------------------------
 
 
 enum obsEnum {kEle,kDih,kHadA,kHadB,NOBS};
@@ -206,6 +207,7 @@ int main(int argc, char** argv) {
   TH2D * PhPerpVsPt[NOBS][NBINS]; // dihadron PhPerp vs. obs pT
   TH2D * QtVsPt[NOBS][NBINS]; // qT = PhPerp/z, vs. obs pT
   TH2D * QtVsEta[NOBS][NBINS]; // qT = PhPerp/z, vs. obs pT
+  TH2D * PtVsY[NOBS][NBINS];
   // - dihadrons only
   TH2D * PhiHvsPhiR[NBINS];
   TH2D * corrXF[NBINS];
@@ -215,6 +217,7 @@ int main(int argc, char** argv) {
   TH2D * PhiHvsP[NBINS];
   TH2D * PhiRvsP[NBINS];
   TH2D * thetaVsP[NBINS];
+  TH2D * QtVsY[NBINS];
   // - electrons only
   TH1D * distY[NBINS];
   TH1D * distW[NBINS];
@@ -243,7 +246,7 @@ int main(int argc, char** argv) {
         pMaxLo = 10;
         pMaxHi = 50;
         ptMin = 0.001;
-        ptMax = 1.5*pMaxLo;
+        ptMax = pMaxLo;
       };
 
       // instantiate plots
@@ -310,6 +313,16 @@ int main(int argc, char** argv) {
         N_P_BINS, ptMin, 100*ptMax);
       Tools::BinLog(QtVsEta[o][b]->GetYaxis());
 
+      plotT = "p_{T,lab} vs. " + obsT[o] +
+        " y, for " + cutT + 
+        ";" + obsT[o] + " y;p_{T,lab} [GeV]";
+      plotN = Form("%s_PtVsY_%d",obsN[o].Data(),b);
+      PtVsY[o][b] = new TH2D(plotN,plotT,
+        N_P_BINS, 1e-3, 1,
+        N_P_BINS, ptMin, ptMax);
+      Tools::BinLog(PtVsY[o][b]->GetXaxis());
+      Tools::BinLog(PtVsY[o][b]->GetYaxis());
+
       if(o==kDih) {
         plotT = obsT[o] + " #phi_{h} vs. #phi_{R}, for " + cutT + 
           ";#phi_{R};#phi_{h}";
@@ -345,6 +358,15 @@ int main(int argc, char** argv) {
         thetaVsP[b] = new TH2D(plotN,plotT,
           N_P_BINS, 0.5, 3*pMaxLo, N_P_BINS, 0, PI);
         Tools::BinLog(thetaVsP[b]->GetXaxis());
+
+        plotT = obsT[o] + " q_{T} vs. y, for " + cutT + 
+          ";y;q_{T} [GeV]";
+        plotN = Form("%s_QtVsY_%d",obsN[o].Data(),b);
+        QtVsY[b] = new TH2D(plotN,plotT,
+          N_P_BINS, 1e-3, 1,
+          N_P_BINS, ptMin, 100*ptMax);
+        Tools::BinLog(QtVsY[b]->GetXaxis());
+        Tools::BinLog(QtVsY[b]->GetYaxis());
 
         plotT = obsT[o] + " M_{h} distribution, for " + cutT + ";M_{h} [GeV]";
         plotN = Form("%s_Mh_%d",obsN[o].Data(),b);
@@ -470,6 +492,7 @@ int main(int argc, char** argv) {
           Qt = ev->PhPerp / ev->Zpair;
           QtVsPt[o][b]->Fill(oPt,Qt);
           QtVsEta[o][b]->Fill(oEta,Qt);
+          PtVsY[o][b]->Fill(ev->y,oPt);
 
           if(o==kDih) {
             PhiHvsPhiR[b]->Fill(ev->PhiR,ev->PhiH);
@@ -477,6 +500,7 @@ int main(int argc, char** argv) {
             PhiHvsP[b]->Fill(oP,ev->PhiH);
             PhiRvsP[b]->Fill(oP,ev->PhiR);
             thetaVsP[b]->Fill(oP,ev->theta);
+            QtVsY[b]->Fill(ev->y,Qt);
             distMh[b]->Fill(ev->Mh);
             distMx[b]->Fill(ev->Mmiss);
             distTheta[b]->Fill(ev->theta);
@@ -543,11 +567,13 @@ int main(int argc, char** argv) {
   TCanvas * PhPerpVsPtMatrix[NOBS];
   TCanvas * QtVsPtMatrix[NOBS];
   TCanvas * QtVsEtaMatrix[NOBS];
+  TCanvas * PtVsYMatrix[NOBS];
   TCanvas * PhiHvsPhiRMatrix;
   TCanvas * corrXFMatrix;
   TCanvas * PhiHvsPMatrix;
   TCanvas * PhiRvsPMatrix;
   TCanvas * thetaVsPMatrix;
+  TCanvas * QtVsYMatrix;
   TCanvas * distMhMatrix;
   TCanvas * distMxMatrix;
   TCanvas * distThetaMatrix;
@@ -564,12 +590,14 @@ int main(int argc, char** argv) {
     PhPerpVsPtMatrix[o] = MatrixifyDist2(PhPerpVsPt[o],1,1,1);
     QtVsPtMatrix[o] = MatrixifyDist2(QtVsPt[o],1,1,1);
     QtVsEtaMatrix[o] = MatrixifyDist2(QtVsEta[o],0,1,1);
+    PtVsYMatrix[o] = MatrixifyDist2(PtVsY[o],1,1,1);
   };
   PhiHvsPhiRMatrix = MatrixifyDist2(PhiHvsPhiR,0,0,1);
   corrXFMatrix = MatrixifyDist2(corrXF,0,0,1);
   PhiHvsPMatrix = MatrixifyDist2(PhiHvsP,1,0,1);
   PhiRvsPMatrix = MatrixifyDist2(PhiRvsP,1,0,1);
   thetaVsPMatrix = MatrixifyDist2(thetaVsP,1,0,1);
+  QtVsYMatrix = MatrixifyDist2(QtVsY,1,1,1);
   distMhMatrix = MatrixifyDist1(distMh,0,0);
   distMxMatrix = MatrixifyDist1(distMx,0,0);
   distThetaMatrix = MatrixifyDist1(distTheta,0,0);
@@ -594,6 +622,7 @@ int main(int argc, char** argv) {
     PhPerpVsPtMatrix[o]->Write();
     QtVsPtMatrix[o]->Write();
     QtVsEtaMatrix[o]->Write();
+    PtVsYMatrix[o]->Write();
     if(o==kDih) {
       PhiHvsPhiRMatrix->Write();
       distMhMatrix->Write();
@@ -603,6 +632,7 @@ int main(int argc, char** argv) {
       PhiHvsPMatrix->Write();
       PhiRvsPMatrix->Write();
       thetaVsPMatrix->Write();
+      QtVsYMatrix->Write();
     };
     if(o==kEle) {
       distWMatrix->Write();
@@ -625,7 +655,7 @@ int main(int argc, char** argv) {
     if(o!=kEle) { for(b=0; b<NBINS; b++) EtaVsZ[o][b]->Write(); };
     for(b=0; b<NBINS; b++) PhPerpVsPt[o][b]->Write();
     for(b=0; b<NBINS; b++) QtVsPt[o][b]->Write();
-    for(b=0; b<NBINS; b++) QtVsEta[o][b]->Write();
+    for(b=0; b<NBINS; b++) PtVsY[o][b]->Write();
     if(o==kDih) {
       for(b=0; b<NBINS; b++) PhiHvsPhiR[b]->Write();
       for(b=0; b<NBINS; b++) distMh[b]->Write();
@@ -635,6 +665,7 @@ int main(int argc, char** argv) {
       for(b=0; b<NBINS; b++) PhiHvsP[b]->Write();
       for(b=0; b<NBINS; b++) PhiRvsP[b]->Write();
       for(b=0; b<NBINS; b++) thetaVsP[b]->Write();
+      for(b=0; b<NBINS; b++) QtVsY[b]->Write();
     };
     if(o==kEle) {
       for(b=0; b<NBINS; b++) distW[b]->Write();
