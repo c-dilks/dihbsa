@@ -28,8 +28,10 @@
 
 
 // OPTIONS --------------------------------------------
+// drawing
+Bool_t includeFullPlots = false; // if true, draw full (x,Q2) range plots
 // binning 
-Float_t Q2min = 0.1; Float_t Q2max = 2e+3; // Q2min must match generation cut
+Float_t Q2min = 1; Float_t Q2max = 2e+3; // Q2min must match generation cut
 Float_t xmin = 1e-4;  Float_t xmax = 1;
 const Int_t NBINS_Q2 = 3;
 const Int_t NBINS_x = 3;
@@ -205,9 +207,11 @@ int main(int argc, char** argv) {
   TH2D * EtaVsPt[NOBS][NBINS];
   TH2D * EtaVsZ[NOBS][NBINS];
   TH2D * PhPerpVsPt[NOBS][NBINS]; // dihadron PhPerp vs. obs pT
-  TH2D * QtVsPt[NOBS][NBINS]; // qT = PhPerp/z, vs. obs pT
-  TH2D * QtVsEta[NOBS][NBINS]; // qT = PhPerp/z, vs. obs pT
+  TH2D * QtVsPt[NOBS][NBINS]; 
+  TH2D * QtVsEta[NOBS][NBINS];
   TH2D * PtVsY[NOBS][NBINS];
+  TH1D * PtDistLin[NOBS][NBINS];
+  TH1D * PtDistLog[NOBS][NBINS];
   // - dihadrons only
   TH2D * PhiHvsPhiR[NBINS];
   TH2D * corrXF[NBINS];
@@ -218,6 +222,8 @@ int main(int argc, char** argv) {
   TH2D * PhiRvsP[NBINS];
   TH2D * thetaVsP[NBINS];
   TH2D * QtVsY[NBINS];
+  TH1D * QtDistLin[NBINS];
+  TH1D * QtDistLog[NBINS];
   // - electrons only
   TH1D * distY[NBINS];
   TH1D * distW[NBINS];
@@ -323,6 +329,23 @@ int main(int argc, char** argv) {
       Tools::BinLog(PtVsY[o][b]->GetXaxis());
       Tools::BinLog(PtVsY[o][b]->GetYaxis());
 
+      plotT = obsT[o] + " p_{T,lab}, for " + cutT +
+        ";" + obsT[o] + " p_{T,lab} [GeV]";
+      plotN = Form("%s_PtDistLin_%d",obsN[o].Data(),b);
+      PtDistLin[o][b] = new TH1D(plotN,plotT,
+        N_P_BINS, ptMin, ptMax);
+      PtDistLin[o][b]->SetLineColor(kAzure);
+      PtDistLin[o][b]->SetFillColor(kAzure);
+
+      plotT = obsT[o] + " p_{T,lab}, for " + cutT +
+        ";" + obsT[o] + " p_{T,lab} [GeV]";
+      plotN = Form("%s_PtDistLog_%d",obsN[o].Data(),b);
+      PtDistLog[o][b] = new TH1D(plotN,plotT,
+        N_P_BINS, ptMin, ptMax);
+      Tools::BinLog(PtDistLog[o][b]->GetXaxis());
+      PtDistLog[o][b]->SetLineColor(kAzure);
+      PtDistLog[o][b]->SetFillColor(kAzure);
+
       if(o==kDih) {
         plotT = obsT[o] + " #phi_{h} vs. #phi_{R}, for " + cutT + 
           ";#phi_{R};#phi_{h}";
@@ -367,6 +390,19 @@ int main(int argc, char** argv) {
           N_P_BINS, ptMin, 100*ptMax);
         Tools::BinLog(QtVsY[b]->GetXaxis());
         Tools::BinLog(QtVsY[b]->GetYaxis());
+
+        plotT = obsT[o] + " q_{T} distribution, for " + cutT + ";q_{T} [GeV]";
+        plotN = Form("%s_QtDistLin_%d",obsN[o].Data(),b);
+        QtDistLin[b] = new TH1D(plotN,plotT, N_P_BINS, ptMin, 100*ptMax);
+        QtDistLin[b]->SetFillColor(kViolet+10);
+        QtDistLin[b]->SetLineColor(kViolet+10);
+
+        plotT = obsT[o] + " q_{T} distribution, for " + cutT + ";q_{T} [GeV]";
+        plotN = Form("%s_QtDistLog_%d",obsN[o].Data(),b);
+        QtDistLog[b] = new TH1D(plotN,plotT, N_P_BINS, ptMin, 100*ptMax);
+        QtDistLog[b]->SetFillColor(kViolet+10);
+        QtDistLog[b]->SetLineColor(kViolet+10);
+        Tools::BinLog(QtDistLog[b]->GetXaxis());
 
         plotT = obsT[o] + " M_{h} distribution, for " + cutT + ";M_{h} [GeV]";
         plotN = Form("%s_Mh_%d",obsN[o].Data(),b);
@@ -424,7 +460,7 @@ int main(int argc, char** argv) {
   ///////////////////////////////////////////////
   printf("begin loop through %lld events...\n",ev->ENT);
   for(int i=0; i<ev->ENT; i++) {
-    //if(i>10000) break; // limiter
+    if(i>10000) break; // limiter
     ev->GetEvent(i);
 
     // fill (x,Q2) plots
@@ -493,6 +529,8 @@ int main(int argc, char** argv) {
           QtVsPt[o][b]->Fill(oPt,Qt);
           QtVsEta[o][b]->Fill(oEta,Qt);
           PtVsY[o][b]->Fill(ev->y,oPt);
+          PtDistLin[o][b]->Fill(oPt);
+          PtDistLog[o][b]->Fill(oPt);
 
           if(o==kDih) {
             PhiHvsPhiR[b]->Fill(ev->PhiR,ev->PhiH);
@@ -501,6 +539,8 @@ int main(int argc, char** argv) {
             PhiRvsP[b]->Fill(oP,ev->PhiR);
             thetaVsP[b]->Fill(oP,ev->theta);
             QtVsY[b]->Fill(ev->y,Qt);
+            QtDistLin[b]->Fill(Qt);
+            QtDistLog[b]->Fill(Qt);
             distMh[b]->Fill(ev->Mh);
             distMx[b]->Fill(ev->Mmiss);
             distTheta[b]->Fill(ev->theta);
@@ -568,12 +608,16 @@ int main(int argc, char** argv) {
   TCanvas * QtVsPtMatrix[NOBS];
   TCanvas * QtVsEtaMatrix[NOBS];
   TCanvas * PtVsYMatrix[NOBS];
+  TCanvas * PtDistLinMatrix[NOBS];
+  TCanvas * PtDistLogMatrix[NOBS];
   TCanvas * PhiHvsPhiRMatrix;
   TCanvas * corrXFMatrix;
   TCanvas * PhiHvsPMatrix;
   TCanvas * PhiRvsPMatrix;
   TCanvas * thetaVsPMatrix;
   TCanvas * QtVsYMatrix;
+  TCanvas * QtDistLinMatrix;
+  TCanvas * QtDistLogMatrix;
   TCanvas * distMhMatrix;
   TCanvas * distMxMatrix;
   TCanvas * distThetaMatrix;
@@ -591,6 +635,8 @@ int main(int argc, char** argv) {
     QtVsPtMatrix[o] = MatrixifyDist2(QtVsPt[o],1,1,1);
     QtVsEtaMatrix[o] = MatrixifyDist2(QtVsEta[o],0,1,1);
     PtVsYMatrix[o] = MatrixifyDist2(PtVsY[o],1,1,1);
+    PtDistLinMatrix[o] = MatrixifyDist1(PtDistLin[o],0,1);
+    PtDistLogMatrix[o] = MatrixifyDist1(PtDistLog[o],1,1);
   };
   PhiHvsPhiRMatrix = MatrixifyDist2(PhiHvsPhiR,0,0,1);
   corrXFMatrix = MatrixifyDist2(corrXF,0,0,1);
@@ -598,6 +644,8 @@ int main(int argc, char** argv) {
   PhiRvsPMatrix = MatrixifyDist2(PhiRvsP,1,0,1);
   thetaVsPMatrix = MatrixifyDist2(thetaVsP,1,0,1);
   QtVsYMatrix = MatrixifyDist2(QtVsY,1,1,1);
+  QtDistLinMatrix = MatrixifyDist1(QtDistLin,0,1);
+  QtDistLogMatrix = MatrixifyDist1(QtDistLog,1,1);
   distMhMatrix = MatrixifyDist1(distMh,0,0);
   distMxMatrix = MatrixifyDist1(distMx,0,0);
   distThetaMatrix = MatrixifyDist1(distTheta,0,0);
@@ -623,6 +671,8 @@ int main(int argc, char** argv) {
     QtVsPtMatrix[o]->Write();
     QtVsEtaMatrix[o]->Write();
     PtVsYMatrix[o]->Write();
+    PtDistLinMatrix[o]->Write();
+    PtDistLogMatrix[o]->Write();
     if(o==kDih) {
       PhiHvsPhiRMatrix->Write();
       distMhMatrix->Write();
@@ -633,6 +683,8 @@ int main(int argc, char** argv) {
       PhiRvsPMatrix->Write();
       thetaVsPMatrix->Write();
       QtVsYMatrix->Write();
+      QtDistLinMatrix->Write();
+      QtDistLogMatrix->Write();
     };
     if(o==kEle) {
       distWMatrix->Write();
@@ -656,6 +708,8 @@ int main(int argc, char** argv) {
     for(b=0; b<NBINS; b++) PhPerpVsPt[o][b]->Write();
     for(b=0; b<NBINS; b++) QtVsPt[o][b]->Write();
     for(b=0; b<NBINS; b++) PtVsY[o][b]->Write();
+    for(b=0; b<NBINS; b++) PtDistLin[o][b]->Write();
+    for(b=0; b<NBINS; b++) PtDistLog[o][b]->Write();
     if(o==kDih) {
       for(b=0; b<NBINS; b++) PhiHvsPhiR[b]->Write();
       for(b=0; b<NBINS; b++) distMh[b]->Write();
@@ -666,6 +720,8 @@ int main(int argc, char** argv) {
       for(b=0; b<NBINS; b++) PhiRvsP[b]->Write();
       for(b=0; b<NBINS; b++) thetaVsP[b]->Write();
       for(b=0; b<NBINS; b++) QtVsY[b]->Write();
+      for(b=0; b<NBINS; b++) QtDistLin[b]->Write();
+      for(b=0; b<NBINS; b++) QtDistLog[b]->Write();
     };
     if(o==kEle) {
       for(b=0; b<NBINS; b++) distW[b]->Write();
@@ -782,10 +838,22 @@ TCanvas * MatrixifyCanv(TCanvas ** canvArr) {
   TString canvN = TString(canvArr[0]->GetName()) + "Matrix";
   canvN = canvN.ReplaceAll("_0_","_");
   TCanvas * canv = new TCanvas(canvN,canvN,400*NBINS_x,300*NBINS_Q2);
-  canv->Divide(NBINS_x,NBINS_Q2);
   Int_t pad;
+  Int_t lim_x,lim_Q2;
+
+  if(includeFullPlots) {
+    lim_x = NBINS_x;
+    lim_Q2 = NBINS_Q2;
+  } else {
+    lim_x = NBINS_x - 1;
+    lim_Q2 = NBINS_Q2 - 1;
+  };
+  canv->Divide(lim_x,lim_Q2);
+
   for(b=0; b<NBINS; b++) {
-    pad = (NBINS_Q2-b/NBINS_x-1)*NBINS_x + (b%NBINS_x) + 1;
+    if(!includeFullPlots && (b%NBINS_x+1==NBINS_x)) continue;
+    if(!includeFullPlots && (b/NBINS_Q2+1==NBINS_Q2)) continue;
+    pad = (lim_Q2-b/NBINS_x-1)*lim_x + (b%NBINS_x) + 1;
     //printf("b+1=%d pad=%d\n",b+1,pad);
     canv->cd(pad);
     canvArr[b]->DrawClonePad();
