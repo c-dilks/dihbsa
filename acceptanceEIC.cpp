@@ -81,10 +81,7 @@ int main(int argc, char** argv) {
     filename = inFiles;
     printf("filename = %s\n",filename.Data());
     filename(TRegexp("^.*/")) = "";
-    filename(TRegexp("\\.root")) = "";
-    filename(TRegexp("\\.hepmc")) = "";
-    filename(TRegexp("\\.pythia")) = "";
-    filename(TRegexp("\\.lund")) = "";
+    filename(TRegexp("\\..*$")) = "";
     while(filename.Tokenize(token,tf,"_")) {
       if(token.Contains("x")) {
         sscanf(token.Data(),"%dx%d",&EbeamEn,&PbeamEn);
@@ -173,6 +170,7 @@ int main(int argc, char** argv) {
   const Int_t NPLOTBINS = 50;
   const Int_t N_P_BINS = NPLOTBINS;
   const Int_t N_THETA_BINS = 3*NPLOTBINS;
+  const Float_t ymin = 1e-4;
 
   // Q2 vs. x planes
   TH2D * Q2vsXfull = new TH2D("Q2vsX_all_events",
@@ -193,10 +191,20 @@ int main(int argc, char** argv) {
   TH2D * XvsXpythia = new TH2D("XvsXpythia",
     "x from e' vs. x from pythia event record",
     NPLOTBINS,xmin,xmax,NPLOTBINS,xmin,xmax);
+  TH2D * Q2diffVsY = new TH2D("Q2diffVsY",
+    "(Q^{2}_{e'}-Q^{2}_{true})/Q^{2}_{true} vs. y_{true}",
+    NPLOTBINS,ymin,1,
+    NPLOTBINS,-3,3);
+  TH2D * XdiffVsY = new TH2D("XdiffVsY",
+    "(x_{e'}-x_{true})/x_{true} vs. y_{true}",
+    NPLOTBINS,ymin,1,
+    NPLOTBINS,-3,3);
   Tools::BinLog(Q2vsQ2pythia->GetXaxis());
   Tools::BinLog(Q2vsQ2pythia->GetYaxis());
   Tools::BinLog(XvsXpythia->GetXaxis());
   Tools::BinLog(XvsXpythia->GetYaxis());
+  Tools::BinLog(Q2diffVsY->GetXaxis());
+  Tools::BinLog(XdiffVsY->GetXaxis());
 
   // acceptance plots
   TH2D * accPolarLoP[NOBS][NBINS];
@@ -324,7 +332,7 @@ int main(int argc, char** argv) {
         ";" + obsT[o] + " y;p_{T,lab} [GeV]";
       plotN = Form("%s_PtVsY_%d",obsN[o].Data(),b);
       PtVsY[o][b] = new TH2D(plotN,plotT,
-        N_P_BINS, 1e-3, 1,
+        N_P_BINS, ymin, 1,
         N_P_BINS, ptMin, ptMax);
       Tools::BinLog(PtVsY[o][b]->GetXaxis());
       Tools::BinLog(PtVsY[o][b]->GetYaxis());
@@ -386,7 +394,7 @@ int main(int argc, char** argv) {
           ";y;q_{T} [GeV]";
         plotN = Form("%s_QtVsY_%d",obsN[o].Data(),b);
         QtVsY[b] = new TH2D(plotN,plotT,
-          N_P_BINS, 1e-3, 1,
+          N_P_BINS, ymin, 1,
           N_P_BINS, ptMin, 100*ptMax);
         Tools::BinLog(QtVsY[b]->GetXaxis());
         Tools::BinLog(QtVsY[b]->GetYaxis());
@@ -429,7 +437,7 @@ int main(int argc, char** argv) {
 
         plotT = obsT[o] + " y distribution, for " + cutT + ";y";
         plotN = Form("%s_Y_%d",obsN[o].Data(),b);
-        distY[b] = new TH1D(plotN,plotT, 3*N_P_BINS, 1e-3, 1);
+        distY[b] = new TH1D(plotN,plotT, 3*N_P_BINS, ymin, 1);
         distY[b]->SetFillColor(kOrange-7);
         distY[b]->SetLineColor(kOrange-7);
         Tools::BinLog(distY[b]->GetXaxis());
@@ -460,13 +468,17 @@ int main(int argc, char** argv) {
   ///////////////////////////////////////////////
   printf("begin loop through %lld events...\n",ev->ENT);
   for(int i=0; i<ev->ENT; i++) {
-    if(i>10000) break; // limiter
+    //if(i>10000) break; // limiter
     ev->GetEvent(i);
 
     // fill (x,Q2) plots
     Q2vsXfull->Fill(ev->x,ev->Q2);
     Q2vsQ2pythia->Fill(ev->Q2_pythia,ev->Q2);
     XvsXpythia->Fill(ev->x_pythia,ev->x);
+    if(ev->Q2_pythia>0) Q2diffVsY->Fill(ev->y_pythia, 
+      (ev->Q2 - ev->Q2_pythia) / ev->Q2_pythia);
+    if(ev->x_pythia>0) XdiffVsY->Fill(ev->y_pythia, 
+      (ev->x - ev->x_pythia) / ev->x_pythia);
     if(ev->Valid()) {
       Q2vsXcut->Fill(ev->x,ev->Q2);
     };
@@ -732,6 +744,8 @@ int main(int argc, char** argv) {
 
   Q2vsQ2pythia->Write();
   XvsXpythia->Write();
+  Q2diffVsY->Write();
+  XdiffVsY->Write();
 
   outfile->Close();
 
