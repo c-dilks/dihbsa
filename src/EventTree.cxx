@@ -190,6 +190,29 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
     };
   };
 
+  if(conf->Experiment=="eic") {
+    chain->SetBranchAddress("eleSmearE",&eleSmearE);
+    chain->SetBranchAddress("eleSmearP",&eleSmearP);
+    chain->SetBranchAddress("eleSmearPID",&eleSmearPID);
+    chain->SetBranchAddress("eleSmearVtx",&eleSmearVtx);
+    chain->SetBranchAddress("hadSmearE",hadSmearE);
+    chain->SetBranchAddress("hadSmearP",hadSmearP);
+    chain->SetBranchAddress("hadSmearPID",hadSmearPID);
+    chain->SetBranchAddress("hadSmearVtx",hadSmearVtx);
+  } else {
+    eleSmearE = false;
+    eleSmearP = false;
+    eleSmearPID = false;
+    eleSmearVtx = false;
+    for(int h=0; h<2; h++) {
+      hadSmearE[h] = false;
+      hadSmearP[h] = false;
+      hadSmearPID[h] = false;
+      hadSmearVtx[h] = false;
+    };
+  };
+
+
   // random number generator (for random theta symmetrization)
   RNG = new TRandom(928); // (argument is seed)
 

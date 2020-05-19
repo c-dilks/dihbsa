@@ -145,6 +145,13 @@ class EventTree : public TObject
     Float_t diphEta[2];
     Float_t diphPhi[2];
     Float_t angEle[2][2];
+
+    // smearing (for EIC simulations)
+    Bool_t eleSmearE,eleSmearP,eleSmearPID,eleSmearVtx;
+    Bool_t hadSmearE[2];
+    Bool_t hadSmearP[2];
+    Bool_t hadSmearPID[2];
+    Bool_t hadSmearVtx[2];
     ///////////////////////////
 
 

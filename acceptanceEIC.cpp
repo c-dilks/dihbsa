@@ -32,17 +32,21 @@
 Bool_t includeFullPlots = false; // if true, draw full (x,Q2) range plots
 // binning 
 Float_t Q2min = 1; Float_t Q2max = 2e+3; // Q2min must match generation cut
-Float_t xmin = 1e-4;  Float_t xmax = 1;
+Float_t xmin = 1e-5;  Float_t xmax = 1;
 const Int_t NBINS_Q2 = 3;
 const Int_t NBINS_x = 3;
 //-----------------------------------------------------
-Float_t binBounds_Q2[NBINS_Q2];
-Float_t binBounds_x[NBINS_x];
-
+// variables which are changed by parsing the file name
+Int_t EbeamEn = 10;
+Int_t PbeamEn = 100;
+Bool_t wasSmeared = true;
+//-----------------------------------------------------
 
 enum obsEnum {kEle,kDih,kHadA,kHadB,NOBS};
 int o;
 
+Float_t binBounds_Q2[NBINS_Q2];
+Float_t binBounds_x[NBINS_x];
 const Int_t NBINS = NBINS_Q2 * NBINS_x;
 Float_t Q2Bin[NBINS][2];
 Float_t xBin[NBINS][2];
@@ -70,11 +74,8 @@ int main(int argc, char** argv) {
   if(argc>1) inFiles = TString(argv[1]);
   if(argc>2) whichPair = (Int_t)strtof(argv[2],NULL);
 
-  // parse beam energies from file name, and define (x,Q2) bins
+  // parse file name, to get things like beam energies and smearing
   // - if reading multiple files, default values listed here will be used
-  Int_t EbeamEn = 10;
-  Int_t PbeamEn = 100;
-  //
   TString filename, token;
   Ssiz_t tf=0;
   if(!(inFiles.Contains("*"))) {
@@ -83,14 +84,27 @@ int main(int argc, char** argv) {
     filename(TRegexp("^.*/")) = "";
     filename(TRegexp("\\..*$")) = "";
     while(filename.Tokenize(token,tf,"_")) {
+      // parse beam energy
       if(token.Contains("x")) {
         sscanf(token.Data(),"%dx%d",&EbeamEn,&PbeamEn);
-        break;
+      }
+      // parse smearing
+      else if(token.Contains("smear")) {
+        if(token=="nosmear") wasSmeared = false;
+        else if(token=="smear") wasSmeared = true;
+        else {
+          fprintf(stderr,
+          "ERROR: found smearing token in filename, but format is wrong\n");
+          return 0;
+        };
       };
     };
     printf("EbeamEn = %d\n",EbeamEn);
     printf("PbeamEn = %d\n",PbeamEn);
+    printf("wasSmeared = %s\n",wasSmeared?"true":"false");
   };
+  Float_t sqrtS = 2*TMath::Sqrt((Float_t)EbeamEn*PbeamEn);
+
 
   /// define binning
   Float_t Q2mid=5; Float_t xmid=0.02; // 10x100 default
@@ -167,9 +181,9 @@ int main(int argc, char** argv) {
 
 
   // define plots ---------------------------------------
-  const Int_t NPLOTBINS = 50;
-  const Int_t N_P_BINS = NPLOTBINS;
-  const Int_t N_THETA_BINS = 3*NPLOTBINS;
+  const Int_t NPLOTBINS = 100;
+  const Int_t N_P_BINS = 100;
+  const Int_t N_THETA_BINS = 36;
   const Float_t ymin = 1e-4;
 
   // Q2 vs. x planes
@@ -191,6 +205,9 @@ int main(int argc, char** argv) {
   TH2D * XvsXpythia = new TH2D("XvsXpythia",
     "x from e' vs. x from pythia event record",
     NPLOTBINS,xmin,xmax,NPLOTBINS,xmin,xmax);
+  TH2D * YvsYpythia = new TH2D("YvsYpythia",
+    "y from e' vs. y from pythia event record",
+    NPLOTBINS,ymin,1,NPLOTBINS,ymin,1);
   TH2D * Q2diffVsY = new TH2D("Q2diffVsY",
     "(Q^{2}_{e'}-Q^{2}_{true})/Q^{2}_{true} vs. y_{true}",
     NPLOTBINS,ymin,1,
@@ -199,12 +216,19 @@ int main(int argc, char** argv) {
     "(x_{e'}-x_{true})/x_{true} vs. y_{true}",
     NPLOTBINS,ymin,1,
     NPLOTBINS,-3,3);
+  TH2D * YdiffVsY = new TH2D("YdiffVsY",
+    "(y_{e'}-y_{true})/y_{true} vs. y_{true}",
+    NPLOTBINS,ymin,1,
+    NPLOTBINS,-3,3);
   Tools::BinLog(Q2vsQ2pythia->GetXaxis());
   Tools::BinLog(Q2vsQ2pythia->GetYaxis());
   Tools::BinLog(XvsXpythia->GetXaxis());
   Tools::BinLog(XvsXpythia->GetYaxis());
+  Tools::BinLog(YvsYpythia->GetXaxis());
+  Tools::BinLog(YvsYpythia->GetYaxis());
   Tools::BinLog(Q2diffVsY->GetXaxis());
   Tools::BinLog(XdiffVsY->GetXaxis());
+  Tools::BinLog(YdiffVsY->GetXaxis());
 
   // acceptance plots
   TH2D * accPolarLoP[NOBS][NBINS];
@@ -253,12 +277,12 @@ int main(int argc, char** argv) {
       // bin boundaries
       if(o==kEle) {
         pMaxLo = (Float_t) EbeamEn;
-        pMaxHi = 3*pMaxLo;
+        pMaxHi = sqrtS;
         ptMin = 0.1;
         ptMax = 1.5*pMaxLo;
       } else if(o==kDih || o==kHadA || o==kHadB) {
-        pMaxLo = 10;
-        pMaxHi = 50;
+        pMaxLo = sqrtS / 2;
+        pMaxHi = sqrtS;
         ptMin = 0.001;
         ptMax = pMaxLo;
       };
@@ -267,10 +291,10 @@ int main(int argc, char** argv) {
       plotT = obsT[o] + ", for " + cutT + ";p_{z} [GeV];p_{T} [GeV]";
       plotN = Form("%s_Polar_LoP_%d",obsN[o].Data(),b);
       accPolarLoP[o][b] = new TH2D(plotN,plotT,
-        N_THETA_BINS, -PI, PI, N_P_BINS, 0, pMaxLo);
+        N_THETA_BINS, 0, PI, N_P_BINS, 0, pMaxLo);
       plotN = Form("%s_Polar_HiP_%d",obsN[o].Data(),b);
       accPolarHiP[o][b] = new TH2D(plotN,plotT,
-        N_THETA_BINS, -PI, PI, N_P_BINS, 0, pMaxHi);
+        N_THETA_BINS, 0, PI, N_P_BINS, 0, pMaxHi);
       plotN = Form("%s_PtVsPz_LoP_%d",obsN[o].Data(),b);
       PtVsPzLoP[o][b] = new TH2D(plotN,plotT,
         N_P_BINS, -pMaxLo, pMaxLo, N_P_BINS, 0, pMaxLo);
@@ -282,7 +306,7 @@ int main(int argc, char** argv) {
       plotN = Form("%s_EtaVsP_%d",obsN[o].Data(),b);
       EtaVsP[o][b] = new TH2D(plotN,plotT,
         N_P_BINS, 0.5, 3*pMaxLo,
-        N_P_BINS, conf->bdEta[0], conf->bdEta[1]);
+        NPLOTBINS, conf->bdEta[0], conf->bdEta[1]);
       Tools::BinLog(EtaVsP[o][b]->GetXaxis());
 
       plotT = obsT[o] + " #eta vs. p_{T,lab}, for " + cutT + 
@@ -290,13 +314,13 @@ int main(int argc, char** argv) {
       plotN = Form("%s_EtaVsPt_%d",obsN[o].Data(),b);
       EtaVsPt[o][b] = new TH2D(plotN,plotT,
         N_P_BINS, ptMin, ptMax,
-        N_P_BINS, conf->bdEta[0], conf->bdEta[1]);
+        NPLOTBINS, conf->bdEta[0], conf->bdEta[1]);
       Tools::BinLog(EtaVsPt[o][b]->GetXaxis());
 
       plotT = obsT[o] + " #eta vs. z, for " + cutT + ";z;#eta";
       plotN = Form("%s_EtaVsZ_%d",obsN[o].Data(),b);
       EtaVsZ[o][b] = new TH2D(plotN,plotT,
-        N_P_BINS, 0, 1, N_P_BINS, conf->bdEta[0], conf->bdEta[1]);
+        NPLOTBINS, 0, 1, NPLOTBINS, conf->bdEta[0], conf->bdEta[1]);
 
       plotT = obsT[kDih] + " P_{h}^{perp} vs. " + obsT[o] + 
         " p_{T,lab}, for " + cutT + 
@@ -323,7 +347,7 @@ int main(int argc, char** argv) {
         ";" + obsT[o] + " #eta;q_{T} [GeV]";
       plotN = Form("%s_QtVsEta_%d",obsN[o].Data(),b);
       QtVsEta[o][b] = new TH2D(plotN,plotT,
-        N_P_BINS, conf->bdEta[0], conf->bdEta[1],
+        NPLOTBINS, conf->bdEta[0], conf->bdEta[1],
         N_P_BINS, ptMin, 100*ptMax);
       Tools::BinLog(QtVsEta[o][b]->GetYaxis());
 
@@ -332,7 +356,7 @@ int main(int argc, char** argv) {
         ";" + obsT[o] + " y;p_{T,lab} [GeV]";
       plotN = Form("%s_PtVsY_%d",obsN[o].Data(),b);
       PtVsY[o][b] = new TH2D(plotN,plotT,
-        N_P_BINS, ymin, 1,
+        NPLOTBINS, ymin, 1,
         N_P_BINS, ptMin, ptMax);
       Tools::BinLog(PtVsY[o][b]->GetXaxis());
       Tools::BinLog(PtVsY[o][b]->GetYaxis());
@@ -359,7 +383,7 @@ int main(int argc, char** argv) {
           ";#phi_{R};#phi_{h}";
         plotN = Form("%s_PhiHvsPhiR_%d",obsN[o].Data(),b);
         PhiHvsPhiR[b] = new TH2D(plotN,plotT,
-          N_P_BINS, -PI, PI, N_P_BINS, -PI, PI);
+          NPLOTBINS, -PI, PI, NPLOTBINS, -PI, PI);
 
         plotT = hadTitle[qA] + " x_{F} vs. " + 
                 hadTitle[qB] + " x_{F}, for " + cutT +
@@ -367,34 +391,34 @@ int main(int argc, char** argv) {
                 ";" + hadTitle[qA] + " x_{F}";
         plotN = Form("%s_corrXF_%d",obsN[o].Data(),b);
         corrXF[b] = new TH2D(plotN,plotT,
-          N_P_BINS, -1, 1, N_P_BINS, -1, 1);
+          NPLOTBINS, -1, 1, NPLOTBINS, -1, 1);
 
         plotT = obsT[o] + " #phi_{h} vs. p, for " + cutT + 
           ";p [GeV];#phi_{h}";
         plotN = Form("%s_PhiHvsP_%d",obsN[o].Data(),b);
         PhiHvsP[b] = new TH2D(plotN,plotT,
-          N_P_BINS, 0.5, 3*pMaxLo, N_P_BINS, -PI, PI);
+          N_P_BINS, 0.5, 3*pMaxLo, NPLOTBINS, -PI, PI);
         Tools::BinLog(PhiHvsP[b]->GetXaxis());
 
         plotT = obsT[o] + " #phi_{R} vs. p, for " + cutT + 
           ";p [GeV];#phi_{R}";
         plotN = Form("%s_PhiRvsP_%d",obsN[o].Data(),b);
         PhiRvsP[b] = new TH2D(plotN,plotT,
-          N_P_BINS, 0.5, 3*pMaxLo, N_P_BINS, -PI, PI);
+          N_P_BINS, 0.5, 3*pMaxLo, NPLOTBINS, -PI, PI);
         Tools::BinLog(PhiRvsP[b]->GetXaxis());
 
         plotT = obsT[o] + " #theta vs. p, for " + cutT + 
           ";p [GeV];#theta";
         plotN = Form("%s_thetaVsP_%d",obsN[o].Data(),b);
         thetaVsP[b] = new TH2D(plotN,plotT,
-          N_P_BINS, 0.5, 3*pMaxLo, N_P_BINS, 0, PI);
+          N_P_BINS, 0.5, 3*pMaxLo, NPLOTBINS, 0, PI);
         Tools::BinLog(thetaVsP[b]->GetXaxis());
 
         plotT = obsT[o] + " q_{T} vs. y, for " + cutT + 
           ";y;q_{T} [GeV]";
         plotN = Form("%s_QtVsY_%d",obsN[o].Data(),b);
         QtVsY[b] = new TH2D(plotN,plotT,
-          N_P_BINS, ymin, 1,
+          NPLOTBINS, ymin, 1,
           N_P_BINS, ptMin, 100*ptMax);
         Tools::BinLog(QtVsY[b]->GetXaxis());
         Tools::BinLog(QtVsY[b]->GetYaxis());
@@ -414,21 +438,21 @@ int main(int argc, char** argv) {
 
         plotT = obsT[o] + " M_{h} distribution, for " + cutT + ";M_{h} [GeV]";
         plotN = Form("%s_Mh_%d",obsN[o].Data(),b);
-        distMh[b] = new TH1D(plotN,plotT, 3*N_P_BINS, 0, 3);
+        distMh[b] = new TH1D(plotN,plotT, 3*NPLOTBINS, 0, 3);
         distMh[b]->SetFillColor(kRed-3);
         distMh[b]->SetLineColor(kRed-3);
 
         plotT = obsT[o] + " M_{X} distribution, for " + cutT + ";M_{X} [GeV]";
         plotN = Form("%s_Mx_%d",obsN[o].Data(),b);
         distMx[b] = new TH1D(plotN,plotT,
-          3*N_P_BINS, conf->bdMmiss[0], conf->bdMmiss[1]);
+          3*NPLOTBINS, conf->bdMmiss[0], conf->bdMmiss[1]);
         distMx[b]->SetFillColor(kRed-5);
         distMx[b]->SetLineColor(kRed-5);
 
         plotT = obsT[o] + " #theta_{CM} distribution, for " + cutT +
           ";#theta_{CM}";
         plotN = Form("%s_theta_%d",obsN[o].Data(),b);
-        distTheta[b] = new TH1D(plotN,plotT, 3*N_P_BINS, 0, 3);
+        distTheta[b] = new TH1D(plotN,plotT, 3*NPLOTBINS, 0, 3);
         distTheta[b]->SetFillColor(kCyan+3);
         distTheta[b]->SetLineColor(kCyan+3);
       };
@@ -437,7 +461,7 @@ int main(int argc, char** argv) {
 
         plotT = obsT[o] + " y distribution, for " + cutT + ";y";
         plotN = Form("%s_Y_%d",obsN[o].Data(),b);
-        distY[b] = new TH1D(plotN,plotT, 3*N_P_BINS, ymin, 1);
+        distY[b] = new TH1D(plotN,plotT, NPLOTBINS, ymin, 1);
         distY[b]->SetFillColor(kOrange-7);
         distY[b]->SetLineColor(kOrange-7);
         Tools::BinLog(distY[b]->GetXaxis());
@@ -445,7 +469,7 @@ int main(int argc, char** argv) {
         plotT = obsT[o] + " W distribution, for " + cutT + ";W [GeV]";
         plotN = Form("%s_W_%d",obsN[o].Data(),b);
         distW[b] = new TH1D(plotN,plotT,
-          3*N_P_BINS, conf->bdW[0], conf->bdW[1]);
+          NPLOTBINS, conf->bdW[0], conf->bdW[1]);
         distW[b]->SetFillColor(kViolet+2);
         distW[b]->SetLineColor(kViolet+2);
       };
@@ -458,7 +482,7 @@ int main(int argc, char** argv) {
 
 
   // prepare for event loop
-  Bool_t fillPlots;
+  Bool_t binCut, smearCut;
   Float_t oP,oPt,oTheta,oEta,oZ,Qt;
   for(b=0; b<NBINS; b++) numEvents[b]=0;
 
@@ -468,103 +492,115 @@ int main(int argc, char** argv) {
   ///////////////////////////////////////////////
   printf("begin loop through %lld events...\n",ev->ENT);
   for(int i=0; i<ev->ENT; i++) {
-    //if(i>10000) break; // limiter
+    //if(i>100000) break; // limiter
     ev->GetEvent(i);
 
-    // fill (x,Q2) plots
-    Q2vsXfull->Fill(ev->x,ev->Q2);
-    Q2vsQ2pythia->Fill(ev->Q2_pythia,ev->Q2);
-    XvsXpythia->Fill(ev->x_pythia,ev->x);
-    if(ev->Q2_pythia>0) Q2diffVsY->Fill(ev->y_pythia, 
-      (ev->Q2 - ev->Q2_pythia) / ev->Q2_pythia);
-    if(ev->x_pythia>0) XdiffVsY->Fill(ev->y_pythia, 
-      (ev->x - ev->x_pythia) / ev->x_pythia);
-    if(ev->Valid()) {
-      Q2vsXcut->Fill(ev->x,ev->Q2);
-    };
+    // smearing cut:
+    // if smearing was on, only analyse smeared particles;
+    // if smearing was not on, analyse all particles
+    if(wasSmeared) {
+      smearCut = ev->eleSmearE && ev->eleSmearP &&
+        ev->hadSmearE[0] && ev->hadSmearP[0] &&
+        ev->hadSmearE[1] && ev->hadSmearP[1];
+    } else smearCut = true;
+    if(smearCut) {
 
-    // loop over (x,Q2) bins
-    for(b=0; b<NBINS; b++) {
+      // fill (x,Q2) plots
+      Q2vsXfull->Fill(ev->x,ev->Q2);
+      if(ev->Valid()) {
+        Q2vsQ2pythia->Fill(ev->Q2_pythia,ev->Q2);
+        XvsXpythia->Fill(ev->x_pythia,ev->x);
+        YvsYpythia->Fill(ev->y_pythia,ev->y);
+        if(ev->Q2_pythia>0) Q2diffVsY->Fill(ev->y_pythia, 
+          (ev->Q2 - ev->Q2_pythia) / ev->Q2_pythia);
+        if(ev->x_pythia>0) XdiffVsY->Fill(ev->y_pythia, 
+          (ev->x - ev->x_pythia) / ev->x_pythia);
+        if(ev->y_pythia>0) YdiffVsY->Fill(ev->y_pythia, 
+          (ev->y - ev->y_pythia) / ev->y_pythia);
+          Q2vsXcut->Fill(ev->x,ev->Q2);
+      };
 
-      // override (x,Q2) cuts in EventTree
-      ev->cutQ2 = ev->Q2 > Q2Bin[b][0] && ev->Q2 < Q2Bin[b][1];
-      ev->cutX = ev->x > xBin[b][0] && ev->x < xBin[b][1];
-      ev->cutDIS = ev->cutQ2 && ev->cutX && ev->cutW && ev->cutY;
+      // loop over (x,Q2) bins
+      for(b=0; b<NBINS; b++) {
 
-      fillPlots = ev->Valid(); // use full cuts
-      //fillPlots = ev->cutDIS; // use DIS cuts only
+        // override (x,Q2) cuts in EventTree
+        ev->cutQ2 = ev->Q2 > Q2Bin[b][0] && ev->Q2 < Q2Bin[b][1];
+        ev->cutX = ev->x > xBin[b][0] && ev->x < xBin[b][1];
+        ev->cutDIS = ev->cutQ2 && ev->cutX && ev->cutW && ev->cutY;
+        binCut = ev->Valid();
 
-      // fill polar plots
-      if(fillPlots) {
-        for(o=0; o<NOBS; o++) {
-          switch(o) {
-            case kEle:
-              oP = ev->eleP;
-              oPt = ev->elePt;
-              oTheta = ev->eleTheta;
-              oEta = ev->eleEta;
-              oZ = UNDEF;
-              break;
-            case kDih:
-              oP = ev->Ph;
-              oPt = ev->PhPt;
-              oTheta = ev->PhTheta;
-              oEta = ev->PhEta;
-              oZ = ev->Zpair;
-              break;
-            case kHadA:
-              oP = ev->hadP[qA];
-              oPt = ev->hadPt[qA];
-              oTheta = ev->hadTheta[qA];
-              oEta = ev->hadEta[qA];
-              oZ = ev->Z[qA];
-              break;
-            case kHadB:
-              oP = ev->hadP[qB];
-              oPt = ev->hadPt[qB];
-              oTheta = ev->hadTheta[qB];
-              oEta = ev->hadEta[qB];
-              oZ = ev->Z[qB];
-              break;
+        // fill polar plots
+        if(binCut) {
+          for(o=0; o<NOBS; o++) {
+            switch(o) {
+              case kEle:
+                oP = ev->eleP;
+                oPt = ev->elePt;
+                oTheta = ev->eleTheta;
+                oEta = ev->eleEta;
+                oZ = UNDEF;
+                break;
+              case kDih:
+                oP = ev->Ph;
+                oPt = ev->PhPt;
+                oTheta = ev->PhTheta;
+                oEta = ev->PhEta;
+                oZ = ev->Zpair;
+                break;
+              case kHadA:
+                oP = ev->hadP[qA];
+                oPt = ev->hadPt[qA];
+                oTheta = ev->hadTheta[qA];
+                oEta = ev->hadEta[qA];
+                oZ = ev->Z[qA];
+                break;
+              case kHadB:
+                oP = ev->hadP[qB];
+                oPt = ev->hadPt[qB];
+                oTheta = ev->hadTheta[qB];
+                oEta = ev->hadEta[qB];
+                oZ = ev->Z[qB];
+                break;
+            };
+
+            accPolarLoP[o][b]->Fill(oTheta,oP);
+            accPolarHiP[o][b]->Fill(oTheta,oP);
+            PtVsPzLoP[o][b]->Fill(oP*TMath::Cos(oTheta),oPt);
+            PtVsPzHiP[o][b]->Fill(oP*TMath::Cos(oTheta),oPt);
+            EtaVsP[o][b]->Fill(oP,oEta);
+            EtaVsPt[o][b]->Fill(oPt,oEta);
+            EtaVsZ[o][b]->Fill(oZ,oEta);
+            PhPerpVsPt[o][b]->Fill(oPt,ev->PhPerp);
+
+            Qt = ev->PhPerp / ev->Zpair;
+            QtVsPt[o][b]->Fill(oPt,Qt);
+            QtVsEta[o][b]->Fill(oEta,Qt);
+            PtVsY[o][b]->Fill(ev->y,oPt);
+            PtDistLin[o][b]->Fill(oPt);
+            PtDistLog[o][b]->Fill(oPt);
+
+            if(o==kDih) {
+              PhiHvsPhiR[b]->Fill(ev->PhiR,ev->PhiH);
+              corrXF[b]->Fill(ev->hadXF[qB],ev->hadXF[qA]);
+              PhiHvsP[b]->Fill(oP,ev->PhiH);
+              PhiRvsP[b]->Fill(oP,ev->PhiR);
+              thetaVsP[b]->Fill(oP,ev->theta);
+              QtVsY[b]->Fill(ev->y,Qt);
+              QtDistLin[b]->Fill(Qt);
+              QtDistLog[b]->Fill(Qt);
+              distMh[b]->Fill(ev->Mh);
+              distMx[b]->Fill(ev->Mmiss);
+              distTheta[b]->Fill(ev->theta);
+            };
+            if(o==kEle) {
+              distW[b]->Fill(ev->W);
+              distY[b]->Fill(ev->y);
+            };
           };
 
-          accPolarLoP[o][b]->Fill(oTheta,oP);
-          accPolarHiP[o][b]->Fill(oTheta,oP);
-          PtVsPzLoP[o][b]->Fill(oP*TMath::Cos(oTheta),oPt);
-          PtVsPzHiP[o][b]->Fill(oP*TMath::Cos(oTheta),oPt);
-          EtaVsP[o][b]->Fill(oP,oEta);
-          EtaVsPt[o][b]->Fill(oPt,oEta);
-          EtaVsZ[o][b]->Fill(oZ,oEta);
-          PhPerpVsPt[o][b]->Fill(oPt,ev->PhPerp);
+          numEvents[b]++;
 
-          Qt = ev->PhPerp / ev->Zpair;
-          QtVsPt[o][b]->Fill(oPt,Qt);
-          QtVsEta[o][b]->Fill(oEta,Qt);
-          PtVsY[o][b]->Fill(ev->y,oPt);
-          PtDistLin[o][b]->Fill(oPt);
-          PtDistLog[o][b]->Fill(oPt);
-
-          if(o==kDih) {
-            PhiHvsPhiR[b]->Fill(ev->PhiR,ev->PhiH);
-            corrXF[b]->Fill(ev->hadXF[qB],ev->hadXF[qA]);
-            PhiHvsP[b]->Fill(oP,ev->PhiH);
-            PhiRvsP[b]->Fill(oP,ev->PhiR);
-            thetaVsP[b]->Fill(oP,ev->theta);
-            QtVsY[b]->Fill(ev->y,Qt);
-            QtDistLin[b]->Fill(Qt);
-            QtDistLog[b]->Fill(Qt);
-            distMh[b]->Fill(ev->Mh);
-            distMx[b]->Fill(ev->Mmiss);
-            distTheta[b]->Fill(ev->theta);
-          };
-          if(o==kEle) {
-            distW[b]->Fill(ev->W);
-            distY[b]->Fill(ev->y);
-          };
         };
-
-        numEvents[b]++;
-
       };
     };
   };
@@ -744,8 +780,10 @@ int main(int argc, char** argv) {
 
   Q2vsQ2pythia->Write();
   XvsXpythia->Write();
+  YvsYpythia->Write();
   Q2diffVsY->Write();
   XdiffVsY->Write();
+  YdiffVsY->Write();
 
   outfile->Close();
 
