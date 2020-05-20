@@ -282,7 +282,7 @@ void EventTree::GetEvent(Int_t i) {
   // dihadron kinematics cuts // dsidis hack: xf cut
   cutDihadronKinematics = 
     Zpair < 0.95 &&
-    Mmiss > 1.05 &&
+    Mmiss > 1.5 &&
     cutXF &&
     hadP[qA] > 1.25 && hadP[qB] > 1.25;
 

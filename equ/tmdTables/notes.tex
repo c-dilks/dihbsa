@@ -1,0 +1,59 @@
+\documentclass[12pt]{article}
+\usepackage{setspace} % double space
+\onehalfspacing % 1.5 space
+\usepackage[left=1in,top=1in,right=1in,bottom=1in,nohead,nofoot]{geometry} %margins
+\setlength\footskip{0.25in} % separate page number from last line
+\setlength\parindent{0.5in} % indent paragraphs; first paragraphs are not indented
+\usepackage{epstopdf}
+
+% begin upright mu (\umu) definition
+%\usepackage{lmodern}
+%\usepackage{textcomp}
+%\DeclareFontFamily{U}{euc}{}
+%\DeclareFontShape{U}{euc}{m}{n}{<-6>eurm5<6-8>eurm7<8->eurm10}{}
+%\DeclareSymbolFont{AMSc}{U}{euc}{m}{n}
+%\DeclareMathSymbol{\umu}{\mathord}{AMSc}{"16}
+% end upright mu
+
+
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{xcolor}
+%\usepackage{MnSymbol} % this must be defined after \umu (upright mu)
+
+\begin{document}
+
+\begin{center}
+{\LARGE 
+Transverse Momentum Dependent PDF tables
+}
+\end{center}
+
+\begin{table}[h]
+\begin{center}
+{\bf Twist-2 TMDs}\\\vspace{5pt}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{N/q} & \textbf{U}                                     & \textbf{L}                               & \textbf{T}                                             \\ \hline
+\textbf{U}   & $f_1$                                          &                                          & $h_1^\perp$                                            \\ \hline
+\textbf{L}   &                                                & $g_1$                                    & $h_{1L}^\perp$                                         \\ \hline
+\textbf{T}   & {\color[HTML]{FE0000} \textbf{$f_{1T}^\perp$}} & {\color[HTML]{FE0000} \textbf{$g_{1T}$}} & {\color[HTML]{FE0000} \textbf{$h_{1T},~h_{1T}^\perp$}} \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+
+\begin{table}[h]
+\begin{center}
+{\bf Twist-3 TMDs}\\\vspace{5pt}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{N/q} & \textbf{U}                                       & \textbf{L}                                       & \textbf{T}                                                       \\ \hline
+\textbf{U}   & $f^\perp$                                        & $g^\perp$                                        & $h,~e$                                                           \\ \hline
+\textbf{L}   & $f_L^\perp$                                      & $g_L^\perp$                                      & $h_L,~e_L$                                                       \\ \hline
+\textbf{T}   & {\color[HTML]{FE0000} \textbf{$f_T,~f_T^\perp$}} & {\color[HTML]{FE0000} \textbf{$g_T,~g_T^\perp$}} & {\color[HTML]{FE0000} \textbf{$h_T,~e_T,~h_T^\perp,~e_T^\perp$}} \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\end{document} 
