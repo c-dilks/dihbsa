@@ -31,14 +31,14 @@
 // drawing
 Bool_t includeFullPlots = false; // if true, draw full (x,Q2) range plots
 // binning 
-Float_t Q2min = 1; Float_t Q2max = 2e+3; // Q2min must match generation cut
+Float_t Q2min = 1; Float_t Q2max = 3e+3; // Q2min must match generation cut
 Float_t xmin = 1e-5;  Float_t xmax = 1;
 const Int_t NBINS_Q2 = 3;
 const Int_t NBINS_x = 3;
 //-----------------------------------------------------
 // variables which are changed by parsing the file name
-Int_t EbeamEn = 10;
-Int_t PbeamEn = 100;
+Float_t EbeamEn = 10;
+Float_t PbeamEn = 100;
 Bool_t wasSmeared = true;
 //-----------------------------------------------------
 
@@ -77,6 +77,7 @@ int main(int argc, char** argv) {
   // parse file name, to get things like beam energies and smearing
   // - if reading multiple files, default values listed here will be used
   TString filename, token;
+  Int_t EbeamEnInt,PbeamEnInt;
   Ssiz_t tf=0;
   if(!(inFiles.Contains("*"))) {
     filename = inFiles;
@@ -86,7 +87,9 @@ int main(int argc, char** argv) {
     while(filename.Tokenize(token,tf,"_")) {
       // parse beam energy
       if(token.Contains("x")) {
-        sscanf(token.Data(),"%dx%d",&EbeamEn,&PbeamEn);
+        sscanf(token.Data(),"%dx%d",&EbeamEnInt,&PbeamEnInt);
+        EbeamEn = (Float_t) EbeamEnInt;
+        PbeamEn = (Float_t) PbeamEnInt;
       }
       // parse smearing
       else if(token.Contains("smear")) {
@@ -99,19 +102,19 @@ int main(int argc, char** argv) {
         };
       };
     };
-    printf("EbeamEn = %d\n",EbeamEn);
-    printf("PbeamEn = %d\n",PbeamEn);
+    printf("EbeamEn = %f\n",EbeamEn);
+    printf("PbeamEn = %f\n",PbeamEn);
     printf("wasSmeared = %s\n",wasSmeared?"true":"false");
   };
-  Float_t sqrtS = 2*TMath::Sqrt((Float_t)EbeamEn*PbeamEn);
+  Float_t sqrtS = 2*TMath::Sqrt(EbeamEn*PbeamEn);
 
 
   /// define binning
   Float_t Q2mid=5; Float_t xmid=0.02; // 10x100 default
-  if( EbeamEn==5 && PbeamEn==41)   { Q2mid=3;    xmid=0.025; };
-  if( EbeamEn==5 && PbeamEn==100)  { Q2mid=3;    xmid=0.01;  };
-  if( EbeamEn==10 && PbeamEn==100) { Q2mid=5;    xmid=0.02;  };
-  if( EbeamEn==18 && PbeamEn==275) { Q2mid=10;   xmid=0.005; };
+  if( EbeamEnInt==5 && PbeamEnInt==41)   { Q2mid=3;    xmid=0.025; };
+  if( EbeamEnInt==5 && PbeamEnInt==100)  { Q2mid=3;    xmid=0.01;  };
+  if( EbeamEnInt==10 && PbeamEnInt==100) { Q2mid=5;    xmid=0.02;  };
+  if( EbeamEnInt==18 && PbeamEnInt==275) { Q2mid=10;   xmid=0.005; };
   binBounds_Q2[0] = Q2min;
   binBounds_Q2[1] = Q2mid;
   binBounds_Q2[2] = Q2max;
@@ -149,6 +152,7 @@ int main(int argc, char** argv) {
   EventTree * ev = new EventTree(inFiles,whichPair);
   Config * conf = new Config();
   gStyle->SetOptStat(0);
+  gStyle->SetPalette(55);
   TString outfileN= inFiles;
   if(inFiles.Contains("*")) outfileN = "eicPlots.root";
   else outfileN(TRegexp("^.*/")) = "eicPlots.";
@@ -211,15 +215,15 @@ int main(int argc, char** argv) {
   TH2D * Q2diffVsY = new TH2D("Q2diffVsY",
     "(Q^{2}_{e'}-Q^{2}_{true})/Q^{2}_{true} vs. y_{true}",
     NPLOTBINS,ymin,1,
-    NPLOTBINS,-3,3);
+    NPLOTBINS,-1,1);
   TH2D * XdiffVsY = new TH2D("XdiffVsY",
     "(x_{e'}-x_{true})/x_{true} vs. y_{true}",
     NPLOTBINS,ymin,1,
-    NPLOTBINS,-3,3);
+    NPLOTBINS,-1,1);
   TH2D * YdiffVsY = new TH2D("YdiffVsY",
     "(y_{e'}-y_{true})/y_{true} vs. y_{true}",
     NPLOTBINS,ymin,1,
-    NPLOTBINS,-3,3);
+    NPLOTBINS,-1,1);
   Tools::BinLog(Q2vsQ2pythia->GetXaxis());
   Tools::BinLog(Q2vsQ2pythia->GetYaxis());
   Tools::BinLog(XvsXpythia->GetXaxis());
@@ -276,13 +280,15 @@ int main(int argc, char** argv) {
 
       // bin boundaries
       if(o==kEle) {
-        pMaxLo = (Float_t) EbeamEn;
+        pMaxLo = EbeamEn;
         pMaxHi = sqrtS;
         ptMin = 0.1;
         ptMax = 1.5*pMaxLo;
       } else if(o==kDih || o==kHadA || o==kHadB) {
-        pMaxLo = sqrtS / 2;
-        pMaxHi = sqrtS;
+        //pMaxLo = sqrtS / 3.0;
+        //pMaxHi = sqrtS;
+        pMaxLo = 10;
+        pMaxHi = 30;
         ptMin = 0.001;
         ptMax = pMaxLo;
       };
@@ -492,7 +498,7 @@ int main(int argc, char** argv) {
   ///////////////////////////////////////////////
   printf("begin loop through %lld events...\n",ev->ENT);
   for(int i=0; i<ev->ENT; i++) {
-    //if(i>100000) break; // limiter
+    //if(i>300000) break; // limiter
     ev->GetEvent(i);
 
     // smearing cut:
@@ -785,6 +791,30 @@ int main(int argc, char** argv) {
   XdiffVsY->Write();
   YdiffVsY->Write();
 
+
+  // printing pngs
+  TString pngpath = Form("img/%dx%d/",EbeamEnInt,PbeamEnInt);
+  accPolarLoPMatrix[kHadA]->Print(
+    TString(pngpath+"polarPiPLoPMatrix.png"),"png");
+  accPolarHiPMatrix[kHadA]->Print(
+    TString(pngpath+"polarPiPHiPMatrix.png"),"png");
+  accPolarLoPMatrix[kHadB]->Print(
+    TString(pngpath+"polarPiMLoPMatrix.png"),"png");
+  accPolarHiPMatrix[kHadB]->Print(
+    TString(pngpath+"polarPiMHiPMatrix.png"),"png");
+  EtaVsPMatrix[kHadA]->Print(TString(pngpath+"EtaVsPMatrix.png"),"png");
+  EtaVsPtMatrix[kHadA]->Print(TString(pngpath+"EtaVsPtMatrix.png"),"png");
+  PhiHvsPhiRMatrix->Print(TString(pngpath+"PhiHvsPhiRMatrix.png"),"png");
+  distMhMatrix->Print(TString(pngpath+"distMhMatrix.png"),"png");
+  distThetaMatrix->Print(TString(pngpath+"distThetaMatrix.png"),"png");
+  QtDistLogMatrix->Print(TString(pngpath+"QtDistLogMatrix.png"),"png");
+  PtDistLogMatrix[kHadA]->Print(TString(pngpath+"PtDistLogMatrix.png"),"png");
+  QtVsEtaMatrix[kHadA]->Print(TString(pngpath+"QtVsEtaMatrix.png"),"png");
+  QtVsPtMatrix[kHadA]->Print(TString(pngpath+"QtVsPtMatrix.png"),"png");
+  PtVsYMatrix[kHadA]->Print(TString(pngpath+"PtVsYMatrix.png"),"png");
+  QtVsYMatrix->Print(TString(pngpath+"QtVsYMatrix.png"),"png");
+
+
   outfile->Close();
 
 };
@@ -872,14 +902,34 @@ TCanvas * xQ2Canv(TH2D * dist) {
   TLine * xline[NBINS_x];
   for(b=0; b<NBINS_Q2; b++) {
     Q2line[b] = new TLine(xmin,binBounds_Q2[b],xmax,binBounds_Q2[b]);
-    Q2line[b]->SetLineWidth(2);
+    Q2line[b]->SetLineWidth(4);
     Q2line[b]->Draw();
   };
   for(b=0; b<NBINS_x; b++) {
     xline[b] = new TLine(binBounds_x[b],Q2min,binBounds_x[b],Q2max);
-    xline[b]->SetLineWidth(2);
+    xline[b]->SetLineWidth(4);
     xline[b]->Draw();
   };
+
+  // y contours
+  Float_t yval, EdotP; 
+  // y-cut contour
+  yval = 0.01; 
+  EdotP = 2*EbeamEn*PbeamEn; // (scalar product of beams' 4 momenta)
+  TLine * yline = new TLine(
+    Q2min / (2*yval*EdotP), Q2min, xmax, 2*xmax*yval*EdotP);
+  yline->SetLineWidth(4);
+  yline->SetLineStyle(2);
+  yline->Draw();
+  // clas12 y=1 line
+  yval = 1;
+  EdotP = PartMass(kP)*10.6;
+  TLine * yclas = new TLine(
+    Q2min / (2*yval*EdotP), Q2min, xmax, 2*xmax*yval*EdotP);
+  yclas->SetLineWidth(4);
+  yclas->SetLineStyle(7);
+  yclas->SetLineColor(kViolet+2);
+  yclas->Draw();
 
   return canv;
 };
