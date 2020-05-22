@@ -6,7 +6,7 @@ Double_t errScale;
 void Projector(TString infileN="spinroot/asym_4.root") {
 
   // input parameters -----------------------
-  Int_t numDays = 30; // number of days to extrapolate yields to
+  Int_t numDays = 100; // number of days to extrapolate yields to
   Double_t evRate = 5.1; // number of events per second
   Double_t polT = 0.85; // target polarization
   Double_t polE = 0.85; // beam polarization
@@ -43,9 +43,9 @@ void Projector(TString infileN="spinroot/asym_4.root") {
 
   // perform the projection
   TCanvas * canv = new TCanvas("canv","canv",800,600);
-  TObjArrayIter nextGr(asymArr);
   Double_t x,y,ex,ey;
   TLine * zero;
+  TObjArrayIter nextGr(asymArr);
   while(TGraphErrors * gr = (TGraphErrors*) nextGr()) {
     printf("gr = %s = %s\n",gr->GetName(),gr->GetTitle());
     for(int i=0; i<gr->GetN(); i++) {
@@ -55,8 +55,7 @@ void Projector(TString infileN="spinroot/asym_4.root") {
       ey = gr->GetErrorY(i);
 
       gr->SetPoint(i,x,0);
-      gr->SetPointError(i,ex,ey);
-      //gr->SetPointError(i,ex,ey*errScale);
+      gr->SetPointError(i,ex,ey*errScale);
 
       gr->Draw("APE");
       gr->GetYaxis()->SetRangeUser(-0.05,0.05);

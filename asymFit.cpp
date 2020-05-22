@@ -195,7 +195,7 @@ int main(int argc, char** argv) {
       for(int aa=0; aa<N_AMP; aa++) {
         grTitle = dihTitle + " " + TString(A->rfA[aa]->GetTitle()) + 
           " vs. " + grTitleSuffix;
-        grName = "kindepMA_A" + TString::Itoa(aa,10) + grNameSuffix;
+        grName = "kindepMA_A" + TString::Itoa(aa,10) + "_" + grNameSuffix;
         kindepGrMA[aa] = new TGraphErrors();
         kindepGrMA[aa]->SetName(grName);
         kindepGrMA[aa]->SetTitle(grTitle);
