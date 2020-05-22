@@ -87,7 +87,7 @@ Asymmetry::Asymmetry(Binning * binScheme, Int_t binNum) {
 
   // fixed polarization (for now...)
   ///////////////////////////////////////////////////
-  pol = 1.0; //0.86;
+  pol = 1; //0.86;
   ///////////////////////////////////////////////////
 
 
@@ -366,14 +366,6 @@ Bool_t Asymmetry::AddEvent(EventTree * ev) {
   Q2 = ev->Q2;
   theta = ev->theta;
 
-  // set spin state
-  spinn = ev->SpinState();
-
-  // set kinematic factors
-  kfA = ev->GetKinematicFactor('A');
-  kfC = ev->GetKinematicFactor('C');
-  kfW = ev->GetKinematicFactor('W');
-
   // testing single-hadron phiH definition
   /*
   PhiH = ev->GetDihadronObj()->GetSingleHadronPhiH(qA);
@@ -416,11 +408,12 @@ Bool_t Asymmetry::AddEvent(EventTree * ev) {
   if(Q2<-8000) return KickEvent("Q2 out of range",Q2);
   if(theta<0 || theta>PI) return KickEvent("theta out of range",theta);
 
-  // check spin state, which was set by EventTree
+  // set spin state
+  spinn = ev->SpinState();
   if(spinn<0 || spinn>=nSpin) return false;
 
   // get kinematic factor
-  kf = EvalKinematicFactor();
+  kf = EvalKinematicFactor(ev);
   if(kf<kfLB || kf>kfUB) return KickEvent("KF out of range",kf);
 
   // evaluate modValOA
@@ -890,10 +883,16 @@ Float_t Asymmetry::EvalWeight() {
 // if e(x) modulation, return W(y)/A(y)
 // if G1perp modulation, return C(y)/A(y)
 // see EventTree::GetKinematicFactor() for definitions
-Float_t Asymmetry::EvalKinematicFactor() {
+Float_t Asymmetry::EvalKinematicFactor(EventTree * ev) {
+  
+  kfA = ev->GetKinematicFactor('A');
+  kfC = ev->GetKinematicFactor('C');
+  kfW = ev->GetKinematicFactor('W');
+
   if(oaTw==3 && oaM==1) return kfW / kfA;
   else if(oaTw==2 && oaM==1) return kfC / kfA;
   else return 1;
+
 };
 
  

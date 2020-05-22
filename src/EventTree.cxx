@@ -274,7 +274,7 @@ void EventTree::GetEvent(Int_t i) {
   // dihadron kinematics cuts
   cutDihadronKinematics = 
     Zpair < 0.95 &&
-    Mmiss > 1.05 &&
+    Mmiss > 1.5 &&
     xF > 0 &&
     hadP[qA] > 1.25 && hadP[qB] > 1.25;
 

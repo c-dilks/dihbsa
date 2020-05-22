@@ -750,11 +750,11 @@ int main(int argc, char** argv) {
 
       printf("fit parameter results:\n");
       for(int aa=0; aa<N_AMP; aa++) {
-        printf(" >> A%d = %.3f +/- %.3f\n",
+        printf(" >> A%d = %.5f +/- %.5f\n",
             aa, A->rfA[aa]->getVal(), A->rfA[aa]->getError() );
       };
       for(int dd=0; dd<N_D; dd++) {
-        printf(" >> D%d = %.3f +/- %.3f\n",
+        printf(" >> D%d = %.5f +/- %.5f\n",
             dd, A->rfD[dd]->getVal(), A->rfD[dd]->getError() );
       };
       /*

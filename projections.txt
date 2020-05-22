@@ -1,0 +1,12 @@
+dihadron event rate
+-------------------
+run evCount time(s) rate(Hz)
+5198 59902 12822 4.67
+5221 58527 11996 4.88
+5303 58091 10702 5.43
+5355 25255 4700  5.37
+
+* run 5355 had some downtime, which was excluded
+
+-> average dihadron production rate: 5.1 Hz
+30 days = 2.592e+6 seconds = 13219200 dihadrons

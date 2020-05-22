@@ -77,7 +77,7 @@ class Asymmetry : public TObject
     Bool_t AddEvent(EventTree * ev);
     Float_t EvalModulation();
     Float_t EvalWeight();
-    Float_t EvalKinematicFactor();
+    Float_t EvalKinematicFactor(EventTree * ev);
     Int_t SpinState(Int_t spin_);
     Bool_t KickEvent(TString reason,Float_t badValue);
 
