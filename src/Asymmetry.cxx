@@ -627,6 +627,16 @@ void Asymmetry::SetFitMode(Int_t fitMode) {
       this->FormuAppend(3,1,-1);
       this->DenomAppend(2,2,0,0); // tw2 |2,0> UU,T
       break;
+    case 1000:
+      this->FormuAppend(2,1,1,0,Modulation::kLL); // double-spin asym
+      this->FormuAppend(3,1,1,0,Modulation::kLL);
+      break;
+    case 1001:
+      enablePW = true;
+      this->FormuAppend(2,1,1,0,Modulation::kLL); // double-spin asym
+      this->FormuAppend(2,2,1,0,Modulation::kLL); // with tw2 PWs
+      this->FormuAppend(2,2,2,0,Modulation::kLL);
+      break;
     default:
       fprintf(stderr,"ERROR: bad fitMode; using G1perp default\n");
       this->FormuAppend(2,1,1);
@@ -821,7 +831,8 @@ void Asymmetry::FitAsymMLM() {
 
 
 // append a modulation to build a multi-amplitude fit formula
-void Asymmetry::FormuAppend(Int_t TW, Int_t L, Int_t M) {
+void Asymmetry::FormuAppend(Int_t TW, Int_t L, Int_t M,
+  Int_t lev, Int_t polarization) {
   if(nAmpUsed>=nAmp) {
     fprintf(stderr,"ERROR: nAmpUsed > nAmp (the max allowed value)\n");
     return;
@@ -836,14 +847,12 @@ void Asymmetry::FormuAppend(Int_t TW, Int_t L, Int_t M) {
     fitFunc2formu += "+";
   };
 
-  modu[nAmpUsed] = new Modulation(TW, L, M, 0, enablePW, Modulation::kLU);
+  modu[nAmpUsed] = new Modulation(TW, L, M, lev, enablePW, polarization);
 
   asymFormu += "A"+TString::Itoa(nAmpUsed,10)+"*"+modu[nAmpUsed]->FormuRF();
   fitFunc2formu += "["+TString::Itoa(nAmpUsed,10)+"]*"+modu[nAmpUsed]->Formu();
 
-  //rfA[nAmpUsed]->SetTitle(TString("A"+modu[nAmpUsed]->StateTitle()));
-  rfA[nAmpUsed]->SetTitle(
-    TString("A_{LU}^{"+modu[nAmpUsed]->ModulationTitle()+"}"));
+  rfA[nAmpUsed]->SetTitle(modu[nAmpUsed]->AsymmetryTitle());
 
   nAmpUsed++;
 

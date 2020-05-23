@@ -55,6 +55,18 @@ Modulation::Modulation(Int_t tw_, Int_t l_, Int_t m_,
       default: aziStr = "0";
     };
   }
+  else if(polarization==kLL) {
+    switch(tw) {
+      case 2:
+        if(m==0) aziStr = "1";
+        else aziStr = Form("cos(%d*phiH-%d*phiR)",mAbs,mAbs);
+        break;
+      case 3:
+        aziStr = Form("cos(%d*phiH+%d*phiR)",1-m,m);
+        break;
+      default: aziStr = "0";
+    };
+  }
   else if(polarization==kUU) {
     switch(tw) {
       case 0:
@@ -175,24 +187,37 @@ TString Modulation::ModulationName() {
   return retstr;
 };
 
-TString Modulation::StateTitle() {
-
-  TString retstr,polStr,lStr;
-
-  if(tw==0) return "const";
+TString Modulation::PolarizationTitle() {
   switch(polarization) {
     case kLU:
-      polStr = "LU";
+      return "LU";
+      break;
+    case kLL:
+      return "LL";
       break;
     case kUU: 
-      if(tw==2 && lev==0) polStr = "UU,T";
-      else polStr = "UU";
+      if(tw==2 && lev==0) return "UU,T";
+      else return "UU";
       break;
   };
+};
+
+TString Modulation::StateTitle() {
+
+  TString retstr,lStr;
+  TString polStr = this->PolarizationTitle();
+
+  if(tw==0) return "const";
 
   lStr = enablePW ? Form("%d",l) : "L";
   
   retstr = Form("|%s,%d>^{tw%d}_{%s}",lStr.Data(),m,tw,polStr.Data());
+  return retstr;
+};
+
+TString Modulation::AsymmetryTitle() {
+  TString retstr = "A_{"+this->PolarizationTitle()+"}^{"+
+    this->ModulationTitle()+"}";
   return retstr;
 };
 
