@@ -1,11 +1,11 @@
 // reads plots.root and draws the kinematic factor plots, with profiles on them
 
 void drawKinematicFactorPlots() {
-  gStyle->SetOptStat(0);
+  gStyle->SetOptStat(100);
 
   TFile * infile = new TFile("plots.root","READ");
 
-  enum KF_enum {kfA, kfB, kfC, kfV, kfW, kfForE, kfForG, Nkf};
+  enum KF_enum {kfA, kfB, kfC, kfV, kfW, kfWA, kfVA, kfCA, kfBA, Nkf};
 
   TString kfName[Nkf];
   TString kfTitle[Nkf];
@@ -14,8 +14,10 @@ void drawKinematicFactorPlots() {
   kfName[kfC] = "kfC"; kfTitle[kfC] = "C(y)";
   kfName[kfV] = "kfV"; kfTitle[kfV] = "V(y)";
   kfName[kfW] = "kfW"; kfTitle[kfW] = "W(y)";
-  kfName[kfForE] = "kfForE"; kfTitle[kfForE] = "W(y)/A(y)";
-  kfName[kfForG] = "kfForG"; kfTitle[kfForG] = "C(y)/A(y)";
+  kfName[kfWA] = "kfWA"; kfTitle[kfWA] = "W(y)/A(y)"; // for e(x) via A_LU
+  kfName[kfVA] = "kfVA"; kfTitle[kfVA] = "V(y)/A(y)"; // for hL(x) via A_UL
+  kfName[kfCA] = "kfCA"; kfTitle[kfCA] = "C(y)/A(y)"; // for G1perp via A_LU
+  kfName[kfBA] = "kfBA"; kfTitle[kfBA] = "B(y)/A(y)";
 
   TH2D * kfVsMh[Nkf];
   TH2D * kfVsQ2[Nkf];
@@ -37,16 +39,18 @@ void drawKinematicFactorPlots() {
   TProfile * kfVsPhiH_pf[Nkf];
   TProfile * kfVsPhiHR_pf[Nkf];
 
+  TString plotName[Nkf];
   for(int k=0; k<Nkf; k++) {
-    kfVsMh[k] = (TH2D*) infile->Get(TString(kfName[k]+"vsMh"));
-    kfVsQ2[k] = (TH2D*) infile->Get(TString(kfName[k]+"vsQ2"));
-    kfVsMmiss[k] = (TH2D*) infile->Get(TString(kfName[k]+"vsMmiss"));
-    kfVsPhPerp[k] = (TH2D*) infile->Get(TString(kfName[k]+"vsPhPerp"));
-    kfVsX[k] = (TH2D*) infile->Get(TString(kfName[k]+"vsX"));
-    kfVsZpair[k] = (TH2D*) infile->Get(TString(kfName[k]+"vsZpair"));
-    kfVsPhiH[k] = (TH2D*) infile->Get(TString(kfName[k]+"vsPhiH"));
-    kfVsPhiR[k] = (TH2D*) infile->Get(TString(kfName[k]+"vsPhiR"));
-    kfVsPhiHR[k] = (TH2D*) infile->Get(TString(kfName[k]+"vsPhiHR"));
+    plotName[k] = "kinematicFactors/" + kfName[k];
+    kfVsMh[k] = (TH2D*) infile->Get(TString(plotName[k]+"vsMh"));
+    kfVsQ2[k] = (TH2D*) infile->Get(TString(plotName[k]+"vsQ2"));
+    kfVsMmiss[k] = (TH2D*) infile->Get(TString(plotName[k]+"vsMmiss"));
+    kfVsPhPerp[k] = (TH2D*) infile->Get(TString(plotName[k]+"vsPhPerp"));
+    kfVsX[k] = (TH2D*) infile->Get(TString(plotName[k]+"vsX"));
+    kfVsZpair[k] = (TH2D*) infile->Get(TString(plotName[k]+"vsZpair"));
+    kfVsPhiH[k] = (TH2D*) infile->Get(TString(plotName[k]+"vsPhiH"));
+    kfVsPhiR[k] = (TH2D*) infile->Get(TString(plotName[k]+"vsPhiR"));
+    kfVsPhiHR[k] = (TH2D*) infile->Get(TString(plotName[k]+"vsPhiHR"));
   };
 
   for(int k=0; k<Nkf; k++) {
@@ -90,11 +94,15 @@ void drawKinematicFactorPlots() {
   TCanvas * canv[Nkf];
   for(int k=0; k<Nkf; k++) {
     canv[k] = new TCanvas(
-      TString("canv_"+kfName[k]),TString("canv_"+kfName[k]),1000,1000);
+      TString("canv_"+kfName[k]),TString("canv_"+kfName[k]),1600,1000);
     canv[k]->Divide(4,2);
 
-    for(int p=1; p<=8; p++) canv[k]->GetPad(p)->SetLogz();
+    for(int p=1; p<=8; p++) {
+      canv[k]->GetPad(p)->SetLogz();
+      canv[k]->GetPad(p)->SetGrid(1,1);
+    };
 
+    /*
     canv[k]->cd(1);
     kfVsX[k]->Draw("colz");
     kfVsX_pf[k]->Draw("same");
@@ -121,6 +129,34 @@ void drawKinematicFactorPlots() {
     kfVsPhiR_pf[k]->Draw("same");
     //kfVsPhiHR[k]->Draw("colz");
     //kfVsPhiHR_pf[k]->Draw("same");
+    */
+
+    ///*
+    canv[k]->cd(1);
+    kfVsX_pf[k]->Draw();
+    kfVsX_pf[k]->GetYaxis()->SetRangeUser(0.5,1.5);
+    canv[k]->cd(2);
+    kfVsQ2_pf[k]->Draw();
+    kfVsQ2_pf[k]->GetYaxis()->SetRangeUser(0.5,1.5);
+    canv[k]->cd(3);
+    kfVsZpair_pf[k]->Draw();
+    kfVsZpair_pf[k]->GetYaxis()->SetRangeUser(0.5,1.5);
+    canv[k]->cd(4);
+    kfVsPhiH_pf[k]->Draw();
+    kfVsPhiH_pf[k]->GetYaxis()->SetRangeUser(0.5,1.5);
+    canv[k]->cd(5);
+    kfVsPhPerp_pf[k]->Draw();
+    kfVsPhPerp_pf[k]->GetYaxis()->SetRangeUser(0.5,1.5);
+    canv[k]->cd(6);
+    kfVsMmiss_pf[k]->Draw();
+    kfVsMmiss_pf[k]->GetYaxis()->SetRangeUser(0.5,1.5);
+    canv[k]->cd(7);
+    kfVsMh_pf[k]->Draw();
+    kfVsMh_pf[k]->GetYaxis()->SetRangeUser(0.5,1.5);
+    canv[k]->cd(8);
+    kfVsPhiR_pf[k]->Draw();
+    kfVsPhiR_pf[k]->GetYaxis()->SetRangeUser(0.5,1.5);
+    //kfVsPhiHR_pf[k]->Draw();
   };
   //*/
 

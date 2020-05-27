@@ -63,12 +63,14 @@ void Projector(TString infileN, TString model, Int_t numDays=30,
   Float_t coeff[3] = { 0.00726707, 0.157865, -0.279454 };
   TString formuXdep = Form("%f+%f*x+%f*x*x",coeff[0],coeff[1],coeff[2]);
   TF1 * funcXdep = new TF1("funcXdep",formuXdep,0,1);
+  TF1 * funcXdep2 = new TF1("funcXdep",TString("2*("+formuXdep+")"),0,1);
   // - flat zero
   TF1 * funcZero = new TF1("funcZero","0",0,1.5);
   // - set model
   TF1 * func;
   if(model=="spec") func = funcSpec;
   else if(model=="xdep") func = funcXdep;
+  else if(model=="xdep2") func = funcXdep2;
   else func = funcZero;
   // -----------------------------------------------------
 
@@ -83,11 +85,22 @@ void Projector(TString infileN, TString model, Int_t numDays=30,
     printf("gr = %s = %s\n",gr->GetName(),gr->GetTitle());
     gr->SetMarkerColor(kBlue-3);
     gr->SetLineColor(kBlue-3);
-    for(int i=0; i<gr->GetN(); i++) {
 
-      grT = gr->GetTitle();
-      grT(TRegexp("LU")) = "UL"; // fix the title LU -> UL
-      gr->SetTitle(grT);
+    grT = gr->GetTitle();
+    grT(TRegexp("LU")) = "UL"; // fix the title LU -> UL
+    if(grT.Contains("theta")) {
+      grT(TRegexp("(sin(#theta))\\*(")) = "sin(#theta)";
+      grT(TRegexp("(sin(2\\*#theta))\\*(")) = "sin(2*#theta)";
+      grT(TRegexp("(pow(sin(#theta),2))\\*(")) = "sin^{2}(#theta)";
+      grT(TRegexp("))")) = ")";
+    };
+    if(model=="xdep") grT+=", for neutron target";
+    else if(model=="xdep2") grT+=", for proton target";
+    else if(model=="spec") grT+=", for proton target";
+    grT = Form("%s, %d days",grT.Data(),numDays);
+    gr->SetTitle(grT);
+
+    for(int i=0; i<gr->GetN(); i++) {
 
       gr->GetPoint(i,x,y);
       ex = gr->GetErrorX(i);
@@ -97,7 +110,8 @@ void Projector(TString infileN, TString model, Int_t numDays=30,
       gr->SetPointError(i,ex,ey*errScale);
 
       gr->Draw("APE");
-      gr->GetYaxis()->SetRangeUser(-0.05,0.05);
+      if(model.Contains("xdep")) gr->GetYaxis()->SetRangeUser(-0.01,0.1);
+      else gr->GetYaxis()->SetRangeUser(-0.025,0.025);
       zero = new TLine(gr->GetXaxis()->GetXmin(),0,
                        gr->GetXaxis()->GetXmax(),0);
       zero->SetLineStyle(2);

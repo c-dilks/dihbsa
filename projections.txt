@@ -7,6 +7,9 @@ run evCount time(s) rate(Hz)
 5355 25255 4700  5.37
 
 * run 5355 had some downtime, which was excluded
+* all of these runs had 45 nA beam current
 
 -> average dihadron production rate: 5.1 Hz
 30 days = 2.592e+6 seconds = 13219200 dihadrons
+
+Note: pass1 inbending had 5.3 million dihadrons

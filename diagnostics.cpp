@@ -246,7 +246,7 @@ int main(int argc, char** argv) {
 
 
    // kinematic factor distributions
-   enum KF_enum {kfA, kfB, kfC, kfV, kfW, kfForE, kfForG, Nkf};
+   enum KF_enum {kfA, kfB, kfC, kfV, kfW, kfWA, kfVA, kfCA, kfBA, Nkf};
    TString kfName[Nkf];
    TString kfTitle[Nkf];
    kfName[kfA] = "kfA"; kfTitle[kfA] = "A(y)";
@@ -254,8 +254,10 @@ int main(int argc, char** argv) {
    kfName[kfC] = "kfC"; kfTitle[kfC] = "C(y)";
    kfName[kfV] = "kfV"; kfTitle[kfV] = "V(y)";
    kfName[kfW] = "kfW"; kfTitle[kfW] = "W(y)";
-   kfName[kfForE] = "kfForE"; kfTitle[kfForE] = "W(y)/A(y)";
-   kfName[kfForG] = "kfForG"; kfTitle[kfForG] = "C(y)/A(y)";
+   kfName[kfWA] = "kfWA"; kfTitle[kfWA] = "W(y)/A(y)";
+   kfName[kfVA] = "kfVA"; kfTitle[kfVA] = "V(y)/A(y)";
+   kfName[kfCA] = "kfCA"; kfTitle[kfCA] = "C(y)/A(y)";
+   kfName[kfBA] = "kfBA"; kfTitle[kfBA] = "B(y)/A(y)";
    Float_t kfVal[Nkf];
    Float_t kfRange[Nkf][2];
    kfRange[kfA][0]=0.5; kfRange[kfA][1]=1; 
@@ -263,8 +265,10 @@ int main(int argc, char** argv) {
    kfRange[kfC][0]=0; kfRange[kfC][1]=0.5;
    kfRange[kfV][0]=0; kfRange[kfV][1]=2; 
    kfRange[kfW][0]=0; kfRange[kfW][1]=0.5;
-   kfRange[kfForE][0]=0; kfRange[kfForE][1]=1;
-   kfRange[kfForG][0]=0; kfRange[kfForG][1]=1; 
+   kfRange[kfWA][0]=0.5; kfRange[kfWA][1]=1.5;
+   kfRange[kfVA][0]=0.5; kfRange[kfVA][1]=1.5;
+   kfRange[kfCA][0]=0.5; kfRange[kfCA][1]=1.5; 
+   kfRange[kfBA][0]=0; kfRange[kfBA][1]=2; 
    TH2D * kfVsMh[Nkf];
    TH2D * kfVsPhPerp[Nkf];
    TH2D * kfVsX[Nkf];
@@ -289,7 +293,7 @@ int main(int argc, char** argv) {
        NBINS,0,12,NBINS,kfRange[k][0],kfRange[k][1]);
      kfVsMmiss[k] = new TH2D(TString(kfName[k]+"vsMmiss"),
        TString(kfTitle[k]+" vs. M_{X}"),
-       NBINS,-2,6,NBINS,kfRange[k][0],kfRange[k][1]);
+       NBINS,0,3.5,NBINS,kfRange[k][0],kfRange[k][1]);
      kfVsZpair[k] = new TH2D(TString(kfName[k]+"vsZpair"),
        TString(kfTitle[k]+" vs. z"),
        NBINS,0,1,NBINS,kfRange[k][0],kfRange[k][1]);
@@ -500,8 +504,10 @@ int main(int argc, char** argv) {
        kfVal[kfC] = ev->GetKinematicFactor('C');
        kfVal[kfV] = ev->GetKinematicFactor('V');
        kfVal[kfW] = ev->GetKinematicFactor('W');
-       kfVal[kfForE] = kfVal[kfW] / kfVal[kfA];
-       kfVal[kfForG] = kfVal[kfC] / kfVal[kfA];
+       kfVal[kfWA] = kfVal[kfW] / kfVal[kfA];
+       kfVal[kfVA] = kfVal[kfV] / kfVal[kfA];
+       kfVal[kfCA] = kfVal[kfC] / kfVal[kfA];
+       kfVal[kfBA] = kfVal[kfB] / kfVal[kfA];
        for(int k=0; k<Nkf; k++) {
          kfVsMh[k]->Fill(ev->Mh,kfVal[k]);
          kfVsPhPerp[k]->Fill(ev->PhPerp,kfVal[k]);
@@ -658,6 +664,8 @@ int main(int argc, char** argv) {
 
    diphMdist->Write();
 
+   outfile->mkdir("kinematicFactors");
+   outfile->cd("kinematicFactors");
    for(int k=0; k<Nkf; k++) {
      kfVsMh[k]->Write();
      kfVsPhPerp[k]->Write();
@@ -669,6 +677,7 @@ int main(int argc, char** argv) {
      kfVsPhiH[k]->Write();
      kfVsPhiHR[k]->Write();
    };
+   outfile->cd("/");
 
    outfile->Close();
 
