@@ -938,7 +938,7 @@ void Asymmetry::StreamData(TFile * tf) {
 
   tf->cd();
   tf->mkdir(aName);
-  tf->cd(TString("/"+aName));
+  tf->cd(TString(aName));
 
   appName = this->AppFileName(tf);
 
@@ -1084,4 +1084,6 @@ Bool_t Asymmetry::KickEvent(TString reason,Float_t badValue) {
 };
 
 
-Asymmetry::~Asymmetry() {};
+Asymmetry::~Asymmetry() {
+  if(rfData) delete rfData;
+};

@@ -36,6 +36,7 @@ int PrintUsage();
 Binning * BS;
 Asymmetry * A;
 EventTree * ev;
+TFile * spinrootFile;
 
 
 //////////////////////////////////////
@@ -151,7 +152,7 @@ int main(int argc, char** argv) {
     spinrootFileN(TRegexp("^.*/")) = "spinroot/spin.";
   };
   printf("\nCREATING OUTPUT FILE = %s\n\n",spinrootFileN.Data());
-  TFile * spinrootFile = new TFile(spinrootFileN,"RECREATE");
+  spinrootFile = new TFile(spinrootFileN,"RECREATE");
 
 
   // instantiate Asymmetry objects, and
@@ -220,10 +221,15 @@ int main(int argc, char** argv) {
   */
 
 
-  // close spinroot file
-  spinrootFile->Close();
+  // close spinroot file and cleanup
   printf("\n%s written\n\n",spinrootFileN.Data());
   printf("evCount = %.0f\n",evCount);
+  spinrootFile->Close();
+  for(Int_t bn : BS->binVec) {
+    A = asymMap.at(bn);
+    delete A;
+  };
+  return 0;
 };
 
 //////////////////////////////////////////////////////////////////////////

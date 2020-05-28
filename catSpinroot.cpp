@@ -102,6 +102,10 @@ int main(int argc, char** argv) {
     A->StreamData(catFile);
   };
   catFile->Close();
+  for(Int_t bn : BS->binVec) {
+    A = asymMap.at(bn);
+    delete A;
+  };
 
   //muntrace(); // (memory tracing)
 };
