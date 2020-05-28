@@ -389,7 +389,7 @@ int main(int argc, char** argv) {
           ";#phi_{R};#phi_{h}";
         plotN = Form("%s_PhiHvsPhiR_%d",obsN[o].Data(),b);
         PhiHvsPhiR[b] = new TH2D(plotN,plotT,
-          NPLOTBINS, -PI, PI, NPLOTBINS, -PI, PI);
+          70, -PI, PI, 70, -PI, PI);
 
         plotT = hadTitle[qA] + " x_{F} vs. " + 
                 hadTitle[qB] + " x_{F}, for " + cutT +
@@ -692,7 +692,7 @@ int main(int argc, char** argv) {
     PtDistLinMatrix[o] = MatrixifyDist1(PtDistLin[o],0,1);
     PtDistLogMatrix[o] = MatrixifyDist1(PtDistLog[o],1,1);
   };
-  PhiHvsPhiRMatrix = MatrixifyDist2(PhiHvsPhiR,0,0,1);
+  PhiHvsPhiRMatrix = MatrixifyDist2(PhiHvsPhiR,0,0,0); // maxima not equalized
   corrXFMatrix = MatrixifyDist2(corrXF,0,0,1);
   PhiHvsPMatrix = MatrixifyDist2(PhiHvsP,1,0,1);
   PhiRvsPMatrix = MatrixifyDist2(PhiRvsP,1,0,1);
@@ -997,7 +997,7 @@ TCanvas * MatrixifyDist2(TH2D ** distArr,Bool_t logx,Bool_t logy,Bool_t logz) {
     if(logy) canvases[b]->SetLogy();
     if(logz) canvases[b]->SetLogz();
     canvases[b]->SetGrid(1,1);
-    distArr[b]->SetMaximum(max);
+    if(!canvN.Contains("PhiHvsPhiR")) distArr[b]->SetMaximum(max);
     FormatDist(distArr[b]);
     distArr[b]->Draw("colz");
   };
