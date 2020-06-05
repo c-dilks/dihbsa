@@ -9,14 +9,18 @@
 
 Double_t errScale;
 
-void Projector(TString infileN, TString model, Int_t numDays=30,
+void Projector(TString infileN, TString model,
+  TString targetTitle,
+  Double_t numDays=60,
   Double_t polE = 0.85,
   Double_t polT = 0.85,
   Double_t dilu = 0.2) {
 
   // input parameters -----------------------
   Double_t evRate = 5.1; // number of events per second
+  Double_t beamEff = 0.5; // efficiency of data taking
   // ----------------------------------------
+  numDays *= beamEff;
   
   // get the number of events in asym.root file, and
   // store asymmetry graphs in an array
@@ -38,8 +42,10 @@ void Projector(TString infileN, TString model, Int_t numDays=30,
 
   // number of events expected in numDays
   Double_t evCountProj = numDays * 24 * 60 * 60 * evRate;
+  printf("projecting %.1f days with %.1f%% efficiency\n",
+    numDays/beamEff,beamEff*100);
   printf("number of events in asym.root file: %.0f\n",evCount);
-  printf("number of events expected for %d days: %.0f\n",numDays,evCountProj);
+  printf("number of events expected for %.1f days: %.0f\n",numDays,evCountProj);
   printf("yield scale factor: %.2f\n",evCountProj/evCount);
   // n.b. pass1 inbending has ~5.3 million dihadrons
 
@@ -58,25 +64,28 @@ void Projector(TString infileN, TString model, Int_t numDays=30,
     formuSpec.Data(),Mrho,sigma,sigma);
   formuSpec = Form("%s*TMath::Sin(%f-x)",formuSpec.Data(),Mrho);
   TF1 * funcSpec = new TF1("funcSpec",formuSpec,0,1.5);
+  TF1 * funcSpec2 = new TF1("funcSpec2","-0.125*("+formuSpec+")",0,1.5);
   // - A_LU^sinPhiR x-dependence from CLAS12 preliminary data polynomial fit,
   //   used for x-dependence of A_UL^sinPhiR
   Float_t coeff[3] = { 0.00726707, 0.157865, -0.279454 };
   TString formuXdep = Form("%f+%f*x+%f*x*x",coeff[0],coeff[1],coeff[2]);
   TF1 * funcXdep = new TF1("funcXdep",formuXdep,0,1);
-  TF1 * funcXdep2 = new TF1("funcXdep",TString("2*("+formuXdep+")"),0,1);
+  TF1 * funcXdep2 = new TF1("funcXdep2",TString("2*("+formuXdep+")"),0,1);
   // - flat zero
   TF1 * funcZero = new TF1("funcZero","0",0,1.5);
   // - set model
   TF1 * func;
-  if(model=="spec") func = funcSpec;
-  else if(model=="xdep") func = funcXdep;
-  else if(model=="xdep2") func = funcXdep2;
+  if(model=="specP") func = funcSpec;
+  else if(model=="specN") func = funcSpec2;
+  else if(model=="xdepN") func = funcXdep;
+  else if(model=="xdepP") func = funcXdep2;
   else func = funcZero;
   // -----------------------------------------------------
 
 
   // perform the projection
   TCanvas * canv = new TCanvas("canv","canv",800,600);
+  canv->SetGrid(1,1);
   Double_t x,y,ex,ey;
   TLine * zero;
   TObjArrayIter nextGr(asymArr);
@@ -85,6 +94,8 @@ void Projector(TString infileN, TString model, Int_t numDays=30,
     printf("gr = %s = %s\n",gr->GetName(),gr->GetTitle());
     gr->SetMarkerColor(kBlue-3);
     gr->SetLineColor(kBlue-3);
+    gr->SetMarkerSize(1.5);
+    gr->SetLineWidth(4);
 
     grT = gr->GetTitle();
     grT(TRegexp("LU")) = "UL"; // fix the title LU -> UL
@@ -94,10 +105,9 @@ void Projector(TString infileN, TString model, Int_t numDays=30,
       grT(TRegexp("(pow(sin(#theta),2))\\*(")) = "sin^{2}(#theta)";
       grT(TRegexp("))")) = ")";
     };
-    if(model=="xdep") grT+=", for neutron target";
-    else if(model=="xdep2") grT+=", for proton target";
-    else if(model=="spec") grT+=", for proton target";
-    grT = Form("%s, %d days",grT.Data(),numDays);
+    grT = grT + ", for " + targetTitle + " target";
+    grT = Form("%s, %d days with %d%% efficiency",
+      grT.Data(),(int)(numDays/beamEff),(int)(beamEff*100));
     gr->SetTitle(grT);
 
     for(int i=0; i<gr->GetN(); i++) {
@@ -114,7 +124,8 @@ void Projector(TString infileN, TString model, Int_t numDays=30,
       else gr->GetYaxis()->SetRangeUser(-0.025,0.025);
       zero = new TLine(gr->GetXaxis()->GetXmin(),0,
                        gr->GetXaxis()->GetXmax(),0);
-      zero->SetLineStyle(2);
+      //zero->SetLineStyle(2);
+      zero->SetLineWidth(1);
       zero->Draw();
       //func->Draw("SAME");
       canv->Print(TString(TString(gr->GetName())+".proj.pdf"),"pdf");

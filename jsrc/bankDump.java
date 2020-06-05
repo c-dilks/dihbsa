@@ -26,10 +26,13 @@ public class bankDump{
 
 
     Event ev = new Event();
-    Bank recBank = new Bank(reader.getSchemaFactory().getSchema("REC::Particle"));
-    Bank genBank = new Bank(reader.getSchemaFactory().getSchema("MC::Particle"));
-    Bank lundBank = new Bank(reader.getSchemaFactory().getSchema("MC::Lund"));
     Bank runconfigBank = new Bank(reader.getSchemaFactory().getSchema("RUN::config"));
+    Bank parBank = new Bank(reader.getSchemaFactory().getSchema("REC::Particle"));
+    //Bank genBank = new Bank(reader.getSchemaFactory().getSchema("MC::Particle"));
+    //Bank lundBank = new Bank(reader.getSchemaFactory().getSchema("MC::Lund"));
+    Bank calBank = new Bank(reader.getSchemaFactory().getSchema("REC::Calorimeter"));
+    Bank trkBank = new Bank(reader.getSchemaFactory().getSchema("REC::Track"));
+    Bank trajBank = new Bank(reader.getSchemaFactory().getSchema("REC::Traj"));
 
     reader.getEvent(ev,0); // init
 
@@ -47,11 +50,12 @@ public class bankDump{
         System.out.println("EVNUM = "+evnum);
 
         System.out.print("REC::Particle\n");
-        ev.read(recBank);
-        //recBank.show();
-        printPions(recBank);
+        ev.read(parBank);
+        parBank.show();
+        //printPions(parBank);
         System.out.println("");
 
+        /*
         System.out.print("MC::Particle\n");
         ev.read(genBank);
         //genBank.show();
@@ -62,6 +66,22 @@ public class bankDump{
         ev.read(lundBank);
         //lundBank.show();
         printPions(lundBank);
+        System.out.println("");
+        */
+
+        System.out.print("REC::Calorimeter\n");
+        ev.read(calBank);
+        calBank.show();
+        System.out.println("");
+
+        System.out.print("REC::Track\n");
+        ev.read(trkBank);
+        trkBank.show();
+        System.out.println("");
+
+        System.out.print("REC::Traj\n");
+        ev.read(trajBank);
+        trajBank.show();
         System.out.println("");
       };
     };
