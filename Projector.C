@@ -29,19 +29,31 @@ void Projector(TString infileN, TString model,
   TString keyname;
   Double_t evCount = 0;
   TObjArray * asymArr = new TObjArray();
+  TString ivBinRange[100];
+  int v;
   while(TKey * key = (TKey*) nextKey()) {
     keyname = TString(key->GetName());
+    // get number of events
     if(keyname.Contains(TRegexp("^ivFullDist"))) {
       evCount += ((TH1D*)key->ReadObj())->GetEntries();
     }
+    // read asymmetry graph
     else if(keyname.Contains(TRegexp("^kindepMA")) &&
            !keyname.Contains("Canv")) {
       asymArr->AddLast((TGraphErrors*)key->ReadObj());
+    }
+    // get bin ranges
+    else if(keyname.Contains(TRegexp("^asym_"))) {
+      keyname(TRegexp("^asym_.")) = "";
+      v = keyname.Atoi();
+      ivBinRange[v] = ((TGraphErrors*)key->ReadObj())->GetTitle();
+      ivBinRange[v](TRegexp("^.*::.*in")) = "";
     };
   };
 
   // number of events expected in numDays
   Double_t evCountProj = numDays * 24 * 60 * 60 * evRate;
+  printf("\n");
   printf("projecting %.1f days with %.1f%% efficiency\n",
     numDays/beamEff,beamEff*100);
   printf("number of events in asym.root file: %.0f\n",evCount);
@@ -52,6 +64,7 @@ void Projector(TString infileN, TString model,
   // the statistical uncertainty will be multiplied by this number
   errScale = 1.0 / ( polE * polT * dilu * TMath::Sqrt(evCountProj/evCount) );
   printf("uncertainty will be scaled by: %.2f\n",errScale);
+  printf("\n");
 
 
   // models -------------------------------------------
@@ -90,8 +103,10 @@ void Projector(TString infileN, TString model,
   TLine * zero;
   TObjArrayIter nextGr(asymArr);
   TString grT;
+  TString rootName;
+  Bool_t once = true;
   while(TGraphErrors * gr = (TGraphErrors*) nextGr()) {
-    printf("gr = %s = %s\n",gr->GetName(),gr->GetTitle());
+    //printf("gr = %s = %s\n",gr->GetName(),gr->GetTitle());
     gr->SetMarkerColor(kBlue-3);
     gr->SetLineColor(kBlue-3);
     gr->SetMarkerSize(1.5);
@@ -112,24 +127,49 @@ void Projector(TString infileN, TString model,
 
     for(int i=0; i<gr->GetN(); i++) {
 
+      // set projected points
       gr->GetPoint(i,x,y);
       ex = gr->GetErrorX(i);
       ey = gr->GetErrorY(i);
 
       gr->SetPoint(i,x,func->Eval(x));
       gr->SetPointError(i,ex,ey*errScale);
-
-      gr->Draw("APE");
-      if(model.Contains("xdep")) gr->GetYaxis()->SetRangeUser(-0.01,0.1);
-      else gr->GetYaxis()->SetRangeUser(-0.025,0.025);
-      zero = new TLine(gr->GetXaxis()->GetXmin(),0,
-                       gr->GetXaxis()->GetXmax(),0);
-      //zero->SetLineStyle(2);
-      zero->SetLineWidth(1);
-      zero->Draw();
-      //func->Draw("SAME");
-      canv->Print(TString(TString(gr->GetName())+".proj.pdf"),"pdf");
-
     };
+
+    // draw projection
+    gr->Draw("APE");
+    if(model.Contains("xdep")) gr->GetYaxis()->SetRangeUser(-0.01,0.1);
+    else gr->GetYaxis()->SetRangeUser(-0.025,0.025);
+    zero = new TLine(gr->GetXaxis()->GetXmin(),0,
+                     gr->GetXaxis()->GetXmax(),0);
+    //zero->SetLineStyle(2);
+    zero->SetLineWidth(1);
+    zero->Draw();
+    //func->Draw("SAME");
+    rootName = gr->GetName();
+    canv->Print(TString(rootName+".proj.pdf"),"pdf");
+
+    // generate table
+    // - bin ranges and means
+    if(once) {
+      gSystem->RedirectOutput("binranges.tabletex","w");
+      for(int i=0; i<gr->GetN(); i++) {
+        gr->GetPoint(i,x,y);
+        printf("%s & %.2g & %.2g\n",ivBinRange[i].Data(),x,y);
+      };
+      gSystem->RedirectOutput(0);
+      once = false;
+      printf("\n");
+    };
+    // - asymmetry values
+    gSystem->RedirectOutput(rootName+".tabletex","w");
+    for(int i=0; i<gr->GetN(); i++) {
+      gr->GetPoint(i,x,y);
+      ey = gr->GetErrorY(i);
+      //printf(" & %.2g $\\pm$ %.2g\n",y,ey);
+      printf(" & %.2g\n",ey);
+    };
+    gSystem->RedirectOutput(0);
+    printf("\n");
   };
 };

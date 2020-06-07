@@ -13,13 +13,24 @@ modelD=(  'zero'   'zero'   'zero') # model for DSA projection
 # beam polarization (for DSA only)
 beamPol=0.8
 
+# subroutine to rename output file and build tables
+function organize {
+# args: 1=rootName 2=tarName 3=days 4={H,G,DSA}
+  mv -v ${1}.proj.pdf projection${4}_${2}_${3}days.pdf
+  if [ $3 -eq 60 ]; then
+    cp binranges.tabletex projection${4}_${2}.tabletex
+  fi
+  paste projection${4}_${2}.tabletex ${1}.tabletex > tempo
+  mv tempo projection${4}_${2}.tabletex
+}
+
+
 # loop over number of days
 for days in 60 90 120; do
 
   # loop over targets
   for i in {0..2}; do
 
-    suffix="${tarName[$i]}_${days}days"
 
 # projection for hL(x)
     root -b -q Projector.C\
@@ -30,7 +41,7 @@ ${days}','\
 1','\
 ${tarPol[$i]}','\
 ${tarDil[$i]}')'
-    mv -v kindepMA_A2_X.proj.pdf projectionH_${suffix}.pdf
+  organize kindepMA_A2_X ${tarName[$i]} ${days} H
 
 # projection for G1perp
     root -b -q Projector.C\
@@ -41,7 +52,7 @@ ${days}','\
 1','\
 ${tarPol[$i]}','\
 ${tarDil[$i]}')'
-    mv -v kindepMA_A1_M.proj.pdf projectionG_${suffix}.pdf
+  organize kindepMA_A1_M ${tarName[$i]} ${days} G
 
 # projection for DSA
     root -b -q Projector.C\
@@ -52,15 +63,27 @@ ${days}','\
 ${beamPol}','\
 ${tarPol[$i]}','\
 ${tarDil[$i]}')'
-    mv -v kindepMA_A1_Z.proj.pdf projectionDSA_${suffix}.pdf
+  organize kindepMA_A1_Z ${tarName[$i]} ${days} DSA
 
   done
 done
 
+rm kindep*.tabletex
+rm binranges*.tabletex
 
-# projection for DSA partial waves
-##root -b -q Projector.C\
-##'("spinroot.proj.vsZ/asym_1001.root","zero",30,0.85,0.85,0.2)'
-##mv kindepMA_A0_Z.proj.pdf projectionPW0.pdf
-##mv kindepMA_A1_Z.proj.pdf projectionPW1.pdf
-##mv kindepMA_A2_Z.proj.pdf projectionPW2.pdf
+
+# add tabletex headers
+function addHeaders {
+# args: 1={M_h,x,z} 2={UL,LL} 3={H,G,DSA}
+  sigmaStr=""
+  sigmaStr='60 days $\sigma$ & 90 days $\sigma$ & 120 days $\sigma$ \\\hline'
+  for file in projection${3}*.tabletex; do
+    echo '\hline' > tempo
+    echo '$'${1}'$ range & $\langle '${1}' \rangle$ & $A_{'${2}'}$ & '$sigmaStr >> tempo
+    while read line; do echo ${line}' \\\hline' >> tempo; done < $file
+    mv tempo $file
+  done
+}
+addHeaders x UL H
+addHeaders M_h UL G
+addHeaders z LL DSA
