@@ -78,9 +78,20 @@ function addHeaders {
   sigmaStr=""
   sigmaStr='60 days $\sigma$ & 90 days $\sigma$ & 120 days $\sigma$ \\\hline'
   for file in projection${3}*.tabletex; do
-    echo '\hline' > tempo
+    
+    fn=$(echo $file|sed 's/\./_/g')
+
+    echo '\begin{tabular}{|c|c|c|c|c|c|}' >> tempo
+    echo '\hline' >> tempo
     echo '$'${1}'$ range & $\langle '${1}' \rangle$ & $A_{'${2}'}$ & '$sigmaStr >> tempo
+
     while read line; do echo ${line}' \\\hline' >> tempo; done < $file
+
+    echo '\end{tabular}' >> tempo
+    echo '\caption{'$fn'}' >> tempo
+    echo '\label{tab:'$fn'}' >> tempo
+    echo '' >> tempo
+
     mv tempo $file
   done
 }
