@@ -31,33 +31,82 @@ Binning::Binning(Int_t pairType_) {
   if(numKaons==0) {
 
     // -- M_h (dihadron invariant mass)
-    ///* // quantiles
+    /* // 7 quantile bins
     AddBinBound(vM,0.46);
     AddBinBound(vM,0.60);
     AddBinBound(vM,0.72);
     AddBinBound(vM,0.81);
     AddBinBound(vM,0.93);
     AddBinBound(vM,1.10);
+    */
+    ///* // 14 quantile bins
+    AddBinBound(vM,0.38);
+    AddBinBound(vM,0.44);
+    AddBinBound(vM,0.51);
+    AddBinBound(vM,0.57);
+    AddBinBound(vM,0.63);
+    AddBinBound(vM,0.69);
+    AddBinBound(vM,0.74);
+    AddBinBound(vM,0.78);
+    AddBinBound(vM,0.82);
+    AddBinBound(vM,0.88);
+    AddBinBound(vM,0.94);
+    AddBinBound(vM,1.02);
+    AddBinBound(vM,1.16);
     //*/
     /* // above/below rho
     AddBinBound(vM,0.77);
     */
 
     // -- x (bjorken-x)
+    /* // 7 quantile bins
     AddBinBound(vX,0.12);
     AddBinBound(vX,0.15);
     AddBinBound(vX,0.18);
     AddBinBound(vX,0.21);
     AddBinBound(vX,0.25);
     AddBinBound(vX,0.32);
+    */
+    ///* // 14 quantile bins
+    AddBinBound(vX,0.11);
+    AddBinBound(vX,0.13);
+    AddBinBound(vX,0.14);
+    AddBinBound(vX,0.15);
+    AddBinBound(vX,0.17);
+    AddBinBound(vX,0.18);
+    AddBinBound(vX,0.19);
+    AddBinBound(vX,0.21);
+    AddBinBound(vX,0.23);
+    AddBinBound(vX,0.25);
+    AddBinBound(vX,0.28);
+    AddBinBound(vX,0.32);
+    AddBinBound(vX,0.38);
+    //*/
 
     // -- z (fragmentation fraction)
+    /* // 7 quantile bins
     AddBinBound(vZ,0.43);
     AddBinBound(vZ,0.48);
     AddBinBound(vZ,0.52);
     AddBinBound(vZ,0.57);
     AddBinBound(vZ,0.62);
     AddBinBound(vZ,0.68);
+    */
+    ///* // 14 quantile bins
+    AddBinBound(vZ,0.40);
+    AddBinBound(vZ,0.44);
+    AddBinBound(vZ,0.46);
+    AddBinBound(vZ,0.49);
+    AddBinBound(vZ,0.51);
+    AddBinBound(vZ,0.53);
+    AddBinBound(vZ,0.56);
+    AddBinBound(vZ,0.58);
+    AddBinBound(vZ,0.60);
+    AddBinBound(vZ,0.63);
+    AddBinBound(vZ,0.66);
+    AddBinBound(vZ,0.69);
+    AddBinBound(vZ,0.73);
+    //*/
 
     // -- PhPerp (transverse momentum of dihadron)
     AddBinBound(vPt,0.29); // 5 quantiles (from GetQuantiles.C)

@@ -357,7 +357,7 @@ int main(int argc, char** argv) {
    printf("begin loop through %lld events...\n",ev->ENT);
    Int_t hadI[2];
    for(int i=0; i<ev->ENT; i++) {
-     if(i>10000) break;
+     //if(i>10000) break; // limiter
 
      ev->GetEvent(i);
 
