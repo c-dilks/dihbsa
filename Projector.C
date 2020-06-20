@@ -18,7 +18,7 @@ void Projector(TString infileN, TString model,
 
   // input parameters -----------------------
   Double_t evRate = 5.1; // number of events per second
-  Double_t beamEff = 0.5; // efficiency of data taking
+  Double_t beamEff = 1; // efficiency of data taking (set to 1 for PAC days)
   // ----------------------------------------
   numDays *= beamEff;
   
@@ -121,8 +121,10 @@ void Projector(TString infileN, TString model,
       grT(TRegexp("))")) = ")";
     };
     grT = grT + ", for " + targetTitle + " target";
-    grT = Form("%s, %d days with %d%% efficiency",
-      grT.Data(),(int)(numDays/beamEff),(int)(beamEff*100));
+    if(beamEff<1) {
+      grT = Form("%s, %d days with %d%% efficiency",
+        grT.Data(),(int)(numDays/beamEff),(int)(beamEff*100));
+    } else grT = Form("%s, %d PAC days",grT.Data(),(int)(numDays));
     gr->SetTitle(grT);
 
     for(int i=0; i<gr->GetN(); i++) {
