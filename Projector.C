@@ -1,6 +1,9 @@
 // takes spinroot/asym*.root file and rescales the error bars
 // according to specifications
 //
+// N.B. the asym*.root file MUST have been produced with polarization==1 and
+//      dilution==1
+//
 // arguments:
 // - numDays: number of days to project
 // - polT: target polarization
@@ -19,9 +22,13 @@ void Projector(TString infileN, TString model,
   // input parameters -----------------------
   Double_t evRate = 5.1; // number of events per second
   Double_t beamEff = 1; // efficiency of data taking (set to 1 for PAC days)
+  Bool_t useCustomYields = false; // use custom yields, rather than 
+                                  // extrapolating from `infileN`
+          if(targetTitle.Contains("He") && model=="specN") 
+            useCustomYields = true; // for He3
   // ----------------------------------------
   numDays *= beamEff;
-  
+
   // get the number of events in asym.root file, and
   // store asymmetry graphs in an array
   TFile * infile = new TFile(infileN,"READ");
@@ -61,10 +68,6 @@ void Projector(TString infileN, TString model,
   printf("yield scale factor: %.2f\n",evCountProj/evCount);
   // n.b. pass1 inbending has ~5.3 million dihadrons
 
-  // the statistical uncertainty will be multiplied by this number
-  errScale = 1.0 / ( polE * polT * dilu * TMath::Sqrt(evCountProj/evCount) );
-  printf("uncertainty will be scaled by: %.2f\n",errScale);
-  printf("\n");
 
 
   // models -------------------------------------------
@@ -100,6 +103,7 @@ void Projector(TString infileN, TString model,
   TCanvas * canv = new TCanvas("canv","canv",800,600);
   canv->SetGrid(1,1);
   Double_t x,y,ex,ey;
+  Double_t ratio;
   TLine * zero;
   TObjArrayIter nextGr(asymArr);
   TString grT;
@@ -129,11 +133,31 @@ void Projector(TString infileN, TString model,
 
     for(int i=0; i<gr->GetN(); i++) {
 
+      // the statistical uncertainty will be multiplied by errScale
+      if(useCustomYields) {
+        // Dien's yield / my yield, for each mass bin, for G1perp projection
+        if(x>0.00 && x<0.46)      ratio = 11047542. / 28204.;
+        else if(x>0.46 && x<0.60) ratio = 13436566. / 29080.;
+        else if(x>0.60 && x<0.72) ratio = 12801074. / 28242.;
+        else if(x>0.72 && x<0.81) ratio = 13317744. / 28683.;
+        else if(x>0.81 && x<0.93) ratio = 12227050. / 30133.;
+        else if(x>0.93 && x<1.10) ratio = 10840390. / 28922.;
+        else if(x>1.10 && x<3.00) ratio = 13411398. / 28510.;
+        else {
+          fprintf(stderr,"ERROR: ratio unknown\n");
+          return;
+        };
+        errScale = 1.0 / ( polE * polT * dilu * TMath::Sqrt(ratio) );
+      } else {
+        errScale = 1.0 / ( polE * polT * dilu * TMath::Sqrt(evCountProj/evCount) );
+      };
+      printf("uncertainty will be scaled by: %.2f\n",errScale);
+      printf("\n");
+
       // set projected points
       gr->GetPoint(i,x,y);
       ex = gr->GetErrorX(i);
       ey = gr->GetErrorY(i);
-
       gr->SetPoint(i,x,func->Eval(x));
       gr->SetPointError(i,ex,ey*errScale);
     };
