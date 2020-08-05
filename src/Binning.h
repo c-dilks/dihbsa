@@ -34,8 +34,6 @@ class Binning : public TObject
   public:
     Binning() {}; // empty default constructor for streaming instances to ROOT files
     Binning(Int_t pairType_,TString Experiment_);
-      // `Experiment_` is from Config; cannot instantiate Config here,
-      // or this class won't be streamable // TODO fix this
     ~Binning();
     void AddBinBound(Int_t ivIdx, Float_t newBound);
     void PrintBinBounds();
@@ -47,7 +45,7 @@ class Binning : public TObject
 
 
     // enumerators 
-    enum ivEnum { vX, vM, vZ, vPt, vPh, vQ, nIV }; // Independent Variables (IV)
+    enum ivEnum { vX, vM, vZ, vPt, vPh, vQ, vXF, nIV }; // Independent Variables (IV)
     Float_t minIV[nIV];
     Float_t maxIV[nIV];
 
@@ -95,7 +93,8 @@ class Binning : public TObject
       oaTw=t_; oaL=l_; oaM=m_;
     };
     Int_t whichHad[2];
-    Bool_t useWeighting, oa2dFit;
+    Bool_t useWeighting;
+    Int_t gridDim;
 
     
   private:

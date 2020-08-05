@@ -66,17 +66,20 @@ class Asymmetry : public TObject
     ~Asymmetry();
 
 
-    void FitOneAmp();
-    void FitMultiAmp(Int_t fitMode, Float_t DparamVal=0);
+    void SetFitMode(Int_t fitMode);
+    void FitAsymGraph();
+    void FitAsymMLM();
     void SetAsymGrPoint(Int_t modBin_, Int_t modBin2_=-1);
-    void FormuAppend(Int_t TW, Int_t L, Int_t M);
-    void FormuAppendUT(Int_t TW, Int_t L, Int_t M, Int_t lev);
+    void FormuAppend(Int_t TW, Int_t L, Int_t M,
+      Int_t lev=0, Int_t polarization=Modulation::kLU);
+    void DenomAppend(Int_t TW, Int_t L, Int_t M, Int_t lev);
+    Double_t DenomEval(Float_t phiR_, Float_t phiH_, Float_t theta_);
 
 
     Bool_t AddEvent(EventTree * ev);
     Float_t EvalModulation();
     Float_t EvalWeight();
-    Float_t EvalKinematicFactor();
+    Float_t EvalKinematicFactor(EventTree * ev);
     Int_t SpinState(Int_t spin_);
     Bool_t KickEvent(TString reason,Float_t badValue);
 
@@ -93,14 +96,21 @@ class Asymmetry : public TObject
     Bool_t success;
     Bool_t successIVmode;
     Bool_t debug;
+    Bool_t extendMLM;
 
     Binning * BS;
 
     // settings
     Int_t oaTw,oaL,oaM;
     Int_t whichDim;
-    Bool_t oa2d;
+    Int_t gridDim;
     Bool_t useWeighting;
+
+    // fixed polarization value used for OA fits only
+    // - this value is the weighted average of the polarizations from
+    //   pass1 inbending data, for before and after the Wien angle change
+    // - this is *not* used by the MLM fit
+    static constexpr Float_t polOA = 0.87;
 
 
 
@@ -114,9 +124,10 @@ class Asymmetry : public TObject
     Float_t PhPerp;
     Float_t Ph;
     Float_t Q2;
+    Float_t xF;
     Float_t theta;
-    Float_t pol;
     Int_t spinn;
+    Float_t pol;
     
     Float_t kfA,kfC,kfW;
 
@@ -165,6 +176,11 @@ class Asymmetry : public TObject
     // kf dist (for computing <K(y)>)
     TH1D * kfDist;
 
+    // denom dist (for studying sigma_UU partial waves systematic; this
+    // distribution is only used externally)
+    TH1D * denomDist;
+    Float_t denomLB,denomUB;
+
     // asymmetry vs. azimuthal modulation bin
     TGraphErrors * asymGr;
     TString asymName,asymTitle;
@@ -174,6 +190,7 @@ class Asymmetry : public TObject
     TGraph2DErrors * asymGr2;
     TH2D * asymGr2hist;
     TF2 * fitFunc2;
+    TString fitFunc2formu;
 
     TString oaModulationTitle,oaModulationName;
 
@@ -192,14 +209,14 @@ class Asymmetry : public TObject
     TString aName;
 
     Double_t rNumer,rDenom,rellum,rellumErr;
+    Double_t average_rellum;
 
 
 
     // RooFit variables
     RooDataSet * rfData;
     RooGenericPdf * rfPdf[2];
-    //RooExtendPdf * rfModelExt[2];
-    //RooAddPdf * rfPdf[2];
+    RooExtendPdf * rfPdfExtended[2];
     RooSimultaneous * rfSimPdf;
     RooCategory * rfSpinCateg;
     //RooFitResult * rfResult;
@@ -209,6 +226,7 @@ class Asymmetry : public TObject
     TString rfSpinName[2];
 
     TString asymFormu;
+    TString denomFormu;
     TString rellumFactor[2];
     Float_t rfParamRange;
 
@@ -221,21 +239,21 @@ class Asymmetry : public TObject
     TString rfAname[nAmp];
     RooRealVar *rfA[nAmp];
 
-    static const Int_t nDparam = 1;
+    static const Int_t nDparam = 12;
     Int_t nDparamUsed;
     TString rfDname[nDparam];
     RooRealVar *rfD[nDparam];
 
-    /*
-    RooRealVar *rfYieldBoth;
     RooRealVar *rfYield[2];
-    */
 
     RooNLLVar * rfNLL;
     RooPlot * rfNLLplot[nAmp];
 
     Modulation * moduOA;
     Modulation * modu[nAmp];
+    Modulation * moduD[nDparam];
+
+    Float_t DparamVal[nDparam];
 
   private:
     Bool_t enablePW;
@@ -254,9 +272,6 @@ class Asymmetry : public TObject
     Int_t spinbin;
 
     TString objName,appName;
-    TH1D * appDist1;
-    TH2D * appDist2;
-    TH3D * appDist3;
     RooDataSet * appRooDataSet;
 
 

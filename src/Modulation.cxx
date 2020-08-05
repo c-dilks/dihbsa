@@ -6,9 +6,7 @@ Modulation::Modulation(Int_t tw_, Int_t l_, Int_t m_,
  Int_t level_, Bool_t enablePW_, Int_t polarization_) {
 
   // twist, l, m, and level (where level is used if there are additional
-  // modulations for a specific twist)
-  // - level numbers start at zero, and are in order for the nonzero 
-  //   structure functions listed in 1408.5721
+  // modulations for a specific set of values {tw,l,m})
   tw = tw_;
   l = l_;
   m = m_;
@@ -40,20 +38,31 @@ Modulation::Modulation(Int_t tw_, Int_t l_, Int_t m_,
   // build a string for the modulation function which is used as a "base";
   // regexps are used to modify this string into a title, a formula, TF3, etc.
   // -- baseStr azimuthal dependence
-  // -- formula numbers are in parentheses, from arXiv:1408.5721
   mAbs = TMath::Abs(m);
   if(polarization==kLU) {
     switch(tw) {
       case 0:
         aziStr = "1"; // constant modulation
         break;
-      case 2: // (43)
+      case 2:
         if(m==0) aziStr = "0";
         else aziStr = Form("sin(%d*phiH-%d*phiR)",mAbs,mAbs);
         if(m<0) aziStr = "-"+aziStr; // pull minus sign out front
         break;
-      case 3: // (44)
+      case 3:
         aziStr = Form("sin(%d*phiH+%d*phiR)",1-m,m);
+        break;
+      default: aziStr = "0";
+    };
+  }
+  else if(polarization==kLL) {
+    switch(tw) {
+      case 2:
+        if(m==0) aziStr = "1";
+        else aziStr = Form("cos(%d*phiH-%d*phiR)",mAbs,mAbs);
+        break;
+      case 3:
+        aziStr = Form("cos(%d*phiH+%d*phiR)",1-m,m);
         break;
       default: aziStr = "0";
     };
@@ -64,16 +73,16 @@ Modulation::Modulation(Int_t tw_, Int_t l_, Int_t m_,
         aziStr = "1"; // constant modulation
         break;
       case 2:
-        if(lev==0) { // transverse photon // (39)
+        if(lev==0) { // transverse photon
           if(m==0) aziStr = "1";
           else aziStr = Form("cos(%d*phiH-%d*phiR)",mAbs,mAbs);
         }
-        else if(lev==1) { // unpolarized photon (40)
+        else if(lev==1) { // unpolarized photon
           aziStr = Form("cos(%d*phiH+%d*phiR)",2-m,m);
         }
         else aziStr = "0";
         break;
-      case 3: // (41)
+      case 3:
         aziStr = Form("cos(%d*phiH+%d*phiR)",1-m,m);
         break;
       default: aziStr = "0";
@@ -160,13 +169,13 @@ Modulation::Modulation(Int_t tw_, Int_t l_, Int_t m_,
 };
 
 
-// evaluate the modulation for specified values of phiH, phiR, theta
-Double_t Modulation::Evaluate(Float_t phiH, Float_t phiR, Float_t theta) {
+// evaluate the modulation for specified values of phiR, phiH, theta
+Double_t Modulation::Evaluate(Float_t phiR, Float_t phiH, Float_t theta) {
   if(polarization==kUT) {
     fprintf(stderr,"ERROR: Modulation::Evaluate not yet functional for UT\n");
     return UNDEF; // TODO
   };
-  return function->Eval(phiH,phiR,theta);
+  return function->Eval(phiR,phiH,theta);
 };
 
 
@@ -179,8 +188,8 @@ TString Modulation::Formu() {
   Tools::GlobalRegexp(formuStr,TRegexp("sin"),"TMath::Sin");
   Tools::GlobalRegexp(formuStr,TRegexp("cos"),"TMath::Cos");
   Tools::GlobalRegexp(formuStr,TRegexp("pow"),"TMath::Power");
-  Tools::GlobalRegexp(formuStr,TRegexp("phiH"),"x");
-  Tools::GlobalRegexp(formuStr,TRegexp("phiR"),"y");
+  Tools::GlobalRegexp(formuStr,TRegexp("phiR"),"x");
+  Tools::GlobalRegexp(formuStr,TRegexp("phiH"),"y");
   Tools::GlobalRegexp(formuStr,TRegexp("theta"),"z");
   return formuStr;
 };
@@ -212,37 +221,49 @@ TString Modulation::ModulationName() {
   return retstr;
 };
 
-TString Modulation::StateTitle() {
-
-  TString retstr,polStr,lStr;
-
-  // 
-  if(tw==0) return "const";
+TString Modulation::PolarizationTitle() {
   switch(polarization) {
     case kLU:
-      polStr = "LU";
+      return "LU";
+      break;
+    case kLL:
+      return "LL";
       break;
     case kUU: 
-      if(tw==2 && lev==0) polStr = "UU,T";
-      else polStr = "UU";
+      if(tw==2 && lev==0) return "UU,T";
+      else return "UU";
       break;
     case kUT:
       if(tw==2) {
-        if(lev==0)      polStr = "UT,T";
-        else if(lev==1) polStr = "UTa";
-        else if(lev==2) polStr = "UTb";
-        else polStr = "unknown";
+        if(lev==0)      return "UT,T";
+        else if(lev==1) return "UTa";
+        else if(lev==2) return "UTb";
+        else return "unknown";
       } else if(tw==3) {
-        if(lev==0)      polStr = "UTa";
-        else if(lev==1) polStr = "UTb";
-        else polStr = "unknown";
+        if(lev==0)      return "UTa";
+        else if(lev==1) return "UTb";
+        else return "unknown";
       };
       break;
   };
+};
+
+TString Modulation::StateTitle() {
+
+  TString retstr,lStr;
+  TString polStr = this->PolarizationTitle();
+
+  if(tw==0) return "const";
 
   lStr = enablePW ? Form("%d",l) : "L";
   
   retstr = Form("|%s,%d>^{tw%d}_{%s}",lStr.Data(),m,tw,polStr.Data());
+  return retstr;
+};
+
+TString Modulation::AsymmetryTitle() {
+  TString retstr = "A_{"+this->PolarizationTitle()+"}^{"+
+    this->ModulationTitle()+"}";
   return retstr;
 };
 

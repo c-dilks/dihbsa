@@ -26,8 +26,8 @@ Int_t pairType;
 Int_t ivType;
 Int_t oaTw,oaL,oaM;
 Bool_t useWeighting;
-Bool_t oa2dFit;
-Int_t whichSpinMC;
+Int_t gridDim;
+Int_t whichHelicityMC;
 
 // subroutines
 void SetDefaultArgs();
@@ -38,6 +38,7 @@ Binning * BS;
 Config * conf;
 Asymmetry * A;
 EventTree * ev;
+TFile * spinrootFile;
 
 
 //////////////////////////////////////
@@ -82,11 +83,11 @@ int main(int argc, char** argv) {
       case 'w': /* enable weighting by PhPerp/Mh */
         useWeighting = true;
         break;
-      case 'b': /* enable 2d asymmetry fit (one amp), instead of 1d fit */
-        oa2dFit = true;
+      case 'b': /* enable 2d asymmetry grids, instead of 1d default */
+        gridDim = 2;
         break;
-      case 'h': /* which spinMC */
-        whichSpinMC = (Int_t) strtof(optarg,NULL);
+      case 'h': /* which helicityMC */
+        whichHelicityMC = (Int_t) strtof(optarg,NULL);
         break;
       default: return PrintUsage();
     };
@@ -108,9 +109,12 @@ int main(int argc, char** argv) {
   printf("enable PhPerp/Mh weighting: %s\n",useWeighting?"true":"false");
   Tools::PrintSeparator(40,"-");
   printf("one-amp fit modulation: |%d,%d>, twist-%d\n",oaL,oaM,oaTw);
-  printf("one-amp fit performed in %dD azimuthal space\n",oa2dFit?2:1);
+  if(gridDim==1)
+    printf("one-amp fit performed in 1D modulation space\n");
+  else if(gridDim==2)
+    printf("one-amp and multi-amp fits performed in 2D (PhiR,PhiH) space\n");
   Tools::PrintSeparator(40,"-");
-  printf("whichSpinMC = %d\n",whichSpinMC);
+  printf("whichHelicityMC = %d\n",whichHelicityMC);
   Tools::PrintSeparator(40,"=");
 
 
@@ -119,7 +123,7 @@ int main(int argc, char** argv) {
   BS = new Binning(pairType,conf->Experiment);
   BS->SetOAnums(oaTw,oaL,oaM);
   BS->useWeighting = useWeighting;
-  BS->oa2dFit = oa2dFit;
+  BS->gridDim = gridDim;
   Bool_t schemeSuccess = BS->SetScheme(ivType);
   if(!schemeSuccess) {
     fprintf(stderr,"ERROR: Binning::SetScheme failed\n");
@@ -151,7 +155,7 @@ int main(int argc, char** argv) {
     spinrootFileN(TRegexp("^.*/")) = "spinroot/spin.";
   };
   printf("\nCREATING OUTPUT FILE = %s\n\n",spinrootFileN.Data());
-  TFile * spinrootFile = new TFile(spinrootFileN,"RECREATE");
+  spinrootFile = new TFile(spinrootFileN,"RECREATE");
 
 
   // instantiate Asymmetry objects, and
@@ -169,7 +173,7 @@ int main(int argc, char** argv) {
   //-----------------------------------------------------
   Bool_t eventAdded;
   Double_t evCount = 0;
-  ev->whichSpinMC = whichSpinMC;
+  ev->whichHelicityMC = whichHelicityMC;
 
   printf("begin loop through %lld events...\n",ev->ENT);
   for(int i=0; i<ev->ENT; i++) {
@@ -220,10 +224,15 @@ int main(int argc, char** argv) {
   */
 
 
-  // close spinroot file
-  spinrootFile->Close();
+  // close spinroot file and cleanup
   printf("\n%s written\n\n",spinrootFileN.Data());
   printf("evCount = %.0f\n",evCount);
+  spinrootFile->Close();
+  for(Int_t bn : BS->binVec) {
+    A = asymMap.at(bn);
+    delete A;
+  };
+  return 0;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -240,8 +249,8 @@ void SetDefaultArgs() {
   oaL = 1;
   oaM = 1;
   useWeighting = false;
-  oa2dFit = false;
-  whichSpinMC = 0;
+  gridDim = 1;
+  whichHelicityMC = 0;
 };
 
 
@@ -284,7 +293,7 @@ int PrintUsage() {
 
   printf(" -b\tdo single-amplitude fit in 2D azimuthal space (default is 1D)\n\n");
 
-  printf(" -h\t(for MC) - select which spinMC to use\n\n");
+  printf(" -h\t(for MC) - select which helicityMC to use\n\n");
 
   return 0;
 };

@@ -54,11 +54,23 @@ DIS::DIS() {
     fprintf(stderr,"ERROR: Config \"Experiment\"=%s is unknown\n",
       (conf->Experiment).Data());
   };
+
 };
 
 
+/*
+// not used, but could be if we want to use RCDB to get beam energy
+void DIS::SetBeamEn(Float_t newBeamEn) {
+  BeamEn = newBeamEn;
+  vecBeam.SetPz(BeamEn);
+  vecBeam.SetE(BeamEn);
+  return;
+};
+*/
+
+
 void DIS::SetElectron(Trajectory * tr) {
-  vecElectron = tr->Vec;
+  vecElectron = tr->Momentum;
   eleE = vecElectron.E();
   eleP = vecElectron.P();
   elePt = vecElectron.Pt();
@@ -73,8 +85,7 @@ void DIS::SetElectron(Trajectory * tr) {
 
 
 // compute DIS kinematics
-void DIS::Analyse() {
-  ResetVars();
+void DIS::CalculateKinematics() {
 
   // compute W
   vecW = vecBeam + vecTarget - vecElectron;
@@ -113,6 +124,12 @@ void DIS::Analyse() {
   };
 
   return;
+};
+
+void DIS::CalculateKinematics(Trajectory * tr) {
+  this->ResetVars();
+  this->SetElectron(tr);
+  this->CalculateKinematics();
 };
 
 
@@ -230,6 +247,12 @@ void DIS::ResetVars() {
   Nu = UNDEF;
   x = UNDEF;
   y = UNDEF;
+  for(int c=0; c<3; c++) eleVertex[c] = UNDEF;
+  eleE = UNDEF;
+  eleP = UNDEF;
+  elePt = UNDEF;
+  eleEta = UNDEF;
+  elePhi = UNDEF;
   return;
 };
 

@@ -43,43 +43,144 @@ Binning::Binning(Int_t pairType_,TString Experiment_) {
   if(numKaons==0) {
 
     // -- M_h (dihadron invariant mass)
-    /*
-    AddBinBound(vM,0.53); // 5 quantiles (from GetQuantiles.C)
-    AddBinBound(vM,0.71);
-    AddBinBound(vM,0.84);
-    AddBinBound(vM,1.03);
+    ///* // 7 quantile bins
+    AddBinBound(vM,0.46);
+    AddBinBound(vM,0.60);
+    AddBinBound(vM,0.72);
+    AddBinBound(vM,0.81);
+    AddBinBound(vM,0.93);
+    AddBinBound(vM,1.10);
+    //*/
+    /* // 14 quantile bins
+    AddBinBound(vM,0.38);
+    AddBinBound(vM,0.44);
+    AddBinBound(vM,0.51);
+    AddBinBound(vM,0.57);
+    AddBinBound(vM,0.63);
+    AddBinBound(vM,0.69);
+    AddBinBound(vM,0.74);
+    AddBinBound(vM,0.78);
+    AddBinBound(vM,0.82);
+    AddBinBound(vM,0.88);
+    AddBinBound(vM,0.94);
+    AddBinBound(vM,1.02);
+    AddBinBound(vM,1.16);
     */
-    AddBinBound(vM,0.77); // bin above/below rho mass
+    /* // 3 quantile bins
+    AddBinBound(vM,0.60);
+    AddBinBound(vM,0.83);
+    */
+    /* // above/below rho
+    AddBinBound(vM,0.77);
+    */
 
     // -- x (bjorken-x)
-    AddBinBound(vX,0.22); // 5 quantiles (from GetQuantiles.C)
-    AddBinBound(vX,0.26);
+    ///* // 7 quantile bins
+    AddBinBound(vX,0.12);
+    AddBinBound(vX,0.15);
+    AddBinBound(vX,0.18);
+    AddBinBound(vX,0.21);
+    AddBinBound(vX,0.25);
     AddBinBound(vX,0.32);
-    AddBinBound(vX,0.39);
+    //*/
+    /* // 14 quantile bins
+    AddBinBound(vX,0.11);
+    AddBinBound(vX,0.13);
+    AddBinBound(vX,0.14);
+    AddBinBound(vX,0.15);
+    AddBinBound(vX,0.17);
+    AddBinBound(vX,0.18);
+    AddBinBound(vX,0.19);
+    AddBinBound(vX,0.21);
+    AddBinBound(vX,0.23);
+    AddBinBound(vX,0.25);
+    AddBinBound(vX,0.28);
+    AddBinBound(vX,0.32);
+    AddBinBound(vX,0.38);
+    */
 
     // -- z (fragmentation fraction)
-    AddBinBound(vZ,0.47); // 5 quantiles (from GetQuantiles.C)
-    AddBinBound(vZ,0.55);
+    ///* // 3 quantile bins
+    AddBinBound(vZ,0.51);
+    AddBinBound(vZ,0.61);
+    //*/
+    /* // 7 quantile bins
+    AddBinBound(vZ,0.43);
+    AddBinBound(vZ,0.48);
+    AddBinBound(vZ,0.52);
+    AddBinBound(vZ,0.57);
+    AddBinBound(vZ,0.62);
+    AddBinBound(vZ,0.68);
+    */
+    /* // 14 quantile bins
+    AddBinBound(vZ,0.40);
+    AddBinBound(vZ,0.44);
+    AddBinBound(vZ,0.46);
+    AddBinBound(vZ,0.49);
+    AddBinBound(vZ,0.51);
+    AddBinBound(vZ,0.53);
+    AddBinBound(vZ,0.56);
+    AddBinBound(vZ,0.58);
+    AddBinBound(vZ,0.60);
     AddBinBound(vZ,0.63);
+    AddBinBound(vZ,0.66);
+    AddBinBound(vZ,0.69);
     AddBinBound(vZ,0.73);
+    */
 
     // -- PhPerp (transverse momentum of dihadron)
-    AddBinBound(vPt,0.29); // 5 quantiles (from GetQuantiles.C)
-    AddBinBound(vPt,0.42);
-    AddBinBound(vPt,0.55);
-    AddBinBound(vPt,0.70);
+    /*
+    AddBinBound(vPt,0.37); // 3 quantile bins 
+    AddBinBound(vPt,0.58);
+    */
+    ///*
+    AddBinBound(vPt,0.16); // 14 quantile bins
+    AddBinBound(vPt,0.23);
+    AddBinBound(vPt,0.29);
+    AddBinBound(vPt,0.34);
+    AddBinBound(vPt,0.39);
+    AddBinBound(vPt,0.43);
+    AddBinBound(vPt,0.47);
+    AddBinBound(vPt,0.52);
+    AddBinBound(vPt,0.57);
+    AddBinBound(vPt,0.62);
+    AddBinBound(vPt,0.68);
+    AddBinBound(vPt,0.75);
+    AddBinBound(vPt,0.85);
+    //*/
 
     // -- Ph (magnitude of momentum sum of dihadron)
-    AddBinBound(vPh,3.15); // 5 quantiles (from GetQuantiles.C)
+    AddBinBound(vPh,3.15); // 5 quantile bins 
     AddBinBound(vPh,3.60);
     AddBinBound(vPh,4.10);
     AddBinBound(vPh,4.80);
 
     // -- Q^2
-    AddBinBound(vQ,2.84); // 5 quantiles (from GetQuantiles.C)
-    AddBinBound(vQ,3.33);
-    AddBinBound(vQ,3.92);
-    AddBinBound(vQ,4.85);
+    AddBinBound(vQ,2.37); // 3 quantile bins, inbending
+    AddBinBound(vQ,3.35);
+
+    // -- xF
+    /*
+    AddBinBound(vXF,0.16); // 14 bins
+    AddBinBound(vXF,0.20);
+    AddBinBound(vXF,0.23);
+    AddBinBound(vXF,0.26);
+    AddBinBound(vXF,0.28);
+    AddBinBound(vXF,0.31);
+    AddBinBound(vXF,0.33);
+    AddBinBound(vXF,0.36);
+    AddBinBound(vXF,0.39);
+    AddBinBound(vXF,0.42);
+    AddBinBound(vXF,0.45);
+    AddBinBound(vXF,0.49);
+    AddBinBound(vXF,0.55);
+    */
+    AddBinBound(vXF,0.20); // 7 bins
+    AddBinBound(vXF,0.26);
+    AddBinBound(vXF,0.31);
+    AddBinBound(vXF,0.37);
+    AddBinBound(vXF,0.42);
+    AddBinBound(vXF,0.50);
     
   } else if(numKaons==1) {
 
@@ -121,6 +222,7 @@ Binning::Binning(Int_t pairType_,TString Experiment_) {
   IVname[vPt] = "Pt";
   IVname[vPh] = "Ph";
   IVname[vQ] = "Q";
+  IVname[vXF] = "XF";
 
   IVtitle[vM] = "M_{h}";
   IVtitle[vX] = "x";
@@ -128,6 +230,7 @@ Binning::Binning(Int_t pairType_,TString Experiment_) {
   IVtitle[vPt] = "P_{h}^{perp}";
   IVtitle[vPh] = "P_{h}";
   IVtitle[vQ] = "Q^{2}";
+  IVtitle[vXF] = "x_{F}";
 
 
   //PrintBinBounds();
@@ -139,7 +242,7 @@ Binning::Binning(Int_t pairType_,TString Experiment_) {
   oaL = UNDEF;
   oaM = UNDEF;
   useWeighting = false;
-  oa2dFit = false;
+  gridDim = 1;
 };
 
 
@@ -243,18 +346,6 @@ Bool_t Binning::SetScheme(Int_t ivType) {
     default:
       fprintf(stderr,"ERROR: bad number of dimensions\n");
       return false;
-  };
-
-  // DNP2019 override: interested in z-dependence above and below rho mass
-  // - override binning scheme, if we requested z-dependence in mass bins (ivType 32)
-  if(ivType==32) {
-    printf("\n\nDNP2019 OVERRIDE: bin in z for M above and below rho mass\n\n");
-    nBins[vM] = -1;
-    bound[vM].clear();
-    AddBinBound(vM,minIV[vM]);
-    AddBinBound(vM,0.77);
-    AddBinBound(vM,maxIV[vM]);
-    PrintBinBounds();
   };
 
   // check IV enumerators

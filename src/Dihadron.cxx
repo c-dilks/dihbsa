@@ -18,7 +18,7 @@ Dihadron::Dihadron() {
 };
 
 
-void Dihadron::SetEvent(
+void Dihadron::CalculateKinematics(
   Trajectory * trajA, 
   Trajectory * trajB,
   DIS * disEvent
@@ -26,6 +26,9 @@ void Dihadron::SetEvent(
   hadron[qA] = trajA;
   hadron[qB] = trajB;
   disEv = disEvent;
+
+  // set pairType
+  pairType = EncodePairType(hadron[qA]->Idx,hadron[qB]->Idx);
 
 
   // get disEv vectors
@@ -45,7 +48,7 @@ void Dihadron::SetEvent(
 
   // compute 4-momenta Ph and R
   for(h=0; h<2; h++) {
-    vecHad[h] = hadron[h]->Vec;
+    vecHad[h] = hadron[h]->Momentum;
     if(useBreit) vecHad[h].Boost(disEv->BreitBoost);
   };
   vecPh = vecHad[qA] + vecHad[qB];
@@ -59,6 +62,17 @@ void Dihadron::SetEvent(
   pR = vecR.Vect();
   for(h=0; h<2; h++) pHad[h] = vecHad[h].Vect();
 
+
+  // set hadron branch variables
+  for(h=0; h<2; h++) {
+    hadIdx[h] = hadron[h]->Idx;
+    hadRow[h] = hadron[h]->Row;
+    hadE[h] = vecHad[h].E();
+    hadP[h] = vecHad[h].P();
+    hadPt[h] = vecHad[h].Pt();
+    hadEta[h] = vecHad[h].Eta();
+    hadPhi[h] = vecHad[h].Phi();
+  };
 
 
   // compute z
@@ -101,13 +115,14 @@ void Dihadron::SetEvent(
     hadXF[h] = 2 * pHad_com[h].Dot(pQ_com) / (disEv->W * pQ_com.Mag());
 
 
-  // get vertex and chi2pid
+  // get vertex and other variables
   for(h=0; h<2; h++) {
     hadVertex[h][eX] = (hadron[h]->Vertex).X();
     hadVertex[h][eY] = (hadron[h]->Vertex).Y();
     hadVertex[h][eZ] = (hadron[h]->Vertex).Z();
     hadChi2pid[h] = hadron[h]->chi2pid;
     hadStatus[h] = hadron[h]->Status;
+    hadBeta[h] = hadron[h]->Beta;
   };
 
 
@@ -256,7 +271,7 @@ void Dihadron::ComputeAngles() {
 };
 
 
-// MUST BE CALLED *AFTER* SetEvent()
+// MUST BE CALLED *AFTER* CalculateKinematics()
 // returns "PhiH" angle for hadron h_idx
 Float_t Dihadron::GetSingleHadronPhiH(Int_t h_idx) {
   if(h_idx==qA || h_idx==qB) return PlaneAngle(pQ,pL,pQ,pHad[h_idx]);
@@ -301,18 +316,29 @@ Float_t Dihadron::PlaneAngle(
 
 
 void Dihadron::ResetVars() {
+  pairType = UNDEF;
   Mh = UNDEF;
   Mmiss = UNDEF;
   for(h=0; h<2; h++) z[h] = UNDEF;
   zpair = UNDEF;
   xF = UNDEF;
   for(h=0; h<2; h++) {
+    hadRow[h] = -1;
+    hadIdx[h] = UNDEF;
+    hadE[h] = UNDEF;
+    hadP[h] = UNDEF;
+    hadPt[h] = UNDEF;
+    hadEta[h] = UNDEF;
+    hadPhi[h] = UNDEF;
     hadXF[h] = UNDEF;
     hadChi2pid[h] = UNDEF;
     hadStatus[h] = UNDEF;
+    hadBeta[h] = UNDEF;
     for(int c=0; c<3; c++) hadVertex[h][c] = UNDEF;
   };
   alpha = UNDEF;
+  theta = UNDEF;
+  zeta = UNDEF;
 
   PhMag = UNDEF;
   PhPerpMag = UNDEF;

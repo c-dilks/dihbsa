@@ -17,7 +17,6 @@
 #include "TFile.h"
 #include "TString.h"
 #include "TMath.h"
-#include "TRandom.h"
 
 // dihbsa
 #include "Constants.h"
@@ -38,21 +37,23 @@ class EventTree : public TObject
     ~EventTree();
 
     void GetEvent(Int_t i);
-    Int_t SpinState();
     Bool_t Valid();
+
+    Int_t SpinState();
+    Float_t Polarization();
+    Float_t Rellum();
+    Bool_t CheckVertex();
+    Bool_t CheckHadChi2pid(Float_t chi2pid, Float_t mom);
+
     void PrintEventVerbose();
     void PrintEvent();
     void PrintEventLine();
 
     Dihadron * GetDihadronObj();
     DIS * GetDISObj();
+    Float_t GetBreitRapidity(Int_t had);
 
     Float_t GetKinematicFactor(Char_t kf);
-
-    /*
-    Bool_t BuildMatchTable();
-    Bool_t FindEvent(Int_t evnum_, Dihadron * queryDih);
-    */
 
     Bool_t debug;
     Long64_t ENT;
@@ -66,7 +67,6 @@ class EventTree : public TObject
 
     // hadron kinematics
     Int_t pairType;
-    Int_t hadOrder;
     Int_t hadIdx[2];
     Float_t hadE[2];
     Float_t hadP[2];
@@ -79,7 +79,6 @@ class EventTree : public TObject
     Float_t hadVertex[2][3];
     Int_t hadStatus[2];
     Float_t hadChi2pid[2];
-    //Bool_t hadFidPCAL[2], hadFidDC[2];
 
     // electron kinematics
     Float_t eleE;
@@ -91,13 +90,14 @@ class EventTree : public TObject
     Float_t eleVertex[3];
     Int_t eleStatus;
     Float_t eleChi2pid;
-    Bool_t eleFidPCAL[FiducialCuts::nLevel];
-    Bool_t eleFidDC[FiducialCuts::nLevel];
+    Float_t eleSampFrac;
+    Float_t elePCALen;
 
+    // fiducial cuts
+    Bool_t eleFiduCut[FiducialCuts::nLevel];
+    Bool_t hadFiduCut[2][FiducialCuts::nLevel];
 
     // dihadron kinematics
-    Int_t particleCnt[nParticles];
-    //Int_t particleCntAll;
     Float_t Mh,Zpair,PhiH,PhiS,Mmiss,xF,alpha;
     Float_t Z[2];
     Float_t zeta;
@@ -109,11 +109,9 @@ class EventTree : public TObject
 
     // event-level branches
     Int_t evnum,runnum;
-    Float_t torus;
-    Long64_t triggerBits;
-    Int_t spinE,spinP;
-    static const Int_t NspinMC = 12;
-    Int_t spinMC[NspinMC];
+    Int_t helicity;
+    static const Int_t NhelicityMC = 12;
+    Int_t helicityMC[NhelicityMC];
 
     // PhiR 
     Float_t PhiR; // set to the preferred one
@@ -124,85 +122,88 @@ class EventTree : public TObject
 
     Float_t PhiHR; // PhiH-PhiR
 
-    /*
-    Float_t b_PhiRq;
-    Float_t b_PhiRp;
-    Float_t b_PhiRp_r;
-    Float_t b_PhiRp_g;
-    */
-
-    // diphotons
-    Int_t diphCnt;
-    Float_t diphPhotE[2][2]; // [diphCnt] [photon 0 or 1]
-    Float_t diphPhotPt[2][2];
-    Float_t diphPhotEta[2][2];
-    Float_t diphPhotPhi[2][2];
-    Float_t diphE[2]; // [diphCnt]
-    Float_t diphZ[2];
-    Float_t diphPt[2];
-    Float_t diphM[2];
-    Float_t diphAlpha[2];
-    Float_t diphEta[2];
-    Float_t diphPhi[2];
-    Float_t angEle[2][2];
-
-    // smearing (for EIC simulations)
-    Bool_t eleSmearE,eleSmearP,eleSmearPID,eleSmearVtx;
-    Bool_t hadSmearE[2];
-    Bool_t hadSmearP[2];
-    Bool_t hadSmearPID[2];
-    Bool_t hadSmearVtx[2];
-    ///////////////////////////
 
 
     ///////////////////////////
     //   EventCuts
     ///////////////////////////
     Bool_t cutQ2,cutX,cutW,cutY,cutDIS;
-    Bool_t cutDihadronKinematics;
     Bool_t cutDihadron;
-    Bool_t cutDiphKinematics[2];
-    Bool_t cutDiph[2];
-    //Bool_t cutCrossCheck;
+    Bool_t cutHelicity;
     Bool_t cutVertex;
     Bool_t cutFiducial;
-    Bool_t cutDihadronStatus;
-    Bool_t cutMCmatch;
+    Bool_t cutPID;
+    Bool_t cutElePID;
+    Bool_t cutHadPID[2];
 
-    // OTHER VARIABLES
-    Bool_t useDiphBG;
-    Int_t whichSpinMC;
-    Float_t W_pythia,Q2_pythia,Nu_pythia,x_pythia,y_pythia;
-
-    /*
-    // variables used for MCrec and MCgen matching
-    Float_t MD,MDmin;
-    Int_t iiFound;
-    Float_t queryTheta[2];
-    Float_t queryPhi[2];
-    Float_t candTheta[2];
-    Float_t candPhi[2];
-    */
 
     // tree banches used for matching MCgen event
+    Int_t whichHelicityMC;
     Bool_t MCrecMode;
-    Float_t matchDiff;
+    Float_t gen_W;
+    Float_t gen_Q2;
+    Float_t gen_Nu;
+    Float_t gen_x;
+    Float_t gen_y;
+    // - generated electron kinematics branches
     Float_t gen_eleE;
+    Float_t gen_eleP;
     Float_t gen_elePt;
     Float_t gen_eleEta;
+    Float_t gen_eleTheta;
     Float_t gen_elePhi;
-    Float_t gen_hadE[2]; // kinematics for matching MCgen hadron
+    Float_t gen_eleVertex[3];
+    // - generated hadron branches
+    Int_t gen_pairType;
+    Int_t gen_hadRow[2];
+    Int_t gen_hadIdx[2];
+    Float_t gen_hadE[2];
+    Float_t gen_hadP[2];
     Float_t gen_hadPt[2];
     Float_t gen_hadEta[2];
     Float_t gen_hadTheta[2];
     Float_t gen_hadPhi[2];
+    Float_t gen_hadXF[2];
+    Float_t gen_hadVertex[2][3];
+    // - generated dihadron branches
+    Float_t gen_Mh;
+    Float_t gen_Mmiss;
+    Float_t gen_Z[2];
+    Float_t gen_Zpair;
+    Float_t gen_xF;
+    Float_t gen_alpha;
+    Float_t gen_theta;
+    Float_t gen_zeta;
+    Float_t gen_Ph;
+    Float_t gen_PhPerp;
+    Float_t gen_PhEta;
+    Float_t gen_PhPhi;
+    Float_t gen_R;
+    Float_t gen_RPerp;
+    Float_t gen_RT;
+    Float_t gen_PhiH;
+    Float_t gen_PhiRq;
+    Float_t gen_PhiRp;
+    Float_t gen_PhiRp_r;
+    Float_t gen_PhiRp_g;
+    // - match quality
+    Bool_t gen_eleIsMatch;
+    Bool_t gen_hadIsMatch[2];
+    Float_t gen_eleMatchDist;
+    Float_t gen_hadMatchDist[2];
+
+    // smearing variables (for EIC simulations)
+    Float_t W_pythia,Q2_pythia,Nu_pythia,x_pythia,y_pythia;
+    Bool_t eleSmearE,eleSmearP,eleSmearPID,eleSmearVtx;
+    Bool_t hadSmearE[2];
+    Bool_t hadSmearP[2];
+    Bool_t hadSmearPID[2];
+    Bool_t hadSmearVtx[2];
     
   private:
     TChain * chain;
     Int_t whichHad[2];
     Int_t whichLevel;
-
-    TRandom * RNG;
 
     Dihadron * objDihadron;
     Dihadron * candDih;
@@ -210,19 +211,18 @@ class EventTree : public TObject
     Trajectory * trEle;
     Trajectory * trHad[2];
 
-    TLorentzVector photMom[2];
     TLorentzVector hadMom[2];
     TLorentzVector eleMom;
 
-    /*
-    std::map<Int_t,std::vector<Int_t>> evnumMap;
-    std::vector<Int_t>iList;
-    bool inserted;
-    Int_t evnumTmp;
-    */
-
+    Bool_t vzBoolEle;
+    Bool_t vzBoolHad[2];
+    Bool_t vrBool;
+    Bool_t vzdiffBool;
+    Float_t vzdiffHads;
+    Float_t vzdiff[2];
     Config * conf;
 
+    Bool_t vertexWarned;
 
   ClassDef(EventTree,1);
 };

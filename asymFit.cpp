@@ -20,6 +20,7 @@
 #include "TLine.h"
 #include "TStyle.h"
 #include "TMultiGraph.h"
+#include "TGraphAsymmErrors.h"
 #include "TSystem.h"
 #include "TObjArray.h"
 #include "TLegend.h"
@@ -31,18 +32,23 @@
 
 
 // subroutines
-void DrawKinDepGraph(TGraphErrors * g_, Binning * B_, Int_t d_);
+void DrawKinDepGraph(TGraph * g_, Binning * B_, Int_t d_);
 void DrawSimpleGraph(TGraphErrors * g_, Binning * B_, Int_t d_, Bool_t setRange_=true);
 void DrawAsymGr(TGraphErrors * g_);
 void DrawAsymGr2(TGraph2DErrors * g_);
-TGraphErrors * ShiftGraph(TGraphErrors * gr, Int_t nShift);
+TGraphAsymmErrors * ShiftGraph(TGraphAsymmErrors * gr, Int_t nShift);
 void SetCloneName(TH1 * clone_);
 
 // global variables
 Int_t N_AMP,N_D;
 TString dihTitle,dihName;
+Int_t gridDim;
 Binning * BS;
 Asymmetry * A;
+
+// plot range for asymmetries
+const Float_t ASYM_PLOT_MIN = -0.07;
+const Float_t ASYM_PLOT_MAX = 0.07;
 
 
 
@@ -51,12 +57,40 @@ int main(int argc, char** argv) {
   //////////////////////////////////////////////
   // ARGUMENTS
   TString spinrootDir = "spinroot";
-  Int_t fitMode = 0;
-  Float_t DparamVal = 0; // (for systematic uncertainty from D_1 pp-wave)
+  Int_t fitMode, fitAlgo;
+  Float_t DparamVal[Asymmetry::nDparam]; // (for sigma_UU systematic)
+  Int_t nD = 0; // (for sigma_UU systematic)
+  TString DparamStr = ""; // (for sigma_UU systematic)
+  if(argc<3) {
+    fprintf(stderr,"USAGE: asymFit.cpp [fitMode] [fitAlgo] [spinrootDir] [(opt)DparamVal List]\n");
+    fprintf(stderr," [fitMode] which modulations to fit (see Asymmetry::SetFitMode)\n");
+    fprintf(stderr," [fitAlgo] which fit algorithm to use:\n");
+    fprintf(stderr,"\t0 = MLM fit: single or multi-amp, depending on fitMode\n");
+    fprintf(stderr,"\t1 = 1d fit: single-amp only (depends on what was used as twist,L,M in buildSpinroot\n");
+    fprintf(stderr,"\t2 = 2d fit: single or multi-amp, depending on fitMode\n");
+    fprintf(stderr," [(opt)spinrootDir]: directory of spinroot files (default=spinroot)\n");
+    fprintf(stderr," [(opt)DparamValue List]: for studying variations in UU cross section modulation amps\n");
+    return 0;
+  }
   if(argc>1) fitMode = (Int_t)strtof(argv[1],NULL);
-  if(argc>2) spinrootDir = TString(argv[2]);
-  if(argc>3) DparamVal = (Float_t)strtof(argv[3],NULL);
+  if(argc>2) fitAlgo = (Int_t)strtof(argv[2],NULL);
+  if(argc>3) spinrootDir = TString(argv[3]);
+  if(argc>4) {
+    for(int ar=4; ar<argc; ar++) {
+      if(ar-4<Asymmetry::nDparam) {
+        DparamVal[ar-4] = (Float_t)strtof(argv[ar],NULL);
+        DparamStr = Form("%s_%.2f",DparamStr.Data(),DparamVal[ar-4]);
+        nD++;
+      };
+    }
+  };
+  //
+  if(nD>0) {
+    printf("D params:\n");
+    for(int ar=0; ar<nD; ar++) printf("%f\n",DparamVal[ar]);
+  };
   //////////////////////////////////////////////
+
 
 
   //////////////////////////////////////////////
@@ -66,9 +100,16 @@ int main(int argc, char** argv) {
   //////////////////////////////////////////////
 
 
+  // check fitAlgo
+  if(fitAlgo<0 || fitAlgo>2) { 
+    fprintf(stderr,"ERROR: bad fitAlgo value\n");
+    return 0;
+  }
+
+
   // open spinroot cat file and result file
-  TString asymFileN = Form("%s/asym_%d.root",spinrootDir.Data(),fitMode);
-  TFile * asymFile = new TFile(asymFileN,"RECREATE");
+  TString asymFileN = Form("%s/asym_%d%s.root",
+    spinrootDir.Data(),fitMode,DparamStr.Data());
   TFile * catFile = new TFile(TString(spinrootDir+"/cat.root"),"READ");
 
 
@@ -94,31 +135,39 @@ int main(int argc, char** argv) {
   if(BS->dimensions>=2) printf("in bins of %s ",(BS->GetIVname(1)).Data());
   if(BS->dimensions>=3) printf("and %s ",(BS->GetIVname(2)).Data());
   printf("\n\n");
+  gridDim = A->gridDim;
 
 
   // perform the fits
   printf("--- calculate asymmetries\n");
   for(Int_t bn : BS->binVec) {
     A = asymMap.at(bn);
-    A->FitOneAmp();
-    A->FitMultiAmp(fitMode,DparamVal);
+
+    // preparation
+    if(nD>0) { for(int v=0; v<nD; v++) A->DparamVal[v]=DparamVal[v]; };
+    A->SetFitMode(fitMode);
+
+    // fitting
+    A->FitAsymGraph();
+    if(fitAlgo==0) A->FitAsymMLM();
   };
 
 
   // build maps from Binning::binVec number to plots etc.
-  TGraphErrors * kindepGr;
-  TGraphErrors * RFkindepGr[Asymmetry::nAmp];
-  TGraphErrors * chindfGr;
+  TGraphErrors * kindepGrOA;
+  TGraphAsymmErrors * kindepGrMA[Asymmetry::nAmp];
+  TGraphErrors * chindfGrOA;
   TGraphErrors * rellumGr;
   TMultiGraph * multiGr;
 
-  std::map<Int_t, TGraphErrors*> kindepMap;
-  std::map<Int_t, TGraphErrors*> RFkindepMap[Asymmetry::nAmp];
+  std::map<Int_t, TGraphErrors*> kindepOAmap;
+  std::map<Int_t, TGraphAsymmErrors*> kindepMAmap[Asymmetry::nAmp];
   std::map<Int_t, TMultiGraph*> multiMap;
-  std::map<Int_t, TGraphErrors*> chindfMap;
+  std::map<Int_t, TGraphErrors*> chindfOAmap;
   std::map<Int_t, TGraphErrors*> rellumMap;
 
   TString grTitle,grTitleSuffix,grName,grNameSuffix;
+  TString polOAstr = Form("(pol. fixed at %.2f)",Asymmetry::polOA);
   Bool_t first = true;
   for(Int_t bn : BS->binVec) {
     A = asymMap.at(bn);
@@ -163,14 +212,26 @@ int main(int argc, char** argv) {
     // horizontal axis of these graphs are all IV0 (hence the if statement here)
     if(BS->UnhashBinNum(bn,0)==0) {
 
-      // instantiate kindep graph, for linear fit ("l.f.") result
+      // instantiate kindep graphs
       grTitle = dihTitle + " A_{LU}[" + A->oaModulationTitle + "] " + 
         " vs. " + grTitleSuffix;
-      grName = "kindep_" + grNameSuffix;
-      kindepGr = new TGraphErrors();
-      kindepGr->SetName(grName);
-      kindepGr->SetTitle(grTitle);
-      kindepGr->SetLineStyle(2);
+      grName = "kindepOA_" + grNameSuffix;
+      kindepGrOA = new TGraphErrors();
+      kindepGrOA->SetName(grName);
+      kindepGrOA->SetTitle(grTitle);
+      grTitle = TString(kindepGrOA->GetTitle()) + " " + polOAstr;
+      kindepGrOA->SetTitle(grTitle);
+      kindepGrOA->SetLineStyle(2);
+
+      for(int aa=0; aa<N_AMP; aa++) {
+        grTitle = dihTitle + " " + TString(A->rfA[aa]->GetTitle()) + 
+          " vs. " + grTitleSuffix;
+        grName = "kindepMA_A" + TString::Itoa(aa,10) + "_" + grNameSuffix;
+        kindepGrMA[aa] = new TGraphAsymmErrors();
+        kindepGrMA[aa]->SetName(grName);
+        kindepGrMA[aa]->SetTitle(grTitle);
+      };
+
 
       // instantiate multiGraph, for plotting kindep graphs together
       grTitle = dihTitle + " A_{LU}[" + A->oaModulationTitle + "] " + 
@@ -180,25 +241,18 @@ int main(int argc, char** argv) {
       multiGr->SetName(grName);
       multiGr->SetTitle(grTitle);
 
-      // instantiate kindep graphs for maximum likelihood method result
-      // for each fit parameter
-      for(int aa=0; aa<N_AMP; aa++) {
-        grTitle = dihTitle + " " + TString(A->rfA[aa]->GetTitle()) + 
-          " vs. " + grTitleSuffix;
-        grName = "RF_A" + TString::Itoa(aa,10) + "_kindep_" + grNameSuffix;
-        RFkindepGr[aa] = new TGraphErrors();
-        RFkindepGr[aa]->SetName(grName);
-        RFkindepGr[aa]->SetTitle(grTitle);
-      };
 
       // instantiate chi2/ndf graphs
       grTitle = "#chi^{2}/NDF of " +
         dihTitle + " A_{LU}[" + A->oaModulationTitle + "]_{l.f.} " + 
         " vs. " + grTitleSuffix;
       grName = "chindf_" + grNameSuffix;
-      chindfGr = new TGraphErrors();
-      chindfGr->SetName(grName);
-      chindfGr->SetTitle(grTitle);
+      chindfGrOA = new TGraphErrors();
+      chindfGrOA->SetName(grName);
+      chindfGrOA->SetTitle(grTitle);
+      grTitle = TString(chindfGrOA->GetTitle()) + " " + polOAstr;
+      chindfGrOA->SetTitle(grTitle);
+
 
       // instantiate relative luminosity graphs
       grTitle = "relative luminosity vs. " + grTitleSuffix;
@@ -212,12 +266,12 @@ int main(int argc, char** argv) {
 
     // insert objects into maps (note: these are many-to-one maps, i.e., several
     // bin numbers will map to the same pointer)
-    kindepMap.insert(std::pair<Int_t,TGraphErrors*>(bn,kindepGr));
+    kindepOAmap.insert(std::pair<Int_t,TGraphErrors*>(bn,kindepGrOA));
     multiMap.insert(std::pair<Int_t,TMultiGraph*>(bn,multiGr));
-    chindfMap.insert(std::pair<Int_t,TGraphErrors*>(bn,chindfGr));
+    chindfOAmap.insert(std::pair<Int_t,TGraphErrors*>(bn,chindfGrOA));
     rellumMap.insert(std::pair<Int_t,TGraphErrors*>(bn,rellumGr));
     for(int aa=0; aa<N_AMP; aa++) {
-      RFkindepMap[aa].insert(std::pair<Int_t,TGraphErrors*>(bn,RFkindepGr[aa]) );
+      kindepMAmap[aa].insert(std::pair<Int_t,TGraphAsymmErrors*>(bn,kindepGrMA[aa]) );
     };
   };
 
@@ -226,46 +280,60 @@ int main(int argc, char** argv) {
       "#chi^{2} distribution (from linear fit results)",100,0,20);
 
   // graph asymmetry results
-  Float_t asymValue,asymError;
-  Float_t RFasymValue[Asymmetry::nAmp];
-  Float_t RFasymError[Asymmetry::nAmp];
+  Float_t asymValueOA,asymErrorOA;
+  Float_t asymValueMA[Asymmetry::nAmp];
+  Float_t asymErrorMA[Asymmetry::nAmp];
+  Float_t asymErrorMAhi[Asymmetry::nAmp];
+  Float_t asymErrorMAlo[Asymmetry::nAmp];
   Float_t meanKF;
   Float_t kinValue,kinError;
   Float_t chisq,ndf;
   for(Int_t bn : BS->binVec) {
     A = asymMap.at(bn);
 
-    if( ( A->oa2d==false && A->fitFunc!=NULL) || 
-        ( A->oa2d==true && A->fitFunc2!=NULL) ) {
+    if( ( A->gridDim==1 && A->fitFunc!=NULL) || 
+        ( A->gridDim==2 && A->fitFunc2!=NULL) ) {
 
-      // linear fit result's asymmetry value and statistical uncertainty
-      if(!(A->oa2d)) {
-        asymValue = A->fitFunc->GetParameter(1);
-        asymError = A->fitFunc->GetParError(1);
+      // linear fit result (one-amp only!)
+      if(A->gridDim==1) {
+        asymValueOA = A->fitFunc->GetParameter(1);
+        asymErrorOA = A->fitFunc->GetParError(1);
       } else {
-        asymValue = A->fitFunc2->GetParameter(0);
-        asymError = A->fitFunc2->GetParError(0);
+        asymValueOA = 0; // not used
+        asymErrorOA = 0; // not used
       };
+
+      // multi-amplitude fit result
       for(int aa=0; aa<N_AMP; aa++) {
-        ///*
-        RFasymValue[aa] = A->rfA[aa]->getVal();
-        RFasymError[aa] = A->rfA[aa]->getError();
-        //*/
-        // hack to replace MLM fit result with 2D fit results (must use fitMode==4)
-        /*
-        for(int kk=0; kk<10; kk++) 
-          fprintf(stderr,"WARNING WARNING WARNING: mlm fit result replaced with 2dfit\n");
-        RFasymValue[aa] = A->fitFunc2->GetParameter(aa);
-        RFasymError[aa] = A->fitFunc2->GetParError(aa);
-        */
+        switch(fitAlgo) {
+          case 0:
+            asymValueMA[aa] = A->rfA[aa]->getVal();
+            asymErrorMA[aa] = A->rfA[aa]->getError(); // HESSE (parabolic)
+            // MINOS errors (asymmetric)
+            // note: if MINOS was not used, `hi` and `lo` will be HESSE errors
+            asymErrorMAhi[aa] = TMath::Abs(A->rfA[aa]->getErrorHi());
+            asymErrorMAlo[aa] = TMath::Abs(A->rfA[aa]->getErrorLo());
+            break;
+          case 1:
+            asymValueMA[aa] = 0; // not used
+            asymErrorMA[aa] = 0;
+            asymErrorMAhi[aa] = 0;
+            asymErrorMAlo[aa] = 0;
+            break;
+          case 2:
+            asymValueMA[aa] = A->fitFunc2->GetParameter(aa);
+            asymErrorMA[aa] = A->fitFunc2->GetParError(aa);
+            asymErrorMAhi[aa] = asymErrorMA[aa];
+            asymErrorMAlo[aa] = asymErrorMA[aa];
+        }
       };
 
 
       // divide out mean kinematic factor
       /*
       meanKF = A->kfDist->GetMean();
-      asymValue /= meanKF;
-      for(int aa=0; aa<N_AMP; aa++) RFasymValue[aa] /= meanKF;
+      asymValueOA /= meanKF;
+      for(int aa=0; aa<N_AMP; aa++) asymValueMA[aa] /= meanKF;
       */
 
 
@@ -287,7 +355,7 @@ int main(int argc, char** argv) {
       kinError = 0; // OVERRIDE (since this should be a systematic uncertainty)
 
       // chi2 and ndf
-      if(!(A->oa2d)) {
+      if(A->gridDim==1) {
         chisq = A->fitFunc->GetChisquare();
         ndf = A->fitFunc->GetNDF();
       } else {
@@ -297,18 +365,19 @@ int main(int argc, char** argv) {
       chisqDist->Fill(chisq);
 
       // set graph points
-      kindepGr = kindepMap.at(bn);
-      kindepGr->SetPoint(A->B[0],kinValue,asymValue);
-      kindepGr->SetPointError(A->B[0],kinError,asymError);
+      kindepGrOA = kindepOAmap.at(bn);
+      kindepGrOA->SetPoint(A->B[0],kinValue,asymValueOA);
+      kindepGrOA->SetPointError(A->B[0],kinError,asymErrorOA);
 
       for(int aa=0; aa<N_AMP; aa++) {
-        RFkindepGr[aa] = RFkindepMap[aa].at(bn);
-        RFkindepGr[aa]->SetPoint(A->B[0],kinValue,RFasymValue[aa]);
-        RFkindepGr[aa]->SetPointError(A->B[0],kinError,RFasymError[aa]);
+        kindepGrMA[aa] = kindepMAmap[aa].at(bn);
+        kindepGrMA[aa]->SetPoint(A->B[0],kinValue,asymValueMA[aa]);
+        kindepGrMA[aa]->SetPointError(A->B[0],
+          kinError,kinError,asymErrorMAlo[aa],asymErrorMAhi[aa]);
       };
 
-      chindfGr = chindfMap.at(bn);
-      chindfGr->SetPoint(A->B[0],kinValue,chisq/ndf);
+      chindfGrOA = chindfOAmap.at(bn);
+      chindfGrOA->SetPoint(A->B[0],kinValue,chisq/ndf);
 
       rellumGr = rellumMap.at(bn);
       rellumGr->SetPoint(A->B[0],kinValue,A->rellum);
@@ -352,15 +421,15 @@ int main(int argc, char** argv) {
       break;
   };
 
-  canvName = "kindep" + canvNameSuffix;
-  TCanvas * kindepCanv = new TCanvas(canvName,canvName,canvX,canvY);
-  kindepCanv->Divide(divX,divY);
+  canvName = "kindepOA" + canvNameSuffix;
+  TCanvas * kindepOAcanv = new TCanvas(canvName,canvName,canvX,canvY);
+  kindepOAcanv->Divide(divX,divY);
 
-  TCanvas * RFkindepCanv[Asymmetry::nAmp];
+  TCanvas * kindepMAcanv[Asymmetry::nAmp];
   for(int aa=0; aa<N_AMP; aa++) {
-    canvName = "RF_A"+TString::Itoa(aa,10)+"_kindep" + canvNameSuffix;
-    RFkindepCanv[aa] = new TCanvas(canvName,canvName,canvX,canvY);
-    RFkindepCanv[aa]->Divide(divX,divY);
+    canvName = "kindepMA_A"+TString::Itoa(aa,10) + canvNameSuffix;
+    kindepMAcanv[aa] = new TCanvas(canvName,canvName,canvX,canvY);
+    kindepMAcanv[aa]->Divide(divX,divY);
   };
 
   canvName = "chindf" + canvNameSuffix;
@@ -385,28 +454,28 @@ int main(int argc, char** argv) {
 
   // -- add objects to canvases and graphs to multigraphs
   Int_t pad;
-  TGraphErrors * RFkindepGrClone[Asymmetry::nAmp];
+  TGraphAsymmErrors * kindepGrMAclone[Asymmetry::nAmp];
   Int_t binNum;
   if(BS->dimensions==1) {
     binNum = BS->HashBinNum(0);
 
-    kindepGr = kindepMap.at(binNum);
-    kindepCanv->cd();
-    DrawKinDepGraph(kindepGr,BS,0);
+    kindepGrOA = kindepOAmap.at(binNum);
+    kindepOAcanv->cd();
+    DrawKinDepGraph(kindepGrOA,BS,0);
 
     multiGr = multiMap.at(binNum);
-    if(includeOAonMultiGr) multiGr->Add(kindepGr);
+    if(includeOAonMultiGr) multiGr->Add(kindepGrOA);
     for(int aa=0; aa<N_AMP; aa++) {
-      RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
-      RFkindepCanv[aa]->cd();
-      DrawKinDepGraph(RFkindepGr[aa],BS,0);
-      RFkindepGrClone[aa] = ShiftGraph(RFkindepGr[aa],aa+1);
-      multiGr->Add(RFkindepGrClone[aa]);
+      kindepGrMA[aa] = kindepMAmap[aa].at(binNum);
+      kindepMAcanv[aa]->cd();
+      DrawKinDepGraph(kindepGrMA[aa],BS,0);
+      kindepGrMAclone[aa] = ShiftGraph(kindepGrMA[aa],aa+1);
+      multiGr->Add(kindepGrMAclone[aa]);
     };
 
-    chindfGr = chindfMap.at(binNum);
+    chindfGrOA = chindfOAmap.at(binNum);
     chindfCanv->cd();
-    DrawSimpleGraph(chindfGr,BS,0);
+    DrawSimpleGraph(chindfGrOA,BS,0);
 
     rellumGr = rellumMap.at(binNum);
     rellumCanv->cd();
@@ -416,12 +485,12 @@ int main(int argc, char** argv) {
       binNum = BS->HashBinNum(b0);
       A = asymMap.at(binNum);
       asymModCanv->cd(b0+1);
-      if(!(A->oa2d)) DrawAsymGr(A->asymGr);
+      if(A->gridDim==1) DrawAsymGr(A->asymGr);
       else DrawAsymGr2(A->asymGr2);
       modDistCanv->cd(b0+1);
-      if(!(A->oa2d)) A->modDist->Draw();
+      if(A->gridDim==1) A->modDist->Draw();
       else A->modDist2->Draw("colz");
-      if(A->oa2d) {
+      if(A->gridDim==2) {
         asymModHist2Canv->cd(b0+1);
         A->asymGr2hist->Draw("colz");
       };
@@ -432,24 +501,24 @@ int main(int argc, char** argv) {
       pad = b1+1;
       binNum = BS->HashBinNum(0,b1);
 
-      kindepGr = kindepMap.at(binNum);
-      kindepCanv->cd(pad);
-      DrawKinDepGraph(kindepGr,BS,0);
+      kindepGrOA = kindepOAmap.at(binNum);
+      kindepOAcanv->cd(pad);
+      DrawKinDepGraph(kindepGrOA,BS,0);
 
       multiGr = multiMap.at(binNum);
-      if(includeOAonMultiGr) multiGr->Add(kindepGr);
+      if(includeOAonMultiGr) multiGr->Add(kindepGrOA);
 
       for(int aa=0; aa<N_AMP; aa++) {
-        RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
-        RFkindepCanv[aa]->cd(pad);
-        DrawKinDepGraph(RFkindepGr[aa],BS,0);
-        RFkindepGrClone[aa] = ShiftGraph(RFkindepGr[aa],aa+1);
-        multiGr->Add(RFkindepGrClone[aa]);
+        kindepGrMA[aa] = kindepMAmap[aa].at(binNum);
+        kindepMAcanv[aa]->cd(pad);
+        DrawKinDepGraph(kindepGrMA[aa],BS,0);
+        kindepGrMAclone[aa] = ShiftGraph(kindepGrMA[aa],aa+1);
+        multiGr->Add(kindepGrMAclone[aa]);
       };
 
-      chindfGr = chindfMap.at(binNum);
+      chindfGrOA = chindfOAmap.at(binNum);
       chindfCanv->cd(pad);
-      DrawSimpleGraph(chindfGr,BS,0);
+      DrawSimpleGraph(chindfGrOA,BS,0);
 
       rellumGr = rellumMap.at(binNum);
       rellumCanv->cd(pad);
@@ -459,12 +528,12 @@ int main(int argc, char** argv) {
         binNum = BS->HashBinNum(b0,b1);
         A = asymMap.at(binNum);
         asymModCanv->cd(b0*NB[1]+b1+1);
-        if(!(A->oa2d)) DrawAsymGr(A->asymGr);
+        if(A->gridDim==1) DrawAsymGr(A->asymGr);
         else DrawAsymGr2(A->asymGr2);
         modDistCanv->cd(b0*NB[1]+b1+1);
-        if(!(A->oa2d)) A->modDist->Draw();
+        if(A->gridDim==1) A->modDist->Draw();
         else A->modDist2->Draw();
-        if(A->oa2d) {
+        if(A->gridDim==2) {
           asymModHist2Canv->cd(b0*NB[1]+b1+1);
           A->asymGr2hist->Draw("colz");
         };
@@ -477,24 +546,24 @@ int main(int argc, char** argv) {
         pad = b1*NB[2]+b2+1;
         binNum = BS->HashBinNum(0,b1,b2);
 
-        kindepGr = kindepMap.at(binNum);
-        kindepCanv->cd(pad);
-        DrawKinDepGraph(kindepGr,BS,0);
+        kindepGrOA = kindepOAmap.at(binNum);
+        kindepOAcanv->cd(pad);
+        DrawKinDepGraph(kindepGrOA,BS,0);
 
         multiGr = multiMap.at(binNum);
-        if(includeOAonMultiGr) multiGr->Add(kindepGr);
+        if(includeOAonMultiGr) multiGr->Add(kindepGrOA);
 
         for(int aa=0; aa<N_AMP; aa++) {
-          RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
-          RFkindepCanv[aa]->cd(pad);
-          DrawKinDepGraph(RFkindepGr[aa],BS,0);
-          RFkindepGrClone[aa] = ShiftGraph(RFkindepGr[aa],aa+1);
-          multiGr->Add(RFkindepGrClone[aa]);
+          kindepGrMA[aa] = kindepMAmap[aa].at(binNum);
+          kindepMAcanv[aa]->cd(pad);
+          DrawKinDepGraph(kindepGrMA[aa],BS,0);
+          kindepGrMAclone[aa] = ShiftGraph(kindepGrMA[aa],aa+1);
+          multiGr->Add(kindepGrMAclone[aa]);
         };
 
-        chindfGr = chindfMap.at(binNum);
+        chindfGrOA = chindfOAmap.at(binNum);
         chindfCanv->cd(pad);
-        DrawSimpleGraph(chindfGr,BS,0);
+        DrawSimpleGraph(chindfGrOA,BS,0);
 
         rellumGr = rellumMap.at(binNum);
         rellumCanv->cd(pad);
@@ -526,22 +595,22 @@ int main(int argc, char** argv) {
       for(int aa=0; aa<N_AMP; aa++) {
         multiGrCanv->cd(aa+1);
         multiGrCanv->GetPad(aa+1)->SetGrid(0,1);
-        RFkindepGr[aa] = RFkindepMap[aa].at(bn);
-        RFkindepGr[aa]->Draw("LAPE");
+        kindepGrMA[aa] = kindepMAmap[aa].at(bn);
+        kindepGrMA[aa]->Draw("LAPE");
         legText = A->modu[aa]->StateTitle();
         legText += ": ";
         legText += A->modu[aa]->ModulationTitle();
-        multiLeg->AddEntry(RFkindepGr[aa],legText,"PLE");
+        multiLeg->AddEntry(kindepGrMA[aa],legText,"PLE");
       };
       
       if(includeOAonMultiGr) {
-        kindepGr = kindepMap.at(bn);
+        kindepGrOA = kindepOAmap.at(bn);
         multiGrCanv->cd(N_AMP+1);
         multiGrCanv->GetPad(N_AMP+1)->SetGrid(0,1);
-        kindepGr->Draw("LAPE");
+        kindepGrOA->Draw("LAPE");
         legText = A->oaModulationTitle;
         legText += " one-amp result";
-        multiLeg->AddEntry(kindepGr,legText,"PLE");
+        multiLeg->AddEntry(kindepGrOA,legText,"PLE");
       };
 
       multiGrCanv->cd(4*nRows);
@@ -549,6 +618,10 @@ int main(int argc, char** argv) {
 
       multiGrCanvArr = new TObjArray();
       multiGrCanvArr->AddLast(multiGrCanv);
+      multiGrCanv->Print(
+        TString(spinrootDir+"/"+multiGrCanvN+DparamStr+".png"),
+        "png");
+
 
     };
   };
@@ -569,7 +642,7 @@ int main(int argc, char** argv) {
       if(b0==0) {
         ivFullDist1 = (TH1D*)(A->ivDist1)->Clone();
         SetCloneName(ivFullDist1);
-        if(!(A->oa2d)) {
+        if(A->gridDim==1) {
           IVvsModFullDist = (TH2D*)(A->IVvsModDist)->Clone();
           SetCloneName(IVvsModFullDist);
           modFullDist = (TH1D*)(A->modDist)->Clone();
@@ -580,7 +653,7 @@ int main(int argc, char** argv) {
         };
       } else {
         ivFullDist1->Add(A->ivDist1);
-        if(!(A->oa2d)) {
+        if(A->gridDim==1) {
           IVvsModFullDist->Add(A->IVvsModDist);
           modFullDist->Add(A->modDist);
         } else {
@@ -597,7 +670,7 @@ int main(int argc, char** argv) {
         if(b0==0 && b1==0) {
           ivFullDist2 = (TH2D*)(A->ivDist2)->Clone();
           SetCloneName(ivFullDist2);
-          if(!(A->oa2d)) {
+          if(A->gridDim==1) {
             modFullDist = (TH1D*)(A->modDist)->Clone();
             SetCloneName(modFullDist);
           } else {
@@ -606,7 +679,7 @@ int main(int argc, char** argv) {
           };
         } else {
           ivFullDist2->Add(A->ivDist2);
-          if(!(A->oa2d)) modFullDist->Add(A->modDist);
+          if(A->gridDim==1) modFullDist->Add(A->modDist);
           else modFullDist2->Add(A->modDist2);
         };
       };
@@ -621,7 +694,7 @@ int main(int argc, char** argv) {
           if(b0==0 && b1==0 && b2==0) {
             ivFullDist3 = (TH3D*)(A->ivDist3)->Clone();
             SetCloneName(ivFullDist3);
-            if(!(A->oa2d)) {
+            if(A->gridDim==1) {
               modFullDist = (TH1D*)(A->modDist)->Clone();
               SetCloneName(modFullDist);
             } else {
@@ -630,7 +703,7 @@ int main(int argc, char** argv) {
             };
           } else {
             ivFullDist3->Add(A->ivDist3);
-            if(!(A->oa2d)) modFullDist->Add(A->modDist);
+            if(A->gridDim==1) modFullDist->Add(A->modDist);
             else modFullDist2->Add(A->modDist2);
           };
         };
@@ -640,24 +713,27 @@ int main(int argc, char** argv) {
 
 
   // write output to asymFile
-  asymFile->cd();
+  TFile * asymFile = new TFile(asymFileN,"RECREATE");
   // -- Asymmetry objects
+  /*
+  asymFile->cd();
   printf("--- write Asymmetry objects\n");
   for(Int_t bn : BS->binVec) {
     A = asymMap.at(bn);
     A->StreamData(asymFile);
   };
+  */
 
   // -- "full" distributions
   if(BS->dimensions==1) {
     ivFullDist1->Write();
-    if(!(A->oa2d)) IVvsModFullDist->Write();
+    if(A->gridDim==1) IVvsModFullDist->Write();
   } else if(BS->dimensions==2) {
     ivFullDist2->Write();
   } else if(BS->dimensions==3) {
     ivFullDist3->Write();
   };
-  if(!(A->oa2d)) modFullDist->Write();
+  if(A->gridDim==1) modFullDist->Write();
   else modFullDist2->Write();
 
   // -- asymmetries and kindep graphs
@@ -667,18 +743,18 @@ int main(int argc, char** argv) {
     A->PrintSettings();
 
     // first write out the asymmetry vs. modulation graphs
-    if(!(A->oa2d)) A->asymGr->Write();
+    if(A->gridDim==1) A->asymGr->Write();
     else A->asymGr2->Write();
 
-    // then write out the kindepGr after writing out all the
+    // then write out the kindepGrOA after writing out all the
     // relevant asymmetry vs. modulation graphs
     if(A->B[0] + 1 == NB[0]) {
       binNum = BS->HashBinNum(A->B[0], A->B[1], A->B[2]);
-      kindepGr = kindepMap.at(binNum);
-      kindepGr->Write();
+      kindepGrOA = kindepOAmap.at(binNum);
+      kindepGrOA->Write();
       for(int aa=0; aa<N_AMP; aa++) {
-        RFkindepGr[aa] = RFkindepMap[aa].at(binNum);
-        RFkindepGr[aa]->Write();
+        kindepGrMA[aa] = kindepMAmap[aa].at(binNum);
+        kindepGrMA[aa]->Write();
       };
       multiGr = multiMap.at(binNum);
       multiGr->Write();
@@ -689,75 +765,74 @@ int main(int argc, char** argv) {
   multiGrCanvArr->Write("multiGrCanvArr",TObject::kSingleKey);
 
 
-  kindepCanv->Write();
-  for(int aa=0; aa<N_AMP; aa++) RFkindepCanv[aa]->Write();
+  kindepOAcanv->Write();
+  for(int aa=0; aa<N_AMP; aa++) kindepMAcanv[aa]->Write();
   chindfCanv->Write();
   chisqDist->Write();
   rellumCanv->Write();
   if(BS->dimensions==1 || BS->dimensions==2) {
     asymModCanv->Write();
-    if(A->oa2d) asymModHist2Canv->Write();
+    if(A->gridDim==2) asymModHist2Canv->Write();
     modDistCanv->Write();
   };
 
 
-  // -- RooFit results
+  // -- MLM results
   TCanvas * rfCanv[Asymmetry::nAmp];
   TString rfCanvName[Asymmetry::nAmp];
 
-  for(Int_t bn : BS->binVec) {
-    A = asymMap.at(bn);
+  if(fitAlgo==0) {
+    for(Int_t bn : BS->binVec) {
+      A = asymMap.at(bn);
 
-    for(int aa=0; aa<N_AMP; aa++) {
-      rfCanvName[aa] = "RF_A" + TString::Itoa(aa,10) + "_NLL_" + A->binN;
-      rfCanv[aa] = new TCanvas(rfCanvName[aa],rfCanvName[aa],800,800);
-      A->rfNLLplot[aa]->Draw();
-      rfCanv[aa]->Write();
+      for(int aa=0; aa<N_AMP; aa++) {
+        rfCanvName[aa] = "RF_A" + TString::Itoa(aa,10) + "_NLL_" + A->binN;
+        rfCanv[aa] = new TCanvas(rfCanvName[aa],rfCanvName[aa],800,800);
+        A->rfNLLplot[aa]->Draw();
+        rfCanv[aa]->Write();
+      };
+
+      Tools::PrintTitleBox("roofit function");
+      A->PrintSettings();
+      printf("\n");
+      for(int ss=0; ss<nSpin; ss++) {
+        printf("%s: %s\n",SpinTitle(ss).Data(),A->rfPdfFormu[ss].Data());
+      };
+      printf("\n");
+
+      printf("fit parameter results:\n");
+      for(int aa=0; aa<N_AMP; aa++) {
+        printf(" >> A%d = %.5f +/- %.5f  (MINOS: +%.5f %.5f)\n",
+            aa, A->rfA[aa]->getVal(), A->rfA[aa]->getError(),
+            A->rfA[aa]->getErrorHi(), A->rfA[aa]->getErrorLo());
+      };
+      for(int dd=0; dd<N_D; dd++) {
+        printf(" >> D%d = %.5f +/- %.5f\n",
+            dd, A->rfD[dd]->getVal(), A->rfD[dd]->getError() );
+      };
+      /*
+         printf(" >> Y+ = %.3f +/- %.3f\n",
+         A->rfYield[0]->getVal(), A->rfYield[0]->getError() );
+         printf(" >> Y- = %.3f +/- %.3f\n",
+         A->rfYield[1]->getVal(), A->rfYield[1]->getError() );
+         */
+
+      printf("\n");
+
     };
-
-    Tools::PrintTitleBox("roofit function");
-    A->PrintSettings();
-    printf("\n");
-    for(int ss=0; ss<nSpin; ss++) {
-      printf("%s: %s\n",SpinTitle(ss).Data(),A->rfPdfFormu[ss].Data());
-    };
-    printf("\n");
-
-    printf("fit parameter results:\n");
-    for(int aa=0; aa<N_AMP; aa++) {
-      printf(" >> A%d = %.3f +/- %.3f\n",
-          aa, A->rfA[aa]->getVal(), A->rfA[aa]->getError() );
-    };
-    for(int dd=0; dd<N_D; dd++) {
-      printf(" >> D%d = %.3f +/- %.3f\n",
-          dd, A->rfD[dd]->getVal(), A->rfD[dd]->getError() );
-    };
-    /*
-       printf(" >> Y+ = %.3f +/- %.3f\n",
-       A->rfYield[0]->getVal(), A->rfYield[0]->getError() );
-       printf(" >> Y- = %.3f +/- %.3f\n",
-       A->rfYield[1]->getVal(), A->rfYield[1]->getError() );
-       */
-
-    printf("\n");
-
   };
 
 
   asymFile->Close();
   catFile->Close();
   printf("--- end %s\n",argv[0]);
-  /*
-  for(int kk=0; kk<10; kk++) 
-    fprintf(stderr,"WARNING WARNING WARNING: mlm fit result replaced with 2dfit\n");
-    */
+  printf("FIT ALGORITHM = %d\n",fitAlgo);
   return 0;
-
 };
 
 
 
-void DrawKinDepGraph(TGraphErrors * g_, Binning * B_, Int_t d_) {
+void DrawKinDepGraph(TGraph * g_, Binning * B_, Int_t d_) {
   Int_t v_ = B_->ivVar[d_];
 
   g_->Draw("APE"); // draw once, so we can then format it
@@ -770,8 +845,8 @@ void DrawKinDepGraph(TGraphErrors * g_, Binning * B_, Int_t d_) {
 
   // set vertical axis range (it is overridden if the plot's vertical range
   // is larger than the desired range)
-  Float_t yMin = -0.05;
-  Float_t yMax = 0.05;
+  Float_t yMin = ASYM_PLOT_MIN;
+  Float_t yMax = ASYM_PLOT_MAX;
   if(g_->GetYaxis()->GetXmin() < yMin) yMin = g_->GetYaxis()->GetXmin();
   if(g_->GetYaxis()->GetXmax() > yMax) yMax = g_->GetYaxis()->GetXmax();
   g_->GetYaxis()->SetRangeUser(yMin,yMax);
@@ -848,8 +923,8 @@ void DrawAsymGr(TGraphErrors * g_) {
 
   // set vertical axis range (it is overridden if the plot's vertical range
   // is larger than the desired range)
-  Float_t yMin = -0.05;
-  Float_t yMax = 0.05;
+  Float_t yMin = ASYM_PLOT_MIN;
+  Float_t yMax = ASYM_PLOT_MAX;
   if(g_->GetYaxis()->GetXmin() < yMin) yMin = g_->GetYaxis()->GetXmin() - 0.05;
   if(g_->GetYaxis()->GetXmax() > yMax) yMax = g_->GetYaxis()->GetXmax() + 0.05;
   g_->GetYaxis()->SetRangeUser(yMin,yMax);
@@ -901,17 +976,18 @@ void SetCloneName(TH1 * clone_) {
 
 // shift a graph's points to the right slightly (a clone of the graph, with shifted
 // points, is returned)
-TGraphErrors * ShiftGraph(TGraphErrors * gr, Int_t nShift) {
-  //TGraphErrors * retGr = (TGrapErrors*) gr->Clone();
-  TGraphErrors * retGr = new TGraphErrors();
+TGraphAsymmErrors * ShiftGraph(TGraphAsymmErrors * gr, Int_t nShift) {
+  TGraphAsymmErrors * retGr = new TGraphAsymmErrors();
   Double_t * grX = gr->GetX();
   Double_t * grY = gr->GetY();
-  Double_t * grEX = gr->GetEX();
-  Double_t * grEY = gr->GetEY();
+  Double_t * grEXhi = gr->GetEXhigh();
+  Double_t * grEXlo = gr->GetEXlow();
+  Double_t * grEYhi = gr->GetEYhigh();
+  Double_t * grEYlo = gr->GetEYlow();
   for(int nn=0; nn<gr->GetN(); nn++) {
     //retGr->SetPoint(nn, grX[nn]+nShift*0.01, grY[nn]); // shifting enabled
     retGr->SetPoint(nn, grX[nn], grY[nn]); // shifting disabled
-    retGr->SetPointError(nn, grEX[nn], grEY[nn]);
+    retGr->SetPointError(nn, grEXlo[nn], grEXhi[nn], grEYlo[nn], grEYhi[nn]);
   };
 
   switch(nShift) {

@@ -22,13 +22,15 @@ class Modulation : public TObject
                Int_t polarization_ = kLU);
     ~Modulation();
 
-    Double_t Evaluate(Float_t phiH, Float_t phiR, Float_t theta);
+    Double_t Evaluate(Float_t phiR, Float_t phiH, Float_t theta);
     TString Formu();
     TString FormuRF();
 
     TString ModulationTitle();
     TString ModulationName();
+    TString PolarizationTitle();
     TString StateTitle();
+    TString AsymmetryTitle();
 
     Int_t GetTw() { return tw; };
     Int_t GetL() { return l; };
@@ -36,7 +38,7 @@ class Modulation : public TObject
     TString GetBaseString() { return baseStr; };
 
     Int_t polarization;
-    enum polarization_enum { kLU, kUU, kUT, nPOL };
+    enum polarization_enum { kLU, kUU, kLL, kUT, nPOL };
     static const Int_t LMAX = 2;
 
 

@@ -25,3 +25,4 @@ outroot.MC.gen
 outroot.MC.rec
 outroot.MC.recNotMatched
 crosscheck/xfiles/*.txt
+*.old
