@@ -109,7 +109,7 @@ class EventTree : public TObject
 
     // event-level branches
     Int_t evnum,runnum;
-    Int_t helicity;
+    Int_t helicity,spinE,spinP;
     static const Int_t NhelicityMC = 12;
     Int_t helicityMC[NhelicityMC];
 

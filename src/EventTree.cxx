@@ -100,7 +100,16 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
 
   chain->SetBranchAddress("runnum",&runnum);
   chain->SetBranchAddress("evnum",&evnum);
-  chain->SetBranchAddress("helicity",&helicity);
+  if(conf->Experiment=="clas") {
+    chain->SetBranchAddress("helicity",&helicity);
+    spinP = UNDEF;
+    spinE = UNDEF;
+  } else if(conf->Experiment=="eic") {
+    chain->SetBranchAddress("spinP",&spinP);
+    chain->SetBranchAddress("spinE",&spinE);
+    helicity = UNDEF;
+  };
+
 
   // MC branches
   if(chain->GetBranch("gen_hadMatchDist")) {
@@ -300,9 +309,9 @@ void EventTree::GetEvent(Int_t i) {
   // - cuts defined here are for EIC
   cutQ2 = true; // open for now, since defined by generator; overrideable
   cutX = true; // open for now, since defined by generator; overrideable
-  cutW = W > 2.0;
-  cutY = y < 0.8;
-  cutDIS = cutQ2 && cutW && cutY;
+  cutW = W > 3.0;
+  cutY = y>0.01 && y<0.95;
+  cutDIS = cutQ2 && cutX && cutW && cutY;
 
   // dihadron cuts
   // - cuts defined here are for EIC
@@ -383,10 +392,10 @@ Int_t EventTree::SpinState() {
     return UNDEF;
   }
   else if(conf->Experiment=="eic") {
-    switch(helicity) {
+    switch(spinP) {
       case 1: return sP;
       case -1: return sM;
-      default: fprintf(stderr,"WARNING: bad SpinState request: %d\n",helicity);
+      default: fprintf(stderr,"WARNING: bad SpinState request: %d\n",spinP);
     };
   }
   else return UNDEF;
