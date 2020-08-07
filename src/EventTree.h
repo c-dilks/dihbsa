@@ -135,6 +135,8 @@ class EventTree : public TObject
     Bool_t cutPID;
     Bool_t cutElePID;
     Bool_t cutHadPID[2];
+    Bool_t cutSmear;
+
 
 
     // tree banches used for matching MCgen event
@@ -223,6 +225,7 @@ class EventTree : public TObject
     Config * conf;
 
     Bool_t vertexWarned;
+    Bool_t wasSmeared;
 
   ClassDef(EventTree,1);
 };

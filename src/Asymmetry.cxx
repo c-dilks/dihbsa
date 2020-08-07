@@ -664,6 +664,66 @@ void Asymmetry::SetFitMode(Int_t fitMode) {
       this->FormuAppend(2,1,1,1,Modulation::kUT); // sin(phiR+phiS)
       this->FormuAppend(3,1,1,0,Modulation::kUT); // sin(phiS)
       break;
+    case 820: // UT twist2 lev0  kf=A(y)/A(y)
+      enablePW = true;
+      this->FormuAppend(2,0,0,0,Modulation::kUT);
+      this->FormuAppend(2,1,0,0,Modulation::kUT);
+      this->FormuAppend(2,1,1,0,Modulation::kUT);
+      this->FormuAppend(2,1,-1,0,Modulation::kUT);
+      this->FormuAppend(2,2,0,0,Modulation::kUT);
+      this->FormuAppend(2,2,1,0,Modulation::kUT);
+      this->FormuAppend(2,2,-1,0,Modulation::kUT);
+      this->FormuAppend(2,2,2,0,Modulation::kUT);
+      this->FormuAppend(2,2,-2,0,Modulation::kUT);
+      break;
+    case 821: // UT twist2 lev1  kf=B(y)/A(y)
+      enablePW = true;
+      this->FormuAppend(2,0,0,1,Modulation::kUT);
+      this->FormuAppend(2,1,0,1,Modulation::kUT);
+      this->FormuAppend(2,1,1,1,Modulation::kUT);
+      this->FormuAppend(2,1,-1,1,Modulation::kUT);
+      this->FormuAppend(2,2,0,1,Modulation::kUT);
+      this->FormuAppend(2,2,1,1,Modulation::kUT);
+      this->FormuAppend(2,2,-1,1,Modulation::kUT);
+      this->FormuAppend(2,2,2,1,Modulation::kUT);
+      this->FormuAppend(2,2,-2,1,Modulation::kUT);
+      break;
+    case 822: // UT twist2 lev2  kf=B(y)/A(y)
+      enablePW = true;
+      this->FormuAppend(2,0,0,2,Modulation::kUT);
+      this->FormuAppend(2,1,0,2,Modulation::kUT);
+      this->FormuAppend(2,1,1,2,Modulation::kUT);
+      this->FormuAppend(2,1,-1,2,Modulation::kUT);
+      this->FormuAppend(2,2,0,2,Modulation::kUT);
+      this->FormuAppend(2,2,1,2,Modulation::kUT);
+      this->FormuAppend(2,2,-1,2,Modulation::kUT);
+      this->FormuAppend(2,2,2,2,Modulation::kUT);
+      this->FormuAppend(2,2,-2,2,Modulation::kUT);
+      break;
+    case 830: // UT twist3 lev0  kf=V(y)/A(y)
+      enablePW = true;
+      this->FormuAppend(3,0,0,0,Modulation::kUT);
+      this->FormuAppend(3,1,0,0,Modulation::kUT);
+      this->FormuAppend(3,1,1,0,Modulation::kUT);
+      this->FormuAppend(3,1,-1,0,Modulation::kUT);
+      this->FormuAppend(3,2,0,0,Modulation::kUT);
+      this->FormuAppend(3,2,1,0,Modulation::kUT);
+      this->FormuAppend(3,2,-1,0,Modulation::kUT);
+      this->FormuAppend(3,2,2,0,Modulation::kUT);
+      this->FormuAppend(3,2,-2,0,Modulation::kUT);
+      break;
+    case 831: // UT twist3 lev1  kf=V(y)/A(y)
+      enablePW = true;
+      this->FormuAppend(3,0,0,1,Modulation::kUT);
+      this->FormuAppend(3,1,0,1,Modulation::kUT);
+      this->FormuAppend(3,1,1,1,Modulation::kUT);
+      this->FormuAppend(3,1,-1,1,Modulation::kUT);
+      this->FormuAppend(3,2,0,1,Modulation::kUT);
+      this->FormuAppend(3,2,1,1,Modulation::kUT);
+      this->FormuAppend(3,2,-1,1,Modulation::kUT);
+      this->FormuAppend(3,2,2,1,Modulation::kUT);
+      this->FormuAppend(3,2,-2,1,Modulation::kUT);
+      break;
     case 1000:
       this->FormuAppend(2,1,1,0,Modulation::kLL); // double-spin asym
       this->FormuAppend(3,1,1,0,Modulation::kLL);

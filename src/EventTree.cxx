@@ -268,6 +268,23 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   whichHelicityMC = 0;
   vertexWarned = false;
 
+
+  // determine if eic-smear was enabled
+  wasSmeared = false;
+  if(conf->Experiment=="eic") {
+    for(int e=0; e<100; e++) {
+      chain->GetEntry(e);
+      if(eleSmearE) {
+        wasSmeared = true;
+        break;
+      };
+    };
+    printf("\nEventTree is using EIC configuration\n");
+    printf("--> the data were %s\n\n",wasSmeared?"SMEARED":"NOT SMEARED");
+  };
+
+
+
 };
 
 
@@ -321,6 +338,17 @@ void EventTree::GetEvent(Int_t i) {
     Z[qA]>0.01 && Z[qB]>0.01 &&
     hadXF[qA] > 0 && hadXF[qB] > 0;
 
+  // smearing cut
+  // - if smearing was enabled, make sure the event was actually smeared (i.e.,
+  //   within acceptance)
+  // - if smearing was not enabled, this cut is just set to true
+  if(wasSmeared) {
+    cutSmear = eleSmearE && eleSmearP &&
+      hadSmearE[qA] && hadSmearP[qA] &&
+      hadSmearE[qB] && hadSmearP[qB];
+  } else cutSmear = true;
+
+
   // vertex cuts
   cutVertex = true;
   //cutVertex = CheckVertex();
@@ -358,7 +386,7 @@ void EventTree::GetEvent(Int_t i) {
 /////////////////////////////////////////////////////////
 // MAIN ANALYSIS CUT
 Bool_t EventTree::Valid() {
-  return cutDIS && cutDihadron && cutHelicity;
+  return cutDIS && cutDihadron && cutHelicity && cutSmear;
   /*
   return cutDIS && cutDihadron && cutHelicity && 
          cutFiducial && cutPID && cutVertex;
@@ -407,6 +435,7 @@ Float_t EventTree::Polarization() {
   if(runnum>=5032 && runnum<5333)       return 0.8592; // +-0.0129
   else if(runnum>=5333 && runnum<=5666) return 0.8922; // +-0.02509
   else if(runnum==11) return 0.86; // MC
+  else if(conf->Experiment=="eic") return 1; // EIC MC
   fprintf(stderr,"WARNING: runnum %d not in EventTree::Polarization\n",runnum);
   return UNDEF;
 };

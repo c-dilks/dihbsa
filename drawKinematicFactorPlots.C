@@ -5,8 +5,7 @@ void drawKinematicFactorPlots() {
 
   TFile * infile = new TFile("plots.root","READ");
 
-  enum KF_enum {kfA, kfB, kfC, kfV, kfW, kfForE, kfForG, Nkf};
-
+  enum KF_enum {kfA, kfB, kfC, kfV, kfW, kfWA, kfVA, kfCA, kfBA, Nkf};
   TString kfName[Nkf];
   TString kfTitle[Nkf];
   kfName[kfA] = "kfA"; kfTitle[kfA] = "A(y)";
@@ -14,8 +13,12 @@ void drawKinematicFactorPlots() {
   kfName[kfC] = "kfC"; kfTitle[kfC] = "C(y)";
   kfName[kfV] = "kfV"; kfTitle[kfV] = "V(y)";
   kfName[kfW] = "kfW"; kfTitle[kfW] = "W(y)";
-  kfName[kfForE] = "kfForE"; kfTitle[kfForE] = "W(y)/A(y)";
-  kfName[kfForG] = "kfForG"; kfTitle[kfForG] = "C(y)/A(y)";
+  kfName[kfWA] = "kfWA"; kfTitle[kfWA] = "W(y)/A(y)";
+  kfName[kfVA] = "kfVA"; kfTitle[kfVA] = "V(y)/A(y)";
+  kfName[kfCA] = "kfCA"; kfTitle[kfCA] = "C(y)/A(y)";
+  kfName[kfBA] = "kfBA"; kfTitle[kfBA] = "B(y)/A(y)";
+
+  for(int k=0; k<Nkf; k++) kfName[k] = "/kinematicFactors/"+kfName[k];
 
   TH2D * kfVsMh[Nkf];
   TH2D * kfVsQ2[Nkf];

@@ -39,7 +39,6 @@ const Int_t NBINS_x = 3;
 // variables which are changed by parsing the file name
 Float_t EbeamEn = 10;
 Float_t PbeamEn = 100;
-Bool_t wasSmeared = true;
 //-----------------------------------------------------
 
 enum obsEnum {kEle,kDih,kHadA,kHadB,NOBS};
@@ -74,7 +73,7 @@ int main(int argc, char** argv) {
   if(argc>1) inFiles = TString(argv[1]);
   if(argc>2) whichPair = (Int_t)strtof(argv[2],NULL);
 
-  // parse file name, to get things like beam energies and smearing
+  // parse file name, to get things like beam energies
   // - if reading multiple files, default values listed here will be used
   TString filename, token;
   Int_t EbeamEnInt,PbeamEnInt;
@@ -91,20 +90,9 @@ int main(int argc, char** argv) {
         EbeamEn = (Float_t) EbeamEnInt;
         PbeamEn = (Float_t) PbeamEnInt;
       }
-      // parse smearing
-      else if(token.Contains("smear")) {
-        if(token=="nosmear") wasSmeared = false;
-        else if(token=="smear") wasSmeared = true;
-        else {
-          fprintf(stderr,
-          "ERROR: found smearing token in filename, but format is wrong\n");
-          return 0;
-        };
-      };
     };
     printf("EbeamEn = %f\n",EbeamEn);
     printf("PbeamEn = %f\n",PbeamEn);
-    printf("wasSmeared = %s\n",wasSmeared?"true":"false");
   };
   Float_t sqrtS = 2*TMath::Sqrt(EbeamEn*PbeamEn);
 
@@ -253,6 +241,9 @@ int main(int argc, char** argv) {
   TH2D * corrXF[NBINS];
   TH1D * distMh[NBINS];
   TH1D * distMx[NBINS];
+  TH1D * distPhiH[NBINS];
+  TH1D * distPhiR[NBINS];
+  TH1D * distPhiS[NBINS];
   TH1D * distTheta[NBINS];
   TH2D * PhiHvsP[NBINS];
   TH2D * PhiRvsP[NBINS];
@@ -455,10 +446,31 @@ int main(int argc, char** argv) {
         distMx[b]->SetFillColor(kRed-5);
         distMx[b]->SetLineColor(kRed-5);
 
+        plotT = obsT[o] + " #phi_{h} distribution, for " + cutT +
+          ";#phi_{h}";
+        plotN = Form("%s_phiH_%d",obsN[o].Data(),b);
+        distPhiH[b] = new TH1D(plotN,plotT, 3*NPLOTBINS, -PIe, PIe);
+        distPhiH[b]->SetFillColor(kOrange-1);
+        distPhiH[b]->SetLineColor(kOrange-1);
+
+        plotT = obsT[o] + " #phi_{R} distribution, for " + cutT +
+          ";#phi_{R}";
+        plotN = Form("%s_phiR_%d",obsN[o].Data(),b);
+        distPhiR[b] = new TH1D(plotN,plotT, 3*NPLOTBINS, -PIe, PIe);
+        distPhiR[b]->SetFillColor(kBlue);
+        distPhiR[b]->SetLineColor(kBlue);
+
+        plotT = obsT[o] + " #phi_{S} distribution, for " + cutT +
+          ";#phi_{S}";
+        plotN = Form("%s_phiS_%d",obsN[o].Data(),b);
+        distPhiS[b] = new TH1D(plotN,plotT, 3*NPLOTBINS, -PIe, PIe);
+        distPhiS[b]->SetFillColor(kGreen+2);
+        distPhiS[b]->SetLineColor(kGreen+2);
+
         plotT = obsT[o] + " #theta_{CM} distribution, for " + cutT +
           ";#theta_{CM}";
         plotN = Form("%s_theta_%d",obsN[o].Data(),b);
-        distTheta[b] = new TH1D(plotN,plotT, 3*NPLOTBINS, 0, 3);
+        distTheta[b] = new TH1D(plotN,plotT, 3*NPLOTBINS, 0, PI);
         distTheta[b]->SetFillColor(kCyan+3);
         distTheta[b]->SetLineColor(kCyan+3);
       };
@@ -488,7 +500,7 @@ int main(int argc, char** argv) {
 
 
   // prepare for event loop
-  Bool_t binCut, smearCut;
+  Bool_t binCut;
   Float_t oP,oPt,oTheta,oEta,oZ,Qt;
   for(b=0; b<NBINS; b++) numEvents[b]=0;
 
@@ -498,18 +510,13 @@ int main(int argc, char** argv) {
   ///////////////////////////////////////////////
   printf("begin loop through %lld events...\n",ev->ENT);
   for(int i=0; i<ev->ENT; i++) {
-    if(i>300000) break; // limiter
+    //if(i>300000) break; // limiter
     ev->GetEvent(i);
 
     // smearing cut:
     // if smearing was on, only analyse smeared particles;
     // if smearing was not on, analyse all particles
-    if(wasSmeared) {
-      smearCut = ev->eleSmearE && ev->eleSmearP &&
-        ev->hadSmearE[0] && ev->hadSmearP[0] &&
-        ev->hadSmearE[1] && ev->hadSmearP[1];
-    } else smearCut = true;
-    if(smearCut) {
+    if(ev->cutSmear) {
 
       // fill (x,Q2) plots
       Q2vsXfull->Fill(ev->x,ev->Q2);
@@ -596,6 +603,9 @@ int main(int argc, char** argv) {
               QtDistLog[b]->Fill(Qt);
               distMh[b]->Fill(ev->Mh);
               distMx[b]->Fill(ev->Mmiss);
+              distPhiH[b]->Fill(ev->PhiH);
+              distPhiR[b]->Fill(ev->PhiR);
+              distPhiS[b]->Fill(ev->PhiS);
               distTheta[b]->Fill(ev->theta);
             };
             if(o==kEle) {
@@ -674,6 +684,9 @@ int main(int argc, char** argv) {
   TCanvas * QtDistLogMatrix;
   TCanvas * distMhMatrix;
   TCanvas * distMxMatrix;
+  TCanvas * distPhiHMatrix;
+  TCanvas * distPhiRMatrix;
+  TCanvas * distPhiSMatrix;
   TCanvas * distThetaMatrix;
   TCanvas * distWMatrix;
   TCanvas * distYMatrix;
@@ -702,6 +715,9 @@ int main(int argc, char** argv) {
   QtDistLogMatrix = MatrixifyDist1(QtDistLog,1,1);
   distMhMatrix = MatrixifyDist1(distMh,0,0);
   distMxMatrix = MatrixifyDist1(distMx,0,0);
+  distPhiHMatrix = MatrixifyDist1(distPhiH,0,0);
+  distPhiRMatrix = MatrixifyDist1(distPhiR,0,0);
+  distPhiSMatrix = MatrixifyDist1(distPhiS,0,0);
   distThetaMatrix = MatrixifyDist1(distTheta,0,0);
   distWMatrix = MatrixifyDist1(distW,0,0);
   distYMatrix = MatrixifyDist1(distY,1,1);
@@ -731,6 +747,9 @@ int main(int argc, char** argv) {
       PhiHvsPhiRMatrix->Write();
       distMhMatrix->Write();
       distMxMatrix->Write();
+      distPhiHMatrix->Write();
+      distPhiRMatrix->Write();
+      distPhiSMatrix->Write();
       distThetaMatrix->Write();
       corrXFMatrix->Write();
       PhiHvsPMatrix->Write();
@@ -768,6 +787,9 @@ int main(int argc, char** argv) {
       for(b=0; b<NBINS; b++) PhiHvsPhiR[b]->Write();
       for(b=0; b<NBINS; b++) distMh[b]->Write();
       for(b=0; b<NBINS; b++) distMx[b]->Write();
+      for(b=0; b<NBINS; b++) distPhiH[b]->Write();
+      for(b=0; b<NBINS; b++) distPhiR[b]->Write();
+      for(b=0; b<NBINS; b++) distPhiS[b]->Write();
       for(b=0; b<NBINS; b++) distTheta[b]->Write();
       for(b=0; b<NBINS; b++) corrXF[b]->Write();
       for(b=0; b<NBINS; b++) PhiHvsP[b]->Write();

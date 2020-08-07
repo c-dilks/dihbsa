@@ -22,7 +22,7 @@ Binning::Binning(Int_t pairType_,TString Experiment_) {
     minIV[vPh] = 0;  maxIV[vPh] = 10;
     minIV[vQ] = 0;   maxIV[vQ] = 12;
   } else if(Experiment_=="eic") {
-    minIV[vM] = 0;   maxIV[vM] = 35;
+    minIV[vM] = 0;   maxIV[vM] = 10;
     minIV[vX] = 0;   maxIV[vX] = 1;
     minIV[vZ] = 0;   maxIV[vZ] = 1;
     minIV[vPt] = 0;  maxIV[vPt] = 2;
@@ -202,17 +202,6 @@ Binning::Binning(Int_t pairType_,TString Experiment_) {
   // set maximum bin boundaries
   for(int v=0; v<nIV; v++) AddBinBound(v,maxIV[v]);
 
-
-  // set to single-bin mode
-  if(Experiment_=="eic") {
-    printf("\n\nEIC OVERRIDE: set Binning to single bin\n\n");
-    for(int v=0; v<nIV; v++) {
-      nBins[v] = -1;
-      bound[v].clear();
-      AddBinBound(v,minIV[v]);
-      AddBinBound(v,maxIV[v]);
-    };
-  };
 
 
   // set IV names and titles

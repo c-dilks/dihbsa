@@ -103,8 +103,8 @@ Modulation::Modulation(Int_t tw_, Int_t l_, Int_t m_,
         else aziStr = "0";
         break;
       case 3:
-        if(lev==0) { // (54)
-          aziStr = "sin(phiS)";
+        if(lev==0) { // (54), but see (26) for |m|>0 form (m=0 is sinPhiS)
+          aziStr = Form("sin(%d*phiH+%d*phiR+phiS)",-m,m);
         }
         else if(lev==1) { // (55)
           aziStr = Form("sin(%d*phiH+%d*phiR-phiS)",2-m,m);
@@ -236,12 +236,12 @@ TString Modulation::PolarizationTitle() {
     case kUT:
       if(tw==2) {
         if(lev==0)      return "UT,T";
-        else if(lev==1) return "UTa";
-        else if(lev==2) return "UTb";
+        else if(lev==1) return "UT";
+        else if(lev==2) return "UT";
         else return "unknown";
       } else if(tw==3) {
-        if(lev==0)      return "UTa";
-        else if(lev==1) return "UTb";
+        if(lev==0)      return "UT";
+        else if(lev==1) return "UT";
         else return "unknown";
       };
       break;
