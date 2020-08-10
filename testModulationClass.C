@@ -1,34 +1,32 @@
 // test new Modulation class
 
 R__LOAD_LIBRARY(DihBsa)
-#include "Modulation.h"
 #include "Tools.h"
+#include "Modulation.h"
+
+void testModu(Int_t tw, Int_t l, Int_t m, Int_t lev, Bool_t pw, Int_t pol) {
+  TString titleStr = Form("|%d,%d>  twist=%d  level=%d",l,m,tw,lev);
+  Tools::PrintTitleBox(titleStr);
+  Modulation * modu = new Modulation(tw,l,m,lev,pw,pol);
+  printf(" %s\n",(modu->StateTitle()).Data());
+  printf(" base:     %s\n",(modu->GetBaseString()).Data());
+  printf(" formuRF:  %s\n",(modu->FormuRF()).Data());
+  printf(" formu:    %s\n",(modu->Formu()).Data());
+  printf("\n");
+};
 
 void testModulationClass() {
 
-  // OPTIONS:
-  Int_t pol = Modulation::kUU;
-  Bool_t enablePW = false;
-  ////////////////
+  Int_t polarization = Modulation::kUT;
+  Bool_t enablePW = true;
+  Int_t twist = 2;
+  Int_t level = 0;
 
-  Modulation * modu;
-  Int_t levMax;
-  TString titleStr;
-  for(int T=2; T<=3; T++) {
-    if(pol==Modulation::kUU && T==2) levMax=1;
-    else levMax = 0;
-    for(int lev=0; lev<=levMax; lev++) {
-      titleStr = Form("twist=%d  level=%d",T,lev);
-      Tools::PrintTitleBox(titleStr);
-      for(int L=0; L<=2; L++) {
-        for(int M=-L; M<=L; M++) {
-          modu = new Modulation(T,L,M,lev,enablePW,pol);
-          printf(" %s\n",(modu->StateTitle()).Data());
-          printf("\t%s\n",(modu->GetBaseString()).Data());
-          printf("\t%s\n",(modu->Formu()).Data());
-        };
-        printf("\n");
-      };
+  for(int L=0; L<=2; L++) {
+    Tools::PrintSeparator(50);
+    printf("L=%d\n",L);
+    for(int M=-L; M<=L; M++) {
+      testModu(twist,L,M,level,enablePW,polarization);
     };
   };
 };

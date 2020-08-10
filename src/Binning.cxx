@@ -43,14 +43,20 @@ Binning::Binning(Int_t pairType_,TString Experiment_) {
   if(numKaons==0) {
 
     // -- M_h (dihadron invariant mass)
-    ///* // 7 quantile bins
+    ///* // 5 quantile bins FOR EIC DATA
+    AddBinBound(vM,0.43);
+    AddBinBound(vM,0.53);
+    AddBinBound(vM,0.70);
+    AddBinBound(vM,0.91);
+    //*/
+    /* // 7 quantile bins
     AddBinBound(vM,0.46);
     AddBinBound(vM,0.60);
     AddBinBound(vM,0.72);
     AddBinBound(vM,0.81);
     AddBinBound(vM,0.93);
     AddBinBound(vM,1.10);
-    //*/
+    */
     /* // 14 quantile bins
     AddBinBound(vM,0.38);
     AddBinBound(vM,0.44);
@@ -75,14 +81,20 @@ Binning::Binning(Int_t pairType_,TString Experiment_) {
     */
 
     // -- x (bjorken-x)
-    ///* // 7 quantile bins
+    ///* // 5 quantile bins FOR EIC DATA
+    AddBinBound(vX,0.0045);
+    AddBinBound(vX,0.0103);
+    AddBinBound(vX,0.0203);
+    AddBinBound(vX,0.0488);
+    //*/
+    /* // 7 quantile bins
     AddBinBound(vX,0.12);
     AddBinBound(vX,0.15);
     AddBinBound(vX,0.18);
     AddBinBound(vX,0.21);
     AddBinBound(vX,0.25);
     AddBinBound(vX,0.32);
-    //*/
+    */
     /* // 14 quantile bins
     AddBinBound(vX,0.11);
     AddBinBound(vX,0.13);

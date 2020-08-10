@@ -261,6 +261,13 @@ int main(int argc, char** argv) {
    TH2D * PhiRvsX = new TH2D("PhiRvsX","#phi_{R} vs. x;x;#phi_{R}",
      NBINS,0,1,NBINS,-PIe,PIe);
 
+   TH2D * PhiSvsMh = new TH2D("PhiSvsMh","#phi_{S} vs. M_{h};M_{h};#phi_{S}",
+     NBINS,0,3,NBINS,-PIe,PIe);
+   TH2D * PhiSvsZ = new TH2D("PhiSvsZ","#phi_{S} vs. z;z;#phi_{S}",
+     NBINS,0,1,NBINS,-PIe,PIe);
+   TH2D * PhiSvsX = new TH2D("PhiSvsX","#phi_{S} vs. x;x;#phi_{S}",
+     NBINS,0,1,NBINS,-PIe,PIe);
+
    TH2D * PhiRvsAlpha = new TH2D("PhiRvsAlpha",
      "#phi_{R} vs. #alpha;#alpha;#phi_{R}",
      NBINS,0,1.3,NBINS,-PIe,PIe);
@@ -485,6 +492,11 @@ int main(int argc, char** argv) {
        PhiRvsMh->Fill(ev->Mh,ev->PhiR);
        PhiRvsX->Fill(ev->x,ev->PhiR);
        PhiRvsZ->Fill(ev->Zpair,ev->PhiR);
+
+       PhiSvsMh->Fill(ev->Mh,ev->PhiS);
+       PhiSvsX->Fill(ev->x,ev->PhiS);
+       PhiSvsZ->Fill(ev->Zpair,ev->PhiS);
+
        PhiRvsAlpha->Fill(ev->alpha,ev->PhiR);
        PhiHRvsAlpha->Fill(ev->alpha,ev->PhiHR);
 
@@ -626,6 +638,11 @@ int main(int argc, char** argv) {
    PhiRvsMh->Write();
    PhiRvsX->Write();
    PhiRvsZ->Write();
+
+   PhiSvsMh->Write();
+   PhiSvsX->Write();
+   PhiSvsZ->Write();
+
    PhiRvsAlpha->Write();
    PhiHRvsAlpha->Write();
 

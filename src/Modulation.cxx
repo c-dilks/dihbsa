@@ -154,10 +154,15 @@ Modulation::Modulation(Int_t tw_, Int_t l_, Int_t m_,
 
   // -- clean up baseStr, to make it more human-readable
   if(aziStr=="0") baseStr="0";
-  Tools::GlobalRegexp(baseStr,TRegexp("1\\*"),"");
-  Tools::GlobalRegexp(baseStr,TRegexp("0\\*phi.\\+"),"");
-  Tools::GlobalRegexp(baseStr,TRegexp("\\+0\\*phi."),"");
-  Tools::GlobalRegexp(baseStr,TRegexp("\\+-"),"-");
+  Tools::GlobalRegexp(baseStr,TRegexp("1\\*"),""); // omit 1*
+  Tools::GlobalRegexp(baseStr,TRegexp("\\+0\\*phi."),""); // omit +0*phi
+  Tools::GlobalRegexp(baseStr,TRegexp("-0\\*phi."),""); // omit -0*phi
+  Tools::GlobalRegexp(baseStr,TRegexp("(0\\*phi."),"("); // (0*var -> (
+  Tools::GlobalRegexp(baseStr,TRegexp("\\+-"),"-"); // +- -> -
+  Tools::GlobalRegexp(baseStr,TRegexp("-\\+"),"-"); // -+ -> -
+  Tools::GlobalRegexp(baseStr,TRegexp("--"),"+"); // -- -> +
+  Tools::GlobalRegexp(baseStr,TRegexp("\\+\\+"),"+"); // ++ -> +
+  Tools::GlobalRegexp(baseStr,TRegexp("(\\+"),"("); // (+ -> (
 
   // ----> done building baseStr
 

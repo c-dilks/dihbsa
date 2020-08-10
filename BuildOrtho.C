@@ -30,7 +30,7 @@ R__LOAD_LIBRARY(DihBsa)
 #include "EventTree.h"
 #include "Tools.h"
 
-void BuildOrtho(TString inDir="outroot") {
+void BuildOrtho(TString infiles="outroot/*.root") {
   const Int_t NBINS = 50;
   TFile * outfile = new TFile("ortho.root","RECREATE");
 
@@ -45,7 +45,7 @@ void BuildOrtho(TString inDir="outroot") {
   pph[1] = new TH2D("pphB","#phi_{h}^{#pi1#pi2} vs. #phi_{h}^{#pi2}",NBINS,-PI,PI,
                                                                      NBINS,-PI,PI);
 
-  EventTree * ev = new EventTree(TString(inDir+"/*.root"),EncodePairType(kPip,kPim));
+  EventTree * ev = new EventTree(infiles,EncodePairType(kPip,kPim));
   Float_t pH,pR;
   for(int i=0; i<ev->ENT; i++) {
     ev->GetEvent(i);

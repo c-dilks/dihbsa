@@ -660,11 +660,74 @@ void Asymmetry::SetFitMode(Int_t fitMode) {
       this->DenomAppend(2,2,0,0); // tw2 |2,0> UU,T
       this->DenomAppend(3,2,0,0);
       break;
-    case 800: // UT
+    case 800: // UT primary modulations
       this->FormuAppend(2,1,1,1,Modulation::kUT); // sin(phiR+phiS)
-      this->FormuAppend(3,1,1,0,Modulation::kUT); // sin(phiS)
+      this->FormuAppend(3,0,0,0,Modulation::kUT); // sin(phiS)
       break;
-    case 820: // UT twist2 lev0  kf=A(y)/A(y)
+    case 801: // UT |0,0> azi-mods // <-- TEST2
+      this->FormuAppend(2,0,0,0,Modulation::kUT);
+      this->FormuAppend(2,0,0,1,Modulation::kUT);
+      this->FormuAppend(2,0,0,2,Modulation::kUT);
+      this->FormuAppend(3,0,0,0,Modulation::kUT);
+      this->FormuAppend(3,0,0,1,Modulation::kUT);
+      break;
+    case 802: // UT |1,0> azi-mods
+      this->FormuAppend(2,1,0,0,Modulation::kUT);
+      this->FormuAppend(2,1,0,1,Modulation::kUT);
+      this->FormuAppend(2,1,0,2,Modulation::kUT);
+      this->FormuAppend(3,1,0,0,Modulation::kUT);
+      this->FormuAppend(3,1,0,1,Modulation::kUT);
+      break;
+    case 803: // UT |1,1> azi-mods // <-- TEST3
+      this->FormuAppend(2,1,1,0,Modulation::kUT);
+      this->FormuAppend(2,1,1,1,Modulation::kUT);
+      this->FormuAppend(2,1,1,2,Modulation::kUT);
+      this->FormuAppend(3,1,1,0,Modulation::kUT);
+      this->FormuAppend(3,1,1,1,Modulation::kUT);
+      break;
+    case 804: // UT |1,-1> azi-mods
+      this->FormuAppend(2,1,-1,0,Modulation::kUT);
+      this->FormuAppend(2,1,-1,1,Modulation::kUT);
+      this->FormuAppend(2,1,-1,2,Modulation::kUT);
+      this->FormuAppend(3,1,-1,0,Modulation::kUT);
+      this->FormuAppend(3,1,-1,1,Modulation::kUT);
+      break;
+    case 805: // UT |2,0> azi-mods
+      this->FormuAppend(2,2,0,0,Modulation::kUT);
+      this->FormuAppend(2,2,0,1,Modulation::kUT);
+      this->FormuAppend(2,2,0,2,Modulation::kUT);
+      this->FormuAppend(3,2,0,0,Modulation::kUT);
+      this->FormuAppend(3,2,0,1,Modulation::kUT);
+      break;
+    case 806: // UT |2,1> azi-mods
+      this->FormuAppend(2,2,1,0,Modulation::kUT);
+      this->FormuAppend(2,2,1,1,Modulation::kUT);
+      this->FormuAppend(2,2,1,2,Modulation::kUT);
+      this->FormuAppend(3,2,1,0,Modulation::kUT);
+      this->FormuAppend(3,2,1,1,Modulation::kUT);
+      break;
+    case 807: // UT |2,-1> azi-mods
+      this->FormuAppend(2,2,-1,0,Modulation::kUT);
+      this->FormuAppend(2,2,-1,1,Modulation::kUT);
+      this->FormuAppend(2,2,-1,2,Modulation::kUT);
+      this->FormuAppend(3,2,-1,0,Modulation::kUT);
+      this->FormuAppend(3,2,-1,1,Modulation::kUT);
+      break;
+    case 808: // UT |2,2> azi-mods
+      this->FormuAppend(2,2,2,0,Modulation::kUT);
+      this->FormuAppend(2,2,2,1,Modulation::kUT);
+      this->FormuAppend(2,2,2,2,Modulation::kUT);
+      this->FormuAppend(3,2,2,0,Modulation::kUT);
+      this->FormuAppend(3,2,2,1,Modulation::kUT);
+      break;
+    case 809: // UT |2,-2> azi-mods
+      this->FormuAppend(2,2,-2,0,Modulation::kUT);
+      this->FormuAppend(2,2,-2,1,Modulation::kUT);
+      this->FormuAppend(2,2,-2,2,Modulation::kUT);
+      this->FormuAppend(3,2,-2,0,Modulation::kUT);
+      this->FormuAppend(3,2,-2,1,Modulation::kUT);
+      break;
+    case 920: // UT partial waves twist2 lev0  kf=A(y)/A(y)
       enablePW = true;
       this->FormuAppend(2,0,0,0,Modulation::kUT);
       this->FormuAppend(2,1,0,0,Modulation::kUT);
@@ -676,7 +739,7 @@ void Asymmetry::SetFitMode(Int_t fitMode) {
       this->FormuAppend(2,2,2,0,Modulation::kUT);
       this->FormuAppend(2,2,-2,0,Modulation::kUT);
       break;
-    case 821: // UT twist2 lev1  kf=B(y)/A(y)
+    case 921: // UT partial waves twist2 lev1  kf=B(y)/A(y) // <-- TEST1
       enablePW = true;
       this->FormuAppend(2,0,0,1,Modulation::kUT);
       this->FormuAppend(2,1,0,1,Modulation::kUT);
@@ -688,7 +751,7 @@ void Asymmetry::SetFitMode(Int_t fitMode) {
       this->FormuAppend(2,2,2,1,Modulation::kUT);
       this->FormuAppend(2,2,-2,1,Modulation::kUT);
       break;
-    case 822: // UT twist2 lev2  kf=B(y)/A(y)
+    case 922: // UT partial waves twist2 lev2  kf=B(y)/A(y)
       enablePW = true;
       this->FormuAppend(2,0,0,2,Modulation::kUT);
       this->FormuAppend(2,1,0,2,Modulation::kUT);
@@ -700,7 +763,7 @@ void Asymmetry::SetFitMode(Int_t fitMode) {
       this->FormuAppend(2,2,2,2,Modulation::kUT);
       this->FormuAppend(2,2,-2,2,Modulation::kUT);
       break;
-    case 830: // UT twist3 lev0  kf=V(y)/A(y)
+    case 930: // UT partial waves twist3 lev0  kf=V(y)/A(y)
       enablePW = true;
       this->FormuAppend(3,0,0,0,Modulation::kUT);
       this->FormuAppend(3,1,0,0,Modulation::kUT);
@@ -712,7 +775,7 @@ void Asymmetry::SetFitMode(Int_t fitMode) {
       this->FormuAppend(3,2,2,0,Modulation::kUT);
       this->FormuAppend(3,2,-2,0,Modulation::kUT);
       break;
-    case 831: // UT twist3 lev1  kf=V(y)/A(y)
+    case 931: // UT partial waves twist3 lev1  kf=V(y)/A(y)
       enablePW = true;
       this->FormuAppend(3,0,0,1,Modulation::kUT);
       this->FormuAppend(3,1,0,1,Modulation::kUT);

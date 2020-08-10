@@ -18,6 +18,7 @@ void GetQuantiles(TString plotsFile="plots.root") {
   PrintNums("PhPerpDist");
   PrintNums("PhDist");
   PrintNums("Q2Dist");
+  PrintNums("xFDist");
 };
 
 
@@ -26,6 +27,6 @@ void PrintNums(TString name) {
   d = (TH1D*) f->Get(name);
   d->GetQuantiles(N,q,p);
   printf("%s:\n",name.Data());
-  for(i=0; i<N; i++) printf("%.2f\n",q[i]);
+  for(i=0; i<N-1; i++) printf("%.4f\n",q[i]);
   printf("\n");
 };

@@ -324,9 +324,9 @@ void EventTree::GetEvent(Int_t i) {
 
   // DIS cuts
   // - cuts defined here are for EIC
-  cutQ2 = true; // open for now, since defined by generator; overrideable
-  cutX = true; // open for now, since defined by generator; overrideable
-  cutW = W > 3.0;
+  cutQ2 = true; // open for now, since defined by generator
+  cutX = x>=0 && x<=1; // open for now, since defined by generator
+  cutW = W>3.0;
   cutY = y>0.01 && y<0.95;
   cutDIS = cutQ2 && cutX && cutW && cutY;
 
@@ -334,9 +334,10 @@ void EventTree::GetEvent(Int_t i) {
   // - cuts defined here are for EIC
   cutDihadron = 
     Tools::PairSame(hadIdx[qA],hadIdx[qB],whichHad[qA],whichHad[qB]) &&
-    Zpair < 0.95 &&
-    Z[qA]>0.01 && Z[qB]>0.01 &&
-    hadXF[qA] > 0 && hadXF[qB] > 0;
+    Zpair>=0 && Zpair<0.95 &&
+    Z[qA]>0.01 && Z[qA]<=1 &&
+    Z[qB]>0.01 && Z[qB]<=1 &&
+    hadXF[qA]>0 && hadXF[qB]>0;
 
   // smearing cut
   // - if smearing was enabled, make sure the event was actually smeared (i.e.,
