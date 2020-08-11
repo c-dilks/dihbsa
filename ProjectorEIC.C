@@ -67,7 +67,7 @@ void ProjectorEIC(TString infileN="spinroot/asym_work.root") {
     canv = new TCanvas();
     canv->SetGrid(1,1);
     gr->Draw("APE");
-    gr->GetYaxis()->SetRangeUser(-3e-4,3e-4);
+    gr->GetYaxis()->SetRangeUser(-4e-4,4e-4);
     zero->Draw();
   };
 };

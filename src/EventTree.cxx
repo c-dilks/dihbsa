@@ -335,8 +335,8 @@ void EventTree::GetEvent(Int_t i) {
   cutDihadron = 
     Tools::PairSame(hadIdx[qA],hadIdx[qB],whichHad[qA],whichHad[qB]) &&
     Zpair>=0 && Zpair<0.95 &&
-    Z[qA]>0.01 && Z[qA]<=1 &&
-    Z[qB]>0.01 && Z[qB]<=1 &&
+    Z[qA]>0.2 && Z[qA]<=1 &&
+    Z[qB]>0.2 && Z[qB]<=1 &&
     hadPt[qA]>0.1 && hadPt[qB]>0.1 &&
     hadXF[qA]>0 && hadXF[qB]>0;
 
