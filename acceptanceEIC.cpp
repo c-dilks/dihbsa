@@ -30,11 +30,14 @@
 // OPTIONS --------------------------------------------
 // drawing
 Bool_t includeFullPlots = false; // if true, draw full (x,Q2) range plots
-// binning 
+
+// binning:
 Float_t Q2min = 1; Float_t Q2max = 3e+3; // Q2min must match generation cut
 Float_t xmin = 1e-5;  Float_t xmax = 1;
-const Int_t NBINS_Q2 = 3;
-const Int_t NBINS_x = 3;
+
+const Int_t NBINS_Q2 = 2; // must be 1 more than you want
+const Int_t NBINS_x = 2; // must be 1 more than you want
+
 //-----------------------------------------------------
 // variables which are changed by parsing the file name
 Float_t EbeamEn = 10;
@@ -103,12 +106,37 @@ int main(int argc, char** argv) {
   if( EbeamEnInt==5 && PbeamEnInt==100)  { Q2mid=3;    xmid=0.01;  };
   if( EbeamEnInt==10 && PbeamEnInt==100) { Q2mid=5;    xmid=0.02;  };
   if( EbeamEnInt==18 && PbeamEnInt==275) { Q2mid=10;   xmid=0.005; };
-  binBounds_Q2[0] = Q2min;
-  binBounds_Q2[1] = Q2mid;
-  binBounds_Q2[2] = Q2max;
-  binBounds_x[0] = xmin;
-  binBounds_x[1] = xmid;
-  binBounds_x[2] = xmax;
+
+  switch(NBINS_Q2) {
+    case 2:
+      binBounds_Q2[0] = Q2min;
+      binBounds_Q2[1] = Q2max;
+      break;
+    case 3:
+      binBounds_Q2[0] = Q2min;
+      binBounds_Q2[1] = Q2mid;
+      binBounds_Q2[2] = Q2max;
+      break;
+    default:
+      fprintf(stderr,"ERROR: undefined Q2 bin bounds\n");
+      return 0;
+  };
+
+  switch(NBINS_x) {
+    case 2:
+      binBounds_x[0] = xmin;
+      binBounds_x[1] = xmax;
+      break;
+    case 3:
+      binBounds_x[0] = xmin;
+      binBounds_x[1] = xmid;
+      binBounds_x[2] = xmax;
+      break;
+    default:
+      fprintf(stderr,"ERROR: undefined x bin bounds\n");
+      return 0;
+  };
+
 
 
   // get hadron pair from whichPair; note that in the print out, the 
@@ -230,6 +258,7 @@ int main(int argc, char** argv) {
   TH2D * EtaVsP[NOBS][NBINS];
   TH2D * EtaVsPt[NOBS][NBINS];
   TH2D * EtaVsZ[NOBS][NBINS];
+  TH2D * PVsZ[NOBS][NBINS];
   TH2D * PhPerpVsPt[NOBS][NBINS]; // dihadron PhPerp vs. obs pT
   TH2D * QtVsPt[NOBS][NBINS]; 
   TH2D * QtVsEta[NOBS][NBINS];
@@ -263,10 +292,10 @@ int main(int argc, char** argv) {
 
       // (x,Q2) bin range title
       cutT = "";
-      if(Q2Bin[b][0]==Q2min && Q2Bin[b][1]==Q2max) cutT += "Full Q^{2}";
+      if(Q2Bin[b][0]==Q2min && Q2Bin[b][1]==Q2max && NBINS_Q2>2) cutT += "Full Q^{2}";
       else cutT += Form("%g<Q^{2}<%g",Q2Bin[b][0],Q2Bin[b][1]);
       cutT += " and ";
-      if(xBin[b][0]==xmin && xBin[b][1]==xmax) cutT += "Full x";
+      if(xBin[b][0]==xmin && xBin[b][1]==xmax && NBINS_x>2) cutT += "Full x";
       else cutT += Form("%g<x<%g",xBin[b][0],xBin[b][1]);
 
       // bin boundaries
@@ -318,6 +347,13 @@ int main(int argc, char** argv) {
       plotN = Form("%s_EtaVsZ_%d",obsN[o].Data(),b);
       EtaVsZ[o][b] = new TH2D(plotN,plotT,
         NPLOTBINS, 0, 1, NPLOTBINS, conf->bdEta[0], conf->bdEta[1]);
+
+      plotT = obsT[o] + " p vs. z, for " + cutT + ";z;p";
+      plotN = Form("%s_PVsZ_%d",obsN[o].Data(),b);
+      PVsZ[o][b] = new TH2D(plotN,plotT,
+        NPLOTBINS, 0, 1,
+        N_P_BINS, 0.5, 3*pMaxLo);
+      Tools::BinLog(PVsZ[o][b]->GetYaxis());
 
       plotT = obsT[kDih] + " P_{h}^{perp} vs. " + obsT[o] + 
         " p_{T,lab}, for " + cutT + 
@@ -510,7 +546,7 @@ int main(int argc, char** argv) {
   ///////////////////////////////////////////////
   printf("begin loop through %lld events...\n",ev->ENT);
   for(int i=0; i<ev->ENT; i++) {
-    //if(i>300000) break; // limiter
+    if(i>300000) break; // limiter
     ev->GetEvent(i);
 
     // smearing cut:
@@ -583,6 +619,7 @@ int main(int argc, char** argv) {
             EtaVsP[o][b]->Fill(oP,oEta);
             EtaVsPt[o][b]->Fill(oPt,oEta);
             EtaVsZ[o][b]->Fill(oZ,oEta);
+            PVsZ[o][b]->Fill(oZ,oP);
             PhPerpVsPt[o][b]->Fill(oPt,ev->PhPerp);
 
             Qt = ev->PhPerp / ev->Zpair;
@@ -668,6 +705,7 @@ int main(int argc, char** argv) {
   TCanvas * EtaVsPMatrix[NOBS];
   TCanvas * EtaVsPtMatrix[NOBS];
   TCanvas * EtaVsZMatrix[NOBS];
+  TCanvas * PVsZMatrix[NOBS];
   TCanvas * PhPerpVsPtMatrix[NOBS];
   TCanvas * QtVsPtMatrix[NOBS];
   TCanvas * QtVsEtaMatrix[NOBS];
@@ -698,6 +736,7 @@ int main(int argc, char** argv) {
     EtaVsPMatrix[o] = MatrixifyDist2(EtaVsP[o],1,0,1);
     EtaVsPtMatrix[o] = MatrixifyDist2(EtaVsPt[o],1,0,1);
     EtaVsZMatrix[o] = MatrixifyDist2(EtaVsZ[o],0,0,1);
+    PVsZMatrix[o] = MatrixifyDist2(PVsZ[o],0,1,1);
     PhPerpVsPtMatrix[o] = MatrixifyDist2(PhPerpVsPt[o],1,1,1);
     QtVsPtMatrix[o] = MatrixifyDist2(QtVsPt[o],1,1,1);
     QtVsEtaMatrix[o] = MatrixifyDist2(QtVsEta[o],0,1,1);
@@ -737,6 +776,7 @@ int main(int argc, char** argv) {
     EtaVsPMatrix[o]->Write();
     EtaVsPtMatrix[o]->Write();
     if(o!=kEle) EtaVsZMatrix[o]->Write();
+    if(o!=kEle) PVsZMatrix[o]->Write();
     PhPerpVsPtMatrix[o]->Write();
     QtVsPtMatrix[o]->Write();
     QtVsEtaMatrix[o]->Write();
