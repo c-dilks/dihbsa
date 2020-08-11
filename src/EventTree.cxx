@@ -337,6 +337,7 @@ void EventTree::GetEvent(Int_t i) {
     Zpair>=0 && Zpair<0.95 &&
     Z[qA]>0.01 && Z[qA]<=1 &&
     Z[qB]>0.01 && Z[qB]<=1 &&
+    hadPt[qA]>0.1 && hadPt[qB]>0.1 &&
     hadXF[qA]>0 && hadXF[qB]>0;
 
   // smearing cut
