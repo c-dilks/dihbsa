@@ -1,4 +1,4 @@
-void ProjectorEIC(TString infileN="spinroot/asym_work.root") {
+void ProjectorEIC(TString infileN="spinroot_5x41_100/asym_test1.root") {
 
   // read asymmetry graphs
   TFile * infile = new TFile(infileN,"READ");
@@ -22,7 +22,7 @@ void ProjectorEIC(TString infileN="spinroot/asym_work.root") {
 
   // error scale factor
   Double_t evCountGen = 1e6;
-  Double_t crossSection = 0.36241800884389658 * 1e-6; // [barns]
+  Double_t crossSection = 0.36241800884389658 * 1e-6; // [barns] // for 5x41
   Double_t luminosityGen = evCountGen / crossSection; // [barns^-1]
   Double_t luminosityProj = 10.0/1e-15; // [barns^-1]
   Double_t scaleFactor = luminosityProj / luminosityGen;
@@ -42,14 +42,19 @@ void ProjectorEIC(TString infileN="spinroot/asym_work.root") {
   TObjArrayIter nextGr(asymArr);
   TString grT;
   Double_t x,y,ex,ey;
-  TCanvas * canv;
   TLine * zero;
+  Int_t ngraphs = asymArr->GetEntries();
+  TCanvas * canv = new TCanvas("canv","canv",3600,1800);
+  Int_t pad = 1;
+  canv->Divide(3,3);
   while(TGraphAsymmErrors * gr = (TGraphAsymmErrors*) nextGr()) {
-    gr->SetMarkerColor(kBlue);
+    gr->SetMarkerColor(kBlack);
     gr->SetLineColor(kBlue);
-    gr->SetMarkerSize(1.5);
+    gr->SetMarkerSize(1);
     gr->SetMarkerStyle(kFullCircle);
     gr->SetLineWidth(4);
+    gr->GetXaxis()->SetLabelSize(0.06);
+    gr->GetYaxis()->SetLabelSize(0.06);
 
     for(int i=0; i<gr->GetN(); i++) {
       gr->GetPoint(i,x,y);
@@ -59,16 +64,19 @@ void ProjectorEIC(TString infileN="spinroot/asym_work.root") {
       gr->SetPointError(i,ex,ex,ey*errScale,ey*errScale); // (TGraphAsymmErrors)
     };
 
-    zero = new TLine(gr->GetXaxis()->GetXmin(),0,
-                     gr->GetXaxis()->GetXmax(),0);
+    //zero = new TLine(gr->GetXaxis()->GetXmin(),0,gr->GetXaxis()->GetXmax(),0);
+    zero = new TLine(0,0,0.15,0);
     //zero->SetLineStyle(2);
     zero->SetLineWidth(1);
 
-    canv = new TCanvas();
-    canv->SetGrid(1,1);
+    canv->cd(pad);
+    canv->GetPad(pad)->SetGrid(1,1);
     gr->Draw("APE");
-    gr->GetYaxis()->SetRangeUser(-4e-4,4e-4);
+    gr->GetXaxis()->SetLimits(0,0.15); // for 5x41
+    gr->GetYaxis()->SetRangeUser(-5e-4,5e-4); // for 5x41
+    //gr->GetYaxis()->SetRangeUser(-5e-3,5e-3); // for 18x275
     zero->Draw();
+    pad++;
   };
 };
     
