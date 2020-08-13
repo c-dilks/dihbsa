@@ -32,10 +32,10 @@
 Bool_t includeFullPlots = false; // if true, draw full (x,Q2) range plots
 
 // binning:
-Float_t Q2min = 1; Float_t Q2max = 3e3; // Q2min must match generation cut
+//Float_t Q2min = 1; Float_t Q2max = 3e3; // Q2min must match generation cut
+//Float_t Q2min = 100; Float_t Q2max = 50e3; // Q2min must match generation cut
+Float_t Q2min = 1000; Float_t Q2max = 50e3; // Q2min must match generation cut
 Float_t xmin = 1e-5;  Float_t xmax = 1;
-//Float_t Q2min = 1000; Float_t Q2max = 50e3; // Q2min must match generation cut
-//Float_t xmin = 1e-2;  Float_t xmax = 1;
 
 const Int_t NBINS_Q2 = 2; // must be 1 more than you want
 const Int_t NBINS_x = 2; // must be 1 more than you want

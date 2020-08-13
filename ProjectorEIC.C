@@ -73,7 +73,8 @@ void ProjectorEIC(TString infileN="spinroot_5x41_100/asym_test1.root") {
     canv->GetPad(pad)->SetGrid(1,1);
     gr->Draw("APE");
     gr->GetXaxis()->SetLimits(0,0.15); // for 5x41
-    gr->GetYaxis()->SetRangeUser(-5e-4,5e-4); // for 5x41
+    //gr->GetYaxis()->SetRangeUser(-5e-4,5e-4); // for 5x41 test 1
+    gr->GetYaxis()->SetRangeUser(-2e-4,2e-4); // for 5x41 tests 2 & 3
     //gr->GetYaxis()->SetRangeUser(-5e-3,5e-3); // for 18x275
     zero->Draw();
     pad++;
