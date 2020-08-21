@@ -32,13 +32,13 @@
 Bool_t includeFullPlots = false; // if true, draw full (x,Q2) range plots
 
 // binning:
-//Float_t Q2min = 1; Float_t Q2max = 3e3; // Q2min must match generation cut
+Float_t Q2min = 1; Float_t Q2max = 3e3; // Q2min must match generation cut
 //Float_t Q2min = 100; Float_t Q2max = 50e3; // Q2min must match generation cut
-Float_t Q2min = 1000; Float_t Q2max = 50e3; // Q2min must match generation cut
+//Float_t Q2min = 1000; Float_t Q2max = 50e3; // Q2min must match generation cut
 Float_t xmin = 1e-5;  Float_t xmax = 1;
 
-const Int_t NBINS_Q2 = 2; // must be 1 more than you want
-const Int_t NBINS_x = 2; // must be 1 more than you want
+const Int_t NBINS_Q2 = 3; // must be 1 more than you want
+const Int_t NBINS_x = 3; // must be 1 more than you want
 
 //-----------------------------------------------------
 // variables which are changed by parsing the file name
@@ -262,10 +262,14 @@ int main(int argc, char** argv) {
   TH2D * EtaVsZ[NOBS][NBINS];
   TH2D * EtaVsQ2[NOBS][NBINS];
   TH2D * PVsZ[NOBS][NBINS];
-  TH2D * PhPerpVsPt[NOBS][NBINS]; // dihadron PhPerp vs. obs pT
+  TH2D * PperpVsPt[NOBS][NBINS]; // Pperp (transverse to q) vs. pT (lab frame)
   TH2D * QtVsPt[NOBS][NBINS]; 
   TH2D * QtVsEta[NOBS][NBINS];
   TH2D * PtVsY[NOBS][NBINS];
+  TH2D * PperpVsY[NOBS][NBINS];
+  TH2D * PtVsZ[NOBS][NBINS];
+  TH2D * PperpVsZ[NOBS][NBINS];
+  TH1D * PperpDistLin[NOBS][NBINS];
   TH1D * PtDistLin[NOBS][NBINS];
   TH1D * PtDistLog[NOBS][NBINS];
   // - dihadrons only
@@ -364,15 +368,15 @@ int main(int argc, char** argv) {
         N_P_BINS, 0.5, 3*pMaxLo);
       Tools::BinLog(PVsZ[o][b]->GetYaxis());
 
-      plotT = obsT[kDih] + " P_{h}^{perp} vs. " + obsT[o] + 
+      plotT = obsT[kDih] + " P_{perp} vs. " + obsT[o] + 
         " p_{T,lab}, for " + cutT + 
         ";" + obsT[o] + " p_{T,lab} [GeV];P_{h}^{perp} [GeV]";
-      plotN = Form("%s_PhPerpVsPt_%d",obsN[o].Data(),b);
-      PhPerpVsPt[o][b] = new TH2D(plotN,plotT,
-        N_P_BINS, ptMin, ptMax,
-        N_P_BINS, ptMin, 10*ptMax);
-      Tools::BinLog(PhPerpVsPt[o][b]->GetXaxis());
-      Tools::BinLog(PhPerpVsPt[o][b]->GetYaxis());
+      plotN = Form("%s_PperpVsPt_%d",obsN[o].Data(),b);
+      PperpVsPt[o][b] = new TH2D(plotN,plotT,
+        N_P_BINS, ptMin, 2*ptMax,
+        N_P_BINS, ptMin, 2*ptMax);
+      Tools::BinLog(PperpVsPt[o][b]->GetXaxis());
+      Tools::BinLog(PperpVsPt[o][b]->GetYaxis());
 
       plotT = "q_{T} vs. " + obsT[o] +
         " p_{T,lab}, for " + cutT + 
@@ -399,10 +403,57 @@ int main(int argc, char** argv) {
       plotN = Form("%s_PtVsY_%d",obsN[o].Data(),b);
       PtVsY[o][b] = new TH2D(plotN,plotT,
         NPLOTBINS, ymin, 1,
-        N_P_BINS, ptMin, ptMax);
+        N_P_BINS, ptMin, 5);
       Tools::BinLog(PtVsY[o][b]->GetXaxis());
-      Tools::BinLog(PtVsY[o][b]->GetYaxis());
+      //Tools::BinLog(PtVsY[o][b]->GetYaxis());
 
+      plotT = "p_{perp} vs. " + obsT[o] +
+        " y, for " + cutT + 
+        ";" + obsT[o] + " y;p_{perp} [GeV]";
+      plotN = Form("%s_PperpVsY_%d",obsN[o].Data(),b);
+      PperpVsY[o][b] = new TH2D(plotN,plotT,
+        NPLOTBINS, ymin, 1,
+        N_P_BINS, ptMin, 5);
+      Tools::BinLog(PperpVsY[o][b]->GetXaxis());
+      //Tools::BinLog(PperpVsY[o][b]->GetYaxis());
+
+      plotT = "p_{T,lab} vs. " + obsT[o] +
+        " z, for " + cutT + 
+        ";" + obsT[o] + " z;p_{T,lab} [GeV]";
+      plotN = Form("%s_PtVsZ_%d",obsN[o].Data(),b);
+      PtVsZ[o][b] = new TH2D(plotN,plotT,
+        NPLOTBINS, 0, 1,
+        N_P_BINS, ptMin, 5);
+      //Tools::BinLog(PtVsZ[o][b]->GetYaxis());
+
+      plotT = "p_{perp} vs. " + obsT[o] +
+        " z, for " + cutT + 
+        ";" + obsT[o] + " z;p_{perp} [GeV]";
+      plotN = Form("%s_PperpVsZ_%d",obsN[o].Data(),b);
+      PperpVsZ[o][b] = new TH2D(plotN,plotT,
+        NPLOTBINS, 0, 1,
+        N_P_BINS, ptMin, 5);
+      //Tools::BinLog(PperpVsZ[o][b]->GetYaxis());
+
+      plotT = obsT[o] + " p_{perp}, for " + cutT +
+        ";" + obsT[o] + " p_{perp} [GeV]";
+      plotN = Form("%s_PperpDistLin_%d",obsN[o].Data(),b);
+      PperpDistLin[o][b] = new TH1D(plotN,plotT,
+        2*N_P_BINS, ptMin, 3);
+      PperpDistLin[o][b]->SetLineColor(kAzure);
+      PperpDistLin[o][b]->SetFillColor(kAzure);
+      /*switch(b) { // 5x41
+        case 0: PperpDistLin[o][b]->GetYaxis()->SetRangeUser(0,12000); break;
+        case 1: PperpDistLin[o][b]->GetYaxis()->SetRangeUser(0,6000); break;
+        case 3: PperpDistLin[o][b]->GetYaxis()->SetRangeUser(0,3000); break;
+        case 4: PperpDistLin[o][b]->GetYaxis()->SetRangeUser(0,6000); break;
+      };*/
+      /*switch(b) { // 18x275
+        case 0: PperpDistLin[o][b]->GetYaxis()->SetRangeUser(0,20000); break;
+        case 1: PperpDistLin[o][b]->GetYaxis()->SetRangeUser(0,3500); break;
+        case 3: PperpDistLin[o][b]->GetYaxis()->SetRangeUser(0,1400); break;
+        case 4: PperpDistLin[o][b]->GetYaxis()->SetRangeUser(0,1800); break;
+      };*/
       plotT = obsT[o] + " p_{T,lab}, for " + cutT +
         ";" + obsT[o] + " p_{T,lab} [GeV]";
       plotN = Form("%s_PtDistLin_%d",obsN[o].Data(),b);
@@ -546,7 +597,7 @@ int main(int argc, char** argv) {
 
   // prepare for event loop
   Bool_t binCut;
-  Float_t oP,oPt,oTheta,oEta,oZ,Qt;
+  Float_t oP,oPt,oPperp,oTheta,oEta,oZ,Qt;
   for(b=0; b<NBINS; b++) numEvents[b]=0;
 
 
@@ -594,6 +645,7 @@ int main(int argc, char** argv) {
               case kEle:
                 oP = ev->eleP;
                 oPt = ev->elePt;
+                oPperp = UNDEF; // TODO currently not implemented
                 oTheta = ev->eleTheta;
                 oEta = ev->eleEta;
                 oZ = UNDEF;
@@ -601,6 +653,7 @@ int main(int argc, char** argv) {
               case kDih:
                 oP = ev->Ph;
                 oPt = ev->PhPt;
+                oPperp = ev->PhPerp;
                 oTheta = ev->PhTheta;
                 oEta = ev->PhEta;
                 oZ = ev->Zpair;
@@ -608,6 +661,7 @@ int main(int argc, char** argv) {
               case kHadA:
                 oP = ev->hadP[qA];
                 oPt = ev->hadPt[qA];
+                oPperp = ev->hadPperp[qA];
                 oTheta = ev->hadTheta[qA];
                 oEta = ev->hadEta[qA];
                 oZ = ev->Z[qA];
@@ -615,6 +669,7 @@ int main(int argc, char** argv) {
               case kHadB:
                 oP = ev->hadP[qB];
                 oPt = ev->hadPt[qB];
+                oPperp = ev->hadPperp[qB];
                 oTheta = ev->hadTheta[qB];
                 oEta = ev->hadEta[qB];
                 oZ = ev->Z[qB];
@@ -630,12 +685,16 @@ int main(int argc, char** argv) {
             EtaVsZ[o][b]->Fill(oZ,oEta);
             EtaVsQ2[o][b]->Fill(ev->Q2,oEta);
             PVsZ[o][b]->Fill(oZ,oP);
-            PhPerpVsPt[o][b]->Fill(oPt,ev->PhPerp);
+            PperpVsPt[o][b]->Fill(oPt,oPperp);
 
-            Qt = ev->PhPerp / ev->Zpair;
+            Qt = oPperp / oZ;
             QtVsPt[o][b]->Fill(oPt,Qt);
             QtVsEta[o][b]->Fill(oEta,Qt);
             PtVsY[o][b]->Fill(ev->y,oPt);
+            PperpVsY[o][b]->Fill(ev->y,oPperp);
+            PtVsZ[o][b]->Fill(oZ,oPt);
+            PperpVsZ[o][b]->Fill(oZ,oPperp);
+            PperpDistLin[o][b]->Fill(oPperp);
             PtDistLin[o][b]->Fill(oPt);
             PtDistLog[o][b]->Fill(oPt);
 
@@ -717,10 +776,14 @@ int main(int argc, char** argv) {
   TCanvas * EtaVsZMatrix[NOBS];
   TCanvas * EtaVsQ2Matrix[NOBS];
   TCanvas * PVsZMatrix[NOBS];
-  TCanvas * PhPerpVsPtMatrix[NOBS];
+  TCanvas * PperpVsPtMatrix[NOBS];
   TCanvas * QtVsPtMatrix[NOBS];
   TCanvas * QtVsEtaMatrix[NOBS];
   TCanvas * PtVsYMatrix[NOBS];
+  TCanvas * PperpVsYMatrix[NOBS];
+  TCanvas * PtVsZMatrix[NOBS];
+  TCanvas * PperpVsZMatrix[NOBS];
+  TCanvas * PperpDistLinMatrix[NOBS];
   TCanvas * PtDistLinMatrix[NOBS];
   TCanvas * PtDistLogMatrix[NOBS];
   TCanvas * PhiHvsPhiRMatrix;
@@ -749,10 +812,14 @@ int main(int argc, char** argv) {
     EtaVsZMatrix[o] = MatrixifyDist2(EtaVsZ[o],0,0,1);
     EtaVsQ2Matrix[o] = MatrixifyDist2(EtaVsQ2[o],1,0,1);
     PVsZMatrix[o] = MatrixifyDist2(PVsZ[o],0,1,1);
-    PhPerpVsPtMatrix[o] = MatrixifyDist2(PhPerpVsPt[o],1,1,1);
+    PperpVsPtMatrix[o] = MatrixifyDist2(PperpVsPt[o],1,1,1);
     QtVsPtMatrix[o] = MatrixifyDist2(QtVsPt[o],1,1,1);
     QtVsEtaMatrix[o] = MatrixifyDist2(QtVsEta[o],0,1,1);
-    PtVsYMatrix[o] = MatrixifyDist2(PtVsY[o],1,1,1);
+    PtVsYMatrix[o] = MatrixifyDist2(PtVsY[o],1,0,1);
+    PperpVsYMatrix[o] = MatrixifyDist2(PperpVsY[o],1,0,1);
+    PtVsZMatrix[o] = MatrixifyDist2(PtVsZ[o],0,0,1);
+    PperpVsZMatrix[o] = MatrixifyDist2(PperpVsZ[o],0,0,1);
+    PperpDistLinMatrix[o] = MatrixifyDist1(PperpDistLin[o],0,0);
     PtDistLinMatrix[o] = MatrixifyDist1(PtDistLin[o],0,1);
     PtDistLogMatrix[o] = MatrixifyDist1(PtDistLog[o],1,1);
   };
@@ -790,10 +857,14 @@ int main(int argc, char** argv) {
     if(o!=kEle) EtaVsZMatrix[o]->Write();
     EtaVsQ2Matrix[o]->Write();
     if(o!=kEle) PVsZMatrix[o]->Write();
-    PhPerpVsPtMatrix[o]->Write();
+    PperpVsPtMatrix[o]->Write();
     QtVsPtMatrix[o]->Write();
     QtVsEtaMatrix[o]->Write();
     PtVsYMatrix[o]->Write();
+    PperpVsYMatrix[o]->Write();
+    PtVsZMatrix[o]->Write();
+    PperpVsZMatrix[o]->Write();
+    PperpDistLinMatrix[o]->Write();
     PtDistLinMatrix[o]->Write();
     PtDistLogMatrix[o]->Write();
     if(o==kDih) {
@@ -831,7 +902,7 @@ int main(int argc, char** argv) {
     for(b=0; b<NBINS; b++) EtaVsP[o][b]->Write();
     for(b=0; b<NBINS; b++) EtaVsPt[o][b]->Write();
     if(o!=kEle) { for(b=0; b<NBINS; b++) EtaVsZ[o][b]->Write(); };
-    for(b=0; b<NBINS; b++) PhPerpVsPt[o][b]->Write();
+    for(b=0; b<NBINS; b++) PperpVsPt[o][b]->Write();
     for(b=0; b<NBINS; b++) QtVsPt[o][b]->Write();
     for(b=0; b<NBINS; b++) PtVsY[o][b]->Write();
     for(b=0; b<NBINS; b++) PtDistLin[o][b]->Write();
@@ -1004,7 +1075,7 @@ TCanvas * xQ2Canv(TH2D * dist) {
   yclas->SetLineWidth(4);
   yclas->SetLineStyle(7);
   yclas->SetLineColor(kViolet+2);
-  yclas->Draw();
+  //yclas->Draw();
 
   return canv;
 };

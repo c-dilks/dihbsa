@@ -61,6 +61,8 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   else { for(int h=0; h<2; h++) hadPtq[h]=UNDEF; };
   if(chain->GetBranch("hadXF")) chain->SetBranchAddress("hadXF",hadXF);
   else { for(int h=0; h<2; h++) hadXF[h]=UNDEF; };
+  if(chain->GetBranch("hadPperp")) chain->SetBranchAddress("hadPperp",hadPperp);
+  else { for(int h=0; h<2; h++) hadPperp[h]=UNDEF; };
   /////////////
 
   chain->SetBranchAddress("Mh",&Mh);
@@ -337,7 +339,7 @@ void EventTree::GetEvent(Int_t i) {
     Zpair>0.2 && Zpair<0.95 &&
     Z[qA]>0 && Z[qA]<=1 &&
     Z[qB]>0 && Z[qB]<=1 &&
-    hadPt[qA]>0.1 && hadPt[qB]>0.1 &&
+    hadPt[qA]>0.1 && hadPt[qB]>0.1 && /*tracking limit*/
     hadXF[qA]>0 && hadXF[qB]>0;
 
   // smearing cut

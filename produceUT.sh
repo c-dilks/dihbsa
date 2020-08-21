@@ -1,6 +1,6 @@
 #!/bin/bash
 
-buildSpinroot.exe -f outroot/pythia_5x41_smear.root -i1
+buildSpinroot.exe -f outroot/pythia_18x275_smear.root -i1
 catSpinroot.exe
 
 

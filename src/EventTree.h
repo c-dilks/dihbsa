@@ -71,6 +71,7 @@ class EventTree : public TObject
     Float_t hadE[2];
     Float_t hadP[2];
     Float_t hadPt[2];
+    Float_t hadPperp[2];
     Float_t hadPtq[2];
     Float_t hadEta[2];
     Float_t hadTheta[2];
