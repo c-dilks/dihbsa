@@ -1049,12 +1049,12 @@ Float_t Asymmetry::EvalWeight() {
 
 // if e(x) modulation, return W(y)/A(y)
 // if G1perp modulation, return C(y)/A(y)
-// see EventTree::GetKinematicFactor() for definitions
+// see EventTree::GetDepolarizationFactor() for definitions
 Float_t Asymmetry::EvalKinematicFactor(EventTree * ev) {
   
-  kfA = ev->GetKinematicFactor('A');
-  kfC = ev->GetKinematicFactor('C');
-  kfW = ev->GetKinematicFactor('W');
+  kfA = ev->GetDepolarizationFactor('A');
+  kfC = ev->GetDepolarizationFactor('C');
+  kfW = ev->GetDepolarizationFactor('W');
 
   if(oaTw==3 && oaM==1) return kfW / kfA;
   else if(oaTw==2 && oaM==1) return kfC / kfA;

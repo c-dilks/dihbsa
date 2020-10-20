@@ -46,13 +46,46 @@ void ProjectorEIC(TString infileN="spinroot_5x41_100/asym_test1.root") {
   Int_t ngraphs = asymArr->GetEntries();
   TCanvas * canv = new TCanvas("canv","canv",3600,1800);
   Int_t pad = 1;
+  Int_t amp;
+  char noop[32];
+  TString mod,title;
   canv->Divide(3,3);
   while(TGraphAsymmErrors * gr = (TGraphAsymmErrors*) nextGr()) {
     gr->SetMarkerColor(kBlack);
     gr->SetLineColor(kBlue);
-    gr->SetMarkerSize(1);
+    gr->SetFillColor(kBlue);
+    gr->SetMarkerSize(0);
     gr->SetMarkerStyle(kFullCircle);
     gr->SetLineWidth(4);
+
+    sscanf(gr->GetName(),"kindepMA_A%d_%s",&amp,noop);
+    cout << gr->GetName() << " " << amp << endl;
+    switch(amp) {
+      case 0: mod="sin(#phi_{h}+#phi_{S})"; break;
+      case 1: mod="cos(#theta) sin(#phi_{h}+#phi_{S})"; break;
+      case 2: mod="sin(#theta) sin(#phi_{R}+#phi_{S})"; break;
+      case 3: mod="sin(#theta) sin(2#phi_{h}-#phi_{R}+#phi_{S})"; break;
+      case 4: mod="1/2 (3cos^{2}#theta-1) sin(#phi_{h}+#phi_{S})"; break;
+      case 5: mod="sin(2#theta) sin(#phi_{R}+#phi_{S})"; break;
+      case 6: mod="sin(2#theta) sin(2#phi_{h}-#phi_{R}+#phi_{S})"; break;
+      case 7: mod="sin^{2}(#theta) sin(-#phi_{h}+2#phi_{R}+#phi_{S})"; break;
+      case 8: mod="sin^{2}(#theta) sin(3#phi_{h}-2#phi_{R}+#phi_{S})"; break;
+    };
+    title = gr->GetTitle();
+    mod = "A_{UT}^{"+mod+"} vs.";
+    title(TRegexp("A_{UT}.* vs.")) = mod;
+    gr->SetTitle(title);
+    gr->GetYaxis()->SetTitle("A_{UT}");
+
+    gStyle->SetTitleBorderSize(4);
+    gStyle->SetTitleSize(0.08,"main");
+    gStyle->SetTitleStyle(1001);
+    gStyle->SetTitleFillColor(kWhite);
+    //gr->GetYaxis()->SetNoExponent(1);
+    gr->GetXaxis()->SetTitleOffset(0.85);
+    gr->GetYaxis()->SetTitleOffset(0.85);
+    gr->GetXaxis()->SetTitleSize(0.06);
+    gr->GetYaxis()->SetTitleSize(0.06);
     gr->GetXaxis()->SetLabelSize(0.06);
     gr->GetYaxis()->SetLabelSize(0.06);
 
@@ -60,24 +93,42 @@ void ProjectorEIC(TString infileN="spinroot_5x41_100/asym_test1.root") {
       gr->GetPoint(i,x,y);
       ex = gr->GetErrorX(i); // parabolic error from HESSE
       ey = gr->GetErrorY(i);
+
+      // divide polarization
+      ey /= 0.7;
+
+      // divide depolarization ratio <B/A>
+      switch(i) {
+	      case 0: ey /= 0.60614853; break;
+	      case 1: ey /= 0.84335763; break;
+	      case 2: ey /= 0.92392810; break;
+	      case 3: ey /= 0.96240604; break;
+	      case 4: ey /= 0.97970662; break;
+        default: fprintf(stderr,"ERROR: unknown depol factor\n");
+      };
+
+
       gr->SetPoint(i,x,0);
       gr->SetPointError(i,ex,ex,ey*errScale,ey*errScale); // (TGraphAsymmErrors)
     };
 
     //zero = new TLine(gr->GetXaxis()->GetXmin(),0,gr->GetXaxis()->GetXmax(),0);
-    zero = new TLine(0,0,0.15,0);
+    zero = new TLine(0,0,0.14,0);
     //zero->SetLineStyle(2);
     zero->SetLineWidth(1);
 
     canv->cd(pad);
     canv->GetPad(pad)->SetGrid(1,1);
-    gr->Draw("APE");
-    gr->GetXaxis()->SetLimits(0,0.15); // for 5x41
-    //gr->GetYaxis()->SetRangeUser(-5e-4,5e-4); // for 5x41 test 1
-    gr->GetYaxis()->SetRangeUser(-2e-4,2e-4); // for 5x41 tests 2 & 3
+    //gr->Draw("A3"); // error band
+    gr->Draw("APEZ"); // error bars
+    gr->GetXaxis()->SetLimits(0,0.14); // for 5x41
+    gr->GetYaxis()->SetRangeUser(-7e-4,7e-4); // for 5x41 test 1
+    //gr->GetYaxis()->SetRangeUser(-2e-4,2e-4); // for 5x41 tests 2 & 3
     //gr->GetYaxis()->SetRangeUser(-5e-3,5e-3); // for 18x275
     zero->Draw();
     pad++;
   };
+
+  canv->Print("dihadronPWprojection.png","png");
 };
     

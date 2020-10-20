@@ -80,7 +80,7 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
   chain->SetBranchAddress("PhEta",&PhEta);
   chain->SetBranchAddress("PhPhi",&PhPhi);
   chain->SetBranchAddress("R",&R);
-  chain->SetBranchAddress("RPerp",&RPerp);
+  //chain->SetBranchAddress("RPerp",&RPerp);
   chain->SetBranchAddress("RT",&RT);
 
   chain->SetBranchAddress("PhiH",&PhiH);
@@ -154,7 +154,7 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
     chain->SetBranchAddress("gen_PhEta",&gen_PhEta);
     chain->SetBranchAddress("gen_PhPhi",&gen_PhPhi);
     chain->SetBranchAddress("gen_R",&gen_R);
-    chain->SetBranchAddress("gen_RPerp",&gen_RPerp);
+    //chain->SetBranchAddress("gen_RPerp",&gen_RPerp);
     chain->SetBranchAddress("gen_RT",&gen_RT);
     chain->SetBranchAddress("gen_PhiH",&gen_PhiH);
     chain->SetBranchAddress("gen_PhiRq",&gen_PhiRq);
@@ -208,7 +208,7 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
     gen_PhEta = UNDEF;
     gen_PhPhi = UNDEF;
     gen_R = UNDEF;
-    gen_RPerp = UNDEF;
+    //gen_RPerp = UNDEF;
     gen_RT = UNDEF;
     gen_PhiH = UNDEF;
     gen_PhiRq = UNDEF;
@@ -323,6 +323,12 @@ void EventTree::GetEvent(Int_t i) {
   };
   PhTheta = Tools::EtaToTheta(PhEta);
   PhPt = Ph * TMath::Sin(PhTheta);
+
+  // compute gamma and epsilon
+  // - epsilon is the ratio of longitudinal to transverse photon flux
+  gamma = 2*PartMass(kP)*x / TMath::Sqrt(Q2);
+  epsilon = ( 1 - y - TMath::Power(gamma*y,2)/4 ) /
+    ( 1 - y + y*y/2 + TMath::Power(gamma*y,2)/4 );
 
   // DIS cuts
   // - cuts defined here are for EIC
@@ -661,7 +667,9 @@ Float_t EventTree::GetBreitRapidity(Int_t had) {
 
 
 // get y-dependent kinematic factor
-Float_t EventTree::GetKinematicFactor(Char_t kf) {
+// - approximations which depend only on y -- do not use!
+/*
+Float_t EventTree::GetDepolarizationFactor(Char_t kf) {
   // source: arXiv:1408.5721
   if(kf=='A')      return 1 - y + y*y/2.0;
   else if(kf=='B') return 1 - y;
@@ -669,10 +677,28 @@ Float_t EventTree::GetKinematicFactor(Char_t kf) {
   else if(kf=='V') return (2-y) * TMath::Sqrt(1-y);
   else if(kf=='W') return y * TMath::Sqrt(1-y);
   else {
-    fprintf(stderr,"ERROR: unknown kinematic factor %c; returning 0\n",kf);
+    fprintf(stderr,"ERROR: unknown depolarization factor %c; returning 0\n",kf);
     return 0;
   };
 };
+*/
+// - exact expressions which depend on epsilon and y
+Float_t EventTree::GetDepolarizationFactor(Char_t kf) {
+  // source: arXiv:1408.5721
+
+  dfA = y*y / (2 - 2*epsilon); // A(x,y)
+
+  if(kf=='A')      return dfA;
+  else if(kf=='B') return dfA * epsilon;
+  else if(kf=='C') return dfA * TMath::Sqrt(1-epsilon*epsilon);
+  else if(kf=='V') return dfA * TMath::Sqrt(2*epsilon*(1+epsilon));
+  else if(kf=='W') return dfA * TMath::Sqrt(2*epsilon*(1-epsilon));
+  else {
+    fprintf(stderr,"ERROR: unknown depolarization factor %c; returning 0\n",kf);
+    return 0;
+  };
+};
+
 
 
 EventTree::~EventTree() {

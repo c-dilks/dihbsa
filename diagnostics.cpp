@@ -337,7 +337,7 @@ int main(int argc, char** argv) {
        NBINS,0,3,NBINS,kfRange[k][0],kfRange[k][1]);
      kfVsX[k] = new TH2D(TString(kfName[k]+"vsX"),
        TString(kfTitle[k]+" vs. x"),
-       NBINS,0,1,NBINS,kfRange[k][0],kfRange[k][1]);
+       NBINS,0,1.0,NBINS,kfRange[k][0],kfRange[k][1]);
      kfVsQ2[k] = new TH2D(TString(kfName[k]+"vsQ2"),
        TString(kfTitle[k]+" vs. Q^{2}"),
        NBINS,0,12,NBINS,kfRange[k][0],kfRange[k][1]);
@@ -501,11 +501,11 @@ int main(int argc, char** argv) {
        PhiHRvsAlpha->Fill(ev->alpha,ev->PhiHR);
 
       
-       kfVal[kfA] = ev->GetKinematicFactor('A');
-       kfVal[kfB] = ev->GetKinematicFactor('B');
-       kfVal[kfC] = ev->GetKinematicFactor('C');
-       kfVal[kfV] = ev->GetKinematicFactor('V');
-       kfVal[kfW] = ev->GetKinematicFactor('W');
+       kfVal[kfA] = ev->GetDepolarizationFactor('A');
+       kfVal[kfB] = ev->GetDepolarizationFactor('B');
+       kfVal[kfC] = ev->GetDepolarizationFactor('C');
+       kfVal[kfV] = ev->GetDepolarizationFactor('V');
+       kfVal[kfW] = ev->GetDepolarizationFactor('W');
        kfVal[kfWA] = kfVal[kfW] / kfVal[kfA];
        kfVal[kfVA] = kfVal[kfV] / kfVal[kfA];
        kfVal[kfCA] = kfVal[kfC] / kfVal[kfA];
