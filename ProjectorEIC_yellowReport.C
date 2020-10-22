@@ -1,3 +1,15 @@
+// projections for yellow report
+//
+// - produces `dihadronPWprojection.png`
+//   - compares two different minimum pion pT values
+//   - to disable one or the other, prevent it from being
+//     added to `mgr`
+// - the vector file `dihadronPWprojection.svg` links to
+//   the png `dihadronPWprojection.png`, and contains latex
+//   overlays for the labels
+// - latex overlays made with tex2img, font size 42
+// - export svg file as png with dpi=100
+
 void ProjectorEIC_yellowReport(
   TString infile0N="spinroot_5x41_300/asym_test1.root",
   TString infile1N="spinroot_5x41_100/asym_test1.root"
@@ -51,7 +63,9 @@ void ProjectorEIC_yellowReport(
   Int_t pad = 1;
   Int_t amp;
   char noop[32];
-  TString mod,title;
+  TString mod,title,eigen,ffpol,super;
+  //TLatex * eigenTex;
+  //TLatex * ffpolTex;
   canv->Divide(3,3);
   for(int e=0; e<asymArr[0]->GetEntries(); e++) {
     for(f=0; f<2; f++) {
@@ -61,24 +75,78 @@ void ProjectorEIC_yellowReport(
       gr->SetFillColor(f==0?kBlue:kRed);
       gr->SetMarkerSize(0);
       gr->SetMarkerStyle(kFullCircle);
-      gr->SetLineWidth(f==0?2:5);
+      //gr->SetLineWidth(f==0?2:5); // pdf
+      gr->SetLineWidth(f==0?10:20); // png
 
       sscanf(gr->GetName(),"kindepMA_A%d_%s",&amp,noop);
       cout << gr->GetName() << " " << amp << endl;
       switch(amp) {
-        case 0: mod="sin(#phi_{h}+#phi_{S})"; break;
-        case 1: mod="cos(#theta) sin(#phi_{h}+#phi_{S})"; break;
-        case 2: mod="sin(#theta) sin(#phi_{R}+#phi_{S})"; break;
-        case 3: mod="sin(#theta) sin(2#phi_{h}-#phi_{R}+#phi_{S})"; break;
-        case 4: mod="1/2 (3cos^{2}#theta-1) sin(#phi_{h}+#phi_{S})"; break;
-        case 5: mod="sin(2#theta) sin(#phi_{R}+#phi_{S})"; break;
-        case 6: mod="sin(2#theta) sin(2#phi_{h}-#phi_{R}+#phi_{S})"; break;
-        case 7: mod="sin^{2}(#theta) sin(-#phi_{h}+2#phi_{R}+#phi_{S})"; break;
-        case 8: mod="sin^{2}(#theta) sin(3#phi_{h}-2#phi_{R}+#phi_{S})"; break;
+        case 0:
+          mod="sin(#phi_{h}+#phi_{S})";
+          eigen = "0,0";
+          ffpol = "OO";
+          super = "#perpss+pp";
+          break;
+        case 1:
+          mod="cos(#theta) sin(#phi_{h}+#phi_{S})";
+          eigen = "1,0";
+          ffpol = "OL";
+          super = "#perp";
+          break;
+        case 2:
+          mod="sin(#theta) sin(#phi_{R}+#phi_{S})";
+          eigen = "1,1";
+          ffpol = "OT";
+          super = "#angle";
+          break;
+        case 3:
+          mod="sin(#theta) sin(2#phi_{h}-#phi_{R}+#phi_{S})";
+          eigen = "1,-1";
+          ffpol = "OT";
+          super = "#perp";
+          break;
+        case 4:
+          mod="1/2 (3cos^{2}#theta-1) sin(#phi_{h}+#phi_{S})";
+          eigen = "2,0";
+          ffpol = "LL";
+          super = "#perp";
+          break;
+        case 5:
+          mod="sin(2#theta) sin(#phi_{R}+#phi_{S})";
+          eigen = "2,1";
+          ffpol = "LT";
+          super = "#angle";
+          break;
+        case 6:
+          mod="sin(2#theta) sin(2#phi_{h}-#phi_{R}+#phi_{S})";
+          eigen = "2,-1";
+          ffpol = "LT";
+          super = "#perp";
+          break;
+        case 7:
+          mod="sin^{2}(#theta) sin(-#phi_{h}+2#phi_{R}+#phi_{S})";
+          eigen = "2,2";
+          ffpol = "TT";
+          super = "#angle";
+          break;
+        case 8:
+          mod="sin^{2}(#theta) sin(3#phi_{h}-2#phi_{R}+#phi_{S})";
+          eigen = "2,-2";
+          ffpol = "TT";
+          super = "#perp";
+          break;
       };
       title = gr->GetTitle();
       mod = "A_{UT}^{"+mod+"} vs.";
+      eigen = "|"+eigen+">";
+      ffpol = "h_{1}#otimesH_{"+ffpol+"}^{"+super+"}";
       title(TRegexp("A_{UT}.* vs.")) = mod;
+      //eigenTex = new TLatex(0.75,0.25,eigen);
+      //ffpolTex = new TLatex(0.75,0.15,ffpol);
+      //eigenTex->SetNDC(1);
+      //ffpolTex->SetNDC(1);
+      //eigenTex->SetTextSize(0.08);
+      //ffpolTex->SetTextSize(0.08);
 
       gStyle->SetTitleBorderSize(4);
       gStyle->SetTitleSize(0.08,"main");
@@ -123,7 +191,10 @@ void ProjectorEIC_yellowReport(
       };
       gr->GetXaxis()->SetLabelSize(0.06);
       gr->GetYaxis()->SetLabelSize(0.06);
-      mgr->Add(gr);
+
+      if(f==1) mgr->Add(gr); // 100 MeV only
+      //mgr->Add(gr); // 100 MeV only
+
     };
 
     //zero = new TLine(gr->GetXaxis()->GetXmin(),0,gr->GetXaxis()->GetXmax(),0);
@@ -140,9 +211,12 @@ void ProjectorEIC_yellowReport(
     //mgr->GetYaxis()->SetRangeUser(-2e-4,2e-4); // for 5x41 tests 2 & 3
     //mgr->GetYaxis()->SetRangeUser(-5e-3,5e-3); // for 18x275
     zero->Draw();
+
+    //eigenTex->Draw();
+    //ffpolTex->Draw();
     pad++;
   };
 
-  canv->Print("dihadronPWprojection.pdf","pdf");
+  canv->Print("dihadronPWprojection.png","png");
 };
     
