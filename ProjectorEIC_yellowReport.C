@@ -59,14 +59,14 @@ void ProjectorEIC_yellowReport(
   TString grT;
   Double_t x,y,ex,ey;
   TLine * zero;
-  TCanvas * canv = new TCanvas("canv","canv",3600,1800);
+  TCanvas * canv = new TCanvas("canv","canv",3*1200,3*600);
+  canv->Divide(3,3);
   Int_t pad = 1;
   Int_t amp;
   char noop[32];
   TString mod,title,eigen,ffpol,super;
   //TLatex * eigenTex;
   //TLatex * ffpolTex;
-  canv->Divide(3,3);
   for(int e=0; e<asymArr[0]->GetEntries(); e++) {
     for(f=0; f<2; f++) {
       gr = (TGraphAsymmErrors*) asymArr[f]->At(e);
@@ -141,6 +141,7 @@ void ProjectorEIC_yellowReport(
       eigen = "|"+eigen+">";
       ffpol = "h_{1}#otimesH_{"+ffpol+"}^{"+super+"}";
       title(TRegexp("A_{UT}.* vs.")) = mod;
+      title(TRegexp("^.* A")) = "A"; // remove pi+pi-
       //eigenTex = new TLatex(0.75,0.25,eigen);
       //ffpolTex = new TLatex(0.75,0.15,ffpol);
       //eigenTex->SetNDC(1);
@@ -149,7 +150,7 @@ void ProjectorEIC_yellowReport(
       //ffpolTex->SetTextSize(0.08);
 
       gStyle->SetTitleBorderSize(4);
-      gStyle->SetTitleSize(0.08,"main");
+      gStyle->SetTitleSize(0.10,"main");
       gStyle->SetTitleStyle(1001);
       gStyle->SetTitleFillColor(kWhite);
 
@@ -183,19 +184,21 @@ void ProjectorEIC_yellowReport(
         mgr->GetXaxis()->SetTitle("x");
         //mgr->GetYaxis()->SetNoExponent(1);
         mgr->GetXaxis()->SetTitleOffset(0.85);
-        mgr->GetYaxis()->SetTitleOffset(0.85);
-        mgr->GetXaxis()->SetTitleSize(0.06);
-        mgr->GetYaxis()->SetTitleSize(0.06);
-        mgr->GetXaxis()->SetLabelSize(0.06);
-        mgr->GetYaxis()->SetLabelSize(0.06);
+        mgr->GetYaxis()->SetTitleOffset(0.75);
+        mgr->GetXaxis()->SetTitleSize(0.08);
+        mgr->GetYaxis()->SetTitleSize(0.08);
+        mgr->GetXaxis()->SetLabelSize(0.08);
+        mgr->GetYaxis()->SetLabelSize(0.08);
       };
-      gr->GetXaxis()->SetLabelSize(0.06);
-      gr->GetYaxis()->SetLabelSize(0.06);
+      gr->GetXaxis()->SetLabelSize(0.08);
+      gr->GetYaxis()->SetLabelSize(0.08);
 
-      if(f==1) mgr->Add(gr); // 100 MeV only
-      //mgr->Add(gr); // 100 MeV only
+      //if(f==1) mgr->Add(gr); // pT>100 MeV only
+      mgr->Add(gr); // both pT cuts
 
     };
+    canv->GetPad(pad)->SetBottomMargin(0.15);
+    canv->GetPad(pad)->SetLeftMargin(0.12);
 
     //zero = new TLine(gr->GetXaxis()->GetXmin(),0,gr->GetXaxis()->GetXmax(),0);
     zero = new TLine(0,0,0.14,0);
@@ -219,4 +222,3 @@ void ProjectorEIC_yellowReport(
 
   canv->Print("dihadronPWprojection.png","png");
 };
-    
