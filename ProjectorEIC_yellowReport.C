@@ -193,8 +193,10 @@ void ProjectorEIC_yellowReport(
       gr->GetXaxis()->SetLabelSize(0.08);
       gr->GetYaxis()->SetLabelSize(0.08);
 
+      // SWITCH for drawing /////////////////////////
       //if(f==1) mgr->Add(gr); // pT>100 MeV only
       mgr->Add(gr); // both pT cuts
+      ///////////////////////////////////////////////
 
     };
     canv->GetPad(pad)->SetBottomMargin(0.15);
