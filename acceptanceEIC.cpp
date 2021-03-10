@@ -907,6 +907,7 @@ int main(int argc, char** argv) {
     for(b=0; b<NBINS; b++) PtVsY[o][b]->Write();
     for(b=0; b<NBINS; b++) PtDistLin[o][b]->Write();
     for(b=0; b<NBINS; b++) PtDistLog[o][b]->Write();
+    for(b=0; b<NBINS; b++) PperpDistLin[o][b]->Write();
     if(o==kDih) {
       for(b=0; b<NBINS; b++) PhiHvsPhiR[b]->Write();
       for(b=0; b<NBINS; b++) distMh[b]->Write();
