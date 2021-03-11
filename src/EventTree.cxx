@@ -340,11 +340,15 @@ void EventTree::GetEvent(Int_t i) {
 
   // dihadron cuts
   // - cuts defined here are for EIC
+  /*cutZ = Zpair>0.2 && Zpair<0.95 && // for PW projections
+         Z[qA]>0 && Z[qA]<=1 &&
+         Z[qB]>0 && Z[qB]<=1;*/
+  cutZ = Zpair>0.0 && Zpair<0.95 && // for pPerp studies
+         Z[qA]>0.2 && Z[qA]<=1 &&
+         Z[qB]>0.2 && Z[qB]<=1;
   cutDihadron = 
     Tools::PairSame(hadIdx[qA],hadIdx[qB],whichHad[qA],whichHad[qB]) &&
-    Zpair>0.2 && Zpair<0.95 &&
-    Z[qA]>0 && Z[qA]<=1 &&
-    Z[qB]>0 && Z[qB]<=1 &&
+    cutZ &&
     hadPt[qA]>0.1 && hadPt[qB]>0.1 && /*tracking limit*/
     hadXF[qA]>0 && hadXF[qB]>0;
 

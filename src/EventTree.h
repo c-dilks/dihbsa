@@ -131,6 +131,7 @@ class EventTree : public TObject
     ///////////////////////////
     Bool_t cutQ2,cutX,cutW,cutY,cutDIS;
     Bool_t cutDihadron;
+    Bool_t cutZ;
     Bool_t cutHelicity;
     Bool_t cutVertex;
     Bool_t cutFiducial;

@@ -37,7 +37,7 @@ Float_t Q2min = 1; Float_t Q2max = 3e3; // Q2min must match generation cut
 //Float_t Q2min = 1000; Float_t Q2max = 50e3; // Q2min must match generation cut
 Float_t xmin = 1e-5;  Float_t xmax = 1;
 
-const Int_t NBINS_Q2 = 3; // must be 1 more than you want
+const Int_t NBINS_Q2 = 5; // must be 1 more than you want
 const Int_t NBINS_x = 3; // must be 1 more than you want
 
 //-----------------------------------------------------
@@ -104,7 +104,8 @@ int main(int argc, char** argv) {
 
   /// define binning
   Float_t Q2mid=5; Float_t xmid=0.02; // 10x100 default
-  if( EbeamEnInt==5 && PbeamEnInt==41)   { Q2mid=3;    xmid=0.025; };
+  //if( EbeamEnInt==5 && PbeamEnInt==41)   { Q2mid=3;    xmid=0.025; }; // PW projections
+  if( EbeamEnInt==5 && PbeamEnInt==41)   { Q2mid=3;    xmid=0.050; }; // pPerp study
   if( EbeamEnInt==5 && PbeamEnInt==100)  { Q2mid=3;    xmid=0.01;  };
   if( EbeamEnInt==10 && PbeamEnInt==100) { Q2mid=5;    xmid=0.02;  };
   if( EbeamEnInt==18 && PbeamEnInt==275) { Q2mid=10;   xmid=0.005; };
@@ -114,10 +115,17 @@ int main(int argc, char** argv) {
       binBounds_Q2[0] = Q2min;
       binBounds_Q2[1] = Q2max;
       break;
-    case 3:
+    case 3: // for PW projections
       binBounds_Q2[0] = Q2min;
       binBounds_Q2[1] = Q2mid;
       binBounds_Q2[2] = Q2max;
+      break;
+    case 5:  // for pPerp study (5x41 quantiles)
+      binBounds_Q2[0] = Q2min;
+      binBounds_Q2[1] = 1.3;
+      binBounds_Q2[2] = 1.9;
+      binBounds_Q2[3] = 3.5;
+      binBounds_Q2[4] = Q2max;
       break;
     default:
       fprintf(stderr,"ERROR: undefined Q2 bin bounds\n");
@@ -272,6 +280,9 @@ int main(int argc, char** argv) {
   TH1D * PperpDistLin[NOBS][NBINS];
   TH1D * PtDistLin[NOBS][NBINS];
   TH1D * PtDistLog[NOBS][NBINS];
+  TH1D * QtDistLin[NOBS][NBINS];
+  TH1D * QtDistLog[NOBS][NBINS];
+  TH1D * QtOverQdist[NOBS][NBINS];
   // - dihadrons only
   TH2D * PhiHvsPhiR[NBINS];
   TH2D * corrXF[NBINS];
@@ -285,8 +296,6 @@ int main(int argc, char** argv) {
   TH2D * PhiRvsP[NBINS];
   TH2D * thetaVsP[NBINS];
   TH2D * QtVsY[NBINS];
-  TH1D * QtDistLin[NBINS];
-  TH1D * QtDistLog[NBINS];
   // - electrons only
   TH1D * distY[NBINS];
   TH1D * distW[NBINS];
@@ -471,6 +480,29 @@ int main(int argc, char** argv) {
       PtDistLog[o][b]->SetLineColor(kAzure);
       PtDistLog[o][b]->SetFillColor(kAzure);
 
+      plotT = obsT[o] + " q_{T} distribution, for " + cutT +
+        ";" + obsT[o] + " q_{T} [GeV]";
+      plotN = Form("%s_QtDistLin_%d",obsN[o].Data(),b);
+      QtDistLin[o][b] = new TH1D(plotN,plotT, N_P_BINS, ptMin, ptMax/3.0);
+      QtDistLin[o][b]->SetFillColor(kViolet+10);
+      QtDistLin[o][b]->SetLineColor(kViolet+10);
+
+      plotT = obsT[o] + " q_{T} distribution, for " + cutT +
+        ";" + obsT[o] + " q_{T} [GeV]";
+      plotN = Form("%s_QtDistLog_%d",obsN[o].Data(),b);
+      QtDistLog[o][b] = new TH1D(plotN,plotT, N_P_BINS, ptMin, ptMax/3.0);
+      QtDistLog[o][b]->SetFillColor(kViolet+10);
+      QtDistLog[o][b]->SetLineColor(kViolet+10);
+      Tools::BinLog(QtDistLog[o][b]->GetXaxis());
+
+      plotT = obsT[o] + " q_{T}/Q distribution, for " + cutT +
+        ";" + obsT[o] + " q_{T}/Q";
+      plotN = Form("%s_QtOverQdist_%d",obsN[o].Data(),b);
+      QtOverQdist[o][b] = new TH1D(plotN,plotT, N_P_BINS, 0, 6);
+      QtOverQdist[o][b]->SetFillColor(kViolet+10);
+      QtOverQdist[o][b]->SetLineColor(kViolet+10);
+
+
       if(o==kDih) {
         plotT = obsT[o] + " #phi_{h} vs. #phi_{R}, for " + cutT + 
           ";#phi_{R};#phi_{h}";
@@ -515,19 +547,6 @@ int main(int argc, char** argv) {
           N_P_BINS, ptMin, 100*ptMax);
         Tools::BinLog(QtVsY[b]->GetXaxis());
         Tools::BinLog(QtVsY[b]->GetYaxis());
-
-        plotT = obsT[o] + " q_{T} distribution, for " + cutT + ";q_{T} [GeV]";
-        plotN = Form("%s_QtDistLin_%d",obsN[o].Data(),b);
-        QtDistLin[b] = new TH1D(plotN,plotT, N_P_BINS, ptMin, 100*ptMax);
-        QtDistLin[b]->SetFillColor(kViolet+10);
-        QtDistLin[b]->SetLineColor(kViolet+10);
-
-        plotT = obsT[o] + " q_{T} distribution, for " + cutT + ";q_{T} [GeV]";
-        plotN = Form("%s_QtDistLog_%d",obsN[o].Data(),b);
-        QtDistLog[b] = new TH1D(plotN,plotT, N_P_BINS, ptMin, 100*ptMax);
-        QtDistLog[b]->SetFillColor(kViolet+10);
-        QtDistLog[b]->SetLineColor(kViolet+10);
-        Tools::BinLog(QtDistLog[b]->GetXaxis());
 
         plotT = obsT[o] + " M_{h} distribution, for " + cutT + ";M_{h} [GeV]";
         plotN = Form("%s_Mh_%d",obsN[o].Data(),b);
@@ -697,6 +716,9 @@ int main(int argc, char** argv) {
             PperpDistLin[o][b]->Fill(oPperp);
             PtDistLin[o][b]->Fill(oPt);
             PtDistLog[o][b]->Fill(oPt);
+            QtDistLin[o][b]->Fill(Qt);
+            QtDistLog[o][b]->Fill(Qt);
+            QtOverQdist[o][b]->Fill(Qt/TMath::Sqrt(ev->Q2));
 
             if(o==kDih) {
               PhiHvsPhiR[b]->Fill(ev->PhiR,ev->PhiH);
@@ -705,8 +727,6 @@ int main(int argc, char** argv) {
               PhiRvsP[b]->Fill(oP,ev->PhiR);
               thetaVsP[b]->Fill(oP,ev->theta);
               QtVsY[b]->Fill(ev->y,Qt);
-              QtDistLin[b]->Fill(Qt);
-              QtDistLog[b]->Fill(Qt);
               distMh[b]->Fill(ev->Mh);
               distMx[b]->Fill(ev->Mmiss);
               distPhiH[b]->Fill(ev->PhiH);
@@ -786,14 +806,15 @@ int main(int argc, char** argv) {
   TCanvas * PperpDistLinMatrix[NOBS];
   TCanvas * PtDistLinMatrix[NOBS];
   TCanvas * PtDistLogMatrix[NOBS];
+  TCanvas * QtDistLinMatrix[NOBS];
+  TCanvas * QtDistLogMatrix[NOBS];
+  TCanvas * QtOverQdistMatrix[NOBS];
   TCanvas * PhiHvsPhiRMatrix;
   TCanvas * corrXFMatrix;
   TCanvas * PhiHvsPMatrix;
   TCanvas * PhiRvsPMatrix;
   TCanvas * thetaVsPMatrix;
   TCanvas * QtVsYMatrix;
-  TCanvas * QtDistLinMatrix;
-  TCanvas * QtDistLogMatrix;
   TCanvas * distMhMatrix;
   TCanvas * distMxMatrix;
   TCanvas * distPhiHMatrix;
@@ -822,6 +843,9 @@ int main(int argc, char** argv) {
     PperpDistLinMatrix[o] = MatrixifyDist1(PperpDistLin[o],0,0);
     PtDistLinMatrix[o] = MatrixifyDist1(PtDistLin[o],0,1);
     PtDistLogMatrix[o] = MatrixifyDist1(PtDistLog[o],1,1);
+    QtDistLinMatrix[o] = MatrixifyDist1(QtDistLin[o],0,1);
+    QtDistLogMatrix[o] = MatrixifyDist1(QtDistLog[o],1,1);
+    QtOverQdistMatrix[o] = MatrixifyDist1(QtOverQdist[o],0,0);
   };
   PhiHvsPhiRMatrix = MatrixifyDist2(PhiHvsPhiR,0,0,0); // maxima not equalized
   corrXFMatrix = MatrixifyDist2(corrXF,0,0,1);
@@ -829,8 +853,6 @@ int main(int argc, char** argv) {
   PhiRvsPMatrix = MatrixifyDist2(PhiRvsP,1,0,1);
   thetaVsPMatrix = MatrixifyDist2(thetaVsP,1,0,1);
   QtVsYMatrix = MatrixifyDist2(QtVsY,1,1,1);
-  QtDistLinMatrix = MatrixifyDist1(QtDistLin,0,1);
-  QtDistLogMatrix = MatrixifyDist1(QtDistLog,1,1);
   distMhMatrix = MatrixifyDist1(distMh,0,0);
   distMxMatrix = MatrixifyDist1(distMx,0,0);
   distPhiHMatrix = MatrixifyDist1(distPhiH,0,0);
@@ -867,6 +889,9 @@ int main(int argc, char** argv) {
     PperpDistLinMatrix[o]->Write();
     PtDistLinMatrix[o]->Write();
     PtDistLogMatrix[o]->Write();
+    QtDistLinMatrix[o]->Write();
+    QtDistLogMatrix[o]->Write();
+    QtOverQdistMatrix[o]->Write();
     if(o==kDih) {
       PhiHvsPhiRMatrix->Write();
       distMhMatrix->Write();
@@ -880,8 +905,6 @@ int main(int argc, char** argv) {
       PhiRvsPMatrix->Write();
       thetaVsPMatrix->Write();
       QtVsYMatrix->Write();
-      QtDistLinMatrix->Write();
-      QtDistLogMatrix->Write();
     };
     if(o==kEle) {
       distWMatrix->Write();
@@ -908,6 +931,9 @@ int main(int argc, char** argv) {
     for(b=0; b<NBINS; b++) PtDistLin[o][b]->Write();
     for(b=0; b<NBINS; b++) PtDistLog[o][b]->Write();
     for(b=0; b<NBINS; b++) PperpDistLin[o][b]->Write();
+    for(b=0; b<NBINS; b++) QtDistLin[o][b]->Write();
+    for(b=0; b<NBINS; b++) QtDistLog[o][b]->Write();
+    for(b=0; b<NBINS; b++) QtOverQdist[o][b]->Write();
     if(o==kDih) {
       for(b=0; b<NBINS; b++) PhiHvsPhiR[b]->Write();
       for(b=0; b<NBINS; b++) distMh[b]->Write();
@@ -921,8 +947,6 @@ int main(int argc, char** argv) {
       for(b=0; b<NBINS; b++) PhiRvsP[b]->Write();
       for(b=0; b<NBINS; b++) thetaVsP[b]->Write();
       for(b=0; b<NBINS; b++) QtVsY[b]->Write();
-      for(b=0; b<NBINS; b++) QtDistLin[b]->Write();
-      for(b=0; b<NBINS; b++) QtDistLog[b]->Write();
     };
     if(o==kEle) {
       for(b=0; b<NBINS; b++) distW[b]->Write();
@@ -954,7 +978,6 @@ int main(int argc, char** argv) {
   PhiHvsPhiRMatrix->Print(TString(pngpath+"PhiHvsPhiRMatrix.png"),"png");
   distMhMatrix->Print(TString(pngpath+"distMhMatrix.png"),"png");
   distThetaMatrix->Print(TString(pngpath+"distThetaMatrix.png"),"png");
-  QtDistLogMatrix->Print(TString(pngpath+"QtDistLogMatrix.png"),"png");
   PtDistLogMatrix[kHadA]->Print(TString(pngpath+"PtDistLogMatrix.png"),"png");
   QtVsEtaMatrix[kHadA]->Print(TString(pngpath+"QtVsEtaMatrix.png"),"png");
   QtVsPtMatrix[kHadA]->Print(TString(pngpath+"QtVsPtMatrix.png"),"png");
