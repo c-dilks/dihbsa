@@ -335,7 +335,7 @@ void EventTree::GetEvent(Int_t i) {
   cutQ2 = true; // open for now, since defined by generator
   cutX = x>=0 && x<=1; // open for now, since defined by generator
   cutW = W>3.0;
-  cutY = y>0.01 && y<0.95;
+  cutY = y>0.00 && y<0.95;
   cutDIS = cutQ2 && cutX && cutW && cutY;
 
   // dihadron cuts

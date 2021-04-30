@@ -9,13 +9,13 @@ R__LOAD_LIBRARY(DihBsa)
 #include "Tools.h"
 
 void RatioPlot(
-  TString numerFileN="eicPlots.pythia_5x41_smear.ymin_0.03.root",
-  TString denomFileN="eicPlots.pythia_5x41_smear.ymin_0.00.root",
+  TString numerFileN="roots_crosscheck/ymin_0.03.root",
+  TString denomFileN="roots_crosscheck/ymin_0.00.root",
   TString particle="hadronA",
-  TString outfileN="QtRatio_PiPlus_ymin0.03",
-  /*TString plotName="PperpDistLin"*/
+  TString outfileN="Pperp_PiPlus_ymin0.03",
+  TString plotName="PperpDistLin"
   /*TString plotName="QtDistLin"*/
-  TString plotName="QtOverQdist"
+  /*TString plotName="QtOverQdist"*/
 ) {
 
   enum numerdenom {num,den};
@@ -23,12 +23,16 @@ void RatioPlot(
   infile[num] = new TFile(numerFileN,"READ");
   infile[den] = new TFile(denomFileN,"READ");
 
+  Bool_t plotRatioOnly = 0;
+
   const Int_t nBins = 15;
   TH1D * dist[2][nBins];
   TH1D * ratio[nBins];
+  Double_t norm;
   TString distN;
   TCanvas * canv[nBins];
   for(int b=0; b<nBins; b++) {
+
     for(int f=0; f<2; f++) {
       distN = "singlePlots/"+particle+
         "_"+plotName+"_"+Form("%d",b);
@@ -37,35 +41,70 @@ void RatioPlot(
       printf("f%d b%d %s @ %p\n",f,b,
         distN.Data(),(void*)dist[f][b]);
       dist[f][b]->Sumw2();
+      dist[f][b]->Rebin(4);
+      norm = dist[f][b]->Integral();
+      //dist[f][b]->Scale(1./norm);
     };
+
     ratio[b] = (TH1D*) dist[num][b]->Clone();
     ratio[b]->Divide(dist[den][b]);
-    canv[b] = new TCanvas(Form("canv%d",b),Form("canv%d",b),
-      1600,700);
-    canv[b]->Divide(2,1);
-    canv[b]->cd(1);
-    canv[b]->GetPad(1)->SetGrid(1,1);
-    dist[num][b]->SetLineColor(kBlue);
-    dist[den][b]->SetLineColor(kRed);
-    dist[num][b]->SetMarkerColor(kBlue);
-    dist[den][b]->SetMarkerColor(kRed);
-    for(int f=0; f<2; f++) {
-      dist[f][b]->SetMarkerStyle(kFullCircle);
-      if(plotName=="PperpDistLin")
-        dist[f][b]->GetXaxis()->SetRangeUser(0,1.7);
+
+    if(plotRatioOnly)
+      canv[b] = new TCanvas(Form("canv%d",b),Form("canv%d",b), 800,700);
+    else
+      canv[b] = new TCanvas(Form("canv%d",b),Form("canv%d",b), 1600,700);
+
+    if(!plotRatioOnly) {
+      canv[b]->Divide(2,1);
+      canv[b]->cd(1);
+      canv[b]->GetPad(1)->SetGrid(1,1);
+      //canv[b]->GetPad(1)->SetLogx();
+      //canv[b]->GetPad(1)->SetLogy();
+      canv[b]->GetPad(1)->SetBottomMargin(0.15);
+      canv[b]->GetPad(1)->SetLeftMargin(0.15);
+      dist[num][b]->SetLineColor(kBlue);
+      dist[den][b]->SetLineColor(kRed);
+      dist[num][b]->SetMarkerColor(kBlue);
+      dist[den][b]->SetMarkerColor(kRed);
+      for(int f=0; f<2; f++) {
+        dist[f][b]->SetMarkerStyle(kFullCircle);
+        dist[f][b]->SetMarkerSize(1.5);
+        dist[f][b]->SetLineWidth(2);
+        dist[f][b]->GetXaxis()->SetLabelSize(0.06);
+        dist[f][b]->GetYaxis()->SetLabelSize(0.06);
+        dist[f][b]->GetXaxis()->SetTitleSize(0.06);
+        dist[f][b]->GetYaxis()->SetTitleSize(0.06);
+        dist[f][b]->GetXaxis()->SetTitleOffset(1.2);
+        if(plotName=="PperpDistLin")
+          dist[f][b]->GetXaxis()->SetRangeUser(0,1.7);
+      };
+      dist[den][b]->Draw("ERR P");
+      dist[num][b]->Draw("ERR P SAME");
+      canv[b]->cd(2);
+      canv[b]->GetPad(2)->SetGrid(1,1);
+      canv[b]->GetPad(2)->SetBottomMargin(0.15);
+      canv[b]->GetPad(2)->SetLeftMargin(0.15);
+    } else {
+      canv[b]->cd();
+      canv[b]->SetGrid(1,1);
+      canv[b]->SetBottomMargin(0.15);
+      canv[b]->SetLeftMargin(0.15);
     };
-    dist[den][b]->Draw("ERR P");
-    dist[num][b]->Draw("ERR P SAME");
-    canv[b]->cd(2);
-    canv[b]->GetPad(2)->SetGrid(1,1);
+    ratio[b]->GetYaxis()->SetTitle("ratio( y>ymin / total )");
     ratio[b]->SetLineColor(kBlack);
     ratio[b]->SetMarkerColor(kBlack);
     ratio[b]->SetMarkerStyle(kFullCircle);
-    ratio[b]->GetYaxis()->SetRangeUser(0,1.1);
-    if(plotName=="PperpDistLin")
-      ratio[b]->GetXaxis()->SetRangeUser(0,1.7);
+    ratio[b]->SetMarkerSize(1.5);
+    ratio[b]->SetLineWidth(2);
+    ratio[b]->GetXaxis()->SetLabelSize(0.06);
+    ratio[b]->GetYaxis()->SetLabelSize(0.06);
+    ratio[b]->GetXaxis()->SetTitleSize(0.06);
+    ratio[b]->GetYaxis()->SetTitleSize(0.06);
+    ratio[b]->GetXaxis()->SetTitleOffset(1.2);
+    ratio[b]->GetYaxis()->SetRangeUser(0,1.3);
+    if(plotName=="PperpDistLin") ratio[b]->GetXaxis()->SetRangeUser(0,1.7);
     ratio[b]->Draw("ERR X0 P");
-    canv[b]->Print(Form("%s_bin%d.pdf",outfileN.Data(),b),"pdf");
+    canv[b]->Print(Form("%s_bin%d.png",outfileN.Data(),b),"png");
   };
 
   //for(int f=0; f<2; f++) infile[f]->Close();

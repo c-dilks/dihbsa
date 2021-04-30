@@ -35,7 +35,7 @@ Bool_t includeFullPlots = false; // if true, draw full (x,Q2) range plots
 Float_t Q2min = 1; Float_t Q2max = 3e3; // Q2min must match generation cut
 //Float_t Q2min = 100; Float_t Q2max = 50e3; // Q2min must match generation cut
 //Float_t Q2min = 1000; Float_t Q2max = 50e3; // Q2min must match generation cut
-Float_t xmin = 1e-5;  Float_t xmax = 1;
+Float_t xmin = 1e-3;  Float_t xmax = 1;
 
 const Int_t NBINS_Q2 = 5; // must be 1 more than you want
 const Int_t NBINS_x = 3; // must be 1 more than you want
@@ -283,6 +283,7 @@ int main(int argc, char** argv) {
   TH1D * QtDistLin[NOBS][NBINS];
   TH1D * QtDistLog[NOBS][NBINS];
   TH1D * QtOverQdist[NOBS][NBINS];
+  TH2D * QtOverQvsQt[NOBS][NBINS];
   // - dihadrons only
   TH2D * PhiHvsPhiR[NBINS];
   TH2D * corrXF[NBINS];
@@ -502,6 +503,13 @@ int main(int argc, char** argv) {
       QtOverQdist[o][b]->SetFillColor(kViolet+10);
       QtOverQdist[o][b]->SetLineColor(kViolet+10);
 
+      plotT = obsT[o] + " q_{T}/Q vs. q_{T}, for " + cutT +
+        ";" + obsT[o] + " q_{T}" +
+        ";" + obsT[o] + " q_{T}/Q";
+      plotN = Form("%s_QtOverQvsQt_%d",obsN[o].Data(),b);
+      QtOverQvsQt[o][b] = new TH2D(plotN,plotT,
+        N_P_BINS, ptMin, ptMax/3.0,
+        N_P_BINS, 0, 6);
 
       if(o==kDih) {
         plotT = obsT[o] + " #phi_{h} vs. #phi_{R}, for " + cutT + 
@@ -719,6 +727,7 @@ int main(int argc, char** argv) {
             QtDistLin[o][b]->Fill(Qt);
             QtDistLog[o][b]->Fill(Qt);
             QtOverQdist[o][b]->Fill(Qt/TMath::Sqrt(ev->Q2));
+            QtOverQvsQt[o][b]->Fill(Qt,Qt/TMath::Sqrt(ev->Q2));
 
             if(o==kDih) {
               PhiHvsPhiR[b]->Fill(ev->PhiR,ev->PhiH);
@@ -809,6 +818,7 @@ int main(int argc, char** argv) {
   TCanvas * QtDistLinMatrix[NOBS];
   TCanvas * QtDistLogMatrix[NOBS];
   TCanvas * QtOverQdistMatrix[NOBS];
+  TCanvas * QtOverQvsQtMatrix[NOBS];
   TCanvas * PhiHvsPhiRMatrix;
   TCanvas * corrXFMatrix;
   TCanvas * PhiHvsPMatrix;
@@ -846,6 +856,7 @@ int main(int argc, char** argv) {
     QtDistLinMatrix[o] = MatrixifyDist1(QtDistLin[o],0,1);
     QtDistLogMatrix[o] = MatrixifyDist1(QtDistLog[o],1,1);
     QtOverQdistMatrix[o] = MatrixifyDist1(QtOverQdist[o],0,0);
+    QtOverQvsQtMatrix[o] = MatrixifyDist2(QtOverQvsQt[o],0,0,0);
   };
   PhiHvsPhiRMatrix = MatrixifyDist2(PhiHvsPhiR,0,0,0); // maxima not equalized
   corrXFMatrix = MatrixifyDist2(corrXF,0,0,1);
@@ -892,6 +903,7 @@ int main(int argc, char** argv) {
     QtDistLinMatrix[o]->Write();
     QtDistLogMatrix[o]->Write();
     QtOverQdistMatrix[o]->Write();
+    QtOverQvsQtMatrix[o]->Write();
     if(o==kDih) {
       PhiHvsPhiRMatrix->Write();
       distMhMatrix->Write();
@@ -934,6 +946,7 @@ int main(int argc, char** argv) {
     for(b=0; b<NBINS; b++) QtDistLin[o][b]->Write();
     for(b=0; b<NBINS; b++) QtDistLog[o][b]->Write();
     for(b=0; b<NBINS; b++) QtOverQdist[o][b]->Write();
+    for(b=0; b<NBINS; b++) QtOverQvsQt[o][b]->Write();
     if(o==kDih) {
       for(b=0; b<NBINS; b++) PhiHvsPhiR[b]->Write();
       for(b=0; b<NBINS; b++) distMh[b]->Write();
@@ -1083,7 +1096,7 @@ TCanvas * xQ2Canv(TH2D * dist) {
 
   // y contours
   Float_t yval, EdotP; 
-  // y-cut contour
+  // y-cut contours
   yval = 0.01; 
   EdotP = 2*EbeamEn*PbeamEn; // (scalar product of beams' 4 momenta)
   TLine * yline = new TLine(
@@ -1091,6 +1104,20 @@ TCanvas * xQ2Canv(TH2D * dist) {
   yline->SetLineWidth(4);
   yline->SetLineStyle(2);
   yline->Draw();
+  //
+  yval = 0.05;
+  TLine * yline2 = new TLine(
+    Q2min / (2*yval*EdotP), Q2min, xmax, 2*xmax*yval*EdotP);
+  yline2->SetLineWidth(4);
+  yline2->SetLineStyle(2);
+  yline2->Draw();
+  //
+  yval = 0.5;
+  TLine * yline3 = new TLine(
+    Q2min / (2*yval*EdotP), Q2min, xmax, 2*xmax*yval*EdotP);
+  yline3->SetLineWidth(4);
+  yline3->SetLineStyle(2);
+  yline3->Draw();
   // clas12 y=1 line
   yval = 1;
   EdotP = PartMass(kP)*10.6;
