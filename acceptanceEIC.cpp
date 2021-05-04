@@ -303,11 +303,15 @@ int main(int argc, char** argv) {
   TH1D * distY[NBINS];
   TH1D * distW[NBINS];
   // - VM and hadron correlations
-  TH1D * distRhoMh[NBINS];
   TH2D * rhoZVsHadZ[NOBS][NBINS];
   TH2D * rhoPperpVsHadPperp[NOBS][NBINS];
   TH2D * rhoQtVsHadQt[NOBS][NBINS];
   TH2D * rhoQtOverQVsHadQtOverQ[NOBS][NBINS];
+  // - extra Mh dists
+  TH1D * distRhoMh[NBINS];
+  TH1D * distAnyDecayMh[NBINS];
+  TH1D * distOmegaBothMh[NBINS];
+  TH1D * distOmegaEitherMh[NBINS];
   ////
   TString plotN,plotT,cutT;
   Float_t pMaxLo,pMaxHi;
@@ -624,6 +628,24 @@ int main(int argc, char** argv) {
         distRhoMh[b]->SetFillColor(kBlack);
         distRhoMh[b]->SetLineColor(kBlack);
 
+        plotT = obsT[o] + " M_{h} distribution, for " + cutT + ";M_{h} [GeV]";
+        plotN = Form("%s_anyDecayMh_%d",obsN[o].Data(),b);
+        distAnyDecayMh[b] = new TH1D(plotN,plotT, 3*NPLOTBINS, 0, 3);
+        distAnyDecayMh[b]->SetFillColor(kBlack);
+        distAnyDecayMh[b]->SetLineColor(kBlack);
+
+        plotT = obsT[o] + " M_{h} distribution, for " + cutT + ";M_{h} [GeV]";
+        plotN = Form("%s_omegaBothMh_%d",obsN[o].Data(),b);
+        distOmegaBothMh[b] = new TH1D(plotN,plotT, 3*NPLOTBINS, 0, 3);
+        distOmegaBothMh[b]->SetFillColor(kBlack);
+        distOmegaBothMh[b]->SetLineColor(kBlack);
+
+        plotT = obsT[o] + " M_{h} distribution, for " + cutT + ";M_{h} [GeV]";
+        plotN = Form("%s_omegaEitherMh_%d",obsN[o].Data(),b);
+        distOmegaEitherMh[b] = new TH1D(plotN,plotT, 3*NPLOTBINS, 0, 3);
+        distOmegaEitherMh[b]->SetFillColor(kBlack);
+        distOmegaEitherMh[b]->SetLineColor(kBlack);
+
         plotT = obsT[o] + " M_{X} distribution, for " + cutT + ";M_{X} [GeV]";
         plotN = Form("%s_Mx_%d",obsN[o].Data(),b);
         distMx[b] = new TH1D(plotN,plotT,
@@ -798,7 +820,7 @@ int main(int argc, char** argv) {
                 ev->hadParentPID[qA] == ev->hadParentPID[qB] &&
                 ev->hadParentPID[qA] == 113
             ) {
-            if(o==kDih) distRhoMh[b]->Fill(ev->Mh);
+              if(o==kDih) distRhoMh[b]->Fill(ev->Mh);
               rhoZVsHadZ[o][b]->Fill(oZ,ev->Zpair);
               rhoPperpVsHadPperp[o][b]->Fill(oPperp,ev->PhPerp);
               rhoQtVsHadQt[o][b]->Fill(Qt,ev->PhPerp/ev->Zpair);
@@ -807,6 +829,28 @@ int main(int argc, char** argv) {
                 (ev->PhPerp/ev->Zpair) / TMath::Sqrt(ev->Q2)
               );
             };
+
+            if( ( TMath::Abs(ev->hadParentPID[qA])>100 &&
+                  TMath::Abs(ev->hadParentPID[qA])<600 )
+             || ( TMath::Abs(ev->hadParentPID[qB])>100 &&
+                  TMath::Abs(ev->hadParentPID[qB])<600 )
+            ) {
+              if(o==kDih) distAnyDecayMh[b]->Fill(ev->Mh);
+            };
+
+            if( ev->hadParentI[qA] == ev->hadParentI[qB] &&
+                ev->hadParentPID[qA] == ev->hadParentPID[qB] &&
+                ev->hadParentPID[qA] == 223
+            ) {
+              if(o==kDih) distOmegaBothMh[b]->Fill(ev->Mh);
+            };
+
+            if( TMath::Abs(ev->hadParentPID[qA])==223 ||
+                TMath::Abs(ev->hadParentPID[qB])==223
+            ) {
+              if(o==kDih) distOmegaEitherMh[b]->Fill(ev->Mh);
+            };
+
 
             if(o==kDih) {
               PhiHvsPhiR[b]->Fill(ev->PhiR,ev->PhiH);
@@ -1039,6 +1083,9 @@ int main(int argc, char** argv) {
     for(b=0; b<NBINS; b++) rhoQtVsHadQt[o][b]->Write();
     for(b=0; b<NBINS; b++) rhoQtOverQVsHadQtOverQ[o][b]->Write();
     if(o==kDih) { for(b=0; b<NBINS; b++) distRhoMh[b]->Write(); };
+    if(o==kDih) { for(b=0; b<NBINS; b++) distAnyDecayMh[b]->Write(); };
+    if(o==kDih) { for(b=0; b<NBINS; b++) distOmegaBothMh[b]->Write(); };
+    if(o==kDih) { for(b=0; b<NBINS; b++) distOmegaEitherMh[b]->Write(); };
     if(o==kDih) {
       for(b=0; b<NBINS; b++) PhiHvsPhiR[b]->Write();
       for(b=0; b<NBINS; b++) distMh[b]->Write();

@@ -31,6 +31,7 @@ void rhoDraw(
   };
   TH1D *m = (TH1D*) infile->Get("singlePlots/dihadron_Mh"+binStr);
   TH1D *mr = (TH1D*) infile->Get("singlePlots/dihadron_rhoMh"+binStr);
+  //TH1D *mr = (TH1D*) infile->Get("singlePlots/dihadron_omegaEitherMh"+binStr);
   c = new TCanvas();
   m->Draw();
   mr->Draw("same");
