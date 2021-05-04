@@ -55,6 +55,10 @@ EventTree::EventTree(TString filelist, Int_t whichPair_) {
     chain->SetBranchAddress("hadStatus",hadStatus);
     chain->SetBranchAddress("hadChi2pid",hadChi2pid);
   };
+  if(conf->Experiment=="eic") {
+    chain->SetBranchAddress("hadParentI",hadParentI);
+    chain->SetBranchAddress("hadParentPID",hadParentPID);
+  };
 
   // these branches were temporarily used for early crosscheck studies
   if(chain->GetBranch("hadPtq")) chain->SetBranchAddress("hadPtq",hadPtq);

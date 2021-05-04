@@ -80,6 +80,8 @@ class EventTree : public TObject
     Float_t hadVertex[2][3];
     Int_t hadStatus[2];
     Float_t hadChi2pid[2];
+    Int_t hadParentI[2];
+    Int_t hadParentPID[2];
 
     // electron kinematics
     Float_t eleE;

@@ -284,6 +284,8 @@ int main(int argc, char** argv) {
   TH1D * QtDistLog[NOBS][NBINS];
   TH1D * QtOverQdist[NOBS][NBINS];
   TH2D * QtOverQvsQt[NOBS][NBINS];
+  TH2D * QtOverQvsPperp[NOBS][NBINS];
+  TH2D * QtOverQvsZ[NOBS][NBINS];
   // - dihadrons only
   TH2D * PhiHvsPhiR[NBINS];
   TH2D * corrXF[NBINS];
@@ -300,6 +302,12 @@ int main(int argc, char** argv) {
   // - electrons only
   TH1D * distY[NBINS];
   TH1D * distW[NBINS];
+  // - VM and hadron correlations
+  TH1D * distRhoMh[NBINS];
+  TH2D * rhoZVsHadZ[NOBS][NBINS];
+  TH2D * rhoPperpVsHadPperp[NOBS][NBINS];
+  TH2D * rhoQtVsHadQt[NOBS][NBINS];
+  TH2D * rhoQtOverQVsHadQtOverQ[NOBS][NBINS];
   ////
   TString plotN,plotT,cutT;
   Float_t pMaxLo,pMaxHi;
@@ -511,6 +519,54 @@ int main(int argc, char** argv) {
         N_P_BINS, ptMin, ptMax/3.0,
         N_P_BINS, 0, 6);
 
+      plotT = obsT[o] + " q_{T}/Q vs. p_{perp}, for " + cutT +
+        ";" + obsT[o] + " p_{perp}" +
+        ";" + obsT[o] + " q_{T}/Q";
+      plotN = Form("%s_QtOverQvsPperp_%d",obsN[o].Data(),b);
+      QtOverQvsPperp[o][b] = new TH2D(plotN,plotT,
+        N_P_BINS, ptMin, 3,
+        N_P_BINS, 0, 6);
+ 
+      plotT = obsT[o] + " q_{T}/Q vs. z, for " + cutT +
+        ";" + obsT[o] + " z" +
+        ";" + obsT[o] + " q_{T}/Q";
+      plotN = Form("%s_QtOverQvsZ_%d",obsN[o].Data(),b);
+      QtOverQvsZ[o][b] = new TH2D(plotN,plotT,
+        N_P_BINS, 0, 1,
+        N_P_BINS, 0, 6);
+ 
+      plotT = "z(#rho) vs. z(" + obsT[o] + "), for " + cutT +
+        ";z(" + obsT[o] + ")" +
+        ";z(#rho)";
+      plotN = Form("%s_rhoZVsHadZ_%d",obsN[o].Data(),b);
+      rhoZVsHadZ[o][b] = new TH2D(plotN,plotT,
+        N_P_BINS, 0, 1,
+        N_P_BINS, 0, 1);
+ 
+      plotT = "p_{perp}(#rho) vs. p_{perp}(" + obsT[o] + "), for " + cutT +
+        ";p_{perp}(" + obsT[o] + ")" +
+        ";p_{perp}(#rho)";
+      plotN = Form("%s_rhoPperpVsHadPperp_%d",obsN[o].Data(),b);
+      rhoPperpVsHadPperp[o][b] = new TH2D(plotN,plotT,
+        N_P_BINS, ptMin, 2,
+        N_P_BINS, ptMin, 2);
+ 
+      plotT = "q_{T}(#rho) vs. q_{T}(" + obsT[o] + "), for " + cutT +
+        ";q_{T}(" + obsT[o] + ")" +
+        ";q_{T}(#rho)";
+      plotN = Form("%s_rhoQtVsHadQt_%d",obsN[o].Data(),b);
+      rhoQtVsHadQt[o][b] = new TH2D(plotN,plotT,
+        N_P_BINS, ptMin, ptMax/6.0,
+        N_P_BINS, ptMin, ptMax/6.0);
+ 
+      plotT = "q_{T}(#rho)/Q vs. q_{T}(" + obsT[o] + ")/Q, for " + cutT +
+        ";q_{T}(" + obsT[o] + ")/Q" +
+        ";q_{T}(#rho)/Q";
+      plotN = Form("%s_rhoQtOverQVsHadQtOverQ_%d",obsN[o].Data(),b);
+      rhoQtOverQVsHadQtOverQ[o][b] = new TH2D(plotN,plotT,
+        N_P_BINS, 0, 3,
+        N_P_BINS, 0, 3);
+             
       if(o==kDih) {
         plotT = obsT[o] + " #phi_{h} vs. #phi_{R}, for " + cutT + 
           ";#phi_{R};#phi_{h}";
@@ -561,6 +617,12 @@ int main(int argc, char** argv) {
         distMh[b] = new TH1D(plotN,plotT, 3*NPLOTBINS, 0, 3);
         distMh[b]->SetFillColor(kRed-3);
         distMh[b]->SetLineColor(kRed-3);
+
+        plotT = obsT[o] + " M_{h} distribution, for " + cutT + ";M_{h} [GeV]";
+        plotN = Form("%s_rhoMh_%d",obsN[o].Data(),b);
+        distRhoMh[b] = new TH1D(plotN,plotT, 3*NPLOTBINS, 0, 3);
+        distRhoMh[b]->SetFillColor(kBlack);
+        distRhoMh[b]->SetLineColor(kBlack);
 
         plotT = obsT[o] + " M_{X} distribution, for " + cutT + ";M_{X} [GeV]";
         plotN = Form("%s_Mx_%d",obsN[o].Data(),b);
@@ -714,13 +776,14 @@ int main(int argc, char** argv) {
             PVsZ[o][b]->Fill(oZ,oP);
             PperpVsPt[o][b]->Fill(oPt,oPperp);
 
-            Qt = oPperp / oZ;
+            Qt = oPperp / oZ; // if you change this formula, don't forget to change it in other places too, viz. in `rhoQt*` plots
             QtVsPt[o][b]->Fill(oPt,Qt);
             QtVsEta[o][b]->Fill(oEta,Qt);
             PtVsY[o][b]->Fill(ev->y,oPt);
             PperpVsY[o][b]->Fill(ev->y,oPperp);
             PtVsZ[o][b]->Fill(oZ,oPt);
             PperpVsZ[o][b]->Fill(oZ,oPperp);
+            //if(Qt/TMath::Sqrt(ev->Q2) > 1.0) PperpDistLin[o][b]->Fill(oPperp);
             PperpDistLin[o][b]->Fill(oPperp);
             PtDistLin[o][b]->Fill(oPt);
             PtDistLog[o][b]->Fill(oPt);
@@ -728,6 +791,22 @@ int main(int argc, char** argv) {
             QtDistLog[o][b]->Fill(Qt);
             QtOverQdist[o][b]->Fill(Qt/TMath::Sqrt(ev->Q2));
             QtOverQvsQt[o][b]->Fill(Qt,Qt/TMath::Sqrt(ev->Q2));
+            QtOverQvsPperp[o][b]->Fill(oPperp,Qt/TMath::Sqrt(ev->Q2));
+            QtOverQvsZ[o][b]->Fill(oZ,Qt/TMath::Sqrt(ev->Q2));
+
+            if( ev->hadParentI[qA] == ev->hadParentI[qB] &&
+                ev->hadParentPID[qA] == ev->hadParentPID[qB] &&
+                ev->hadParentPID[qA] == 113
+            ) {
+            if(o==kDih) distRhoMh[b]->Fill(ev->Mh);
+              rhoZVsHadZ[o][b]->Fill(oZ,ev->Zpair);
+              rhoPperpVsHadPperp[o][b]->Fill(oPperp,ev->PhPerp);
+              rhoQtVsHadQt[o][b]->Fill(Qt,ev->PhPerp/ev->Zpair);
+              rhoQtOverQVsHadQtOverQ[o][b]->Fill(
+                Qt/TMath::Sqrt(ev->Q2),
+                (ev->PhPerp/ev->Zpair) / TMath::Sqrt(ev->Q2)
+              );
+            };
 
             if(o==kDih) {
               PhiHvsPhiR[b]->Fill(ev->PhiR,ev->PhiH);
@@ -819,6 +898,8 @@ int main(int argc, char** argv) {
   TCanvas * QtDistLogMatrix[NOBS];
   TCanvas * QtOverQdistMatrix[NOBS];
   TCanvas * QtOverQvsQtMatrix[NOBS];
+  TCanvas * QtOverQvsPperpMatrix[NOBS];
+  TCanvas * QtOverQvsZMatrix[NOBS];
   TCanvas * PhiHvsPhiRMatrix;
   TCanvas * corrXFMatrix;
   TCanvas * PhiHvsPMatrix;
@@ -857,6 +938,8 @@ int main(int argc, char** argv) {
     QtDistLogMatrix[o] = MatrixifyDist1(QtDistLog[o],1,1);
     QtOverQdistMatrix[o] = MatrixifyDist1(QtOverQdist[o],0,0);
     QtOverQvsQtMatrix[o] = MatrixifyDist2(QtOverQvsQt[o],0,0,0);
+    QtOverQvsPperpMatrix[o] = MatrixifyDist2(QtOverQvsPperp[o],0,0,0);
+    QtOverQvsZMatrix[o] = MatrixifyDist2(QtOverQvsZ[o],0,0,0);
   };
   PhiHvsPhiRMatrix = MatrixifyDist2(PhiHvsPhiR,0,0,0); // maxima not equalized
   corrXFMatrix = MatrixifyDist2(corrXF,0,0,1);
@@ -904,6 +987,8 @@ int main(int argc, char** argv) {
     QtDistLogMatrix[o]->Write();
     QtOverQdistMatrix[o]->Write();
     QtOverQvsQtMatrix[o]->Write();
+    QtOverQvsPperpMatrix[o]->Write();
+    QtOverQvsZMatrix[o]->Write();
     if(o==kDih) {
       PhiHvsPhiRMatrix->Write();
       distMhMatrix->Write();
@@ -947,6 +1032,13 @@ int main(int argc, char** argv) {
     for(b=0; b<NBINS; b++) QtDistLog[o][b]->Write();
     for(b=0; b<NBINS; b++) QtOverQdist[o][b]->Write();
     for(b=0; b<NBINS; b++) QtOverQvsQt[o][b]->Write();
+    for(b=0; b<NBINS; b++) QtOverQvsPperp[o][b]->Write();
+    for(b=0; b<NBINS; b++) QtOverQvsZ[o][b]->Write();
+    for(b=0; b<NBINS; b++) rhoZVsHadZ[o][b]->Write();
+    for(b=0; b<NBINS; b++) rhoPperpVsHadPperp[o][b]->Write();
+    for(b=0; b<NBINS; b++) rhoQtVsHadQt[o][b]->Write();
+    for(b=0; b<NBINS; b++) rhoQtOverQVsHadQtOverQ[o][b]->Write();
+    if(o==kDih) { for(b=0; b<NBINS; b++) distRhoMh[b]->Write(); };
     if(o==kDih) {
       for(b=0; b<NBINS; b++) PhiHvsPhiR[b]->Write();
       for(b=0; b<NBINS; b++) distMh[b]->Write();
@@ -1105,14 +1197,14 @@ TCanvas * xQ2Canv(TH2D * dist) {
   yline->SetLineStyle(2);
   yline->Draw();
   //
-  yval = 0.05;
+  yval = 0.03;
   TLine * yline2 = new TLine(
     Q2min / (2*yval*EdotP), Q2min, xmax, 2*xmax*yval*EdotP);
   yline2->SetLineWidth(4);
   yline2->SetLineStyle(2);
   yline2->Draw();
   //
-  yval = 0.5;
+  yval = 0.05;
   TLine * yline3 = new TLine(
     Q2min / (2*yval*EdotP), Q2min, xmax, 2*xmax*yval*EdotP);
   yline3->SetLineWidth(4);

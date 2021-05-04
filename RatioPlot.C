@@ -9,10 +9,10 @@ R__LOAD_LIBRARY(DihBsa)
 #include "Tools.h"
 
 void RatioPlot(
-  TString numerFileN="roots_crosscheck/ymin_0.03.root",
-  TString denomFileN="roots_crosscheck/ymin_0.00.root",
+  TString numerFileN="roots_pTgt1.0/ymin_0.05.root",
+  TString denomFileN="roots_pTgt1.0/ymin_0.00.root",
   TString particle="hadronA",
-  TString outfileN="Pperp_PiPlus_ymin0.03",
+  TString outfileN="Pperp_PiPlus_ymin0.05",
   TString plotName="PperpDistLin"
   /*TString plotName="QtDistLin"*/
   /*TString plotName="QtOverQdist"*/
