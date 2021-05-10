@@ -31,6 +31,7 @@ void RatioPlot(
   Double_t norm;
   TString distN;
   TCanvas * canv[nBins];
+  Double_t ny,ry,err;
   for(int b=0; b<nBins; b++) {
 
     for(int f=0; f<2; f++) {
@@ -38,8 +39,6 @@ void RatioPlot(
         "_"+plotName+"_"+Form("%d",b);
       //dist[f][b] = (TH1D*) infile[f]->Get(distN)->Clone();
       infile[f]->GetObject(distN,dist[f][b]);
-      printf("f%d b%d %s @ %p\n",f,b,
-        distN.Data(),(void*)dist[f][b]);
       dist[f][b]->Sumw2();
       dist[f][b]->Rebin(4);
       norm = dist[f][b]->Integral();
@@ -48,6 +47,15 @@ void RatioPlot(
 
     ratio[b] = (TH1D*) dist[num][b]->Clone();
     ratio[b]->Divide(dist[den][b]);
+
+    // correct error bars in ratio plot (thanks Valery!)
+    for(int p=1; p<=ratio[b]->GetNbinsX(); p++) {
+      ny = dist[den][b]->GetBinContent(p);
+      ry = ratio[b]->GetBinContent(p);
+      err = TMath::Abs(ny)>0 ? TMath::Sqrt( (ry*(1-ry)) / ny ) : 0;
+      ratio[b]->SetBinError(p,err);
+    };
+
 
     if(plotRatioOnly)
       canv[b] = new TCanvas(Form("canv%d",b),Form("canv%d",b), 800,700);
